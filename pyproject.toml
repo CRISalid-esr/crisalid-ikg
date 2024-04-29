@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "crisalid-ikg"
+version = "0.1.0"
+description = "CRISalid institutional knowledge graph"
+authors = ["CRISalid community <contact@crisalid.org>"]
+license = "CeCILL v2.1"
+readme = "README.md"
+packages = [{include = "crisalid_ikg"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.110.2"
+pydantic-settings = "^2.2.1"
+pyparsing = "^3.1.2"
+loguru = "^0.7.2"
+aio-pika = "^9.4.1"
+
+
+[tool.poetry.group.development.dependencies]
+black = {extras = ["d"], version = "^24.4.0"}
+uvicorn = "^0.29.0"
+pytest = "^8.1.1"
+httpx = "^0.27.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
