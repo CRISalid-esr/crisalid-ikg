@@ -5,6 +5,7 @@ from typing import List
 
 from pydantic import validator, root_validator, field_validator
 
+from app.models.agent_identifiers import AgentIdentifier, PersonIdentifier
 from app.models.agents import Agent
 from app.models.identifier_types import PersonIdentifierType
 
@@ -19,9 +20,11 @@ class Person(Agent[PersonIdentifierType]):
 
     alternative_names: List[str] = []
 
-    @field_validator("identifiers", mode="before")
+    identifiers: List[PersonIdentifier]
+
+    @field_validator("identifiers", mode="after")
     def validate_identifiers(cls, identifiers):
         if identifiers and any(
-                ident.get('type', None) not in PersonIdentifierType.__members__.values() for ident in identifiers):
+                ident.type not in PersonIdentifierType for ident in identifiers):
             raise ValueError("All identifiers for a Person must be of type PersonIdentifierType")
         return identifiers

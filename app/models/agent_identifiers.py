@@ -18,7 +18,9 @@ class AgentIdentifier(Generic[IdType], BaseModel):
 
 class PersonIdentifier(AgentIdentifier[PersonIdentifierType]):
     """Person identifier model"""
+    type: PersonIdentifierType
 
 
 class OrganizationIdentifier(AgentIdentifier[OrganizationIdentifierType]):
     """Organization identifier model"""
+    type: OrganizationIdentifierType

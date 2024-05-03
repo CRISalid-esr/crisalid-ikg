@@ -21,7 +21,7 @@ tags_metadata = [
 
 
 @router.post(
-    "/person",
+    "/",
     name="references:create-person",
 )
 async def create_person(
