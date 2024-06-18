@@ -5,7 +5,7 @@ from loguru import logger
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 
 
-class AMQPPublicationMessageProcessor(AMQPMessageProcessor):
+class AMQPPeopleMessageProcessor(AMQPMessageProcessor):
     """
     Workers to process publication messages from AMQP interface
     """

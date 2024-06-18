@@ -45,9 +45,11 @@ class CrisalidIKG(FastAPI):
         """Init AMQP connexion at boot time"""
         try:
             logger.info("Enabling RabbitMQ connexion")
-            self.amqp_interface = AMQPInterface(get_app_settings())
+            settings = get_app_settings()
+            self.amqp_interface = AMQPInterface(settings)
             await self.amqp_interface.connect()
-            asyncio.create_task(self.amqp_interface.listen(), name="amqp_listener")
+            asyncio.create_task(self.amqp_interface.listen(settings.amqp_people_topic), name="amqp_people_listener")
+            asyncio.create_task(self.amqp_interface.listen(settings.amqp_publications_topic), name="amqp_publications_listener")
             logger.info("RabbitMQ connexion has been enabled")
         except AMQPConnectionError as error:
             logger.error(

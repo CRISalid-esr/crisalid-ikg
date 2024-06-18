@@ -3,9 +3,9 @@ Person model
 """
 from typing import List
 
-from pydantic import validator, root_validator, field_validator
+from pydantic import field_validator
 
-from app.models.agent_identifiers import AgentIdentifier, PersonIdentifier
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.agents import Agent
 from app.models.identifier_types import PersonIdentifierType
 
