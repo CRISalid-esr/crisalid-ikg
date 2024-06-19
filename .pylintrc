@@ -1,0 +1,5 @@
+[MASTER]
+disable=missing-module-docstring,
+        too-few-public-methods
+
+init-hook='import sys; sys.path.append(".")'
