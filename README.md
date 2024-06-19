@@ -51,6 +51,20 @@ The project uses [poetry](https://python-poetry.org/) for dependency management.
 poetry install
 ```
 
+### Dependencies export
+
+Development dependencies can be exported to requirements-dev.txt file with the following command :
+
+```bash
+poetry export -f requirements.txt --output requirements-dev.txt --with=development
+```
+
+Production dependencies can be exported to requirements.txt file with the following command :
+
+```bash
+poetry export -f requirements.txt --output requirements.txt
+```
+
 ### Tests
 
 The project uses [pytest](https://docs.pytest.org/en/stable/) for testing.

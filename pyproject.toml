@@ -23,10 +23,10 @@ optional = true
 
 [tool.poetry.group.development.dependencies]
 black = {extras = ["d"], version = "^24.4.0"}
-pylint = "^3.2.3"
 uvicorn = "^0.29.0"
 pytest = "^8.1.1"
 httpx = "^0.27.0"
+pylint = "^3.2.3"
 
 [build-system]
 requires = ["poetry-core"]
