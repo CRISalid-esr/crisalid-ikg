@@ -6,6 +6,7 @@ class AgentIdentifierType(Enum):
     pass
 
 
+
 class PersonIdentifierType(AgentIdentifierType):
     """Person identifier types"""
     ORCID = "ORCID"

@@ -9,11 +9,14 @@ from app.models.identifier_types import AgentIdentifierType, PersonIdentifierTyp
 from app.models.shared_types import IdType
 
 
-class AgentIdentifier(Generic[IdType], BaseModel):
+class AgentIdentifier(BaseModel, Generic[IdType]):
     """Agent identifier model"""
 
     type: IdType
     value: str
+
+    def dict(self, **kwargs):
+        return super().dict(**kwargs) | {"type": self.type.value}
 
 
 class PersonIdentifier(AgentIdentifier[PersonIdentifierType]):

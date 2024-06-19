@@ -1,6 +1,5 @@
 import pytest
 
-from app.models.agent_identifiers import PersonIdentifier
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 
@@ -8,23 +7,58 @@ from app.models.people import Person
 @pytest.fixture
 def valid_person_data():
     return {
-        "first_names": ["John"],
-        "last_names": ["Doe"],
-        "alternative_names": ["Johnny"],
+        "names": [
+            {
+                "first_names": [
+                    "John"
+                ],
+                "family_names": [
+                    "Doe"
+                ],
+                "other_names": [
+                    "Johnny"
+                ]
+            }
+        ],
         "identifiers": [
-            {"type": PersonIdentifierType.ORCID, "value": "0000-0000-0000-0000"}
+            {
+                "type": "ORCID",
+                "value": "0000-0001-2345-6789"
+            },
+            {
+                "type": "local",
+                "value": "jdoe@univ-paris1.fr"
+            }
         ]
     }
 
 
 @pytest.fixture
 def invalid_person_data():
+    # wrong identifier type "InvalidIdentifier"
     return {
-        "first_names": ["John"],
-        "last_names": ["Doe"],
-        "alternative_names": ["Johnny"],
+        "names": [
+            {
+                "first_names": [
+                    "John"
+                ],
+                "family_names": [
+                    "Doe"
+                ],
+                "other_names": [
+                    "Johnny"
+                ]
+            }
+        ],
         "identifiers": [
-            {"type": "InvalidIdentifier", "value": "0000-0000-0000-0000"}
+            {
+                "type": "InvalidIdentifier",
+                "value": "0000-0001-2345-6789"
+            },
+            {
+                "type": "local",
+                "value": "jdoe@univ-paris1.fr"
+            }
         ]
     }
 
@@ -32,9 +66,18 @@ def invalid_person_data():
 def test_create_valid_person(valid_person_data):
     person = Person(**valid_person_data)
     assert person
-    assert person.first_names == valid_person_data["first_names"]
-    assert person.last_names == valid_person_data["last_names"]
-    assert person.alternative_names == valid_person_data["alternative_names"]
+    assert len(person.names) == 1
+    assert len(person.identifiers) == 2
+    assert any(
+        name for name in person.names if "John" in name.first_names and "Doe" in name.family_names and "Johnny" in name.other_names
+    )
+    assert any(
+        identifier for identifier in person.identifiers if identifier.type == PersonIdentifierType.ORCID and identifier.value == "0000-0001-2345-6789"
+    )
+    assert any(
+        identifier for identifier in person.identifiers if identifier.type == PersonIdentifierType.LOCAL and identifier.value == "jdoe@univ-paris1.fr"
+    )
+
 
 
 def test_create_invalid_person(invalid_person_data):

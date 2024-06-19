@@ -8,6 +8,7 @@ from pydantic import field_validator
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.agents import Agent
 from app.models.identifier_types import PersonIdentifierType
+from app.models.people_names import PersonName
 
 
 class Person(Agent[PersonIdentifierType]):
@@ -15,10 +16,7 @@ class Person(Agent[PersonIdentifierType]):
     Person API object
     """
 
-    first_names: List[str] = []
-    last_names: List[str] = []
-
-    alternative_names: List[str] = []
+    names: List[PersonName] = []
 
     identifiers: List[PersonIdentifier]
 

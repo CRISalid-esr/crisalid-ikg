@@ -9,7 +9,7 @@ from app.models.agent_identifiers import AgentIdentifier
 from app.models.shared_types import IdType
 
 
-class Agent(Generic[IdType], BaseModel):
+class Agent(BaseModel, Generic[IdType]):
     """
     Agent API object
     """
