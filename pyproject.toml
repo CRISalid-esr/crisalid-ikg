@@ -18,13 +18,21 @@ pytest-asyncio = "^0.23.6"
 neo4j = "^5.21.0"
 
 
+[tool.poetry.group.development]
+optional = true
+
 [tool.poetry.group.development.dependencies]
 black = {extras = ["d"], version = "^24.4.0"}
+pylint = "^3.2.3"
 uvicorn = "^0.29.0"
 pytest = "^8.1.1"
 httpx = "^0.27.0"
-pylint = "^3.2.3"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+asyncio_mode = "auto"
