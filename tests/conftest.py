@@ -21,11 +21,3 @@ def app() -> FastAPI:
 def fixture_test_client(test_app: FastAPI) -> TestClient:
     """Provide test client as fixture"""
     return TestClient(test_app)
-
-
-@pytest.fixture(autouse=True, name="event_loop")
-def fixture_event_loop():
-    """Provide an event loop for all tests"""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
