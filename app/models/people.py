@@ -23,7 +23,8 @@ class Person(Agent[PersonIdentifierType]):
     identifiers: List[PersonIdentifier]
 
     @field_validator("identifiers", mode="after")
-    def _validate_identifiers(self, identifiers):
+    @staticmethod
+    def _validate_identifiers( identifiers):
         if identifiers and any(
                 ident.type not in PersonIdentifierType for ident in identifiers):
             raise ValueError("All identifiers for a Person must be of type PersonIdentifierType")
