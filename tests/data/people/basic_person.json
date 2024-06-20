@@ -1,0 +1,25 @@
+{
+  "names": [
+    {
+      "first_names": [
+        "John"
+      ],
+      "family_names": [
+        "Doe"
+      ],
+      "other_names": [
+        "Johnny"
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "orcid",
+      "value": "0000-0001-2345-6789"
+    },
+    {
+      "type": "local",
+      "value": "jdoe@univ-paris1.fr"
+    }
+  ]
+}

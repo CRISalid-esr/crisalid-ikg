@@ -1,8 +1,11 @@
 from neo4j import AsyncSession
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
+from app.models.agent_identifiers import PersonIdentifier
+from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.config import get_app_settings
+from app.models.people_names import PersonName
 
 
 class PeopleDAO(Neo4jDAO):
@@ -110,3 +113,37 @@ class PeopleDAO(Neo4jDAO):
             identifiers=[identifier.dict() for identifier in person.identifiers]
         )
 
+    async def find_by_identifier(self, identifier_type: PersonIdentifierType, identifier_value: str) -> Person | None:
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        self._find_by_identifier_query,
+                        identifier_type=identifier_type.value,
+                        identifier_value=identifier_value
+                    )
+                    record = await result.single()
+                    if record:
+                        person_data = record["p"]
+                        names_data = record["names"]
+                        identifiers_data = record["identifiers"]
+
+                        names = [PersonName(**name) for name in names_data]
+                        identifiers = [PersonIdentifier(**identifier) for identifier in identifiers_data]
+
+                        person = Person(
+                            id=person_data["id"],
+                            identifiers=identifiers,
+                            names=names
+                        )
+
+                        return person
+                    else:
+                        return None
+
+    _find_by_identifier_query = """
+        MATCH (p:Person)-[:HAS_NAME]->(n:PersonName)
+        MATCH (p)-[:HAS_IDENTIFIER]->(i1:AgentIdentifier {type: $identifier_type, value: $identifier_value})
+        MATCH (p)-[:HAS_IDENTIFIER]->(i2:AgentIdentifier)
+        RETURN p, collect(n) as names, collect(i2) as identifiers
+    """

@@ -16,6 +16,8 @@ class Person(Agent[PersonIdentifierType]):
     Person API object
     """
 
+    id:Optional[str] = None # id from the database if exists
+
     names: List[PersonName] = []
 
     identifiers: List[PersonIdentifier]
@@ -26,3 +28,11 @@ class Person(Agent[PersonIdentifierType]):
                 ident.type not in PersonIdentifierType for ident in identifiers):
             raise ValueError("All identifiers for a Person must be of type PersonIdentifierType")
         return identifiers
+
+    def get_identifier(self, identifier_type: PersonIdentifierType) -> PersonIdentifier:
+        """
+        Get the identifier of the given type
+        :param identifier_type: identifier type
+        :return: identifier
+        """
+        return next((ident for ident in self.identifiers if ident.type == identifier_type), None)

@@ -9,10 +9,10 @@ class AgentIdentifierType(Enum):
 
 class PersonIdentifierType(AgentIdentifierType):
     """Person identifier types"""
-    ORCID = "ORCID"
-    IDREF = "IdRef"
-    ID_HAL_S = "IdHalS"
-    SCOPUS_EID = "ScopusEID"
+    ORCID = "orcid"
+    IDREF = "idref"
+    ID_HAL_S = "idhal_s"
+    SCOPUS_EID = "scopus_eid"
     LOCAL = "local"
 
 

@@ -15,10 +15,14 @@ class Neo4jDAOFactory(DAOFactory):
     def __init__(self):
         self.driver: AsyncDriver = Neo4jConnexion().get_driver()
 
-    def get_dao(self, object_type: Type[BaseModel]) -> Neo4jDAO:
+    def get_dao(self, object_type: Type[BaseModel]=None) -> Neo4jDAO:
+        if object_type is None:
+            from app.graph.neo4j.global_dao import GlobalDAO
+            return GlobalDAO(driver=self.driver)
         if object_type.__name__ == Person.__name__:
             from app.graph.neo4j.people_dao import PeopleDAO
             return PeopleDAO(driver=self.driver)
+
 
     def get_setup(self) -> Neo4jSetup:
         return Neo4jSetup(driver=self.driver)

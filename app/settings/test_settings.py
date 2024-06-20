@@ -28,3 +28,5 @@ class TestAppSettings(AppSettings):
     model_config = SettingsConfigDict(env_file=".test.env", extra="ignore")
 
     institution_name: str = "XYZ University • test"
+
+    neo4j_uri: str = "bolt://localhost:7688"
