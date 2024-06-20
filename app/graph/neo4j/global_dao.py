@@ -1,15 +1,15 @@
 from neo4j import AsyncSession
+
+from app.config import get_app_settings
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
-from app.models.agent_identifiers import PersonIdentifier
-from app.models.identifier_types import PersonIdentifierType
-from app.models.people import Person
-from app.config import get_app_settings
-from app.models.people_names import PersonName
 from app.settings.app_env_types import AppEnvTypes
 
 
 class GlobalDAO(Neo4jDAO):
+    """
+    Global DAO to manage global operations on the database
+    """
 
     async def reset_all(self) -> None:
         """

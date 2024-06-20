@@ -1,7 +1,5 @@
-import asyncio
 from os import environ
 
-import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
@@ -30,6 +28,7 @@ def fixture_test_client(test_app: FastAPI) -> TestClient:
 
 @pytest.fixture(scope="function", autouse=True)
 async def reset_graph():
+    """Reset the graph database before and after each test"""
     settings = get_app_settings()
     factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
     global_dao = factory.get_dao()

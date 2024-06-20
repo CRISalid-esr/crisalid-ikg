@@ -5,7 +5,7 @@ from typing import Generic
 
 from pydantic import BaseModel
 
-from app.models.identifier_types import AgentIdentifierType, PersonIdentifierType, OrganizationIdentifierType
+from app.models.identifier_types import PersonIdentifierType, OrganizationIdentifierType
 from app.models.shared_types import IdType
 
 

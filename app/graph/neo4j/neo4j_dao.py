@@ -4,4 +4,6 @@ from app.graph.generic.dao import DAO
 
 
 class Neo4jDAO(DAO[AsyncDriver]):
-    pass
+    """
+    Parent class for all Neo4j DAO classes
+    """

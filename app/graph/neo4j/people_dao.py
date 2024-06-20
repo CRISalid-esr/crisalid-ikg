@@ -1,16 +1,26 @@
 from neo4j import AsyncSession
+
+from app.config import get_app_settings
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
-from app.config import get_app_settings
 from app.models.people_names import PersonName
 
 
 class PeopleDAO(Neo4jDAO):
+    """
+    Data access object for people and the neo4j database
+    """
 
     async def create_or_update(self, person: Person):
+        """
+        Create or update a person in the graph database
+
+        :param person: person object
+        :return: None
+        """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 await session.write_transaction(self._create_or_update_person_transaction, person)
@@ -24,7 +34,8 @@ class PeopleDAO(Neo4jDAO):
         for identifier_type in identifier_order:
             if identifier_type in [identifier.type for identifier in person.identifiers]:
                 selected_identifier = next(
-                    identifier for identifier in person.identifiers if identifier.type == identifier_type
+                    identifier for identifier in person.identifiers
+                    if identifier.type == identifier_type
                 )
                 person_id = f"{selected_identifier.type.value}-{selected_identifier.value}"
                 break
@@ -113,7 +124,15 @@ class PeopleDAO(Neo4jDAO):
             identifiers=[identifier.dict() for identifier in person.identifiers]
         )
 
-    async def find_by_identifier(self, identifier_type: PersonIdentifierType, identifier_value: str) -> Person | None:
+    async def find_by_identifier(self, identifier_type: PersonIdentifierType,
+                                 identifier_value: str) -> Person | None:
+        """
+        Find a person by an identifier
+
+        :param identifier_type: identifier type
+        :param identifier_value: identifier value
+        :return:
+        """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
@@ -129,7 +148,8 @@ class PeopleDAO(Neo4jDAO):
                         identifiers_data = record["identifiers"]
 
                         names = [PersonName(**name) for name in names_data]
-                        identifiers = [PersonIdentifier(**identifier) for identifier in identifiers_data]
+                        identifiers = [PersonIdentifier(**identifier)
+                                       for identifier in identifiers_data]
 
                         person = Person(
                             id=person_data["id"],
@@ -138,8 +158,7 @@ class PeopleDAO(Neo4jDAO):
                         )
 
                         return person
-                    else:
-                        return None
+                    return None
 
     _find_by_identifier_query = """
         MATCH (p:Person)-[:HAS_NAME]->(n:PersonName)

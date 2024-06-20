@@ -5,10 +5,8 @@ from fastapi import APIRouter, Depends
 from starlette import status
 from starlette.responses import JSONResponse
 
-from app.config import get_app_settings
 from app.models.people import Person
 from app.services.people.people_service import PeopleService
-from app.settings.app_settings import AppSettings
 
 router = APIRouter()
 
@@ -25,15 +23,12 @@ tags_metadata = [
     name="references:create-person",
 )
 async def create_person(
-        settings: Annotated[AppSettings, Depends(get_app_settings)],
         people_service: Annotated[PeopleService, Depends(PeopleService)],
         person: Person | None,
 ) -> JSONResponse:
     """
     Creates a person
 
-    \f
-    :param settings: app settings
     :param people_service:
     :param person: entity built from fields
     :return: json response

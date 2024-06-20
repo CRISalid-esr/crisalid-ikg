@@ -66,4 +66,3 @@ class AMQPMessageProcessor(ABC):
         :param payload: message payload
         :return: None
         """
-        pass

@@ -3,7 +3,6 @@ from enum import Enum
 
 class AgentIdentifierType(Enum):
     """Base class for agent identifier types"""
-    pass
 
 
 

@@ -5,6 +5,13 @@ from app.models.people import Person
 
 
 def test_create_valid_person(basic_person_pydantic_model):
+    """
+    Given a valid person model
+    When asked for different field values
+    Then the values should be returned correctly
+    :param basic_person_pydantic_model:
+    :return:
+    """
     assert basic_person_pydantic_model
     assert len(basic_person_pydantic_model.names) == 1
     assert len(basic_person_pydantic_model.identifiers) == 2
@@ -23,5 +30,13 @@ def test_create_valid_person(basic_person_pydantic_model):
 
 
 def test_create_invalid_person(person_with_invalid_identifier_type_json_data):
+    """
+    Given json person data with invalid identifier type
+    When creating a person object
+    Then a ValueError should be raised
+
+    :param person_with_invalid_identifier_type_json_data: json data with invalid identifier type
+    :return:
+    """
     with pytest.raises(ValueError):
         Person(**person_with_invalid_identifier_type_json_data)

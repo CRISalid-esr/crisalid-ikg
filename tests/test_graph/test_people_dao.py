@@ -4,6 +4,14 @@ from app.models.people import Person
 
 
 async def test_create_person(basic_person_pydantic_model: Person):
+    """
+    Given a basic person Pydantic model
+    When the create_person method is called
+    Then the person should be created in the database
+
+    :param basic_person_pydantic_model:
+    :return:
+    """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
     await dao.create_or_update(basic_person_pydantic_model)
@@ -21,4 +29,3 @@ async def test_create_person(basic_person_pydantic_model: Person):
         identifier for identifier in person.identifiers if
         identifier.type == orcid_identifier.type and identifier.value == orcid_identifier.value
     )
-

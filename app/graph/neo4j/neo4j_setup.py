@@ -8,6 +8,9 @@ from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 
 
 class Neo4jSetup(Setup[AsyncDriver]):
+    """
+    Class to setup the Neo4j database
+    """
 
     async def run(self):
         async for driver in Neo4jConnexion().get_driver():

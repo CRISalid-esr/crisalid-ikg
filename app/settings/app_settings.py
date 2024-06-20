@@ -50,7 +50,7 @@ class AppSettings(BaseSettings):
     git_branch: str = "-"
     docker_digest: str = "-"
 
-    graph_db:str = "neo4j"
+    graph_db: str = "neo4j"
 
     neo4j_edition: str = "community"
 
@@ -58,5 +58,7 @@ class AppSettings(BaseSettings):
     neo4j_user: str = "neo4j"
     neo4j_password: str = "password"
 
-    people_identifier_order: list[PersonIdentifierType] = [PersonIdentifierType.LOCAL, PersonIdentifierType.ORCID,
-                                                           PersonIdentifierType.IDREF]
+    people_identifier_order: list[PersonIdentifierType] = \
+        [PersonIdentifierType.LOCAL,
+         PersonIdentifierType.ORCID,
+         PersonIdentifierType.IDREF]

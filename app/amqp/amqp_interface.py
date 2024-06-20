@@ -7,7 +7,6 @@ from aio_pika import ExchangeType
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_message_processor_factory import AMQPMessageProcessorFactory
-from app.amqp.amqp_publication_message_processor import AMQPPublicationMessageProcessor
 from app.settings.app_settings import AppSettings
 
 DEFAULT_RESULT_TIMEOUT = 600
@@ -36,13 +35,16 @@ class AMQPInterface:
     async def connect(self):
         """Connect to AMQP queue"""
         await self._connect()
-        await self._declare_exchange(self.settings.amqp_people_topic, self.settings.amqp_directory_exchange_name)
+        await self._declare_exchange(self.settings.amqp_people_topic,
+                                     self.settings.amqp_directory_exchange_name)
         await self._declare_exchange(self.settings.amqp_publications_topic,
                                      self.settings.amqp_publications_exchange_name)
         await self._attach_message_processing_workers(self.settings.amqp_people_topic)
         await self._attach_message_processing_workers(self.settings.amqp_publications_topic)
-        await self._bind_queue(self.settings.amqp_people_topic, self.settings.amqp_people_queue_name)
-        await self._bind_queue(self.settings.amqp_publications_topic, self.settings.amqp_publications_queue_name)
+        await self._bind_queue(self.settings.amqp_people_topic,
+                               self.settings.amqp_people_queue_name)
+        await self._bind_queue(self.settings.amqp_publications_topic,
+                               self.settings.amqp_publications_queue_name)
 
     async def listen(self, topic: str) -> None:
         """Listen to AMQP queue"""
@@ -51,10 +53,11 @@ class AMQPInterface:
     async def stop_listening(self) -> None:
         """Stop listening to AMQP queue"""
         try:
-            await asyncio.wait_for(
-                self.inner_tasks_queues.join(),
-                timeout=self.settings.amqp_wait_before_shutdown,
-            )
+            for _, queue in self.inner_tasks_queues.items():
+                await asyncio.wait_for(
+                    queue.join(),
+                    timeout=self.settings.amqp_wait_before_shutdown,
+                )
         finally:
             for worker in self.message_processing_workers:
                 worker.cancel()
@@ -62,7 +65,8 @@ class AMQPInterface:
             await self.pika_connexion.close()
 
     async def _attach_message_processing_workers(self, topic: str):
-        self.inner_tasks_queues[topic] = asyncio.Queue(maxsize=self.INNER_PUBLICATIONS_TASKS_QUEUE_LENGTH)
+        self.inner_tasks_queues[topic] = asyncio.Queue(
+            maxsize=self.INNER_PUBLICATIONS_TASKS_QUEUE_LENGTH)
         for worker_id in range(self.settings.amqp_task_parallelism_limit):
             processor = await self._message_processor(topic)
             self.message_processing_workers[topic].append(
