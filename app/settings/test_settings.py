@@ -2,7 +2,6 @@
 Settings for test environment
 """
 import logging
-import os
 import sys
 from typing import ClassVar
 
@@ -16,9 +15,7 @@ class TestAppSettings(AppSettings):
     """
     Settings for test environment
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    __test__ = False
 
     debug: bool = True
 
@@ -31,3 +28,5 @@ class TestAppSettings(AppSettings):
     model_config = SettingsConfigDict(env_file=".test.env", extra="ignore")
 
     institution_name: str = "XYZ University • test"
+
+    neo4j_uri: str = "bolt://localhost:7688"

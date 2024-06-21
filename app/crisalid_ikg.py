@@ -9,8 +9,9 @@ from pydantic import ValidationError
 from app.amqp.amqp_interface import AMQPInterface
 from app.config import get_app_settings
 from app.errors.validation_error import http422_error_handler
-from app.routes.healthness import router as healthness_router
+from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.routes.api import router as api_router
+from app.routes.healthness import router as healthness_router
 
 
 class CrisalidIKG(FastAPI):
@@ -18,7 +19,7 @@ class CrisalidIKG(FastAPI):
 
     def __init__(self):
         super().__init__()
-
+        self.amqp_interface = None
         settings = get_app_settings()
 
         self.include_router(
@@ -36,18 +37,34 @@ class CrisalidIKG(FastAPI):
 
         self.add_exception_handler(ValidationError, http422_error_handler)
 
+        self.add_event_handler("startup", self.setup_graph)
+
         if settings.amqp_enabled:
             self.add_event_handler("startup", self.open_rabbitmq_connexion)
             self.add_event_handler("shutdown", self.close_rabbitmq_connexion)
+
+    @logger.catch(reraise=True)
+    async def setup_graph(self) -> None:  # pragma: no cover
+        """Init graph connexion at boot time"""
+        logger.info("Setting up graph connexion")
+        settings = get_app_settings()
+        factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
+        setup = factory.get_setup()
+        await setup.run()
+        logger.info("Graph connexion has been set up")
 
     @logger.catch(reraise=True)
     async def open_rabbitmq_connexion(self) -> None:  # pragma: no cover
         """Init AMQP connexion at boot time"""
         try:
             logger.info("Enabling RabbitMQ connexion")
-            self.amqp_interface = AMQPInterface(get_app_settings())
+            settings = get_app_settings()
+            self.amqp_interface = AMQPInterface(settings)
             await self.amqp_interface.connect()
-            asyncio.create_task(self.amqp_interface.listen(), name="amqp_listener")
+            asyncio.create_task(self.amqp_interface.listen(settings.amqp_people_topic),
+                                name="amqp_people_listener")
+            asyncio.create_task(self.amqp_interface.listen(settings.amqp_publications_topic),
+                                name="amqp_publications_listener")
             logger.info("RabbitMQ connexion has been enabled")
         except AMQPConnectionError as error:
             logger.error(

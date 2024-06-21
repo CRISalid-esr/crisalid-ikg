@@ -1,9 +1,12 @@
-import asyncio
 from os import environ
 
-import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
+
+from app.config import get_app_settings
+from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from tests.fixtures.common import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
+from tests.fixtures.people_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 
 environ["APP_ENV"] = "TEST"
 
@@ -23,9 +26,12 @@ def fixture_test_client(test_app: FastAPI) -> TestClient:
     return TestClient(test_app)
 
 
-@pytest.fixture(autouse=True, name="event_loop")
-def fixture_event_loop():
-    """Provide an event loop for all tests"""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+@pytest.fixture(scope="function", autouse=True)
+async def reset_graph():
+    """Reset the graph database before and after each test"""
+    settings = get_app_settings()
+    factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
+    global_dao = factory.get_dao()
+    await global_dao.reset_all()
+    yield
+    await global_dao.reset_all()
