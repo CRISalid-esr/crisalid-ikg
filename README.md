@@ -1,7 +1,5 @@
 # CRISalid institutional knowledge graph
 
-# il gère l'alimentation en données du graphe depuis le bus de données et donne accès au graphe au travers d'un API GraphQL
-
 CRISalid institutional Knowledge Graph (IKG) is a Python/FastAPI middleware that manages the data ingestion from the
 data bus and provides access to the graph through a GraphQL API.
 
