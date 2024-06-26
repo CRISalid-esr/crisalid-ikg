@@ -10,7 +10,7 @@ class AMQPPublicationMessageProcessor(AMQPMessageProcessor):
     Workers to process publication messages from AMQP interface
     """
 
-    async def _process_message(self, payload: str):
+    async def _process_message(self, key:str, payload: str):
         json_payload = json.loads(payload)
         reply_expected = json_payload.get("reply", False)
         logger.debug(f"Processing message {json_payload}")
