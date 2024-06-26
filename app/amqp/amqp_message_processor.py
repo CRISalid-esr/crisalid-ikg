@@ -41,7 +41,8 @@ class AMQPMessageProcessor(ABC):
                 start_time = datetime.now()
                 async with message.process(ignore_processed=True):
                     payload = message.body
-                    await self._process_message(payload)
+                    key = message.routing_key
+                    await self._process_message(key, payload)
                     await message.ack()
                     self.tasks_queue.task_done()
                     end_time = datetime.now()
@@ -60,7 +61,7 @@ class AMQPMessageProcessor(ABC):
             raise exception
 
     @abstractmethod
-    async def _process_message(self, payload: str) -> None:
+    async def _process_message(self, key:str, payload: str) -> None:
         """
         Abstract method to process message
         :param payload: message payload

@@ -14,7 +14,7 @@ async def test_create_person(basic_person_pydantic_model: Person):
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
-    await dao.create_or_update(basic_person_pydantic_model)
+    await dao.create(basic_person_pydantic_model)
     local_identifier = basic_person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
     person = await dao.find_by_identifier(local_identifier.type,
                                           local_identifier.value)
