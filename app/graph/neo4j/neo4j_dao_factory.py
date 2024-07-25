@@ -8,6 +8,7 @@ from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.neo4j_setup import Neo4jSetup
 from app.models.people import Person
+from app.models.research_structures import ResearchStructure
 
 
 class Neo4jDAOFactory(DAOFactory):
@@ -25,6 +26,9 @@ class Neo4jDAOFactory(DAOFactory):
         if object_type.__name__ == Person.__name__:
             from app.graph.neo4j.people_dao import PeopleDAO  # pylint: disable=import-outside-toplevel
             return PeopleDAO(driver=self.driver)
+        if object_type.__name__ == ResearchStructure.__name__:
+            from app.graph.neo4j.structure_dao import StructureDAO  # pylint: disable=import-outside-toplevel
+            return StructureDAO(driver=self.driver)
         raise ValueError(f"Unsupported object type: {object_type}")
 
     def get_setup(self) -> Neo4jSetup:

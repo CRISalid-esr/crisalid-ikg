@@ -5,6 +5,7 @@ from app.errors.conflict_error import ConflictError
 from app.errors.not_found_error import NotFoundError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
+from app.graph.neo4j.structure_dao import StructureDAO
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
@@ -40,6 +41,26 @@ class PeopleDAO(Neo4jDAO):
                 await session.write_transaction(self._update_person_transaction, person)
         return person
 
+    async def create_or_update(self, person: Person) -> Person:
+        """
+        Create or update a person in the graph database
+
+        :param person: person object
+        :return: None
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                local_identifier_value = person.get_identifier(PersonIdentifierType.LOCAL).value
+                existing_person = await self.find_by_identifier(
+                    PersonIdentifierType.LOCAL,
+                    local_identifier_value
+                )
+                if existing_person:
+                    await session.write_transaction(self._update_person_transaction, person)
+                else:
+                    await session.write_transaction(self._create_person_transaction, person)
+        return person
+
     @staticmethod
     async def _create_person_transaction(tx: AsyncSession, person: Person):
         person.id = await PeopleDAO._compute_person_id(person)
@@ -54,8 +75,16 @@ class PeopleDAO(Neo4jDAO):
                     CREATE (p:Person {id: $person_id})
                     WITH p
                     UNWIND $names AS name
-                    CREATE (n:PersonName {first_names: name.first_names, family_names: name.family_names, other_names: name.other_names})
-                    CREATE (p)-[:HAS_NAME]->(n)
+                    CREATE (pn:PersonName)
+                    WITH p, pn, name
+                    UNWIND name.first_names AS first_name
+                    CREATE (fn:Literal {value: first_name.value, language: first_name.language})
+                    CREATE (pn)-[:HAS_FIRST_NAME]->(fn)
+                    WITH p, pn, name
+                    UNWIND name.last_names AS last_name
+                    CREATE (ln:Literal {value: last_name.value, language: last_name.language})
+                    CREATE (pn)-[:HAS_LAST_NAME]->(ln)
+                    CREATE (p)-[:HAS_NAME]->(pn)
                     WITH p
                     UNWIND $identifiers AS identifier
                     CREATE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
@@ -67,6 +96,28 @@ class PeopleDAO(Neo4jDAO):
             names=[name.dict() for name in person.names],
             identifiers=[identifier.dict() for identifier in person.identifiers]
         )
+        for membership in person.memberships:
+            structure_id = await StructureDAO.compute_structure_id(membership.research_structure)
+            if structure_id:
+                find_structure_query = """
+                            MATCH (s:ResearchStructure {id: $structure_id})
+                            RETURN s
+                        """
+                result = await tx.run(find_structure_query, structure_id=structure_id)
+                structure = await result.single()
+
+                if structure:
+                    create_membership_query = """
+                                MATCH (p:Person {id: $person_id})
+                                MATCH (s:ResearchStructure {id: $structure_id})
+                                CREATE (m:Membership)
+                                CREATE (p)-[:HAS_MEMBERSHIP]->(m)
+                                CREATE (m)-[:MEMBER_OF]->(s)
+                            """
+                    await tx.run(create_membership_query,
+                                 person_id=person.id,
+                                 structure_id=structure_id)
+
         return person
 
     @staticmethod
@@ -105,17 +156,27 @@ class PeopleDAO(Neo4jDAO):
         if existing_person is None:
             raise NotFoundError(f"Person with id {person.id} does not exist")
 
+        # Delete existing names
         delete_names_query = """
                 MATCH (p:Person {id: $person_id})-[:HAS_NAME]->(n:PersonName)
                 DETACH DELETE n
             """
         await tx.run(delete_names_query, person_id=person.id)
 
+        # Create new names with literals
         create_names_query = """
                 MATCH (p:Person {id: $person_id})
                 UNWIND $names AS name
-                CREATE (n:PersonName {first_names: name.first_names, family_names: name.family_names, other_names: name.other_names})
-                CREATE (p)-[:HAS_NAME]->(n)
+                CREATE (pn:PersonName)
+                WITH p, pn, name
+                UNWIND name.first_names AS first_name
+                CREATE (fn:Literal {value: first_name.value, language: first_name.language})
+                CREATE (pn)-[:HAS_FIRST_NAME]->(fn)
+                WITH p, pn, name
+                UNWIND name.last_names AS last_name
+                CREATE (ln:Literal {value: last_name.value, language: last_name.language})
+                CREATE (pn)-[:HAS_LAST_NAME]->(ln)
+                CREATE (p)-[:HAS_NAME]->(pn)
             """
         await tx.run(
             create_names_query,
@@ -123,7 +184,7 @@ class PeopleDAO(Neo4jDAO):
             names=[name.dict() for name in person.names]
         )
 
-        # Delete and recreate identifiers
+        # Delete identifiers that are not in the new set
         delete_identifiers_query = """
                 MATCH (p:Person {id: $person_id})-[:HAS_IDENTIFIER]->(i:AgentIdentifier)
                 WHERE NOT (i.type IN $identifier_types AND i.value IN $identifier_values)
@@ -138,6 +199,7 @@ class PeopleDAO(Neo4jDAO):
             identifier_values=identifier_values
         )
 
+        # Create or update identifiers
         create_identifiers_query = """
                 MATCH (p:Person {id: $person_id})
                 UNWIND $identifiers AS identifier

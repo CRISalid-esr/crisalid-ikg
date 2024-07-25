@@ -19,3 +19,4 @@ class OrganizationIdentifierType(AgentIdentifierType):
     """Organization identifier types"""
     IDREF = "IdRef"
     ROR = "ROR"
+    LOCAL = "local"

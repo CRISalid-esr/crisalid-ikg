@@ -16,7 +16,7 @@ DEFAULT_RESULT_TIMEOUT = 600
 class AMQPInterface:
     """Rabbitmq Connexion abstraction"""
 
-    INNER_PUBLICATIONS_TASKS_QUEUE_LENGTH = 10000
+    INNER_TASKS_QUEUE_LENGTH = 10000
 
     def __init__(self, settings: AppSettings):
         """Init AMQP Connexion class"""
@@ -29,6 +29,7 @@ class AMQPInterface:
         self.message_processing_workers: dict[str, List[asyncio.Task]] = defaultdict(list)
         self.keys = {
             "people": [self.settings.amqp_people_event_routing_key],
+            "structures": [self.settings.amqp_structure_event_routing_key],
             "publications": [self.settings.amqp_reference_event_routing_key],
         }
 
@@ -37,12 +38,17 @@ class AMQPInterface:
         await self._connect()
         await self._declare_exchange(self.settings.amqp_people_topic,
                                      self.settings.amqp_directory_exchange_name)
+        await self._declare_exchange(self.settings.amqp_structures_topic,
+                                     self.settings.amqp_directory_exchange_name)
         await self._declare_exchange(self.settings.amqp_publications_topic,
                                      self.settings.amqp_publications_exchange_name)
         await self._attach_message_processing_workers(self.settings.amqp_people_topic)
         await self._attach_message_processing_workers(self.settings.amqp_publications_topic)
+        await self._attach_message_processing_workers(self.settings.amqp_structures_topic)
         await self._bind_queue(self.settings.amqp_people_topic,
                                self.settings.amqp_people_queue_name)
+        await self._bind_queue(self.settings.amqp_structures_topic,
+                               self.settings.amqp_structures_queue_name)
         await self._bind_queue(self.settings.amqp_publications_topic,
                                self.settings.amqp_publications_queue_name)
 
@@ -66,7 +72,7 @@ class AMQPInterface:
 
     async def _attach_message_processing_workers(self, topic: str):
         self.inner_tasks_queues[topic] = asyncio.Queue(
-            maxsize=self.INNER_PUBLICATIONS_TASKS_QUEUE_LENGTH)
+            maxsize=self.INNER_TASKS_QUEUE_LENGTH)
         for worker_id in range(self.settings.amqp_task_parallelism_limit):
             processor = await self._message_processor(topic)
             self.message_processing_workers[topic].append(
