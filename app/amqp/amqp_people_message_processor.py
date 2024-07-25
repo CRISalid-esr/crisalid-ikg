@@ -23,7 +23,7 @@ class AMQPPeopleMessageProcessor(AMQPMessageProcessor):
         logger.debug(f"Processing message {json_payload}")
         event_data = json_payload["people_event"]
         event_type = event_data["type"]
-        person_data = event_data["data"]
+        person_data = event_data["people"]
         try:
             person = Person(**person_data)
         except ValidationError as e:

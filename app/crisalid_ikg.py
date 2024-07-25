@@ -14,7 +14,6 @@ from app.errors.validation_error import invalid_entity_error_handler
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.routes.api import router as api_router
 from app.routes.healthness import router as healthness_router
-from app.signals import person_created, person_identifiers_updated
 
 
 class CrisalidIKG(FastAPI):
@@ -72,8 +71,6 @@ class CrisalidIKG(FastAPI):
                                 name="amqp_publications_listener")
             asyncio.create_task(self.amqp_interface.listen(settings.amqp_structures_topic),
                                 name="amqp_structures_listener")
-            person_created.connect(self.amqp_interface.fetch_publications)
-            person_identifiers_updated.connect(self.amqp_interface.fetch_publications)
             logger.info("RabbitMQ connexion has been enabled")
         except AMQPConnectionError as error:
             logger.error(

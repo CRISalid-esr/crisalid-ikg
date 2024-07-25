@@ -1,18 +1,15 @@
-from typing import Tuple, NamedTuple
-
-from neo4j import AsyncSession, AsyncManagedTransaction
+from neo4j import AsyncSession
 
 from app.config import get_app_settings
 from app.errors.conflict_error import ConflictError
 from app.errors.not_found_error import NotFoundError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
-from app.graph.neo4j.utils import load_query
+from app.graph.neo4j.structure_dao import StructureDAO
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.models.people_names import PersonName
-from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
 class PeopleDAO(Neo4jDAO):
@@ -20,116 +17,79 @@ class PeopleDAO(Neo4jDAO):
     Data access object for people and the neo4j database
     """
 
-    class UpdateStatus(NamedTuple):
-        """
-        Update status details
-        """
-        identifiers_changed: bool
-        names_changed: bool
-        memberships_changed: bool
-
-    async def get(self, person_id: str) -> Person | None:
-        """
-        Get a person from the graph database
-
-        :param person_id: person id
-        :return: person object
-        """
-        async for driver in Neo4jConnexion().get_driver():
-            async with driver.session() as session:
-                async with await session.begin_transaction() as tx:
-                    return await PeopleDAO._get_person_by_id(tx, person_id)
-
-    @classmethod
-    async def _get_person_by_id(cls, tx, person_id: str) -> Person | None:
-        result = await tx.run(
-            load_query("get_person_by_id"),
-            person_id=person_id
-        )
-        record = await result.single()
-        if record:
-            return cls._hydrate(record)
-        return None
-
-    @staticmethod
-    def _hydrate(record: dict) -> Person:
-        person_data = record["p"]
-        names_data = record["names"]
-        identifiers_data = record["identifiers"]
-        names = [PersonName(**name) for name in names_data]
-        identifiers = [PersonIdentifier(**identifier)
-                       for identifier in identifiers_data]
-        person = Person(
-            id=person_data["id"],
-            identifiers=identifiers,
-            names=names
-        )
-        return person
-
-    @staticmethod
-    async def _person_exists(tx: AsyncManagedTransaction, person_id: str) -> bool:
-        result = await tx.run(
-            load_query("person_exists"),
-            person_id=person_id
-        )
-        record = await result.single()
-        return record is not None
-
-    async def create(self, person: Person) -> Tuple[str, Neo4jDAO.Status, UpdateStatus | None]:
+    async def create(self, person: Person) -> Person:
         """
         Create  a person in the graph database
 
         :param person: person object
-        :return: person id and operation status
+        :return: None
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 await session.write_transaction(self._create_person_transaction, person)
-        return person.id, PeopleDAO.Status.CREATED, None
+        return person
 
-    async def update(self, person: Person) -> Tuple[str, Neo4jDAO.Status, UpdateStatus | None]:
+    async def update(self, person: Person) -> Person:
         """
         Update a person in the graph database
 
         :param person: person object
-        :return: person id, operation status and update status details
+        :return: None
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                update_status = await session.write_transaction(self._update_person_transaction,
-                                                                person)
-        return person.id, PeopleDAO.Status.UPDATED, update_status
+                await session.write_transaction(self._update_person_transaction, person)
+        return person
 
-    async def create_or_update(self, person: Person) -> Tuple[
-        str, Neo4jDAO.Status, UpdateStatus | None]:
+    async def create_or_update(self, person: Person) -> Person:
         """
         Create or update a person in the graph database
 
         :param person: person object
-        :return: person id, operation status and update status details
+        :return: None
         """
-        status = None
-        update_status = None
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                try:
+                local_identifier_value = person.get_identifier(PersonIdentifierType.LOCAL).value
+                existing_person = await self.find_by_identifier(
+                    PersonIdentifierType.LOCAL,
+                    local_identifier_value
+                )
+                if existing_person:
+                    await session.write_transaction(self._update_person_transaction, person)
+                else:
                     await session.write_transaction(self._create_person_transaction, person)
-                    status = self.Status.CREATED
-                except ConflictError:
-                    update_status = await session.write_transaction(self._update_person_transaction,
-                                                                    person)
-                    status = self.Status.UPDATED
-        return person.id, status, update_status
+        return person
 
     @staticmethod
-    async def _create_person_transaction(tx: AsyncManagedTransaction, person: Person) -> None:
-        person.id = person.id or AgentIdentifierService.compute_identifier_for(person)
+    async def _create_person_transaction(tx: AsyncSession, person: Person):
+        person.id = await PeopleDAO._compute_person_id(person)
         if not person.id:
-            raise ValueError(f"Unable to compute primary key for person {person}")
-        person_exists = await PeopleDAO._person_exists(tx, person.id)
-        if person_exists:
+            raise ValueError("The submitted person data is missing a required identifier")
+        existing_person = await PeopleDAO._find_person_by_id(person, tx)
+
+        if existing_person is not None:
             raise ConflictError(f"Person with id {person.id} already exists")
-        create_person_query = load_query("create_person")
+
+        create_person_query = """
+                    CREATE (p:Person {id: $person_id})
+                    WITH p
+                    UNWIND $names AS name
+                    CREATE (pn:PersonName)
+                    WITH p, pn, name
+                    UNWIND name.first_names AS first_name
+                    CREATE (fn:Literal {value: first_name.value, language: first_name.language})
+                    CREATE (pn)-[:HAS_FIRST_NAME]->(fn)
+                    WITH p, pn, name
+                    UNWIND name.last_names AS last_name
+                    CREATE (ln:Literal {value: last_name.value, language: last_name.language})
+                    CREATE (pn)-[:HAS_LAST_NAME]->(ln)
+                    CREATE (p)-[:HAS_NAME]->(pn)
+                    WITH p
+                    UNWIND $identifiers AS identifier
+                    CREATE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
+                    CREATE (p)-[:HAS_IDENTIFIER]->(i)
+                """
         await tx.run(
             create_person_query,
             person_id=person.id,
@@ -137,9 +97,7 @@ class PeopleDAO(Neo4jDAO):
             identifiers=[identifier.dict() for identifier in person.identifiers]
         )
         for membership in person.memberships:
-            structure_id = AgentIdentifierService.compute_identifier_for(
-                membership.research_structure
-            )
+            structure_id = await StructureDAO.compute_structure_id(membership.research_structure)
             if structure_id:
                 find_structure_query = """
                             MATCH (s:ResearchStructure {id: $structure_id})
@@ -160,66 +118,101 @@ class PeopleDAO(Neo4jDAO):
                                  person_id=person.id,
                                  structure_id=structure_id)
 
-    @classmethod
-    async def _update_person_transaction(cls, tx: AsyncSession,
-                                         incoming_person: Person) -> UpdateStatus:
-        incoming_person.id = incoming_person.id or AgentIdentifierService.compute_identifier_for(
-            incoming_person)
-        if not incoming_person.id:
-            raise ValueError(f"Unable to compute primary key for person {incoming_person}")
-        existing_person = await cls._get_person_by_id(tx, incoming_person.id)
+        return person
+
+    @staticmethod
+    async def _find_person_by_id(person, tx):
+        find_person_query = """
+                MATCH (p:Person {id: $person_id})
+                RETURN p
+                """
+        result = await tx.run(find_person_query, person_id=person.id)
+        record = await result.single()
+        return record
+
+    @staticmethod
+    async def _compute_person_id(person):
+        settings = get_app_settings()
+        identifier_order = settings.people_identifier_order
+        person_id = None
+        for identifier_type in identifier_order:
+            if identifier_type in [identifier.type for identifier in person.identifiers]:
+                selected_identifier = next(
+                    identifier for identifier in person.identifiers
+                    if identifier.type == identifier_type
+                )
+                person_id = f"{selected_identifier.type.value}-{selected_identifier.value}"
+                break
+        return person_id
+
+    @staticmethod
+    async def _update_person_transaction(tx: AsyncSession, person: Person):
+        if person.id is None:
+            person.id = await PeopleDAO._compute_person_id(person)
+        if not person.id:
+            raise ValueError("The submitted person data is missing a required identifier")
+        existing_person = await PeopleDAO._find_person_by_id(person, tx)
 
         if existing_person is None:
-            raise NotFoundError(f"Person with id {incoming_person.id} does not exist")
-        await tx.run(load_query("delete_person_names"),
-                     person_id=incoming_person.id)
+            raise NotFoundError(f"Person with id {person.id} does not exist")
+
+        # Delete existing names
+        delete_names_query = """
+                MATCH (p:Person {id: $person_id})-[:HAS_NAME]->(n:PersonName)
+                DETACH DELETE n
+            """
+        await tx.run(delete_names_query, person_id=person.id)
+
+        # Create new names with literals
+        create_names_query = """
+                MATCH (p:Person {id: $person_id})
+                UNWIND $names AS name
+                CREATE (pn:PersonName)
+                WITH p, pn, name
+                UNWIND name.first_names AS first_name
+                CREATE (fn:Literal {value: first_name.value, language: first_name.language})
+                CREATE (pn)-[:HAS_FIRST_NAME]->(fn)
+                WITH p, pn, name
+                UNWIND name.last_names AS last_name
+                CREATE (ln:Literal {value: last_name.value, language: last_name.language})
+                CREATE (pn)-[:HAS_LAST_NAME]->(ln)
+                CREATE (p)-[:HAS_NAME]->(pn)
+            """
         await tx.run(
-            load_query("create_person_names"),
-            person_id=incoming_person.id,
-            names=[name.dict() for name in incoming_person.names]
+            create_names_query,
+            person_id=person.id,
+            names=[name.dict() for name in person.names]
         )
-        existing_identifiers = existing_person.identifiers
-        identifier_types = [identifier.type.value for identifier in incoming_person.identifiers]
-        identifier_values = [identifier.value for identifier in incoming_person.identifiers]
+
+        # Delete identifiers that are not in the new set
+        delete_identifiers_query = """
+                MATCH (p:Person {id: $person_id})-[:HAS_IDENTIFIER]->(i:AgentIdentifier)
+                WHERE NOT (i.type IN $identifier_types AND i.value IN $identifier_values)
+                DETACH DELETE i
+            """
+        identifier_types = [identifier.type.value for identifier in person.identifiers]
+        identifier_values = [identifier.value for identifier in person.identifiers]
         await tx.run(
-            load_query("delete_person_identifiers"),
-            person_id=incoming_person.id,
+            delete_identifiers_query,
+            person_id=person.id,
             identifier_types=identifier_types,
             identifier_values=identifier_values
         )
-        await tx.run(
-            load_query("create_person_identifiers"),
-            person_id=incoming_person.id,
-            identifiers=[identifier.dict() for identifier in incoming_person.identifiers]
-        )
-        identifiers_changed = AgentIdentifierService.identifiers_are_identical(
-            existing_identifiers,
-            incoming_person.identifiers
-        )
-        return PeopleDAO.UpdateStatus(
-            identifiers_changed=identifiers_changed,
-            # TODO compute names_changed
-            names_changed=None,
-            memberships_changed=None
-        )
 
-    async def find_person(self, person: Person) -> Person | None:
-        """
-        Find a person by one of its identifiers
-        taking identifiers in the order defined in the settings
-        :param person: person object
-        :return: person object
-        """
-        settings = get_app_settings()
-        identifier_order = settings.person_identifier_order
-        for identifier_type in identifier_order:
-            identifier = next((identifier for identifier in person.identifiers
-                               if identifier.type == identifier_type), None)
-            if identifier:
-                found_person = await self.find_by_identifier(identifier.type, identifier.value)
-                if found_person:
-                    return found_person
-        return None
+        # Create or update identifiers
+        create_identifiers_query = """
+                MATCH (p:Person {id: $person_id})
+                UNWIND $identifiers AS identifier
+                MERGE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
+                ON CREATE SET i = identifier
+                ON MATCH SET i = identifier
+                MERGE (p)-[:HAS_IDENTIFIER]->(i)
+            """
+        await tx.run(
+            create_identifiers_query,
+            person_id=person.id,
+            identifiers=[identifier.dict() for identifier in person.identifiers]
+        )
 
     async def find_by_identifier(self, identifier_type: PersonIdentifierType,
                                  identifier_value: str) -> Person | None:
@@ -234,11 +227,32 @@ class PeopleDAO(Neo4jDAO):
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(
-                        load_query("find_person_by_identifier"),
+                        self._find_by_identifier_query,
                         identifier_type=identifier_type.value,
                         identifier_value=identifier_value
                     )
                     record = await result.single()
-                    if record is not None:
-                        return PeopleDAO._hydrate(record)
+                    if record:
+                        person_data = record["p"]
+                        names_data = record["names"]
+                        identifiers_data = record["identifiers"]
+
+                        names = [PersonName(**name) for name in names_data]
+                        identifiers = [PersonIdentifier(**identifier)
+                                       for identifier in identifiers_data]
+
+                        person = Person(
+                            id=person_data["id"],
+                            identifiers=identifiers,
+                            names=names
+                        )
+
+                        return person
                     return None
+
+    _find_by_identifier_query = """
+        MATCH (p:Person)-[:HAS_NAME]->(n:PersonName)
+        MATCH (p)-[:HAS_IDENTIFIER]->(i1:AgentIdentifier {type: $identifier_type, value: $identifier_value})
+        MATCH (p)-[:HAS_IDENTIFIER]->(i2:AgentIdentifier)
+        RETURN p, collect(n) as names, collect(i2) as identifiers
+    """

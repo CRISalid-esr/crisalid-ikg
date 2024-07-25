@@ -44,7 +44,6 @@ class AppSettings(BaseSettings):
     amqp_reference_event_routing_key: str = "event.references.reference.*"
     amqp_people_event_routing_key: str = "event.people.person.*"
     amqp_structure_event_routing_key: str = "event.structures.structure.*"
-    amqp_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
 
     institution_name: str = "XYZ University"
 
@@ -60,12 +59,12 @@ class AppSettings(BaseSettings):
     neo4j_user: str = "neo4j"
     neo4j_password: str = "password"
 
-    person_identifier_order: list[PersonIdentifierType] = \
+    people_identifier_order: list[PersonIdentifierType] = \
         [PersonIdentifierType.LOCAL,
          PersonIdentifierType.ORCID,
          PersonIdentifierType.IDREF]
 
-    research_structure_identifier_order: list[OrganizationIdentifierType] = \
+    structure_identifier_order: list[OrganizationIdentifierType] = \
         [OrganizationIdentifierType.LOCAL,
          OrganizationIdentifierType.IDREF,
          OrganizationIdentifierType.ROR]
