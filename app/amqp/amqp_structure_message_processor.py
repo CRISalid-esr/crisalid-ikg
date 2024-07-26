@@ -23,7 +23,7 @@ class AMQPStructureMessageProcessor(AMQPMessageProcessor):
         logger.debug(f"Processing message {json_payload}")
         event_data = json_payload["structures_event"]
         event_type = event_data["type"]
-        structure_data = event_data["structures"]
+        structure_data = event_data["data"]
         try:
             structure = ResearchStructure(**structure_data)
         except ValidationError as e:
