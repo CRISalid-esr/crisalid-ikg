@@ -1,0 +1,42 @@
+{
+  "structures_event": {
+    "type": "unchanged",
+    "data": {
+      "names": [
+        {
+          "value": "Laboratoire de recherche fictif",
+          "language": "fr"
+        }
+      ],
+      "acronym": "",
+      "descriptions": [
+        {
+          "value": "Un laboratoire de recherche fictif",
+          "language": "fr"
+        }
+      ],
+      "contacts": [
+        {
+          "type": "postal_address",
+          "format": "structured_physical_address",
+          "value": {
+            "country": "France",
+            "zip_code": "750000",
+            "city": "PARIS",
+            "street": "151 Rue Rémi Durant"
+          }
+        }
+      ],
+      "identifiers": [
+        {
+          "type": "local",
+          "value": "UR0456"
+        },
+        {
+          "type": "RNSR",
+          "value": "201220011X"
+        }
+      ]
+    }
+  }
+}
