@@ -102,3 +102,95 @@ or
 ```bash
 APP_ENV=DEV python3 app/main.py 
 ```
+
+## Feeding the graph from the data bus
+
+### Structure events
+
+Here is an exemple of the payload of an incoming AMQP message for a structure event :
+
+```json
+{
+  "structures_event": {
+    "type": "unchanged",
+    "data": {
+      "names": [
+        {
+          "value": "Laboratoire de recherche fictif",
+          "language": "fr"
+        }
+      ],
+      "acronym": "",
+      "descriptions": [
+        {
+          "value": "Un laboratoire de recherche fictif",
+          "language": "fr"
+        }
+      ],
+      "contacts": [
+        {
+          "type": "postal_address",
+          "format": "structured_physical_address",
+          "value": {
+            "country": "France",
+            "zip_code": "750000",
+            "city": "PARIS",
+            "street": "151 Rue Rémi Durant"
+          }
+        }
+      ],
+      "identifiers": [
+        {
+          "type": "local",
+          "value": "UR0456"
+        },
+        {
+          "type": "RNSR",
+          "value": "201220011X"
+        }
+      ]
+    }
+  }
+}
+```
+
+### People events
+
+Here is an exemple of the payload of an incoming AMQP message for a people event :
+
+```json
+{
+  "people_event": {
+    "type": "unchanged",
+    "data": {
+      "names": [
+        {
+          "last_names": [
+            {
+              "value": "Caroy",
+              "language": "fr"
+            }
+          ],
+          "first_names": [
+            {
+              "value": "Jeanne",
+              "language": "fr"
+            }
+          ]
+        }
+      ],
+      "identifiers": [
+        {
+          "type": "local",
+          "value": "jcaroy"
+        }
+      ],
+      "memberships": [
+        {
+          "entity": "UR0456"
+        }
+      ]
+    }
+  }
+}
+```

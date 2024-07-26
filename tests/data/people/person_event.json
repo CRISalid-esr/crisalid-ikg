@@ -1,0 +1,34 @@
+{
+  "people_event": {
+    "type": "unchanged",
+    "data": {
+      "names": [
+        {
+          "last_names": [
+            {
+              "value": "Caroy",
+              "language": "fr"
+            }
+          ],
+          "first_names": [
+            {
+              "value": "Jeanne",
+              "language": "fr"
+            }
+          ]
+        }
+      ],
+      "identifiers": [
+        {
+          "type": "local",
+          "value": "jcaroy"
+        }
+      ],
+      "memberships": [
+        {
+          "entity": "UR0456"
+        }
+      ]
+    }
+  }
+}
