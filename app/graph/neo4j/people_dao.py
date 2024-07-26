@@ -5,11 +5,11 @@ from app.errors.conflict_error import ConflictError
 from app.errors.not_found_error import NotFoundError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
-from app.graph.neo4j.structure_dao import StructureDAO
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.models.people_names import PersonName
+from app.services.organisations.structure_service import StructureService
 
 
 class PeopleDAO(Neo4jDAO):
@@ -97,7 +97,9 @@ class PeopleDAO(Neo4jDAO):
             identifiers=[identifier.dict() for identifier in person.identifiers]
         )
         for membership in person.memberships:
-            structure_id = await StructureDAO.compute_structure_id(membership.research_structure)
+            structure_id = await StructureService.compute_structure_id(
+                membership.research_structure
+            )
             if structure_id:
                 find_structure_query = """
                             MATCH (s:ResearchStructure {id: $structure_id})
@@ -251,8 +253,30 @@ class PeopleDAO(Neo4jDAO):
                     return None
 
     _find_by_identifier_query = """
-        MATCH (p:Person)-[:HAS_NAME]->(n:PersonName)
-        MATCH (p)-[:HAS_IDENTIFIER]->(i1:AgentIdentifier {type: $identifier_type, value: $identifier_value})
+        MATCH (p:Person)-[:HAS_IDENTIFIER]->(i1:AgentIdentifier {type: $identifier_type, value: $identifier_value})
+        OPTIONAL MATCH (p)-[:HAS_NAME]->(n:PersonName)
+        OPTIONAL MATCH (n)-[:HAS_FIRST_NAME]->(fn:Literal)
+        OPTIONAL MATCH (n)-[:HAS_LAST_NAME]->(ln:Literal)
         MATCH (p)-[:HAS_IDENTIFIER]->(i2:AgentIdentifier)
-        RETURN p, collect(n) as names, collect(i2) as identifiers
+        WITH 
+          p, 
+          n, 
+          i2, 
+          fn, 
+          ln,
+          COLLECT(DISTINCT {value: fn.value, language: fn.language}) AS first_names,
+          COLLECT(DISTINCT {value: ln.value, language: ln.language}) AS last_names
+        WITH 
+          p, 
+          n, 
+          i2, 
+          COLLECT(DISTINCT {
+            name: id(n), 
+            first_names: first_names, 
+            last_names: last_names
+          }) AS names
+        RETURN 
+          p, 
+          COLLECT(DISTINCT i2) AS identifiers, 
+          names
     """
