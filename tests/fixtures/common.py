@@ -24,5 +24,5 @@ def _person_json_data_from_file(base_path, person) -> dict:
     return _json_data_from_file(base_path, file_path)
 
 
-def _person_from_json_data(input_data) -> Person:
+def _person_from_json_data(input_data:dict) -> Person:
     return Person(**input_data)

@@ -1,6 +1,5 @@
 from neo4j import AsyncSession
 
-from app.config import get_app_settings
 from app.errors.conflict_error import ConflictError
 from app.errors.not_found_error import NotFoundError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
@@ -9,6 +8,7 @@ from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.research_structures import ResearchStructure
+from app.services.organisations.structure_service import StructureService
 
 
 class StructureDAO(Neo4jDAO):
@@ -63,7 +63,7 @@ class StructureDAO(Neo4jDAO):
 
     @staticmethod
     async def _create_structure_transaction(tx: AsyncSession, structure: ResearchStructure):
-        structure.id = await StructureDAO.compute_structure_id(structure)
+        structure.id = await StructureService.compute_structure_id(structure)
         if not structure.id:
             raise ValueError("The submitted structure data is missing a required identifier")
         existing_structure = await StructureDAO._find_structure_by_id(structure, tx)
@@ -102,31 +102,9 @@ class StructureDAO(Neo4jDAO):
         return record
 
     @staticmethod
-    async def compute_structure_id(structure: ResearchStructure) -> str:
-        """
-        Compute the structure id from the structure identifiers
-        The selected identifier is the first one found among the identifiers
-        in the order defined in the settings
-        :param structure:
-        :return:
-        """
-        settings = get_app_settings()
-        identifier_order = settings.structure_identifier_order
-        structure_id = None
-        for identifier_type in identifier_order:
-            if identifier_type in [identifier.type for identifier in structure.identifiers]:
-                selected_identifier = next(
-                    identifier for identifier in structure.identifiers
-                    if identifier.type == identifier_type
-                )
-                structure_id = f"{selected_identifier.type.value}-{selected_identifier.value}"
-                break
-        return structure_id
-
-    @staticmethod
     async def _update_structure_transaction(tx: AsyncSession, structure: ResearchStructure):
         if structure.id is None:
-            structure.id = await StructureDAO.compute_structure_id(structure)
+            structure.id = await StructureService.compute_structure_id(structure)
         if not structure.id:
             raise ValueError("The submitted structure data is missing a required identifier")
         existing_structure = await StructureDAO._find_structure_by_id(structure, tx)

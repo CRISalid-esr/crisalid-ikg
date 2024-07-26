@@ -1,14 +1,17 @@
 {
   "names": [
     {
+      "last_names": [
+        {
+          "value": "Doe",
+          "language": "fr"
+        }
+      ],
       "first_names": [
-        "John"
-      ],
-      "family_names": [
-        "Doe"
-      ],
-      "other_names": [
-        "Johnny"
+        {
+          "value": "John",
+          "language": "fr"
+        }
       ]
     }
   ],
@@ -20,6 +23,11 @@
     {
       "type": "local",
       "value": "jdoe@univ-paris1.fr"
+    }
+  ],
+  "memberships": [
+    {
+      "entity": "U115"
     }
   ]
 }

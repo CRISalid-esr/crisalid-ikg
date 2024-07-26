@@ -17,7 +17,11 @@ def test_create_valid_person(basic_person_pydantic_model):
     assert len(basic_person_pydantic_model.identifiers) == 2
     assert any(
         name for name in basic_person_pydantic_model.names if
-        "John" in name.first_names and "Doe" in name.family_names and "Johnny" in name.other_names
+        any(
+            literal for literal in name.first_names if literal.value == "John"
+        ) and any(
+            literal for literal in name.last_names if literal.value == "Doe"
+        )
     )
     assert any(
         identifier for identifier in basic_person_pydantic_model.identifiers if
