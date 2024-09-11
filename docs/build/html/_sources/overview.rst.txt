@@ -4,8 +4,7 @@ Overview
 Project repository
 ------------------
 
-.. |ico1| image:: https://img.shields.io/badge/github.com%2FCRISalid-esr%2Fcrisalid-ikg%23readme?style=flat&logo=GitHub&color=blue
-
+.. |ico1| image:: https://img.shields.io/badge/GitHub--repository-CRISalid--ikg-blue?style=flat-square&logo=GitHub
     :target: https://github.com/CRISalid-esr/crisalid-ikg#readme
     :alt: GitHub repository
 
