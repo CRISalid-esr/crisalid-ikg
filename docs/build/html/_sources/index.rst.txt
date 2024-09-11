@@ -16,6 +16,7 @@ documentation for details.
    :caption: Contents:
 
    overview
-   deployment
+   quickstart/deployment
+   quickstart/development
    references
 

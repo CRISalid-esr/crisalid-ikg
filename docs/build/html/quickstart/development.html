@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quickstart: development &mdash; CRISalid institutional knowledge graph 0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=2709fde1"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="References" href="../references.html" />
+    <link rel="prev" title="Quickstart: deployment" href="deployment.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            CRISalid institutional knowledge graph
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deployment.html">Quickstart: deployment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart: development</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-rabbitmq">1. Install RabbitMQ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-postgresql">2. Install PostgreSQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-neo4j">Install Neo4j</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-poetry">Install Poetry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-up-the-project">Set up the project</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CRISalid institutional knowledge graph</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quickstart: development</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/quickstart/development.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quickstart-development">
+<h1>Quickstart: development<a class="headerlink" href="#quickstart-development" title="Link to this heading"></a></h1>
+<p>This guide will walk you through setting up the SVP Harvester project on a fresh Ubuntu 22.04 installation.</p>
+<section id="install-rabbitmq">
+<h2>1. Install RabbitMQ<a class="headerlink" href="#install-rabbitmq" title="Link to this heading"></a></h2>
+<p>To install RabbitMQ on your system, please follow the steps outlined in the <a class="reference external" href="https://www.rabbitmq.com/docs/install-debian">official RabbitMQ documentation</a>.</p>
+<p>Once RabbitMQ is installed, enable the management interface by executing the following commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Enable the management interface</span>
+sudo<span class="w"> </span>rabbitmq-plugins<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>rabbitmq_management
+
+<span class="c1"># Restart RabbitMQ</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>rabbitmq-server
+</pre></div>
+</div>
+<p>After completing these steps, access the management interface through your web browser by navigating to <cite>localhost:15672</cite>. You can log in using the default credentials: <code class="docutils literal notranslate"><span class="pre">guest:guest</span></code>.</p>
+</section>
+<section id="install-postgresql">
+<h2>2. Install PostgreSQL<a class="headerlink" href="#install-postgresql" title="Link to this heading"></a></h2>
+<p>Follow the steps outlined on <a class="reference external" href="https://www.postgresql.org/download/linux/ubuntu/">PostgreSQL’s official documentation</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add PostgreSQL repository</span>
+sudo<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;echo &quot;deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main&quot; &gt; /etc/apt/sources.list.d/pgdg.list&#39;</span>
+wget<span class="w"> </span>--quiet<span class="w"> </span>-O<span class="w"> </span>-<span class="w"> </span>https://www.postgresql.org/media/keys/ACCC4CF8.asc<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>apt-key<span class="w"> </span>add<span class="w"> </span>-
+sudo<span class="w"> </span>apt-get<span class="w"> </span>update
+
+<span class="c1"># Install PostgreSQL</span>
+sudo<span class="w"> </span>apt-get<span class="w"> </span>-y<span class="w"> </span>install<span class="w"> </span>postgresql-16
+
+<span class="c1"># Create PostgreSQL database and user</span>
+sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> </span>psql
+</pre></div>
+</div>
+<p>In the PostgreSQL shell:</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">CREATE</span><span class="w"> </span><span class="k">DATABASE</span><span class="w"> </span><span class="n">db</span><span class="p">;</span>
+<span class="k">CREATE</span><span class="w"> </span><span class="k">USER</span><span class="w"> </span><span class="n">db_user</span><span class="w"> </span><span class="k">WITH</span><span class="w"> </span><span class="n">PASSWORD</span><span class="w"> </span><span class="s1">&#39;db_word&#39;</span><span class="p">;</span>
+<span class="k">GRANT</span><span class="w"> </span><span class="k">ALL</span><span class="w"> </span><span class="k">PRIVILEGES</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="k">DATABASE</span><span class="w"> </span><span class="n">db</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="n">db_user</span><span class="p">;</span>
+<span class="k">ALTER</span><span class="w"> </span><span class="k">DATABASE</span><span class="w"> </span><span class="n">db</span><span class="w"> </span><span class="k">OWNER</span><span class="w"> </span><span class="k">TO</span><span class="w"> </span><span class="n">db_user</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Following instructions….</p>
+</section>
+<section id="install-neo4j">
+<h2>Install Neo4j<a class="headerlink" href="#install-neo4j" title="Link to this heading"></a></h2>
+</section>
+<section id="install-poetry">
+<h2>Install Poetry<a class="headerlink" href="#install-poetry" title="Link to this heading"></a></h2>
+<p>This project use poetry to manage dependencies.
+The procedure to install poetry can be found here: <a class="reference external" href="https://python-poetry.org/docs/#installation">https://python-poetry.org/docs/#installation</a></p>
+</section>
+<section id="set-up-the-project">
+<h2>Set up the project<a class="headerlink" href="#set-up-the-project" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="deployment.html" class="btn btn-neutral float-left" title="Quickstart: deployment" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../references.html" class="btn btn-neutral float-right" title="References" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, CRISalid Community.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
