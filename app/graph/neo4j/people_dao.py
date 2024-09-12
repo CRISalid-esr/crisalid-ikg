@@ -158,10 +158,12 @@ class PeopleDAO(Neo4jDAO):
         if existing_person is None:
             raise NotFoundError(f"Person with id {person.id} does not exist")
 
-        # Delete existing names
+        # Delete existing names with associated literals
         delete_names_query = """
                 MATCH (p:Person {id: $person_id})-[:HAS_NAME]->(n:PersonName)
-                DETACH DELETE n
+                MATCH (n)-[:HAS_FIRST_NAME]->(fn:Literal)
+                MATCH (n)-[:HAS_LAST_NAME]->(ln:Literal)
+                DETACH DELETE n , fn, ln
             """
         await tx.run(delete_names_query, person_id=person.id)
 

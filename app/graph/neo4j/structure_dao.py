@@ -207,7 +207,7 @@ class StructureDAO(Neo4jDAO):
                     return None
 
     _find_by_identifier_query = """
-        MATCH (s:ResearchStructure)-[:HAS_NAME]->(n:OrganizationName)
+        MATCH (s:ResearchStructure)-[:HAS_NAME]->(n:Literal)
         MATCH (s)-[:HAS_IDENTIFIER]->(i1:AgentIdentifier {type: $identifier_type, value: $identifier_value})
         MATCH (s)-[:HAS_IDENTIFIER]->(i2:AgentIdentifier)
         RETURN s, collect(n) as names, collect(i2) as identifiers
