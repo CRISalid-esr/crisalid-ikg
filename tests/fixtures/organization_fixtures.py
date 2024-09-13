@@ -5,8 +5,8 @@ from tests.fixtures.common import _research_structure_from_json_data, \
     _organization_json_data_from_file
 
 
-@pytest_asyncio.fixture(name="basic_research_structure_pidantic_model")
-async def fixture_basic_research_structure_pidantic_model(_base_path) -> ResearchStructure:
+@pytest_asyncio.fixture(name="basic_research_structure_pydantic_model")
+async def fixture_basic_research_structure_pydantic_model(_base_path) -> ResearchStructure:
     """
     Create a basic structure pydantic model
     :return: basic structure pydantic model

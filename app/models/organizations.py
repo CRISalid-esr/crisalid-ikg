@@ -19,3 +19,11 @@ class Organization(Agent[OrganizationIdentifierType]):
     names: List[Literal] = []
 
     identifiers: List[OrganizationIdentifier]
+
+    def get_name(self, language: str) -> Literal:
+        """
+        Get the name in the given language
+        :param language: language code
+        :return: name
+        """
+        return next((name for name in self.names if name.language == language), None)

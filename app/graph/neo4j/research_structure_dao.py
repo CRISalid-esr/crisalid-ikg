@@ -82,12 +82,12 @@ class ResearchStructureDAO(Neo4jDAO):
 
         create_research_structure_query = """
                     CREATE (research_struct:Organisation:ResearchStructure {id: $research_structure_id})
+                    
                     WITH research_struct
                     UNWIND $names AS name
-                    WITH research_struct, name
                     CREATE (rs_name:Literal {value: name.value, language: name.language})
-                    CREATE (research_struct)-[:HAS_NAME]->(rs_name)
-                    WITH research_struct
+                    CREATE (research_struct)-[:HAS_NAME]->(rs_name)                    
+                    WITH research_struct, count(name) as _ // count(name) is a trick to avoid cartesian product
                     UNWIND $identifiers AS identifier
                     CREATE (rs_identifier:AgentIdentifier {type: identifier.type, value: identifier.value})
                     CREATE (research_struct)-[:HAS_IDENTIFIER]->(rs_identifier)
@@ -130,27 +130,17 @@ class ResearchStructureDAO(Neo4jDAO):
             raise NotFoundError("Research structure with id "
                                 f"{research_structure.id} does not exist")
 
-        # Delete existing names
         delete_names_query = """
-                MATCH (s:ResearchStructure {id: $research_structure_id})-[:HAS_NAME]->(n:OrganizationName)
-                DETACH DELETE n
+                MATCH (s:ResearchStructure {id: $research_structure_id})-[:HAS_NAME]->(l:Literal)
+                DETACH DELETE l
             """
         await tx.run(delete_names_query, research_structure_id=research_structure.id)
 
-        # Create new names with literals
         create_names_query = """
                 MATCH (s:ResearchStructure {id: $research_structure_id})
                 UNWIND $names AS name
-                CREATE (sn:OrganizationName)
-                WITH s, sn, name
-                UNWIND name.first_names AS first_name
-                CREATE (fn:Literal {value: first_name.value, language: first_name.language})
-                CREATE (sn)-[:HAS_FIRST_NAME]->(fn)
-                WITH s, sn, name
-                UNWIND name.last_names AS last_name
-                CREATE (ln:Literal {value: last_name.value, language: last_name.language})
-                CREATE (sn)-[:HAS_LAST_NAME]->(ln)
-                CREATE (s)-[:HAS_NAME]->(sn)
+                CREATE (l:Literal {value: name.value, language: name.language})
+                CREATE (s)-[:HAS_NAME]->(l)
             """
         await tx.run(
             create_names_query,
@@ -225,8 +215,9 @@ class ResearchStructureDAO(Neo4jDAO):
                     return None
 
     _find_by_identifier_query = """
-        MATCH (s:ResearchStructure)-[:HAS_NAME]->(n:Literal)
-        MATCH (s)-[:HAS_IDENTIFIER]->(i1:AgentIdentifier {type: $identifier_type, value: $identifier_value})
-        MATCH (s)-[:HAS_IDENTIFIER]->(i2:AgentIdentifier)
-        RETURN s, collect(n) as names, collect(i2) as identifiers
+        MATCH (s)-[:HAS_IDENTIFIER]->(:AgentIdentifier {type: $identifier_type, value: $identifier_value})
+        WITH s
+        MATCH (s)-[:HAS_IDENTIFIER]->(i:AgentIdentifier),
+        (s)-[:HAS_NAME]->(n:Literal)
+        RETURN s, collect(DISTINCT n) as names, collect(DISTINCT i) as identifiers
     """
