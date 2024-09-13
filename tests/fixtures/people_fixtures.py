@@ -5,7 +5,7 @@ from tests.fixtures.common import _person_json_data_from_file, _person_from_json
 
 
 @pytest_asyncio.fixture(name="basic_person_pydantic_model")
-async def basic_person_pidantic_model(_base_path) -> Person:
+async def fixture_basic_person_pydantic_model(_base_path) -> Person:
     """
     Create a basic person pydantic model
     :return: basic person pydantic model

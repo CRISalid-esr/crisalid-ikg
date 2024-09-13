@@ -5,6 +5,7 @@ import aio_pika
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_people_message_processor import AMQPPeopleMessageProcessor
 from app.amqp.amqp_publication_message_processor import AMQPPublicationMessageProcessor
+from app.amqp.amqp_structure_message_processor import AMQPStructureMessageProcessor
 from app.settings.app_settings import AppSettings
 
 
@@ -32,4 +33,6 @@ class AMQPMessageProcessorFactory:
             return AMQPPublicationMessageProcessor(exchange, tasks_queue, settings)
         if topic == settings.amqp_people_topic:
             return AMQPPeopleMessageProcessor(exchange, tasks_queue, settings)
+        if topic == settings.amqp_structures_topic:
+            return AMQPStructureMessageProcessor(exchange, tasks_queue, settings)
         raise ValueError(f"No processor found for topic: {topic}")

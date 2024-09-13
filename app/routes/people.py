@@ -21,7 +21,7 @@ tags_metadata = [
 
 @router.post(
     "/",
-    name="references:create-person",
+    name="create-person",
 )
 async def create_person(
         people_service: Annotated[PeopleService, Depends(PeopleService)],
@@ -42,7 +42,7 @@ async def create_person(
 
 @router.put(
     "/",
-    name="references:update-person",
+    name="update-person",
 )
 async def update_person(
         people_service: Annotated[PeopleService, Depends(PeopleService)],

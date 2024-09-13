@@ -23,6 +23,6 @@ class AbstractDAOFactory(ABC):
         :return:
         """
         if dao_type == self.DaoType.NEO4J.value:
-            from app.graph.neo4j.neo4j_dao_factory import Neo4jDAOFactory # pylint: disable=import-outside-toplevel
+            from app.graph.neo4j.neo4j_dao_factory import Neo4jDAOFactory # pylint: disable=import-outside-toplevel, cyclic-import
             return Neo4jDAOFactory()
         raise ValueError(f"Unknown DAO type {dao_type}")

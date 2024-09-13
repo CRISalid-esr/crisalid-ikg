@@ -6,7 +6,7 @@ from typing import ClassVar, TextIO
 
 from pydantic_settings import BaseSettings
 
-from app.models.identifier_types import PersonIdentifierType
+from app.models.identifier_types import PersonIdentifierType, OrganizationIdentifierType
 from app.settings.app_env_types import AppEnvTypes
 
 
@@ -31,12 +31,13 @@ class AppSettings(BaseSettings):
     amqp_host: str = "127.0.0.1"
     amqp_publications_queue_name: str = "crisalid-ikg-publications"
     amqp_people_queue_name: str = "crisalid-ikg-people"
+    amqp_structures_queue_name: str = "crisalid-ikg-structures"
     amqp_wait_before_shutdown: int = 30
     amqp_task_parallelism_limit: int = 50
     amqp_publications_topic: str = "publications"
     amqp_publications_exchange_name: str = "publications"
     amqp_people_topic: str = "people"
-    amqp_structure_topic: str = "structures"
+    amqp_structures_topic: str = "structures"
     amqp_directory_exchange_name: str = "directory"
     amqp_prefetch_count: int = 50
     amqp_consumer_ack_timeout: int = 43200000
@@ -62,3 +63,8 @@ class AppSettings(BaseSettings):
         [PersonIdentifierType.LOCAL,
          PersonIdentifierType.ORCID,
          PersonIdentifierType.IDREF]
+
+    structure_identifier_order: list[OrganizationIdentifierType] = \
+        [OrganizationIdentifierType.LOCAL,
+         OrganizationIdentifierType.IDREF,
+         OrganizationIdentifierType.ROR]

@@ -69,6 +69,8 @@ class CrisalidIKG(FastAPI):
                                 name="amqp_people_listener")
             asyncio.create_task(self.amqp_interface.listen(settings.amqp_publications_topic),
                                 name="amqp_publications_listener")
+            asyncio.create_task(self.amqp_interface.listen(settings.amqp_structures_topic),
+                                name="amqp_structures_listener")
             logger.info("RabbitMQ connexion has been enabled")
         except AMQPConnectionError as error:
             logger.error(

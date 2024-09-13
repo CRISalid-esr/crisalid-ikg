@@ -5,7 +5,6 @@ class AgentIdentifierType(Enum):
     """Base class for agent identifier types"""
 
 
-
 class PersonIdentifierType(AgentIdentifierType):
     """Person identifier types"""
     ORCID = "orcid"
@@ -19,3 +18,5 @@ class OrganizationIdentifierType(AgentIdentifierType):
     """Organization identifier types"""
     IDREF = "IdRef"
     ROR = "ROR"
+    RNSR = "RNSR"
+    LOCAL = "local"

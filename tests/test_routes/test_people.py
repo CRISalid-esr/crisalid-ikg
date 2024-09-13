@@ -89,9 +89,13 @@ def test_update_person_success(test_client: TestClient, basic_person_json_data):
     assert response.status_code == status.HTTP_201_CREATED
     assert "person" in response.json()
     assert response.json()["person"]["id"] == "local-jdoe@univ-paris1.fr"
-    assert response.json()["person"]["names"][0]["first_names"][0] == "John"
-    basic_person_json_data["names"][0]["first_names"][0] = "Joe"
+    assert response.json()["person"]["names"][0]["first_names"][0] == {
+        "value": "John", "language": "fr"
+    }
+    basic_person_json_data["names"][0]["first_names"][0] = {"value": "Joe", "language": "fr"}
     response = test_client.put("/api/v1/person", json=basic_person_json_data)
     assert response.status_code == status.HTTP_200_OK
     assert "person" in response.json()
-    assert response.json()["person"]["names"][0]["first_names"][0] == "Joe"
+    assert response.json()["person"]["names"][0]["first_names"][0] == {
+        "value": "Joe", "language": "fr"
+    }

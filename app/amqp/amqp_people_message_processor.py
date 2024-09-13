@@ -11,28 +11,31 @@ from app.services.people.people_service import PeopleService
 
 class AMQPPeopleMessageProcessor(AMQPMessageProcessor):
     """
-    Workers to process publication messages from AMQP interface
+    Workers to process messages about people from AMQP interface
     """
 
-   # overrid super init with args nd kwards : instantiate self.service
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.service =  PeopleService()
-
+        self.service = PeopleService()
 
     async def _process_message(self, key: str, payload: str):
         json_payload = json.loads(payload)
         logger.debug(f"Processing message {json_payload}")
-        person_data = json_payload["person"]
+        event_data = json_payload["people_event"]
+        event_type = event_data["type"]
+        person_data = event_data["data"]
         try:
             person = Person(**person_data)
         except ValidationError as e:
             logger.error(f"Error processing person data {person_data} : {e}")
             raise e
-        if key.endswith('created'):
+        if event_type == "created":
             await self._create_person(person)
-        elif key.endswith('updated'):
+        elif event_type == "updated":
             await self._update_person(person)
+        elif event_type == "unchanged":
+            logger.debug(f"Person {person} unchanged")
+            await self._create_or_update_person(person)
 
     async def _create_person(self, person):
         try:
@@ -47,3 +50,10 @@ class AMQPPeopleMessageProcessor(AMQPMessageProcessor):
             await self.service.update_person(person)
         except ConflictError as e:
             logger.error(f"Identifier conflict while trying to update person {person} : {e}")
+
+    async def _create_or_update_person(self, person):
+        try:
+            await self.service.create_or_update_person(person)
+        except ConflictError as e:
+            logger.error("Identifier conflict while trying "
+                         f"to create or update person {person} : {e}")
