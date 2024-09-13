@@ -4,6 +4,7 @@ import pathlib
 import pytest
 
 from app.models.people import Person
+from app.models.research_structures import ResearchStructure
 
 
 @pytest.fixture(name="_base_path")
@@ -24,5 +25,14 @@ def _person_json_data_from_file(base_path, person) -> dict:
     return _json_data_from_file(base_path, file_path)
 
 
-def _person_from_json_data(input_data:dict) -> Person:
+def _person_from_json_data(input_data: dict) -> Person:
     return Person(**input_data)
+
+
+def _organization_json_data_from_file(base_path, structure) -> dict:
+    file_path = f"data/organizations/{structure}.json"
+    return _json_data_from_file(base_path, file_path)
+
+
+def _research_structure_from_json_data(input_data: dict) -> ResearchStructure:
+    return ResearchStructure(**input_data)

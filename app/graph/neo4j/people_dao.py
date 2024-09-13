@@ -9,7 +9,7 @@ from app.models.agent_identifiers import PersonIdentifier
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.models.people_names import PersonName
-from app.services.organisations.structure_service import StructureService
+from app.services.organizations.research_structure_service import ResearchStructureService
 
 
 class PeopleDAO(Neo4jDAO):
@@ -97,7 +97,7 @@ class PeopleDAO(Neo4jDAO):
             identifiers=[identifier.dict() for identifier in person.identifiers]
         )
         for membership in person.memberships:
-            structure_id = await StructureService.compute_structure_id(
+            structure_id = await ResearchStructureService.compute_research_structure_id(
                 membership.research_structure
             )
             if structure_id:

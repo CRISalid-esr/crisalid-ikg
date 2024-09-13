@@ -27,8 +27,8 @@ class Neo4jDAOFactory(DAOFactory):
             from app.graph.neo4j.people_dao import PeopleDAO  # pylint: disable=import-outside-toplevel
             return PeopleDAO(driver=self.driver)
         if object_type.__name__ == ResearchStructure.__name__:
-            from app.graph.neo4j.structure_dao import StructureDAO  # pylint: disable=import-outside-toplevel
-            return StructureDAO(driver=self.driver)
+            from app.graph.neo4j.research_structure_dao import ResearchStructureDAO  # pylint: disable=import-outside-toplevel
+            return ResearchStructureDAO(driver=self.driver)
         raise ValueError(f"Unsupported object type: {object_type}")
 
     def get_setup(self) -> Neo4jSetup:

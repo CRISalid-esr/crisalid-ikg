@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.errors.conflict_error import ConflictError
 from app.models.research_structures import ResearchStructure
-from app.services.organisations.structure_service import StructureService
+from app.services.organizations.research_structure_service import ResearchStructureService
 
 
 class AMQPStructureMessageProcessor(AMQPMessageProcessor):
@@ -16,7 +16,7 @@ class AMQPStructureMessageProcessor(AMQPMessageProcessor):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.service = StructureService()
+        self.service = ResearchStructureService()
 
     async def _process_message(self, key: str, payload: str):
         json_payload = json.loads(payload)

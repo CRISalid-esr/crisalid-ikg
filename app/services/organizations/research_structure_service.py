@@ -4,27 +4,28 @@ from app.graph.generic.dao import DAO
 from app.models.research_structures import ResearchStructure
 
 
-class StructureService:
+class ResearchStructureService:
     """
     Service to handle operations on structure data
     """
 
     @staticmethod
-    async def compute_structure_id(structure: ResearchStructure) -> str:
+    async def compute_research_structure_id(research_structure: ResearchStructure) -> str:
         """
         Compute the structure id from the structure identifiers
         The selected identifier is the first one found among the identifiers
         in the order defined in the settings
-        :param structure:
+        :param research_structure:
         :return:
         """
         settings = get_app_settings()
         identifier_order = settings.structure_identifier_order
         structure_id = None
         for identifier_type in identifier_order:
-            if identifier_type in [identifier.type for identifier in structure.identifiers]:
+            if identifier_type in [identifier.type for identifier in
+                                   research_structure.identifiers]:
                 selected_identifier = next(
-                    identifier for identifier in structure.identifiers
+                    identifier for identifier in research_structure.identifiers
                     if identifier.type == identifier_type
                 )
                 structure_id = f"{selected_identifier.type.value}-{selected_identifier.value}"
