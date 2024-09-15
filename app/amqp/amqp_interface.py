@@ -7,6 +7,7 @@ from aio_pika import ExchangeType
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_message_processor_factory import AMQPMessageProcessorFactory
+from app.services.people.people_service import PeopleService
 from app.settings.app_settings import AppSettings
 
 DEFAULT_RESULT_TIMEOUT = 600
@@ -69,6 +70,12 @@ class AMQPInterface:
                 worker.cancel()
             await self.pika_channel.close()
             await self.pika_connexion.close()
+
+    async def fetch_publications(self, **extra):
+        person_id = extra["payload"]
+        print(f"Fetching publications for {person_id}")
+        # use peopleService to fetch the person from the graph
+        people_service = PeopleService()
 
     async def _attach_message_processing_workers(self, topic: str):
         self.inner_tasks_queues[topic] = asyncio.Queue(
