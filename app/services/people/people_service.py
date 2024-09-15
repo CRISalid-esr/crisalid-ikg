@@ -20,8 +20,8 @@ class PeopleService:
         factory = self._get_people_dao()
         dao: PeopleDAO = factory.get_dao(Person)
         person_id, status, _ = await dao.create(person)
-        if status == PeopleDAO.Status.CREATED:
-            person_created.send_async(self, payload=person_id)
+        if status is PeopleDAO.Status.CREATED:
+            await person_created.send_async(self, payload=person_id)
         return person
 
     async def update_person(self, person: Person) -> Person:
@@ -33,8 +33,8 @@ class PeopleService:
         factory = self._get_people_dao()
         dao: PeopleDAO = factory.get_dao(Person)
         person_id, status, update_status = await dao.update(person)
-        if status == PeopleDAO.Status.UPDATED and update_status.identifiers_changed:
-            person_identifiers_updated.send_async(self, payload=person_id)
+        if status is PeopleDAO.Status.UPDATED and update_status.identifiers_changed:
+            await person_identifiers_updated.send_async(self, payload=person_id)
         return person
 
     async def create_or_update_person(self, person: Person) -> None:
@@ -45,10 +45,10 @@ class PeopleService:
         """
         factory = self._get_people_dao()
         dao: PeopleDAO = factory.get_dao(Person)
-        person_id, status = await dao.create_or_update(person)
-        if status == PeopleDAO.Status.CREATED:
+        person_id, status, update_status = await dao.create_or_update(person)
+        if status is PeopleDAO.Status.CREATED:
             await person_created.send_async(payload=person_id)
-        else:
+        elif status is PeopleDAO.Status.UPDATED and update_status.identifiers_changed:
             await person_identifiers_updated.send_async(payload=person_id)
 
     async def get_person(self, person_id: str) -> Person:

@@ -71,7 +71,7 @@ class AMQPInterface:
             await self.pika_channel.close()
             await self.pika_connexion.close()
 
-    async def fetch_publications(self, **extra):
+    async def fetch_publications(self, sender, **extra):
         person_id = extra["payload"]
         print(f"Fetching publications for {person_id}")
         # use peopleService to fetch the person from the graph
