@@ -7,7 +7,7 @@ from aio_pika import ExchangeType
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_message_processor_factory import AMQPMessageProcessorFactory
-from app.services.people.people_service import PeopleService
+from app.amqp.amqp_message_publisher import AMQPMessagePublisher
 from app.settings.app_settings import AppSettings
 
 DEFAULT_RESULT_TIMEOUT = 600
@@ -71,11 +71,18 @@ class AMQPInterface:
             await self.pika_channel.close()
             await self.pika_connexion.close()
 
-    async def fetch_publications(self, sender, **extra):
+    async def fetch_publications(self, _, **extra) -> None:
+        """
+        Request publications for a person
+        :param _: sender of message (unused)
+        :param extra: extra parameters (payload of the message)
+        :return: None
+        """
         person_id = extra["payload"]
-        print(f"Fetching publications for {person_id}")
-        # use peopleService to fetch the person from the graph
-        people_service = PeopleService()
+        publisher = AMQPMessagePublisher(self.pika_exchanges[self.settings.amqp_publications_topic])
+        await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
+                                AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
+                                {"person_id": person_id})
 
     async def _attach_message_processing_workers(self, topic: str):
         self.inner_tasks_queues[topic] = asyncio.Queue(

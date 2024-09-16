@@ -44,6 +44,7 @@ class AppSettings(BaseSettings):
     amqp_reference_event_routing_key: str = "event.references.reference.*"
     amqp_people_event_routing_key: str = "event.people.person.*"
     amqp_structure_event_routing_key: str = "event.structures.structure.*"
+    amqp_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
 
     institution_name: str = "XYZ University"
 
