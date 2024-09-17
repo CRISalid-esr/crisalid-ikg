@@ -27,6 +27,12 @@ class TestAppSettings(AppSettings):
 
     model_config = SettingsConfigDict(env_file=".test.env", extra="ignore")
 
+    amqp_user: str = "rabbitmq_test_user"
+
+    amqp_password: str = "rabbitmq_test_password"
+
+    amqp_host: str = "rabbitmq_test_host"
+
     institution_name: str = "XYZ University • test"
 
     neo4j_uri: str = "bolt://localhost:7688"
