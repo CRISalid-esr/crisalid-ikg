@@ -60,10 +60,9 @@ class AMQPMessagePublisher:
                 message=message,
                 routing_key=routing_key,
             )
-        except Exception as e:
+            logger.debug(f"Message published to {routing_key} queue : {payload}")
+        except aio_pika.exceptions.AMQPError as e:
             logger.error(f"Error publishing message to {routing_key} queue : {e}")
-            return
-        logger.debug(f"Message published to {routing_key} queue : {payload}")
 
     @staticmethod
     async def _build_message(message_type: MessageType,
