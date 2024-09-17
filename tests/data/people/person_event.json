@@ -22,6 +22,10 @@
         {
           "type": "local",
           "value": "jcaroy"
+        },
+        {
+          "type": "idref",
+          "value": "077548914"
         }
       ],
       "memberships": [

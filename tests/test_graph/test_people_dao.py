@@ -62,3 +62,36 @@ async def test_create_and_update_person_with_same_data(basic_person_pydantic_mod
     literal_first_names = await dao.find_literals_by_value_and_language("John", "fr")
     assert len(literal_last_names) == 1
     assert len(literal_first_names) == 1
+
+async def test_create_and_get_person(basic_person_pydantic_model: Person):
+    """
+    Given a basic person Pydantic model
+    When the create_person method is called
+    And the get_person method is called with the person id
+    Then the person should be created in the database
+    and the person should be retrieved
+
+    :param basic_person_pydantic_model:
+    :return:
+    """
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    dao = factory.get_dao(Person)
+    await dao.create(basic_person_pydantic_model)
+    person = await dao.get(basic_person_pydantic_model.id)
+    assert person
+    retrieved_person = await dao.get(person.id)
+    assert retrieved_person
+    assert retrieved_person.id == person.id
+    assert any(
+        name for name in retrieved_person.names if
+        any(
+            literal for literal in name.first_names if literal.value == "John"
+        ) and any(
+            literal for literal in name.last_names if literal.value == "Doe"
+        )
+    )
+    orcid_identifier = basic_person_pydantic_model.get_identifier(PersonIdentifierType.ORCID)
+    assert any(
+        identifier for identifier in retrieved_person.identifiers if
+        identifier.type == orcid_identifier.type and identifier.value == orcid_identifier.value
+    )
