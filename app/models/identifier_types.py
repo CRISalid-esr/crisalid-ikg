@@ -9,7 +9,8 @@ class PersonIdentifierType(AgentIdentifierType):
     """Person identifier types"""
     ORCID = "orcid"
     IDREF = "idref"
-    ID_HAL_S = "idhal_s"
+    ID_HAL_S = "id_hal_s"
+    ID_HAL_I = "id_hal_i"
     SCOPUS_EID = "scopus_eid"
     LOCAL = "local"
 
