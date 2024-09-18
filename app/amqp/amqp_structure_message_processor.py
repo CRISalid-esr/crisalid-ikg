@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.errors.conflict_error import ConflictError
+from app.errors.not_found_error import NotFoundError
 from app.models.research_structures import ResearchStructure
 from app.services.organizations.research_structure_service import ResearchStructureService
 
@@ -48,6 +49,10 @@ class AMQPStructureMessageProcessor(AMQPMessageProcessor):
     async def _update_structure(self, structure):
         try:
             await self.service.update_structure(structure)
+        except NotFoundError as e:
+            logger.error(f"Structure not found while trying to update structure {structure} : {e}")
+            logger.error("Will try to create the structure instead")
+            await self._create_structure(structure)
         except ConflictError as e:
             logger.error(f"Identifier conflict while trying to update structure {structure} : {e}")
 
