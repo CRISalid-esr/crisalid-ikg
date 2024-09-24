@@ -1,0 +1,107 @@
+{
+  "source_identifier": "http://www.example.fr/123456789/id",
+  "harvester": "Idref",
+  "harvester_version": "1.0.0",
+  "identifiers": [
+    {
+      "type": "uri",
+      "value": "http://www.example.fr/123456789/id"
+    }
+  ],
+  "manifestations": [
+    {
+      "page": "http://www.theses.fr/2000EX12345/id",
+      "download_url": null,
+      "additional_files": []
+    },
+    {
+      "page": "http://www.example.fr/123456789",
+      "download_url": null,
+      "additional_files": []
+    }
+  ],
+  "titles": [
+    {
+      "value": "Études sur les nuages galactiques : turbulence et poussières",
+      "language": null
+    }
+  ],
+  "subtitles": [],
+  "abstracts": [
+    {
+      "value": "English summary (similar)",
+      "language": null
+    },
+    {
+      "value": "Résumé français (maximum 1000 caractères)",
+      "language": null
+    }
+  ],
+  "subjects": [
+    {
+      "uri": "http://www.example.fr/subject/123456",
+      "dereferenced": false,
+      "pref_labels": [],
+      "alt_labels": []
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Book",
+      "label": "Livre"
+    },
+    {
+      "uri": "http://purl.org/ontology/bibo/Thesis",
+      "label": "Thèse"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": null,
+      "contributor": {
+        "source": "example_source",
+        "source_identifier": "http://www.example.fr/creator/987654321/id",
+        "name": "Doe, John (1980-.... ; astrophysicist)",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/ths.html",
+      "affiliations": []
+    },
+    {
+      "rank": null,
+      "contributor": {
+        "source": "example_source",
+        "source_identifier": "http://www.example.fr/creator/654321987/id",
+        "name": "Smith, Jane (1990-....)",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": null,
+      "contributor": {
+        "source": "example_source",
+        "source_identifier": "http://www.example.fr/creator/321987654/id",
+        "name": "Brown, Alex (1975-....)",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/ths.html",
+      "affiliations": []
+    }
+  ],
+  "issue": null,
+  "page": null,
+  "book": {
+    "source": "example_source",
+    "title": "Études sur les nuages galactiques : turbulence et poussières / Jane Smith ; sous la dir. de John Doe et Alex Brown",
+    "title_variants": [],
+    "isbn10": null,
+    "isbn13": null,
+    "publisher": "[S.l.] : [s.n.] , 2000"
+  },
+  "issued": null,
+  "created": "2005-06-14 00:00:00",
+  "version": 0,
+  "enhanced": false
+}

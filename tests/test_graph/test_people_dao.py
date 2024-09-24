@@ -3,19 +3,19 @@ from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 
 
-async def test_create_person(basic_person_pydantic_model: Person):
+async def test_create_person(person_pydantic_model: Person):
     """
     Given a basic person Pydantic model
     When the create_person method is called
     Then the person should be created in the database
 
-    :param basic_person_pydantic_model:
+    :param person_pydantic_model:
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
-    await dao.create(basic_person_pydantic_model)
-    local_identifier = basic_person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
+    await dao.create(person_pydantic_model)
+    local_identifier = person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
     person = await dao.find_by_identifier(local_identifier.type,
                                           local_identifier.value)
     assert person
@@ -28,14 +28,14 @@ async def test_create_person(basic_person_pydantic_model: Person):
             literal for literal in name.last_names if literal.value == "Doe"
         )
     )
-    orcid_identifier = basic_person_pydantic_model.get_identifier(PersonIdentifierType.ORCID)
+    orcid_identifier = person_pydantic_model.get_identifier(PersonIdentifierType.ORCID)
     assert any(
         identifier for identifier in person.identifiers if
         identifier.type == orcid_identifier.type and identifier.value == orcid_identifier.value
     )
 
 
-async def test_create_and_update_person_with_same_data(basic_person_pydantic_model: Person):
+async def test_create_and_update_person_with_same_data(person_pydantic_model: Person):
     """
     Given a basic person Pydantic model
     When the create_person method is called
@@ -43,17 +43,17 @@ async def test_create_and_update_person_with_same_data(basic_person_pydantic_mod
     Then the person should be created in the database
     and there should be only one instance of the person last name, fist name and identifier
 
-    :param basic_person_pydantic_model:
+    :param person_pydantic_model:
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
-    await dao.create(basic_person_pydantic_model)
-    local_identifier = basic_person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
+    await dao.create(person_pydantic_model)
+    local_identifier = person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
     person = await dao.find_by_identifier(local_identifier.type,
                                           local_identifier.value)
     assert person
-    await dao.update(basic_person_pydantic_model)
+    await dao.update(person_pydantic_model)
     person = await dao.find_by_identifier(local_identifier.type,
                                           local_identifier.value)
     assert person
@@ -63,7 +63,7 @@ async def test_create_and_update_person_with_same_data(basic_person_pydantic_mod
     assert len(literal_last_names) == 1
     assert len(literal_first_names) == 1
 
-async def test_create_and_get_person(basic_person_pydantic_model: Person):
+async def test_create_and_get_person(person_pydantic_model: Person):
     """
     Given a basic person Pydantic model
     When the create_person method is called
@@ -71,13 +71,13 @@ async def test_create_and_get_person(basic_person_pydantic_model: Person):
     Then the person should be created in the database
     and the person should be retrieved
 
-    :param basic_person_pydantic_model:
+    :param person_pydantic_model:
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
-    await dao.create(basic_person_pydantic_model)
-    person = await dao.get(basic_person_pydantic_model.id)
+    await dao.create(person_pydantic_model)
+    person = await dao.get(person_pydantic_model.id)
     assert person
     retrieved_person = await dao.get(person.id)
     assert retrieved_person
@@ -90,7 +90,7 @@ async def test_create_and_get_person(basic_person_pydantic_model: Person):
             literal for literal in name.last_names if literal.value == "Doe"
         )
     )
-    orcid_identifier = basic_person_pydantic_model.get_identifier(PersonIdentifierType.ORCID)
+    orcid_identifier = person_pydantic_model.get_identifier(PersonIdentifierType.ORCID)
     assert any(
         identifier for identifier in retrieved_person.identifiers if
         identifier.type == orcid_identifier.type and identifier.value == orcid_identifier.value

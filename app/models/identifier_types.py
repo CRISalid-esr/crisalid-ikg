@@ -21,3 +21,13 @@ class OrganizationIdentifierType(AgentIdentifierType):
     ROR = "ROR"
     RNSR = "RNSR"
     LOCAL = "local"
+
+class PublicationIdentifierType(Enum):
+    """Publication identifier types"""
+    DOI = "doi"
+    URI = "uri"
+    PMID = "pmid"
+    OPENALEX = "openalex"
+    ARXIV = "arxiv"
+    HAL = "hal"
+    NNT = "nnt"

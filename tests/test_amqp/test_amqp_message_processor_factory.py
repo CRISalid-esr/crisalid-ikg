@@ -6,7 +6,7 @@ import pytest
 
 from app.amqp.amqp_message_processor_factory import AMQPMessageProcessorFactory
 from app.amqp.amqp_people_message_processor import AMQPPeopleMessageProcessor
-from app.amqp.amqp_publication_message_processor import AMQPPublicationMessageProcessor
+from app.amqp.amqp_reference_message_processor import AMQReferenceMessageProcessor
 from app.config import get_app_settings
 
 
@@ -42,7 +42,7 @@ def test_get_publication_processor(mock_exchange, mock_queue) -> None:
     processor = AMQPMessageProcessorFactory.get_processor(
         settings.amqp_publications_topic, mock_exchange, mock_queue, settings
     )
-    assert isinstance(processor, AMQPPublicationMessageProcessor)
+    assert isinstance(processor, AMQReferenceMessageProcessor)
 
 
 def test_get_people_processor(mock_exchange, mock_queue) -> None:

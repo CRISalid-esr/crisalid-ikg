@@ -12,7 +12,7 @@ from app.models.agent_identifiers import PersonIdentifier
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.models.people_names import PersonName
-from app.services.organizations.research_structure_service import ResearchStructureService
+from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
 class PeopleDAO(Neo4jDAO):
@@ -40,15 +40,15 @@ class PeopleDAO(Neo4jDAO):
                 async with await session.begin_transaction() as tx:
                     return await PeopleDAO._get_person_by_id(tx, person_id)
 
-    @staticmethod
-    async def _get_person_by_id(tx, person_id: str) -> Person | None:
+    @classmethod
+    async def _get_person_by_id(cls, tx, person_id: str) -> Person | None:
         result = await tx.run(
             load_query("get_person_by_id"),
             person_id=person_id
         )
         record = await result.single()
         if record:
-            return PeopleDAO._hydrate(record)
+            return cls._hydrate(record)
         return None
 
     @staticmethod
@@ -123,7 +123,7 @@ class PeopleDAO(Neo4jDAO):
 
     @staticmethod
     async def _create_person_transaction(tx: AsyncManagedTransaction, person: Person) -> None:
-        person.id = person.id or PeopleDAO._compute_person_id(person)
+        person.id = person.id or AgentIdentifierService.compute_identifier_for(person)
         if not person.id:
             raise ValueError(f"Unable to compute primary key for person {person}")
         person_exists = await PeopleDAO._person_exists(tx, person.id)
@@ -137,7 +137,7 @@ class PeopleDAO(Neo4jDAO):
             identifiers=[identifier.dict() for identifier in person.identifiers]
         )
         for membership in person.memberships:
-            structure_id = await ResearchStructureService.compute_research_structure_id(
+            structure_id = AgentIdentifierService.compute_identifier_for(
                 membership.research_structure
             )
             if structure_id:
@@ -160,12 +160,14 @@ class PeopleDAO(Neo4jDAO):
                                  person_id=person.id,
                                  structure_id=structure_id)
 
-    @staticmethod
-    async def _update_person_transaction(tx: AsyncSession, incoming_person: Person) -> UpdateStatus:
-        incoming_person.id = incoming_person.id or PeopleDAO._compute_person_id(incoming_person)
+    @classmethod
+    async def _update_person_transaction(cls, tx: AsyncSession,
+                                         incoming_person: Person) -> UpdateStatus:
+        incoming_person.id = incoming_person.id or AgentIdentifierService.compute_identifier_for(
+            incoming_person)
         if not incoming_person.id:
             raise ValueError(f"Unable to compute primary key for person {incoming_person}")
-        existing_person = await PeopleDAO._get_person_by_id(tx, incoming_person.id)
+        existing_person = await cls._get_person_by_id(tx, incoming_person.id)
 
         if existing_person is None:
             raise NotFoundError(f"Person with id {incoming_person.id} does not exist")
@@ -190,14 +192,34 @@ class PeopleDAO(Neo4jDAO):
             person_id=incoming_person.id,
             identifiers=[identifier.dict() for identifier in incoming_person.identifiers]
         )
-        identifiers_changed = PeopleDAO._compare_identifiers(existing_identifiers,
-                                                             incoming_person.identifiers)
+        identifiers_changed = AgentIdentifierService.identifiers_are_identical(
+            existing_identifiers,
+            incoming_person.identifiers
+        )
         return PeopleDAO.UpdateStatus(
             identifiers_changed=identifiers_changed,
             # TODO compute names_changed
             names_changed=None,
             memberships_changed=None
         )
+
+    async def find_person(self, person: Person) -> Person | None:
+        """
+        Find a person by one of its identifiers
+        taking identifiers in the order defined in the settings
+        :param person: person object
+        :return: person object
+        """
+        settings = get_app_settings()
+        identifier_order = settings.person_identifier_order
+        for identifier_type in identifier_order:
+            identifier = next((identifier for identifier in person.identifiers
+                               if identifier.type == identifier_type), None)
+            if identifier:
+                found_person = await self.find_by_identifier(identifier.type, identifier.value)
+                if found_person:
+                    return found_person
+        return None
 
     async def find_by_identifier(self, identifier_type: PersonIdentifierType,
                                  identifier_value: str) -> Person | None:
@@ -220,26 +242,3 @@ class PeopleDAO(Neo4jDAO):
                     if record is not None:
                         return PeopleDAO._hydrate(record)
                     return None
-
-    @staticmethod
-    def _compare_identifiers(existing_identifiers: list[PersonIdentifier],
-                             updated_identifiers: list[PersonIdentifier]) -> bool:
-        existing_identifiers = sorted(existing_identifiers, key=lambda x: str(x.type))
-        updated_identifiers = sorted(updated_identifiers, key=lambda x: str(x.type))
-        return existing_identifiers != updated_identifiers
-
-    @staticmethod
-    def _compute_person_id(person):
-        # TODO factorize with research structure code in research_structure_service
-        settings = get_app_settings()
-        identifier_order = settings.people_identifier_order
-        person_id = None
-        for identifier_type in identifier_order:
-            if identifier_type in [identifier.type for identifier in person.identifiers]:
-                selected_identifier = next(
-                    identifier for identifier in person.identifiers
-                    if identifier.type == identifier_type
-                )
-                person_id = f"{selected_identifier.type.value}-{selected_identifier.value}"
-                break
-        return person_id

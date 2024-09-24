@@ -17,16 +17,16 @@ class Neo4jSetup(Setup[AsyncDriver]):
             async with driver.session() as session:
                 await session.write_transaction(self._create_constraints)
 
-    @staticmethod
-    async def _create_constraints(tx):
+    @classmethod
+    async def _create_constraints(cls, tx):
         settings = get_app_settings()
-        await Neo4jSetup._create_person_id_constraint(tx)
-        await Neo4jSetup._create_agent_identifier_unique_type_value_constraint(tx)
+        await cls._create_person_id_constraint(tx)
+        await cls._create_agent_identifier_unique_type_value_constraint(tx)
         if settings.neo4j_edition == "community":
             return
         assert settings.neo4j_version == "enterprise"
-        await Neo4jSetup._create_agent_identifier_type_constraint(tx)
-        await Neo4jSetup._create_agent_identifier_value_constraint(tx)
+        await cls._create_agent_identifier_type_constraint(tx)
+        await cls._create_agent_identifier_value_constraint(tx)
 
     @staticmethod
     async def _create_person_id_constraint(tx):
@@ -35,7 +35,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         FOR (p:Person) REQUIRE p.id IS UNIQUE;
         """
         try:
-            await tx.run(query)
+            await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating person id unique constraint: {e}")
             raise e
@@ -47,7 +47,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         FOR (a:AgentIdentifier) REQUIRE a.type IS NOT NULL
         """
         try:
-            await tx.run(query)
+            await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating agent identifier type not null constraint: {e}")
 
@@ -58,7 +58,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         FOR (a:AgentIdentifier) REQUIRE a.value IS NOT NULL
         """
         try:
-            await tx.run(query)
+            await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating agent identifier value not null constraint: {e}")
 
@@ -69,7 +69,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         FOR (a:AgentIdentifier) REQUIRE (a.type, a.value) IS UNIQUE;
         """
         try:
-            await tx.run(query)
+            await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating agent identifier unique type/value constraint: {e}")
             raise e

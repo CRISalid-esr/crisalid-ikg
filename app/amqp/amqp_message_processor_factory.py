@@ -4,7 +4,7 @@ import aio_pika
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_people_message_processor import AMQPPeopleMessageProcessor
-from app.amqp.amqp_publication_message_processor import AMQPPublicationMessageProcessor
+from app.amqp.amqp_reference_message_processor import AMQReferenceMessageProcessor
 from app.amqp.amqp_structure_message_processor import AMQPStructureMessageProcessor
 from app.settings.app_settings import AppSettings
 
@@ -30,7 +30,7 @@ class AMQPMessageProcessorFactory:
         :return:
         """
         if topic == settings.amqp_publications_topic:
-            return AMQPPublicationMessageProcessor(exchange, tasks_queue, settings)
+            return AMQReferenceMessageProcessor(exchange, tasks_queue, settings)
         if topic == settings.amqp_people_topic:
             return AMQPPeopleMessageProcessor(exchange, tasks_queue, settings)
         if topic == settings.amqp_structures_topic:

@@ -8,7 +8,7 @@ from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.research_structures import ResearchStructure
-from app.services.organizations.research_structure_service import ResearchStructureService
+from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
 class ResearchStructureDAO(Neo4jDAO):
@@ -65,15 +65,15 @@ class ResearchStructureDAO(Neo4jDAO):
                                                     research_structure)
         return research_structure
 
-    @staticmethod
-    async def _create_research_structure_transaction(tx: AsyncSession,
+    @classmethod
+    async def _create_research_structure_transaction(cls, tx: AsyncSession,
                                                      research_structure: ResearchStructure):
-        research_structure.id = await ResearchStructureService.compute_research_structure_id(
+        research_structure.id = AgentIdentifierService.compute_identifier_for(
             research_structure)
         if not research_structure.id:
             raise ValueError(
                 "The submitted research_structure data is missing a required identifier")
-        existing_research_structure = await ResearchStructureDAO._find_research_structure_by_id(
+        existing_research_structure = await cls._find_research_structure_by_id(
             research_structure, tx)
 
         if existing_research_structure is not None:
@@ -81,8 +81,7 @@ class ResearchStructureDAO(Neo4jDAO):
                 f"Research structure with id {research_structure.id} already exists")
 
         create_research_structure_query = """
-                    CREATE (research_struct:Organisation:ResearchStructure {id: $research_structure_id})
-                    
+                    CREATE (research_struct:Organisation:ResearchStructure {id: $research_structure_id})                    
                     WITH research_struct
                     UNWIND $names AS name
                     CREATE (rs_name:Literal {value: name.value, language: name.language})
@@ -111,17 +110,17 @@ class ResearchStructureDAO(Neo4jDAO):
         record = await result.single()
         return record
 
-    @staticmethod
-    async def _update_research_structure_transaction(tx: AsyncSession,
+    @classmethod
+    async def _update_research_structure_transaction(cls, tx: AsyncSession,
                                                      research_structure: ResearchStructure):
-        if research_structure.id is None:
-            research_structure.id = await ResearchStructureService.compute_research_structure_id(
-                research_structure
-            )
+        research_structure.id = research_structure.id or \
+                                AgentIdentifierService.compute_identifier_for(
+                                    research_structure
+                                )
         if not research_structure.id:
             raise ValueError("The submitted research_structure data "
                              "is missing a required identifier")
-        existing_research_structure = await ResearchStructureDAO._find_research_structure_by_id(
+        existing_research_structure = await cls._find_research_structure_by_id(
             research_structure,
             tx
         )

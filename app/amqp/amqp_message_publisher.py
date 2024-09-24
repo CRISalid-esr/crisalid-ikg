@@ -64,11 +64,11 @@ class AMQPMessagePublisher:
         except aio_pika.exceptions.AMQPError as e:
             logger.error(f"Error publishing message to {routing_key} queue : {e}")
 
-    @staticmethod
-    async def _build_message(message_type: MessageType,
+    @classmethod
+    async def _build_message(cls, message_type: MessageType,
                              message_subtype: MessageSubtype,
                              content: dict) -> tuple[str | None, str | None]:
-        if message_type is AMQPMessagePublisher.MessageType.TASK:
-            if message_subtype is AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL:
+        if message_type is cls.MessageType.TASK:
+            if message_subtype is cls.TaskMessageSubtype.PUBLICATION_RETRIEVAL:
                 return await AMQPPublicationRetrievalMessageFactory(content).build_message()
         return None, None

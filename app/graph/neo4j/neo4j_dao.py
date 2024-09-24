@@ -10,6 +10,8 @@ class Neo4jDAO(DAO[AsyncDriver]):
     Parent class for all Neo4j DAO classes
     """
 
+    IDENTIFIER_SEPARATOR = '-'  # separator for unique identifiers generated from multiple fields
+
     async def find_literals_by_value_and_language(self, value: str, language: str) -> list[Literal]:
         """
         Find literals by value and language
