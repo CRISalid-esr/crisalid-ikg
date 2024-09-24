@@ -10,18 +10,18 @@ from app.models.people import Person
 
 async def test_publish_fetch_publications_taks(
         mocked_exchange: Exchange,
-        basic_person_pydantic_model: Person,
+        person_pydantic_model: Person,
 ):
     """
     Test that a message is published to the AMQP queue when the publish method is called.
     :param mocked_exchange:
-    :param basic_person_pydantic_model:
+    :param person_pydantic_model:
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
-    await dao.create(basic_person_pydantic_model)
-    local_identifier = basic_person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
+    await dao.create(person_pydantic_model)
+    local_identifier = person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
     person = await dao.find_by_identifier(local_identifier.type, local_identifier.value)
     person_id = person.id
     publisher = AMQPMessagePublisher(mocked_exchange)

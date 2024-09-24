@@ -17,7 +17,7 @@ class PeopleService:
         :param person: Pydantic Person object
         :return:
         """
-        factory = self._get_people_dao()
+        factory = self._get_dao_factory()
         dao: PeopleDAO = factory.get_dao(Person)
         person_id, status, _ = await dao.create(person)
         if status is PeopleDAO.Status.CREATED:
@@ -30,7 +30,7 @@ class PeopleService:
         :param person: Pydantic Person object
         :return:
         """
-        factory = self._get_people_dao()
+        factory = self._get_dao_factory()
         dao: PeopleDAO = factory.get_dao(Person)
         person_id, status, update_status = await dao.update(person)
         if status is PeopleDAO.Status.UPDATED and update_status.identifiers_changed:
@@ -43,7 +43,7 @@ class PeopleService:
         :param person: Pydantic Person object
         :return:
         """
-        factory = self._get_people_dao()
+        factory = self._get_dao_factory()
         dao: PeopleDAO = factory.get_dao(Person)
         person_id, status, update_status = await dao.create_or_update(person)
         if status is PeopleDAO.Status.CREATED:
@@ -57,11 +57,11 @@ class PeopleService:
         :param person_id: person id
         :return: Pydantic Person object
         """
-        factory = self._get_people_dao()
+        factory = self._get_dao_factory()
         dao: PeopleDAO = factory.get_dao(Person)
         return await dao.get(person_id)
 
     @staticmethod
-    def _get_people_dao() -> DAO:
+    def _get_dao_factory() -> DAO:
         settings = get_app_settings()
         return AbstractDAOFactory().get_dao_factory(settings.graph_db)

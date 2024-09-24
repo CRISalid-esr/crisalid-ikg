@@ -1,0 +1,70 @@
+{
+  "source_identifier": "nnt2023xyz135",
+  "harvester": "ScanR",
+  "harvester_version": "2.0",
+  "identifiers": [
+    {
+      "type": "nnt",
+      "value": "2023xyz135"
+    }
+  ],
+  "titles": [
+    {
+      "value": "Understanding Galactic Phenomena through New Data Models",
+      "language": "en"
+    }
+  ],
+  "abstracts": [
+    {
+      "value": "In this research, we investigate the dynamics of galactic structures using high-resolution data models. The study focuses on analyzing the distribution of matter in the outer regions of galaxies.",
+      "language": "en"
+    },
+    {
+      "value": "Dans cette recherche, nous étudions la dynamique des structures galactiques à l'aide de modèles de données haute résolution. L'étude se concentre sur l'analyse de la distribution de la matière dans les régions externes des galaxies.",
+      "language": "fr"
+    }
+  ],
+  "subjects": [
+    {
+      "uri": "http://example.org/subject/astronomy",
+      "pref_labels": [
+        {
+          "value": "Astronomy",
+          "language": "en"
+        },
+        {
+          "value": "Astronomie",
+          "language": "fr"
+        }
+      ]
+    },
+    {
+      "uri": "http://example.org/subject/galactic_physics",
+      "pref_labels": [
+        {
+          "value": "Galactic Physics",
+          "language": "en"
+        },
+        {
+          "value": "Physique Galactique",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Thesis",
+      "label": "Thesis"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 1,
+      "contributor": {
+        "name": "Doe, Jane",
+        "affiliation": "University of Example"
+      }
+    }
+  ]
+}

@@ -60,12 +60,12 @@ class AppSettings(BaseSettings):
     neo4j_user: str = "neo4j"
     neo4j_password: str = "password"
 
-    people_identifier_order: list[PersonIdentifierType] = \
+    person_identifier_order: list[PersonIdentifierType] = \
         [PersonIdentifierType.LOCAL,
          PersonIdentifierType.ORCID,
          PersonIdentifierType.IDREF]
 
-    structure_identifier_order: list[OrganizationIdentifierType] = \
+    research_structure_identifier_order: list[OrganizationIdentifierType] = \
         [OrganizationIdentifierType.LOCAL,
          OrganizationIdentifierType.IDREF,
          OrganizationIdentifierType.ROR]
