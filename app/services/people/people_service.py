@@ -71,6 +71,16 @@ class PeopleService:
         dao: PeopleDAO = factory.get_dao(Person)
         return await dao.create_or_update(person)
 
+    async def create_or_update_person(self, person: Person) -> Person:
+        """
+        Create a person if not exists, update otherwise
+        :param person: Pydantic Person object
+        :return:
+        """
+        factory = self._get_people_dao()
+        dao: PeopleDAO = factory.get_dao(Person)
+        return await dao.create_or_update(person)
+
     @staticmethod
     def _get_dao_factory() -> DAO:
         settings = get_app_settings()
