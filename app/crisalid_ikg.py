@@ -86,9 +86,6 @@ class CrisalidIKG(FastAPI):
             logger.error("Cannot connect to RabbitMQ : Unknown error, will not retry")
             raise error
 
-    def fetch_publications(self, sender, person):
-        print(f"Fetching publications for {person['name']} from sender {sender}")
-
     async def close_rabbitmq_connexion(self) -> None:  # pragma: no cover
         """Handle last tasks before shutdown"""
         logger.info("Closing RabbitMQ connexion")

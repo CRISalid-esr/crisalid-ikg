@@ -29,7 +29,8 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         try:
             person = Person(**person_data)
         except ValidationError as e:
-            logger.error(f"Error processing person data {person_data} : {e}")
+            logger.error(f"Error processing person data associated with incoming reference"
+                         f" {person_data} : {e}")
             raise e
         try:
             source_record = SourceRecord(**reference_data)
@@ -47,4 +48,3 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
             logger.error(
                 f"Identifier conflict while trying to create source record {source_record} : {e}")
             logger.error("Will try to update the source record instead")
-            
