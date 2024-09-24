@@ -27,5 +27,7 @@ class PublicationIdentifierType(Enum):
     DOI = "doi"
     URI = "uri"
     PMID = "pmid"
+    OPENALEX = "openalex"
+    ARXIV = "arxiv"
     HAL = "hal"
     NNT = "nnt"
