@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.errors.conflict_error import ConflictError
+from app.errors.not_found_error import NotFoundError
 from app.models.people import Person
 from app.services.people.people_service import PeopleService
 
@@ -50,6 +51,10 @@ class AMQPPeopleMessageProcessor(AMQPMessageProcessor):
             await self.service.update_person(person)
         except ConflictError as e:
             logger.error(f"Identifier conflict while trying to update person {person} : {e}")
+        except NotFoundError as e:
+            logger.error(f"Error while trying to update person {person} : {e}")
+            logger.error("Will try to create the person instead")
+            await self._create_person(person)
 
     async def _create_or_update_person(self, person):
         try:
