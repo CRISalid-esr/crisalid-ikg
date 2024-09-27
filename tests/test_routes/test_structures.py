@@ -7,7 +7,7 @@ RESEARCH_STRUCTURE_API_PATH = "/api/v1/organization/research-structure"
 
 
 def test_create_research_structure_success(test_client: TestClient,
-                                           basic_research_structure_json_data):
+                                           research_structure_json_data):
     """
     Given a valid person json data
     When creating a person through  REST API
@@ -18,7 +18,7 @@ def test_create_research_structure_success(test_client: TestClient,
     :return:
     """
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,
-                                json=basic_research_structure_json_data)
+                                json=research_structure_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "structure" in response.json()
     assert response.json()["structure"]["id"] == "local-U123"
@@ -52,23 +52,23 @@ def test_create_research_structure_invalid_identifier_type(
 
 
 def test_create_research_structure_twice(test_client: TestClient,
-                                         basic_research_structure_json_data):
+                                         research_structure_json_data):
     """
     Given a valid research structure json data
     When creating a research structure twice through REST API
     Then a 409 error should be raised
 
     :param test_client:
-    :param basic_research_structure_json_data:
+    :param research_structure_json_data:
     :return:
     """
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,
-                                json=basic_research_structure_json_data)
+                                json=research_structure_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "structure" in response.json()
     assert response.json()["structure"]["id"] == "local-U123"
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,
-                                json=basic_research_structure_json_data)
+                                json=research_structure_json_data)
     assert response.status_code == status.HTTP_409_CONFLICT
     assert "error" in response.json()
     assert response.json()["error"] == "Research structure with id local-U123 already exists"

@@ -1,4 +1,4 @@
-""" Validation error handler. """
+""" Invalid entity error handler """
 import json
 
 from pydantic import ValidationError
@@ -8,8 +8,8 @@ from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 
 async def invalid_entity_error_handler(
-    _: Request,
-    exc: ValidationError,
+        _: Request,
+        exc: ValidationError,
 ) -> JSONResponse:
     """
 

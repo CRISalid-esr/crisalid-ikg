@@ -1,9 +1,11 @@
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
+from app.models.research_structures import ResearchStructure
 
 
-async def test_create_person(person_pydantic_model: Person):
+async def test_create_person(person_pydantic_model: Person,
+                             persisted_research_structure_pydantic_model: ResearchStructure):
     """
     Given a basic person Pydantic model
     When the create_person method is called
@@ -16,12 +18,12 @@ async def test_create_person(person_pydantic_model: Person):
     dao = factory.get_dao(Person)
     await dao.create(person_pydantic_model)
     local_identifier = person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
-    person = await dao.find_by_identifier(local_identifier.type,
+    person_from_db = await dao.find_by_identifier(local_identifier.type,
                                           local_identifier.value)
-    assert person
-    assert person.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    assert person_from_db
+    assert person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
     assert any(
-        name for name in person.names if
+        name for name in person_from_db.names if
         any(
             literal for literal in name.first_names if literal.value == "John"
         ) and any(
@@ -30,8 +32,13 @@ async def test_create_person(person_pydantic_model: Person):
     )
     orcid_identifier = person_pydantic_model.get_identifier(PersonIdentifierType.ORCID)
     assert any(
-        identifier for identifier in person.identifiers if
+        identifier for identifier in person_from_db.identifiers if
         identifier.type == orcid_identifier.type and identifier.value == orcid_identifier.value
+    )
+    assert person_from_db.memberships
+    assert any(
+        membership for membership in person_from_db.memberships if
+        membership.entity_id == persisted_research_structure_pydantic_model.id
     )
 
 
@@ -62,6 +69,7 @@ async def test_create_and_update_person_with_same_data(person_pydantic_model: Pe
     literal_first_names = await dao.find_literals_by_value_and_language("John", "fr")
     assert len(literal_last_names) == 1
     assert len(literal_first_names) == 1
+
 
 async def test_create_and_get_person(person_pydantic_model: Person):
     """

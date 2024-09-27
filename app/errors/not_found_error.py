@@ -1,4 +1,4 @@
-""" Validation error handler. """
+""" Not found error handler. """
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse

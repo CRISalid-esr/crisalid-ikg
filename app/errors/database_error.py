@@ -1,22 +1,22 @@
-""" Conflict error handler. """
+""" Database error handler. """
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_409_CONFLICT
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 
-class ConflictError(ValueError):
+class DatabaseError(Exception):
     """
-    Conflict error
+    Database error
     """
 
     def __init__(self, message: str) -> None:
         super().__init__(message)
 
 
-async def conflicting_entity_error_handler(
+async def database_error_handler(
         _: Request,
-        exc: ConflictError,
+        exc: DatabaseError,
 ) -> JSONResponse:
     """
 
@@ -26,5 +26,5 @@ async def conflicting_entity_error_handler(
     """
     return JSONResponse(
         {"error": str(exc)},
-        status_code=HTTP_409_CONFLICT,
+        status_code=HTTP_500_INTERNAL_SERVER_ERROR,
     )
