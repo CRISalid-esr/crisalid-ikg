@@ -219,7 +219,6 @@ class PeopleDAO(Neo4jDAO):
         )
         return PeopleDAO.UpdateStatus(
             identifiers_changed=identifiers_changed,
-            # TODO compute names_changed
             names_changed=None,
             memberships_changed=None
         )
