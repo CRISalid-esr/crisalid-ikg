@@ -1,6 +1,8 @@
 from typing import Tuple, NamedTuple
 
+from loguru import logger
 from neo4j import AsyncSession, AsyncManagedTransaction
+from neo4j.exceptions import ConstraintError, ClientError, Neo4jError, DatabaseError
 
 from app.config import get_app_settings
 from app.errors.conflict_error import ConflictError
@@ -10,6 +12,7 @@ from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.identifier_types import PersonIdentifierType
+from app.models.memberships import Membership
 from app.models.people import Person
 from app.models.people_names import PersonName
 from app.services.identifiers.identifier_service import AgentIdentifierService
@@ -53,16 +56,28 @@ class PeopleDAO(Neo4jDAO):
 
     @staticmethod
     def _hydrate(record: dict) -> Person:
-        person_data = record["p"]
+        person_data = record["person"]
         names_data = record["names"]
         identifiers_data = record["identifiers"]
+        memberships_data = record["memberships"]
         names = [PersonName(**name) for name in names_data]
         identifiers = [PersonIdentifier(**identifier)
                        for identifier in identifiers_data]
+        memberships = []
+        for membership_data in memberships_data:
+            research_structure = membership_data["research_structure"]
+            if research_structure is None:
+                continue
+            memberships.append(
+                Membership(
+                    entity_id=membership_data["research_structure"]['id']
+                )
+            )
         person = Person(
             id=person_data["id"],
             identifiers=identifiers,
-            names=names
+            names=names,
+            memberships=memberships
         )
         return person
 
@@ -130,35 +145,41 @@ class PeopleDAO(Neo4jDAO):
         if person_exists:
             raise ConflictError(f"Person with id {person.id} already exists")
         create_person_query = load_query("create_person")
-        await tx.run(
-            create_person_query,
-            person_id=person.id,
-            names=[name.dict() for name in person.names],
-            identifiers=[identifier.dict() for identifier in person.identifiers]
-        )
+        try:
+            await tx.run(
+                create_person_query,
+                person_id=person.id,
+                names=[name.dict() for name in person.names],
+                identifiers=[identifier.dict() for identifier in person.identifiers]
+            )
+        except ConstraintError as constraint_error:
+            raise ConflictError(
+                f"Schema constraint violation while creating person {person}") from constraint_error
+        except ClientError as client_error:
+            raise ValueError(
+                f"Bad request error while creating person {person}") from client_error
+        except Neo4jError as neo4j_error:
+            raise DatabaseError(f"Database error while creating person {person}") from neo4j_error
         for membership in person.memberships:
             structure_id = AgentIdentifierService.compute_identifier_for(
                 membership.research_structure
             )
             if structure_id:
-                find_structure_query = """
-                            MATCH (s:ResearchStructure {id: $structure_id})
-                            RETURN s
-                        """
+                find_structure_query = load_query("find_structure_by_id")
                 result = await tx.run(find_structure_query, structure_id=structure_id)
                 structure = await result.single()
-
                 if structure:
-                    create_membership_query = """
-                                MATCH (p:Person {id: $person_id})
-                                MATCH (s:ResearchStructure {id: $structure_id})
-                                CREATE (m:Membership)
-                                CREATE (p)-[:HAS_MEMBERSHIP]->(m)
-                                CREATE (m)-[:MEMBER_OF]->(s)
-                            """
+                    create_membership_query = load_query("create_membership")
                     await tx.run(create_membership_query,
                                  person_id=person.id,
                                  structure_id=structure_id)
+                else:
+                    logger.error(f"Research structure with id {structure_id} not found")
+            else:
+                logger.error(
+                    "Unable to compute primary key for research structure "
+                    f"{membership.research_structure}"
+                )
 
     @classmethod
     async def _update_person_transaction(cls, tx: AsyncSession,
@@ -198,7 +219,6 @@ class PeopleDAO(Neo4jDAO):
         )
         return PeopleDAO.UpdateStatus(
             identifiers_changed=identifiers_changed,
-            # TODO compute names_changed
             names_changed=None,
             memberships_changed=None
         )

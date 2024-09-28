@@ -6,7 +6,21 @@
         {
           "last_names": [
             {
-              "value": "Caroy",
+              "value": "Dupont",
+              "language": "fr"
+            }
+          ],
+          "first_names": [
+            {
+              "value": "Jeanne",
+              "language": "fr"
+            }
+          ]
+        },
+        {
+          "last_names": [
+            {
+              "value": "Durand",
               "language": "fr"
             }
           ],
@@ -21,16 +35,16 @@
       "identifiers": [
         {
           "type": "local",
-          "value": "jcaroy"
+          "value": "jdupond"
         },
         {
           "type": "idref",
-          "value": "077548914"
+          "value": "012345678"
         }
       ],
       "memberships": [
         {
-          "entity": "UR0456"
+          "entity_id": "UR0456"
         }
       ]
     }

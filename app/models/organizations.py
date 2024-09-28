@@ -18,7 +18,7 @@ class Organization(Agent[OrganizationIdentifierType]):
 
     names: List[Literal] = []
 
-    identifiers: List[OrganizationIdentifier]
+    identifiers: List[OrganizationIdentifier] = []
 
     def get_name(self, language: str) -> Literal:
         """

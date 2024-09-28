@@ -25,7 +25,7 @@ class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
             "events": ["created", "updated", "deleted", "unchanged"],
             "harvesters": harvesters,
             "fields": {
-                "name": "temporary name",  # TODO implement display name
+                "name": "temporary name",
                 "identifiers": [
                     {"type": id.type.value, "value": id.value}
                     for id in person.identifiers
