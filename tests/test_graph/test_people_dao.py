@@ -19,7 +19,7 @@ async def test_create_person(person_pydantic_model: Person,
     await dao.create(person_pydantic_model)
     local_identifier = person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
     person_from_db = await dao.find_by_identifier(local_identifier.type,
-                                          local_identifier.value)
+                                                  local_identifier.value)
     assert person_from_db
     assert person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
     assert any(
@@ -102,4 +102,71 @@ async def test_create_and_get_person(person_pydantic_model: Person):
     assert any(
         identifier for identifier in retrieved_person.identifiers if
         identifier.type == orcid_identifier.type and identifier.value == orcid_identifier.value
+    )
+
+
+async def test_create_person_with_two_names(person_with_two_names_pydantic_model: Person):
+    """
+    Given a basic person Pydantic model with two names
+    When the create_person method is called
+    Then the person should be created in the database
+
+    :param person_with_two_names_pydantic_model:
+    :return:
+    """
+    # "names": [
+    #     {
+    #         "last_names": [
+    #             {
+    #                 "value": "Dupont",
+    #                 "language": "fr"
+    #             }
+    #         ],
+    #         "first_names": [
+    #             {
+    #                 "value": "Jeanne",
+    #                 "language": "fr"
+    #             }
+    #         ]
+    #     },
+    #     {
+    #         "last_names": [
+    #             {
+    #                 "value": "Durand",
+    #                 "language": "fr"
+    #             }
+    #         ],
+    #         "first_names": [
+    #             {
+    #                 "value": "Jeanne",
+    #                 "language": "fr"
+    #             }
+    #         ]
+    #     }
+    # ],
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    dao = factory.get_dao(Person)
+    await dao.create(person_with_two_names_pydantic_model)
+    local_identifier = person_with_two_names_pydantic_model.get_identifier(
+        PersonIdentifierType.LOCAL)
+    person_from_db = await dao.find_by_identifier(local_identifier.type,
+                                                  local_identifier.value)
+    assert person_from_db
+    assert person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    assert len(person_from_db.names) == 2
+    assert any(
+        name for name in person_from_db.names if
+        any(
+            literal for literal in name.first_names if literal.value == "Jeanne"
+        ) and any(
+            literal for literal in name.last_names if literal.value == "Dupont"
+        )
+    )
+    assert any(
+        name for name in person_from_db.names if
+        any(
+            literal for literal in name.first_names if literal.value == "Jeanne"
+        ) and any(
+            literal for literal in name.last_names if literal.value == "Durand"
+        )
     )

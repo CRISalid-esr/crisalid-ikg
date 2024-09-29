@@ -30,6 +30,14 @@ async def fixture_person_pydantic_model(_base_path) -> Person:
     """
     return _person_from_json_data(_person_json_data_from_file(_base_path, "person"))
 
+@pytest_asyncio.fixture(name="person_with_two_names_pydantic_model")
+async def fixture_person_with_two_names_pydantic_model(_base_path) -> Person:
+    """
+    Create a basic person pydantic model with two names
+    :return: basic person pydantic model with two names
+    """
+    return _person_from_json_data(_person_json_data_from_file(_base_path, "person_with_two_names"))
+
 
 @pytest_asyncio.fixture(name="person_json_data")
 async def fixture_person_json_data(_base_path) -> dict:

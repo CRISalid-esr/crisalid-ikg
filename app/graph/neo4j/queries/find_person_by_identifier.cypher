@@ -21,11 +21,8 @@ WITH
   identifiers,
   collect(DISTINCT {value: fn.value, language: fn.language}) AS first_names,
   collect(DISTINCT {value: ln.value, language: ln.language}) AS last_names
-WITH
+RETURN
   person,
-  pn,
-  mb,
-  rs,
   identifiers,
   collect(DISTINCT {
     name:        id(pn),
@@ -37,13 +34,3 @@ WITH
     THEN { research_structure: rs, membership: mb }
     ELSE null
   END) AS memberships
-WITH
-  person,
-  identifiers,
-  names,
-  memberships
-RETURN
-  person,
-  identifiers,
-  names,
-  memberships
