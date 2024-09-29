@@ -1,0 +1,47 @@
+{
+  "names": [
+    {
+      "last_names": [
+        {
+          "value": "Dupont",
+          "language": "fr"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "Jeanne",
+          "language": "fr"
+        }
+      ]
+    },
+    {
+      "last_names": [
+        {
+          "value": "Durand",
+          "language": "fr"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "Jeanne",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "local",
+      "value": "jdupond"
+    },
+    {
+      "type": "idref",
+      "value": "012345678"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_id": "UR0456"
+    }
+  ]
+}

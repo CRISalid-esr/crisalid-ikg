@@ -11,7 +11,7 @@ UNWIND name.last_names AS last_name
 CREATE (ln:Literal {value: last_name.value, language: last_name.language})
 CREATE (pn)-[:HAS_LAST_NAME]->(ln)
 CREATE (p)-[:HAS_NAME]->(pn)
-WITH p
+WITH p, count(pn) AS npn
 UNWIND $identifiers AS identifier
 CREATE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
 CREATE (p)-[:HAS_IDENTIFIER]->(i)
