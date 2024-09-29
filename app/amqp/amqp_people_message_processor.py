@@ -38,25 +38,27 @@ class AMQPPeopleMessageProcessor(AMQPMessageProcessor):
             logger.debug(f"Person {person} unchanged")
             await self._create_or_update_person(person)
 
-    async def _create_person(self, person):
+    async def _create_person(self, person: Person, retry=False):
         try:
             await self.service.create_person(person)
         except ConflictError as e:
             logger.error(f"Identifier conflict while trying to create person {person} : {e}")
-            logger.error("Will try to update the person instead")
-            await self._update_person(person)
+            if not retry:
+                logger.error("Will try to update the person instead")
+                await self._update_person(person, retry=True)
 
-    async def _update_person(self, person):
+    async def _update_person(self, person: Person, retry=False):
         try:
             await self.service.update_person(person)
         except ConflictError as e:
             logger.error(f"Identifier conflict while trying to update person {person} : {e}")
         except NotFoundError as e:
             logger.error(f"Error while trying to update person {person} : {e}")
-            logger.error("Will try to create the person instead")
-            await self._create_person(person)
+            if not retry:
+                logger.error("Will try to create the person instead")
+                await self._create_person(person, retry=True)
 
-    async def _create_or_update_person(self, person):
+    async def _create_or_update_person(self, person: Person):
         try:
             await self.service.create_or_update_person(person)
         except ConflictError as e:
