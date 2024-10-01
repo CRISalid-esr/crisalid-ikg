@@ -101,6 +101,7 @@ class SourceRecordDAO(Neo4jDAO):
             harvester=source_record.harvester,
             person_id=harvested_for.id,
             titles=[title.dict() for title in source_record.titles],
+            abstracts=[abstract.dict() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers]
         )
 
@@ -115,6 +116,8 @@ class SourceRecordDAO(Neo4jDAO):
         )
         for title in record["titles"]:
             source_record.titles.append(Literal(**title))
+        for abstract in record["abstracts"]:
+            source_record.abstracts.append(Literal(**abstract))
         for identifier in record["identifiers"]:
             source_record.identifiers.append(PublicationIdentifier(**identifier))
         return source_record
