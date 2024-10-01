@@ -6,7 +6,7 @@ from app.models.document_type import DocumentType
 from app.models.literal import Literal
 from app.models.publication_identifiers import PublicationIdentifier
 from app.models.source_contributions import SourceContribution
-from app.models.subjects import Subject
+from app.models.concepts import Concept
 
 
 class SourceRecord(BaseModel):
@@ -27,7 +27,7 @@ class SourceRecord(BaseModel):
 
     abstracts: List[Literal] = []
 
-    subjects: List[Subject] = []
+    subjects: List[Concept] = []
 
     document_type: List[DocumentType] = []
 

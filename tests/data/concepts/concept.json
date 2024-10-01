@@ -1,0 +1,23 @@
+{
+  "uri": "http://example.org/subject/galactic_physics",
+  "pref_labels": [
+    {
+      "value": "Galactic Physics",
+      "language": "en"
+    },
+    {
+      "value": "Physique Galactique",
+      "language": "fr"
+    }
+  ],
+  "alt_labels": [
+    {
+      "value": "Galactic Astrophysics",
+      "language": "en"
+    },
+    {
+      "value": "Astrophysique Galactique",
+      "language": "fr"
+    }
+  ]
+}

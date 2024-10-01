@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from app.models.literal import Literal
 
 
-class Subject(BaseModel):
+class Concept(BaseModel):
     """
     Subject model (follows RDF Skos concept schema)
     """
