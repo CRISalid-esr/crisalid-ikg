@@ -33,3 +33,7 @@ async def test_create_source_record(person_persisted_pydantic_model: Person,
             fetched_identifier.type ==
             identifier.type and fetched_identifier.value == identifier.value
             for fetched_identifier in fetched_source_record.identifiers)
+    for abstract in scanr_thesis_source_record_pydantic_model.abstracts:
+        assert any(
+            fetched_abstract.language == abstract.language and fetched_abstract.value == abstract.value
+            for fetched_abstract in fetched_source_record.abstracts)
