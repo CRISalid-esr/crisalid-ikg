@@ -1,7 +1,7 @@
 ########################
 Quickstart: development
 ########################
-This guide will walk you through setting up the SVP Harvester project on a fresh Ubuntu 22.04 installation.
+This guide will walk you through setting up CRISalid IKG project on a fresh Ubuntu 22.04 installation.
 
 
 1. Install RabbitMQ
