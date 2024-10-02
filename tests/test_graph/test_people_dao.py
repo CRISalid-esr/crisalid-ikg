@@ -140,3 +140,40 @@ async def test_create_person_with_two_names(person_with_two_names_pydantic_model
             literal for literal in name.last_names if literal.value == "Durand"
         )
     )
+
+
+async def test_create_person_with_names_in_multiple_lng(
+    person_with_name_in_multiple_lng_pydantic_model:Person):
+    """
+    Given a person Pydantic model with names in multiple languages
+    When the create_person method is called
+    Then the person should be created in the database
+    :param person_with_name_in_multiple_lng_pydantic_model:
+    :return:
+    """
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    dao = factory.get_dao(Person)
+    await dao.create(person_with_name_in_multiple_lng_pydantic_model)
+    local_identifier = person_with_name_in_multiple_lng_pydantic_model.get_identifier(
+        PersonIdentifierType.LOCAL)
+    person_from_db = await dao.find_by_identifier(local_identifier.type,
+                                                  local_identifier.value)
+    assert person_from_db
+    assert person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    assert len(person_from_db.names) == 1
+    assert any(
+        name for name in person_from_db.names if
+        any(
+            literal for literal in name.first_names if
+            literal.value == "John" and literal.language == "fr"
+        ) and any(
+            literal for literal in name.first_names if
+            literal.value == "Михаил Александрович" and literal.language == "ru"
+        ) and any(
+            literal for literal in name.last_names if
+            literal.value == "Doe" and literal.language == "fr"
+        ) and any(
+            literal for literal in name.last_names if
+            literal.value == "Бакунин" and literal.language == "ru"
+        )
+    )
