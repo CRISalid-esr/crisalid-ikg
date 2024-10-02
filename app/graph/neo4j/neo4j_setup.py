@@ -27,6 +27,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         assert settings.neo4j_version == "enterprise"
         await cls._create_agent_identifier_type_constraint(tx)
         await cls._create_agent_identifier_value_constraint(tx)
+        await cls._create_has_name_relationship_constraint(tx)
 
     @staticmethod
     async def _create_person_id_constraint(tx):
@@ -72,4 +73,17 @@ class Neo4jSetup(Setup[AsyncDriver]):
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating agent identifier unique type/value constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_has_name_relationship_constraint(tx):
+        query = """
+        CREATE CONSTRAINT unique_has_name_relationship IF NOT EXISTS
+        FOR ()-[r:HAS_NAME]->()
+        REQUIRE (startNode(r), endNode(r)) IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating has name relationship constraint: {e}")
             raise e
