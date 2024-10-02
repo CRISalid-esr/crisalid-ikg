@@ -65,6 +65,42 @@ class ResearchStructureDAO(Neo4jDAO):
                                                     research_structure)
         return research_structure
 
+    async def find_by_identifier(self, identifier_type: OrganizationIdentifierType,
+                                 identifier_value: str) -> ResearchStructure | None:
+        """
+        Find a research_structure by an identifier
+
+        :param identifier_type: identifier type
+        :param identifier_value: identifier value
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        self._find_by_identifier_query,
+                        identifier_type=identifier_type.value,
+                        identifier_value=identifier_value
+                    )
+                    record = await result.single()
+                    if record:
+                        research_structure_data = record["s"]
+                        names_data = record["names"]
+                        identifiers_data = record["identifiers"]
+
+                        names = [Literal(**name) for name in names_data]
+                        identifiers = [OrganizationIdentifier(**identifier)
+                                       for identifier in identifiers_data]
+
+                        research_structure = ResearchStructure(
+                            id=research_structure_data["id"],
+                            identifiers=identifiers,
+                            names=names
+                        )
+
+                        return research_structure
+                    return None
+
     @classmethod
     async def _create_research_structure_transaction(cls, tx: AsyncSession,
                                                      research_structure: ResearchStructure):
@@ -176,42 +212,6 @@ class ResearchStructureDAO(Neo4jDAO):
             research_structure_id=research_structure.id,
             identifiers=[identifier.dict() for identifier in research_structure.identifiers]
         )
-
-    async def find_by_identifier(self, identifier_type: OrganizationIdentifierType,
-                                 identifier_value: str) -> ResearchStructure | None:
-        """
-        Find a research_structure by an identifier
-
-        :param identifier_type: identifier type
-        :param identifier_value: identifier value
-        :return:
-        """
-        async for driver in Neo4jConnexion().get_driver():
-            async with driver.session() as session:
-                async with await session.begin_transaction() as tx:
-                    result = await tx.run(
-                        self._find_by_identifier_query,
-                        identifier_type=identifier_type.value,
-                        identifier_value=identifier_value
-                    )
-                    record = await result.single()
-                    if record:
-                        research_structure_data = record["s"]
-                        names_data = record["names"]
-                        identifiers_data = record["identifiers"]
-
-                        names = [Literal(**name) for name in names_data]
-                        identifiers = [OrganizationIdentifier(**identifier)
-                                       for identifier in identifiers_data]
-
-                        research_structure = ResearchStructure(
-                            id=research_structure_data["id"],
-                            identifiers=identifiers,
-                            names=names
-                        )
-
-                        return research_structure
-                    return None
 
     _find_by_identifier_query = """
         MATCH (s)-[:HAS_IDENTIFIER]->(:AgentIdentifier {type: $identifier_type, value: $identifier_value})
