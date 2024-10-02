@@ -44,3 +44,34 @@ def test_create_invalid_person(person_with_invalid_identifier_type_json_data):
     """
     with pytest.raises(ValueError):
         Person(**person_with_invalid_identifier_type_json_data)
+
+
+def test_create_person_with_two_last_names(person_with_two_last_names_json_data):
+    """
+    Given a valid person model
+    When asked for different field values
+    Then the values should be returned correctly
+    :param person_pydantic_model:
+    :return:
+    """
+    person = Person(**person_with_two_last_names_json_data)
+    assert len(person.names) == 1
+    assert len(person.identifiers) == 2
+    assert any(
+        name for name in person.names if
+        any(
+            literal for literal in name.first_names if literal.value == "Jane"
+        ) and any(
+            literal for literal in name.last_names if literal.value == "Mariée"
+        ) and any(
+            literal for literal in name.last_names if literal.value == "Done"
+        )
+    )
+    assert any(
+        identifier for identifier in person.identifiers if
+        identifier.type == PersonIdentifierType.ORCID and identifier.value == "0000-0001-2345-6789"
+    )
+    assert any(
+        identifier for identifier in person.identifiers if
+        identifier.type == PersonIdentifierType.LOCAL and identifier.value == "jdoe@univ-paris1.fr"
+    )
