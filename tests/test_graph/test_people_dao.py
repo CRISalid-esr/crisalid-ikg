@@ -177,3 +177,49 @@ async def test_create_person_with_names_in_multiple_lng(
             literal.value == "Бакунин" and literal.language == "ru"
         )
     )
+
+
+async def test_create_person_with_two_last_names(
+        person_with_two_orcid_pydantic_model: Person,
+):
+    """
+    Given a person Pydantic model with two last names
+    When the create_person method is called
+    Then the person should be created in the database
+
+    :param person_with_two_names_pydantic_model:
+    :return:
+    """
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    dao = factory.get_dao(Person)
+    await dao.create(person_with_two_orcid_pydantic_model)
+    local_identifier = person_with_two_orcid_pydantic_model.get_identifier(
+        PersonIdentifierType.LOCAL
+    )
+    person_from_db = await dao.find_by_identifier(
+        local_identifier.type, local_identifier.value
+    )
+    assert person_from_db
+    assert (
+            person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    )
+    assert len(person_from_db.names) == 1
+    assert len(person_from_db.names[0].last_names) == 1
+    assert len(person_from_db.names[0].first_names) == 1
+    assert any(
+        name
+        for name in person_from_db.names
+        if any(literal for literal in name.first_names if literal.value == "John")
+        and any(literal for literal in name.last_names if literal.value == "Doe")
+    )
+    assert len(person_from_db.identifiers) == 3
+    assert any(
+        identifier.type == PersonIdentifierType.ORCID and identifier.value == "0000-0001-2345-6789"
+        for identifier in person_from_db.identifiers
+    ) and any(
+        identifier.type == PersonIdentifierType.ORCID and identifier.value == "0000-0000-2040-6080"
+        for identifier in person_from_db.identifiers
+    ) and any(
+        identifier.type == PersonIdentifierType.LOCAL and identifier.value == "jdoe@univ-paris1.fr"
+        for identifier in person_from_db.identifiers
+    )

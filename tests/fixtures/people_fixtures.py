@@ -72,3 +72,22 @@ async def fixture_person_with_invalid_identifier_type_json_data(_base_path) -> d
     :return: person with invalid identifier type json data
     """
     return _person_json_data_from_file(_base_path, "person_with_invalid_identifier_type")
+
+
+@pytest_asyncio.fixture(name="person_with_two_orcid_json_data")
+async def fixture_person_with_two_orcid_json_data(_base_path) -> dict:
+    """
+    Create a person with multiple orcid json data
+    :return: person with multiple orcid json data
+    """
+    return _person_json_data_from_file(_base_path, "person_with_two_orcid")
+
+
+@pytest_asyncio.fixture(name="person_with_two_orcid_pydantic_model")
+async def fixture_person_with_two_orcid_pydantic_model(
+        person_with_two_orcid_json_data) -> Person:
+    """
+    Create a person with multiple orcid pydantic model
+    :return: person with multiple orcid pydantic model
+    """
+    return _person_from_json_data(person_with_two_orcid_json_data)

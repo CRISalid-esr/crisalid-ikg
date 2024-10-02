@@ -73,3 +73,41 @@ def test_create_person_with_name_in_multiple_lng(person_with_name_in_multiple_ln
             literal.value == "Бакунин" and literal.language == "ru"
         )
     )
+
+
+def test_create_person_with_two_orcid(person_with_two_orcid_json_data):
+    """
+    Given json person data with two orcid
+    When asked for different field values
+    Then the values should be returned correctly
+    :param person_pydantic_model:
+    :return:
+    """
+    person = Person(**person_with_two_orcid_json_data)
+
+    assert len(person.names) == 1
+    assert len(person.identifiers) == 3
+    assert any(
+        name
+        for name in person.names
+        if any(literal for literal in name.first_names if literal.value == "John")
+        and any(literal for literal in name.last_names if literal.value == "Doe")
+    )
+    assert any(
+        identifier
+        for identifier in person.identifiers
+        if identifier.type == PersonIdentifierType.ORCID
+        and identifier.value == "0000-0001-2345-6789"
+    )
+    assert any(
+        identifier
+        for identifier in person.identifiers
+        if identifier.type == PersonIdentifierType.ORCID
+        and identifier.value == "0000-0000-2040-6080"
+    )
+    assert any(
+        identifier
+        for identifier in person.identifiers
+        if identifier.type == PersonIdentifierType.LOCAL
+        and identifier.value == "jdoe@univ-paris1.fr"
+    )
