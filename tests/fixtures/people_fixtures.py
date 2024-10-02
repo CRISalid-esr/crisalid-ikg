@@ -2,7 +2,7 @@ import pytest_asyncio
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
-from app.graph.neo4j.people_dao import PeopleDAO
+from app.graph.neo4j.person_dao import PersonDAO
 from app.models.people import Person
 from tests.fixtures.common import _person_json_data_from_file, _person_from_json_data
 
@@ -14,7 +14,7 @@ async def fixture_person_persisted_pydantic_model(person_pydantic_model) -> Pers
     :return: basic persisted person pydantic model
     """
     factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
-    people_dao: PeopleDAO = factory.get_dao(Person)
+    people_dao: PersonDAO = factory.get_dao(Person)
     await people_dao.create(person_pydantic_model)
     return person_pydantic_model
 

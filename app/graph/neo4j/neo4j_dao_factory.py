@@ -27,9 +27,9 @@ class Neo4jDAOFactory(DAOFactory):
                 GlobalDAO  # pylint: disable=import-outside-toplevel
             return GlobalDAO(driver=self.driver)
         if object_type.__name__ == Person.__name__:
-            from app.graph.neo4j.people_dao import \
-                PeopleDAO  # pylint: disable=import-outside-toplevel
-            return PeopleDAO(driver=self.driver)
+            from app.graph.neo4j.person_dao import \
+                PersonDAO  # pylint: disable=import-outside-toplevel
+            return PersonDAO(driver=self.driver)
         if object_type.__name__ == ResearchStructure.__name__:
             from app.graph.neo4j.research_structure_dao import \
                 ResearchStructureDAO  # pylint: disable=import-outside-toplevel

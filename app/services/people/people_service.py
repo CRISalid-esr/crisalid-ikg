@@ -1,7 +1,7 @@
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao import DAO
-from app.graph.neo4j.people_dao import PeopleDAO
+from app.graph.neo4j.person_dao import PersonDAO
 from app.models.people import Person
 from app.signals import person_created, person_identifiers_updated
 
@@ -18,9 +18,9 @@ class PeopleService:
         :return:
         """
         factory = self._get_dao_factory()
-        dao: PeopleDAO = factory.get_dao(Person)
+        dao: PersonDAO = factory.get_dao(Person)
         person_id, status, _ = await dao.create(person)
-        if status is PeopleDAO.Status.CREATED:
+        if status is PersonDAO.Status.CREATED:
             await person_created.send_async(self, payload=person_id)
         return person
 
@@ -31,9 +31,9 @@ class PeopleService:
         :return:
         """
         factory = self._get_dao_factory()
-        dao: PeopleDAO = factory.get_dao(Person)
+        dao: PersonDAO = factory.get_dao(Person)
         person_id, status, update_status = await dao.update(person)
-        if status is PeopleDAO.Status.UPDATED and update_status.identifiers_changed:
+        if status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
             await person_identifiers_updated.send_async(self, payload=person_id)
         return person
 
@@ -44,11 +44,11 @@ class PeopleService:
         :return:
         """
         factory = self._get_dao_factory()
-        dao: PeopleDAO = factory.get_dao(Person)
+        dao: PersonDAO = factory.get_dao(Person)
         person_id, status, update_status = await dao.create_or_update(person)
-        if status is PeopleDAO.Status.CREATED:
+        if status is PersonDAO.Status.CREATED:
             await person_created.send_async(payload=person_id)
-        elif status is PeopleDAO.Status.UPDATED and update_status.identifiers_changed:
+        elif status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
             await person_identifiers_updated.send_async(payload=person_id)
 
     async def get_person(self, person_id: str) -> Person:
@@ -58,7 +58,7 @@ class PeopleService:
         :return: Pydantic Person object
         """
         factory = self._get_dao_factory()
-        dao: PeopleDAO = factory.get_dao(Person)
+        dao: PersonDAO = factory.get_dao(Person)
         return await dao.get(person_id)
 
     @staticmethod

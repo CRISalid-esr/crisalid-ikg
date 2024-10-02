@@ -18,7 +18,7 @@ from app.models.people_names import PersonName
 from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
-class PeopleDAO(Neo4jDAO):
+class PersonDAO(Neo4jDAO):
     """
     Data access object for people and the neo4j database
     """
@@ -41,7 +41,7 @@ class PeopleDAO(Neo4jDAO):
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
-                    return await PeopleDAO._get_person_by_id(tx, person_id)
+                    return await PersonDAO._get_person_by_id(tx, person_id)
 
     @classmethod
     async def _get_person_by_id(cls, tx, person_id: str) -> Person | None:
@@ -100,7 +100,7 @@ class PeopleDAO(Neo4jDAO):
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 await session.write_transaction(self._create_person_transaction, person)
-        return person.id, PeopleDAO.Status.CREATED, None
+        return person.id, PersonDAO.Status.CREATED, None
 
     async def update(self, person: Person) -> Tuple[str, Neo4jDAO.Status, UpdateStatus | None]:
         """
@@ -113,7 +113,7 @@ class PeopleDAO(Neo4jDAO):
             async with driver.session() as session:
                 update_status = await session.write_transaction(self._update_person_transaction,
                                                                 person)
-        return person.id, PeopleDAO.Status.UPDATED, update_status
+        return person.id, PersonDAO.Status.UPDATED, update_status
 
     async def create_or_update(self, person: Person) -> Tuple[
         str, Neo4jDAO.Status, UpdateStatus | None]:
@@ -141,7 +141,7 @@ class PeopleDAO(Neo4jDAO):
         person.id = person.id or AgentIdentifierService.compute_identifier_for(person)
         if not person.id:
             raise ValueError(f"Unable to compute primary key for person {person}")
-        person_exists = await PeopleDAO._person_exists(tx, person.id)
+        person_exists = await PersonDAO._person_exists(tx, person.id)
         if person_exists:
             raise ConflictError(f"Person with id {person.id} already exists")
         create_person_query = load_query("create_person")
@@ -217,7 +217,7 @@ class PeopleDAO(Neo4jDAO):
             existing_identifiers,
             incoming_person.identifiers
         )
-        return PeopleDAO.UpdateStatus(
+        return PersonDAO.UpdateStatus(
             identifiers_changed=identifiers_changed,
             names_changed=None,
             memberships_changed=None
@@ -260,5 +260,5 @@ class PeopleDAO(Neo4jDAO):
                     )
                     record = await result.single()
                     if record is not None:
-                        return PeopleDAO._hydrate(record)
+                        return PersonDAO._hydrate(record)
                     return None
