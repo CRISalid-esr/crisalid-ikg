@@ -47,10 +47,10 @@ class ConceptDAO(Neo4jDAO):
                     return None
 
     @classmethod
-    async def _get_concept_by_id(cls, tx, person_id: str) -> Person | None:
+    async def _get_concept_by_id(cls, tx, concept_id: str) -> Person | None:
         result = await tx.run(
             load_query("get_concept_by_id"),
-            person_id=person_id
+            concept_id=concept_id
         )
         record = await result.single()
         if record:
