@@ -48,6 +48,25 @@ async def fixture_person_with_two_names_pydantic_model(_base_path) -> Person:
     )
 
 
+@pytest_asyncio.fixture(name="person_with_name_in_multiple_lng_pydantic_model")
+async def fixture_person_with_name_in_multiple_lng_pydantic_model(
+        person_with_name_in_multiple_lng_json_data) -> Person:
+    """
+    Create a person with name in multiple languages pydantic model
+    :return: person with name in multiple languages pydantic model
+    """
+    return _person_from_json_data(person_with_name_in_multiple_lng_json_data)
+
+
+@pytest_asyncio.fixture(name="person_with_name_in_multiple_lng_json_data")
+async def fixture_person_with_name_in_multiple_lng_json_data(_base_path) -> dict:
+    """
+    Create a person with name in multiple languages json data
+    :return: person with name in multiple languages json data
+    """
+    return _person_json_data_from_file(_base_path, "person_with_name_in_multiple_lng")
+
+
 @pytest_asyncio.fixture(name="person_with_invalid_identifier_type_json_data")
 async def fixture_person_with_invalid_identifier_type_json_data(_base_path) -> dict:
     """
