@@ -5,12 +5,12 @@ from tests.fixtures.common import _concept_from_json_data, _concept_json_data_fr
 
 
 @pytest_asyncio.fixture(name="concept_pydantic_model")
-async def fixture_concept_pydantic_model(_base_path) -> Concept:
+async def fixture_concept_pydantic_model(concept_json_data) -> Concept:
     """
     Create a basic concept pydantic model
     :return: basic concept pydantic model
     """
-    return _concept_from_json_data(_concept_json_data_from_file(_base_path, "concept"))
+    return _concept_from_json_data(concept_json_data)
 
 
 @pytest_asyncio.fixture(name="concept_json_data")
