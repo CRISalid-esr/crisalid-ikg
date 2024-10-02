@@ -30,6 +30,14 @@ async def fixture_person_pydantic_model(_base_path) -> Person:
     """
     return _person_from_json_data(_person_json_data_from_file(_base_path, "person"))
 
+@pytest_asyncio.fixture(name="person_json_data")
+async def fixture_person_json_data(_base_path) -> dict:
+    """
+    Create a basic person json data
+    :return: basic person json data
+    """
+    return _person_json_data_from_file(_base_path, "person")
+
 @pytest_asyncio.fixture(name="person_with_two_names_pydantic_model")
 async def fixture_person_with_two_names_pydantic_model(_base_path) -> Person:
     """
@@ -38,14 +46,6 @@ async def fixture_person_with_two_names_pydantic_model(_base_path) -> Person:
     """
     return _person_from_json_data(_person_json_data_from_file(_base_path, "person_with_two_names"))
 
-
-@pytest_asyncio.fixture(name="person_json_data")
-async def fixture_person_json_data(_base_path) -> dict:
-    """
-    Create a basic person json data
-    :return: basic person json data
-    """
-    return _person_json_data_from_file(_base_path, "person")
 
 
 @pytest_asyncio.fixture(name="person_with_invalid_identifier_type_json_data")

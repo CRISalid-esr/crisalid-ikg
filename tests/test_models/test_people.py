@@ -4,7 +4,7 @@ from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 
 
-def test_create_valid_person(person_pydantic_model):
+def test_create_valid_person(person_json_data):
     """
     Given a valid person model
     When asked for different field values
@@ -12,11 +12,11 @@ def test_create_valid_person(person_pydantic_model):
     :param person_pydantic_model:
     :return:
     """
-    assert person_pydantic_model
-    assert len(person_pydantic_model.names) == 1
-    assert len(person_pydantic_model.identifiers) == 2
+    person = Person(**person_json_data)
+    assert len(person.names) == 1
+    assert len(person.identifiers) == 2
     assert any(
-        name for name in person_pydantic_model.names if
+        name for name in person.names if
         any(
             literal for literal in name.first_names if literal.value == "John"
         ) and any(
@@ -24,11 +24,11 @@ def test_create_valid_person(person_pydantic_model):
         )
     )
     assert any(
-        identifier for identifier in person_pydantic_model.identifiers if
+        identifier for identifier in person.identifiers if
         identifier.type == PersonIdentifierType.ORCID and identifier.value == "0000-0001-2345-6789"
     )
     assert any(
-        identifier for identifier in person_pydantic_model.identifiers if
+        identifier for identifier in person.identifiers if
         identifier.type == PersonIdentifierType.LOCAL and identifier.value == "jdoe@univ-paris1.fr"
     )
 
