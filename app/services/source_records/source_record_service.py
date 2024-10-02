@@ -25,7 +25,7 @@ class SourceRecordService:
         """
         factory = self._get_dao_factory()
         people_dao: PersonDAO = factory.get_dao(Person)
-        person = await people_dao.find_person(harvested_for)
+        person = await people_dao.find(harvested_for)
         if not person:
             raise ValueError(f"Person with id {harvested_for.id} does not exist")
         source_record_dao: SourceRecordDAO = factory.get_dao(SourceRecord)

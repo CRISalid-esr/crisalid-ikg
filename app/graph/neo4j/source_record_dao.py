@@ -26,15 +26,6 @@ class SourceRecordDAO(Neo4jDAO):
         titles_changed: bool
         contributors_changed: bool
 
-    @staticmethod
-    async def _source_record_exists(tx: AsyncManagedTransaction, source_record_id: str) -> bool:
-        result = await tx.run(
-            load_query("source_record_exists"),
-            source_record_id=source_record_id
-        )
-        record = await result.single()
-        return record is not None
-
     async def create(self, source_record: SourceRecord,
                      harvested_for: Person
                      ) -> Tuple[
@@ -64,6 +55,15 @@ class SourceRecordDAO(Neo4jDAO):
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourceRecordDAO._get_source_record_by_id(tx, source_record_id)
+
+    @staticmethod
+    async def _source_record_exists(tx: AsyncManagedTransaction, source_record_id: str) -> bool:
+        result = await tx.run(
+            load_query("source_record_exists"),
+            source_record_id=source_record_id
+        )
+        record = await result.single()
+        return record is not None
 
     @classmethod
     async def _get_source_record_by_id(cls, tx: AsyncManagedTransaction,
