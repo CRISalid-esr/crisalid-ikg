@@ -46,6 +46,18 @@ class ConceptDAO(Neo4jDAO):
                         return self._hydrate(record)
                     return None
 
+    async def create(self, concept: Concept) -> str:
+        """
+        Create  a concept in the graph database
+
+        :param concept: concept object
+        :return: concept id
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                await session.write_transaction(self._create_concept_transaction, concept)
+        return concept.uri
+
     @classmethod
     async def _get_concept_by_id(cls, tx, concept_id: str) -> Person | None:
         result = await tx.run(
@@ -70,18 +82,6 @@ class ConceptDAO(Neo4jDAO):
             alt_labels=alt_labels
         )
         return concept
-
-    async def create(self, concept: Concept) -> str:
-        """
-        Create  a concept in the graph database
-
-        :param concept: concept object
-        :return: concept id
-        """
-        async for driver in Neo4jConnexion().get_driver():
-            async with driver.session() as session:
-                await session.write_transaction(self._create_concept_transaction, concept)
-        return concept.uri
 
     @staticmethod
     async def _create_concept_transaction(tx: AsyncManagedTransaction, concept: Concept) -> None:
