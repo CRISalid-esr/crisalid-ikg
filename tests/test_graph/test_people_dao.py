@@ -114,36 +114,6 @@ async def test_create_person_with_two_names(person_with_two_names_pydantic_model
     :param person_with_two_names_pydantic_model:
     :return:
     """
-    # "names": [
-    #     {
-    #         "last_names": [
-    #             {
-    #                 "value": "Dupont",
-    #                 "language": "fr"
-    #             }
-    #         ],
-    #         "first_names": [
-    #             {
-    #                 "value": "Jeanne",
-    #                 "language": "fr"
-    #             }
-    #         ]
-    #     },
-    #     {
-    #         "last_names": [
-    #             {
-    #                 "value": "Durand",
-    #                 "language": "fr"
-    #             }
-    #         ],
-    #         "first_names": [
-    #             {
-    #                 "value": "Jeanne",
-    #                 "language": "fr"
-    #             }
-    #         ]
-    #     }
-    # ],
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
     await dao.create(person_with_two_names_pydantic_model)

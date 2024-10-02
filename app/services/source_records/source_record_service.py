@@ -1,7 +1,7 @@
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao_factory import DAOFactory
-from app.graph.neo4j.people_dao import PeopleDAO
+from app.graph.neo4j.person_dao import PersonDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -24,8 +24,8 @@ class SourceRecordService:
         :return:
         """
         factory = self._get_dao_factory()
-        people_dao: PeopleDAO = factory.get_dao(Person)
-        person = await people_dao.find_person(harvested_for)
+        people_dao: PersonDAO = factory.get_dao(Person)
+        person = await people_dao.find(harvested_for)
         if not person:
             raise ValueError(f"Person with id {harvested_for.id} does not exist")
         source_record_dao: SourceRecordDAO = factory.get_dao(SourceRecord)
