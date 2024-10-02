@@ -44,3 +44,32 @@ def test_create_invalid_person(person_with_invalid_identifier_type_json_data):
     """
     with pytest.raises(ValueError):
         Person(**person_with_invalid_identifier_type_json_data)
+
+
+def test_create_person_with_name_in_multiple_lng(person_with_name_in_multiple_lng_json_data):
+    """
+    Given json person data with name in multiple languages
+    When creating a person object
+    Then the person object should be created correctly
+    :param person_with_name_in_multiple_lng_json_data:
+    :return:
+    """
+    person = Person(**person_with_name_in_multiple_lng_json_data)
+    assert len(person.names) == 1
+    assert len(person.identifiers) == 2
+    assert any(
+        name for name in person.names if
+        any(
+            literal for literal in name.first_names if
+            literal.value == "John" and literal.language == "fr"
+        ) and any(
+            literal for literal in name.first_names if
+            literal.value == "Михаил Александрович" and literal.language == "ru"
+        ) and any(
+            literal for literal in name.last_names if
+            literal.value == "Doe" and literal.language == "fr"
+        ) and any(
+            literal for literal in name.last_names if
+            literal.value == "Бакунин" and literal.language == "ru"
+        )
+    )
