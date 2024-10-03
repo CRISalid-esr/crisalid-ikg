@@ -25,11 +25,7 @@ class Organization(Agent[OrganizationIdentifierType]):
     @field_validator('identifiers', mode="after")
     @staticmethod
     def _validate_identifiers(identifiers):
-        seen_types = set()
-        for ident in identifiers:
-            if ident.type in seen_types:
-                raise ValueError(f"Duplicate identifier type found: {ident.type}")
-            seen_types.add(ident.type)
+        Organization._prevent_duplicate_identifiers(identifiers)
         return identifiers
 
     def get_name(self, language: str) -> Literal:

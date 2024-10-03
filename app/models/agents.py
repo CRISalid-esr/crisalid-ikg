@@ -24,3 +24,10 @@ class Agent(BaseModel, Generic[IdType]):
         :return: identifier
         """
         return next((ident for ident in self.identifiers if ident.type == identifier_type), None)
+
+    @staticmethod
+    def _prevent_duplicate_identifiers(identifiers):
+        types = [ident.type for ident in identifiers]
+        if len(list(set(types))) == len(types):
+            return
+        raise ValueError(f"Duplicate identifier type found in {identifiers}")
