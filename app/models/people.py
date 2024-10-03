@@ -40,6 +40,13 @@ class Person(Agent[PersonIdentifierType]):
         if identifiers and any(
                 ident.type not in PersonIdentifierType for ident in identifiers):
             raise ValueError("All identifiers for a Person must be of type PersonIdentifierType")
+
+        seen_types = set()
+        for ident in identifiers:
+            if ident.type in seen_types:
+                raise ValueError(f"Duplicate identifier type found: {ident.type}")
+            seen_types.add(ident.type)
+
         return identifiers
 
     def get_identifier(self, identifier_type: PersonIdentifierType) -> PersonIdentifier:

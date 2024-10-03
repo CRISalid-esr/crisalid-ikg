@@ -119,3 +119,15 @@ def test_create_person_with_name_in_multiple_lng(
             if literal.value == "Бакунин" and literal.language == "ru"
         )
     )
+
+
+def test_create_person_with_two_orcid(person_with_two_orcid_json_data):
+    """
+    Given json person data with two orcid
+    When creating a person object
+    Then a ValueError should be raised
+    :param person_with_two_orcid_json_data: json data with two orcid
+    :return:
+    """
+    with pytest.raises(ValueError):
+        Person(**person_with_two_orcid_json_data)
