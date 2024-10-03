@@ -184,11 +184,14 @@ async def test_create_person_with_two_last_names(
     )
     assert len(person_from_db.identifiers) == 2
     assert any(
-        identifier.type == PersonIdentifierType.ORCID and identifier.value == "0000-0001-2345-6789"
+        identifier.type == PersonIdentifierType.ORCID
+        and identifier.value == "0000-0001-2345-6789"
         for identifier in person_from_db.identifiers
     ) and any(
-        identifier.type == PersonIdentifierType.LOCAL and identifier.value == "jdoe@univ-paris1.fr"
+        identifier.type == PersonIdentifierType.LOCAL
+        and identifier.value == "jdoe@univ-paris1.fr"
         for identifier in person_from_db.identifiers
+    )
 
 
 async def test_create_person_with_names_in_multiple_lng(
