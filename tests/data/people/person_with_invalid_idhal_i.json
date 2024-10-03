@@ -1,0 +1,41 @@
+{
+  "names": [
+    {
+      "last_names": [
+        {
+          "value": "Doe",
+          "language": "fr"
+        },
+        {
+          "value": "Бакунин",
+          "language": "ru"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "John",
+          "language": "fr"
+        },
+        {
+          "value": "Михаил Александрович",
+          "language": "ru"
+        }
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "id_hal_i",
+      "value": "bla"
+    },
+    {
+      "type": "local",
+      "value": "jdoeuniv-paris1.fr"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_id": "U123"
+    }
+  ]
+}

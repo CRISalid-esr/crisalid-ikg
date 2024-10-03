@@ -121,6 +121,40 @@ def test_create_person_with_name_in_multiple_lng(
     )
 
 
+@pytest.mark.parametrize(
+    "invalid_identifier_data_fixture",
+    [
+        "person_with_invalid_orcid_json_data",
+        "person_with_invalid_scopus_json_data",
+        "person_with_invalid_idref_json_data",
+        "person_with_invalid_idhal_s_json_data",
+        "person_with_invalid_idhal_i_json_data"
+    ],
+    ids=[
+        "person_with_invalid_orcid_json_data",
+        "person_with_invalid_scopus_json_data",
+        "person_with_invalid_idref_json_data",
+        "person_with_invalid_idhal_s_json_data",
+        "person_with_invalid_idhal_i_json_data"
+    ]
+)
+def test_create_person_with_invalid_identifier(invalid_identifier_data_fixture, request):
+    """
+    Given json person data with an invalid identifier type
+    When creating a person object
+    Then a ValueError should be raised
+
+    :param invalid_identifier_data_fixture: Fixture providing invalid identifier data
+    :param request: Pytest request object to get the fixture by name
+    :return: None
+    """
+    # Retrieve the fixture dynamically using the request object
+    person_data = request.getfixturevalue(invalid_identifier_data_fixture)
+
+    with pytest.raises(ValueError):
+        Person(**person_data)
+
+        
 def test_create_person_with_two_orcid(person_with_two_orcid_json_data):
     """
     Given json person data with two orcid
