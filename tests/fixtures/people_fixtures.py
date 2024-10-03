@@ -96,3 +96,48 @@ async def fixture_person_with_two_last_names_pydantic_model(_base_path) -> Perso
     return _person_from_json_data(
         _person_json_data_from_file(_base_path, "person_with_two_last_names")
     )
+
+
+@pytest_asyncio.fixture(name="person_with_invalid_orcid_json_data")
+async def fixture_person_with_invalid_orcid_json_data(_base_path) -> dict:
+    """
+    Create a person with invalid orcid json data
+    :return: person with invalid orcid json data
+    """
+    return _person_json_data_from_file(_base_path, "person_with_invalid_orcid")
+
+
+@pytest_asyncio.fixture(name="person_with_invalid_scopus_json_data")
+async def fixture_person_with_invalid_scopus_json_data(_base_path) -> dict:
+    """
+    Create a person with invalid orcid json data
+    :return: person with invalid orcid json data
+    """
+    return _person_json_data_from_file(_base_path, "person_with_invalid_scopus_eid")
+
+
+@pytest_asyncio.fixture(name="person_with_invalid_idref_json_data")
+async def fixture_person_with_invalid_idref_json_data(_base_path) -> dict:
+    """
+    Create a person with invalid idref json data
+    :return: person with invalid idref json data
+    """
+    return _person_json_data_from_file(_base_path, "person_with_invalid_idref")
+
+
+@pytest_asyncio.fixture(name="person_with_invalid_idhal_s_json_data")
+async def fixture_person_with_invalid_idhal_s_json_data(_base_path) -> dict:
+    """
+    Create a person with invalid id_hal_s json data
+    :return: person with invalid id_hal_s json data
+    """
+    return _person_json_data_from_file(_base_path, "person_with_invalid_idhal_s")
+
+
+@pytest_asyncio.fixture(name="person_with_invalid_idhal_i_json_data")
+async def fixture_person_with_invalid_idhal_i_json_data(_base_path) -> dict:
+    """
+    Create a person with invalid id_hal_i json data
+    :return: person with invalid id_hal_i json data
+    """
+    return _person_json_data_from_file(_base_path, "person_with_invalid_idhal_i")

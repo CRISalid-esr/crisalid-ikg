@@ -1,6 +1,8 @@
 """
 Person model
 """
+
+import re
 from typing import List, Optional, Annotated
 
 from pydantic import field_validator, BeforeValidator, Field
@@ -38,8 +40,28 @@ class Person(Agent[PersonIdentifierType]):
     @staticmethod
     def _validate_identifiers(identifiers):
         if identifiers and any(
-                ident.type not in PersonIdentifierType for ident in identifiers):
-            raise ValueError("All identifiers for a Person must be of type PersonIdentifierType")
+                ident.type not in PersonIdentifierType for ident in identifiers
+        ):
+            raise ValueError(
+                "All identifiers for a Person must be of type PersonIdentifierType"
+            )
+
+        type_pattern = {
+            PersonIdentifierType.ORCID: "^([0-9]{4}-){3}[0-9]{3}[0-9X]$",
+            PersonIdentifierType.IDREF: "^[0-9]{1,9}$",
+            PersonIdentifierType.ID_HAL_S: "^([a-z]+-)*[a-z]+$",
+            PersonIdentifierType.ID_HAL_I: "^[0-9]{1,9}$",
+            PersonIdentifierType.SCOPUS_EID: "123456789",
+        }
+        for identifier in identifiers:
+            if identifier.type != PersonIdentifierType.LOCAL:
+                if identifier.type in type_pattern:
+                    pattern = type_pattern[identifier.type]
+                    if not re.fullmatch(pattern, identifier.value):
+                        raise ValueError(
+                            f"Value {identifier.value} for"
+                            f" {identifier.type} does not match the expected pattern {pattern}"
+                        )
         return identifiers
 
     def get_identifier(self, identifier_type: PersonIdentifierType) -> PersonIdentifier:
