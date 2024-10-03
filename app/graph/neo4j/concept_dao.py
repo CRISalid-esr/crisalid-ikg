@@ -46,6 +46,25 @@ class ConceptDAO(Neo4jDAO):
                         return self._hydrate(record)
                     return None
 
+    async def find_concept_without_uri_by_pref_label(self, pref_label: Literal) -> Concept | None:
+        """
+        Find a concept by its pref label
+
+        :param pref_label: concept pref label
+        :return: concept object
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        load_query("find_concept_without_uri_by_label"),
+                        label=pref_label.value,
+                    )
+                    record = await result.single()
+                    if record:
+                        return self._hydrate(record)
+                    return None
+
     async def create(self, concept: Concept) -> str:
         """
         Create  a concept in the graph database
@@ -56,6 +75,18 @@ class ConceptDAO(Neo4jDAO):
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 await session.write_transaction(self._create_concept_transaction, concept)
+        return concept.uri
+
+    async def update(self, concept: Concept) -> str:
+        """
+        Update a concept in the graph database
+
+        :param concept: concept object
+        :return: concept id
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                await session.write_transaction(self._update_concept_transaction, concept)
         return concept.uri
 
     @classmethod
@@ -107,6 +138,36 @@ class ConceptDAO(Neo4jDAO):
                 f"Bad request error while creating concept {concept}") from client_error
         except Neo4jError as neo4j_error:
             raise DatabaseError(f"Database error while creating concept {concept}") \
+                from neo4j_error
+
+    @staticmethod
+    async def _update_concept_transaction(tx: AsyncManagedTransaction, concept: Concept) -> None:
+        concept_exists = await ConceptDAO._concept_exists_by_uri(tx, concept.uri)
+        if not concept_exists:
+            raise ConflictError(
+                f"Concept identified by {concept.uri} cannot be updated as it does not exist")
+        delete_labels_query = load_query("delete_concept_labels")
+        create_labels_query = load_query("create_concept_labels")
+        try:
+            await tx.run(
+                delete_labels_query,
+                uri=concept.uri
+            )
+            await tx.run(
+                create_labels_query,
+                uri=concept.uri,
+                pref_labels=[pref_label.dict() for pref_label in concept.pref_labels],
+                alt_labels=[alt_label.dict() for alt_label in concept.alt_labels]
+            )
+        except ConstraintError as constraint_error:
+            raise ConflictError(
+                f"Schema constraint violation while updating concept {concept}") \
+                from constraint_error
+        except ClientError as client_error:
+            raise ValueError(
+                f"Bad request error while updating concept {concept}") from client_error
+        except Neo4jError as neo4j_error:
+            raise DatabaseError(f"Database error while updating concept {concept}") \
                 from neo4j_error
 
     @staticmethod
