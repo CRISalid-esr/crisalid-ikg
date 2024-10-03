@@ -193,7 +193,7 @@ async def test_create_person_with_two_last_names(
 
 
 async def test_create_person_with_names_in_multiple_lng(
-    person_with_name_in_multiple_lng_pydantic_model:Person):
+        person_with_name_in_multiple_lng_pydantic_model: Person):
     """
     Given a person Pydantic model with names in multiple languages
     When the create_person method is called

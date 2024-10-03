@@ -78,6 +78,15 @@ async def fixture_person_with_invalid_identifier_type_json_data(_base_path) -> d
     )
 
 
+@pytest_asyncio.fixture(name="person_with_two_orcid_json_data")
+async def fixture_person_with_two_orcid_json_data(_base_path) -> dict:
+    """
+    Create a person with multiple orcid json data
+    :return: person with multiple orcid json data
+    """
+    return _person_json_data_from_file(_base_path, "person_with_two_orcid")
+
+
 @pytest_asyncio.fixture(name="person_with_two_last_names_json_data")
 async def fixture_person_with_two_last_names_json_data(_base_path) -> dict:
     """
