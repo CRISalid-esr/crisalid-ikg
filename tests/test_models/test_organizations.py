@@ -1,3 +1,5 @@
+import pytest
+
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.organizations import Organization
 
@@ -40,3 +42,19 @@ def test_create_valid_organization(research_structure_json_data):
         identifier.value == "123456" and identifier.type == OrganizationIdentifierType.ROR
         for identifier in organization.identifiers
     )
+
+
+def test_create_organization_with_duplicate_identifier(
+        research_structure_with_duplicate_identifiers_json_data
+):
+    """
+    Given json organization data with invalid identifier type
+    When creating an organization object
+    Then a ValueError should be raised
+
+    :param research_structure_with_duplicate_identifiers_json_data:
+     json data with invalid identifier type
+    :return:
+    """
+    with pytest.raises(ValueError):
+        Organization(**research_structure_with_duplicate_identifiers_json_data)
