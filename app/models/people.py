@@ -51,7 +51,7 @@ class Person(Agent[PersonIdentifierType]):
             PersonIdentifierType.IDREF: "^[0-9]{1,9}$",
             PersonIdentifierType.ID_HAL_S: "^([a-z]+-)*[a-z]+$",
             PersonIdentifierType.ID_HAL_I: "^[0-9]{1,9}$",
-            PersonIdentifierType.SCOPUS_EID: "123456789",
+            PersonIdentifierType.SCOPUS_EID: "^[0-9]+$",
         }
         for identifier in identifiers:
             if identifier.type != PersonIdentifierType.LOCAL:
