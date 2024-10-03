@@ -1,7 +1,6 @@
 """
 Person model
 """
-
 from typing import List, Optional, Annotated
 
 from pydantic import field_validator, BeforeValidator, Field
@@ -14,7 +13,7 @@ from app.models.people_names import PersonName
 
 
 def _hydrate_memberships(v):
-    if isinstance(v, dict) and "entity" in v:
+    if isinstance(v, dict) and 'entity' in v:
         return Membership(**v)
     return v
 
@@ -39,11 +38,8 @@ class Person(Agent[PersonIdentifierType]):
     @staticmethod
     def _validate_identifiers(identifiers):
         if identifiers and any(
-                ident.type not in PersonIdentifierType for ident in identifiers
-        ):
-            raise ValueError(
-                "All identifiers for a Person must be of type PersonIdentifierType"
-            )
+                ident.type not in PersonIdentifierType for ident in identifiers):
+            raise ValueError("All identifiers for a Person must be of type PersonIdentifierType")
 
         seen_types = set()
         for ident in identifiers:
@@ -59,6 +55,4 @@ class Person(Agent[PersonIdentifierType]):
         :param identifier_type: identifier type
         :return: identifier
         """
-        return next(
-            (ident for ident in self.identifiers if ident.type == identifier_type), None
-        )
+        return next((ident for ident in self.identifiers if ident.type == identifier_type), None)
