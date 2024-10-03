@@ -63,11 +63,7 @@ class Person(Agent[PersonIdentifierType]):
                             f" {identifier.type} does not match the expected pattern {pattern}"
                         )
 
-        seen_types = set()
-        for ident in identifiers:
-            if ident.type in seen_types:
-                raise ValueError(f"Duplicate identifier type found: {ident.type}")
-            seen_types.add(ident.type)
+        Person._prevent_duplicate_identifiers(identifiers)
 
         return identifiers
 

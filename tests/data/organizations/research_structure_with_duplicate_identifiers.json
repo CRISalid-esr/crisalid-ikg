@@ -1,0 +1,61 @@
+{
+  "names": [
+    {
+      "value": "Laboratoire toto",
+      "language": "fr"
+    },
+    {
+      "value": "Foobar Laboratory",
+      "language": "en"
+    }
+  ],
+  "acronym": "FL",
+  "descriptions": [
+    {
+      "value": "Un laboratoire de recherche fictif",
+      "language": "fr"
+    },
+    {
+      "value": "An imaginary laboratory",
+      "language": "en"
+    }
+  ],
+  "contacts": [
+    {
+      "type": "postal_address",
+      "format": "structured_physical_address",
+      "value": {
+        "country": "France",
+        "zip_code": "75005",
+        "city": "PARIS",
+        "street": "Sorbonne, 1 rue de la Sorbonne"
+      }
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "local",
+      "value": "U123"
+    },
+    {
+      "type": "local",
+      "value": "U153"
+    },
+    {
+      "type": "RNSR",
+      "value": "200012123S"
+    },
+    {
+      "type": "RNSR",
+      "value": "200012133S"
+    },
+    {
+      "type": "ROR",
+      "value": "123456"
+    },
+    {
+      "type": "ROR",
+      "value": "153456"
+    }
+  ]
+}

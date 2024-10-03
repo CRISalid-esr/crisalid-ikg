@@ -3,6 +3,8 @@ Person model
 """
 from typing import List, Optional
 
+from pydantic import field_validator
+
 from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.agents import Agent
 from app.models.identifier_types import OrganizationIdentifierType
@@ -19,6 +21,12 @@ class Organization(Agent[OrganizationIdentifierType]):
     names: List[Literal] = []
 
     identifiers: List[OrganizationIdentifier] = []
+
+    @field_validator('identifiers', mode="after")
+    @staticmethod
+    def _validate_identifiers(identifiers):
+        Organization._prevent_duplicate_identifiers(identifiers)
+        return identifiers
 
     def get_name(self, language: str) -> Literal:
         """

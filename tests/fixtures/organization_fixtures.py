@@ -48,3 +48,13 @@ async def fixture_research_structure_with_invalid_identifier_type_json_data(_bas
     """
     return _organization_json_data_from_file(_base_path,
                                              "research_structure_with_invalid_identifier_type")
+
+
+@pytest_asyncio.fixture(name="research_structure_with_duplicate_identifiers_json_data")
+async def fixture_research_structure_with_duplicate_identifiers_json_data(_base_path) -> dict:
+    """
+    Create a basic structure json data
+    :return: basic structure json data
+    """
+    return _organization_json_data_from_file(
+        _base_path, "research_structure_with_duplicate_identifiers")
