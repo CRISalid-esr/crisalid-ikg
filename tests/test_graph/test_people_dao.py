@@ -184,19 +184,16 @@ async def test_create_person_with_two_last_names(
     )
     assert len(person_from_db.identifiers) == 2
     assert any(
-        identifier.type == PersonIdentifierType.ORCID
-        and identifier.value == "0000-0001-2345-6789"
+        identifier.type == PersonIdentifierType.ORCID and identifier.value == "0000-0001-2345-6789"
         for identifier in person_from_db.identifiers
     ) and any(
-        identifier.type == PersonIdentifierType.LOCAL
-        and identifier.value == "jdoe@univ-paris1.fr"
+        identifier.type == PersonIdentifierType.LOCAL and identifier.value == "jdoe@univ-paris1.fr"
         for identifier in person_from_db.identifiers
     )
 
 
 async def test_create_person_with_names_in_multiple_lng(
-        person_with_name_in_multiple_lng_pydantic_model: Person,
-):
+        person_with_name_in_multiple_lng_pydantic_model: Person):
     """
     Given a person Pydantic model with names in multiple languages
     When the create_person method is called
@@ -208,37 +205,25 @@ async def test_create_person_with_names_in_multiple_lng(
     dao = factory.get_dao(Person)
     await dao.create(person_with_name_in_multiple_lng_pydantic_model)
     local_identifier = person_with_name_in_multiple_lng_pydantic_model.get_identifier(
-        PersonIdentifierType.LOCAL
-    )
-    person_from_db = await dao.find_by_identifier(
-        local_identifier.type, local_identifier.value
-    )
+        PersonIdentifierType.LOCAL)
+    person_from_db = await dao.find_by_identifier(local_identifier.type,
+                                                  local_identifier.value)
     assert person_from_db
-    assert (
-            person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
-    )
+    assert person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
     assert len(person_from_db.names) == 1
     assert any(
-        name
-        for name in person_from_db.names
-        if any(
-            literal
-            for literal in name.first_names
-            if literal.value == "John" and literal.language == "fr"
-        )
-        and any(
-            literal
-            for literal in name.first_names
-            if literal.value == "Михаил Александрович" and literal.language == "ru"
-        )
-        and any(
-            literal
-            for literal in name.last_names
-            if literal.value == "Doe" and literal.language == "fr"
-        )
-        and any(
-            literal
-            for literal in name.last_names
-            if literal.value == "Бакунин" and literal.language == "ru"
+        name for name in person_from_db.names if
+        any(
+            literal for literal in name.first_names if
+            literal.value == "John" and literal.language == "fr"
+        ) and any(
+            literal for literal in name.first_names if
+            literal.value == "Михаил Александрович" and literal.language == "ru"
+        ) and any(
+            literal for literal in name.last_names if
+            literal.value == "Doe" and literal.language == "fr"
+        ) and any(
+            literal for literal in name.last_names if
+            literal.value == "Бакунин" and literal.language == "ru"
         )
     )

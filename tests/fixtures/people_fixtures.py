@@ -73,7 +73,9 @@ async def fixture_person_with_invalid_identifier_type_json_data(_base_path) -> d
     Create a person with invalid identifier type json data
     :return: person with invalid identifier type json data
     """
-    return _person_json_data_from_file(_base_path, "person_with_invalid_identifier_type")
+    return _person_json_data_from_file(
+        _base_path, "person_with_invalid_identifier_type"
+    )
 
 
 @pytest_asyncio.fixture(name="person_with_two_orcid_json_data")

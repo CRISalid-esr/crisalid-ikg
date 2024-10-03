@@ -16,20 +16,22 @@ def test_create_valid_person(person_json_data):
     assert len(person.names) == 1
     assert len(person.identifiers) == 2
     assert any(
-        name for name in person.names if
-        any(
-            literal for literal in name.first_names if literal.value == "John"
-        ) and any(
-            literal for literal in name.last_names if literal.value == "Doe"
-        )
+        name
+        for name in person.names
+        if any(literal for literal in name.first_names if literal.value == "John")
+        and any(literal for literal in name.last_names if literal.value == "Doe")
     )
     assert any(
-        identifier for identifier in person.identifiers if
-        identifier.type == PersonIdentifierType.ORCID and identifier.value == "0000-0001-2345-6789"
+        identifier
+        for identifier in person.identifiers
+        if identifier.type == PersonIdentifierType.ORCID
+        and identifier.value == "0000-0001-2345-6789"
     )
     assert any(
-        identifier for identifier in person.identifiers if
-        identifier.type == PersonIdentifierType.LOCAL and identifier.value == "jdoe@univ-paris1.fr"
+        identifier
+        for identifier in person.identifiers
+        if identifier.type == PersonIdentifierType.LOCAL
+        and identifier.value == "jdoe@univ-paris1.fr"
     )
 
 
@@ -77,6 +79,7 @@ def test_create_person_with_two_last_names(person_with_two_last_names_json_data)
         if identifier.type == PersonIdentifierType.LOCAL
         and identifier.value == "jdoe@univ-paris1.fr"
     )
+
 
 def test_create_person_with_name_in_multiple_lng(
         person_with_name_in_multiple_lng_json_data,
