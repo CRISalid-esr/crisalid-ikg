@@ -43,7 +43,9 @@ async def fixture_person_with_two_names_pydantic_model(_base_path) -> Person:
     Create a basic person pydantic model with two names
     :return: basic person pydantic model with two names
     """
-    return _person_from_json_data(_person_json_data_from_file(_base_path, "person_with_two_names"))
+    return _person_from_json_data(
+        _person_json_data_from_file(_base_path, "person_with_two_names")
+    )
 
 
 @pytest_asyncio.fixture(name="person_with_name_in_multiple_lng_pydantic_model")
@@ -83,11 +85,21 @@ async def fixture_person_with_two_orcid_json_data(_base_path) -> dict:
     return _person_json_data_from_file(_base_path, "person_with_two_orcid")
 
 
-@pytest_asyncio.fixture(name="person_with_two_orcid_pydantic_model")
-async def fixture_person_with_two_orcid_pydantic_model(
-        person_with_two_orcid_json_data) -> Person:
+@pytest_asyncio.fixture(name="person_with_two_last_names_json_data")
+async def fixture_person_with_two_last_names_json_data(_base_path) -> dict:
     """
-    Create a person with multiple orcid pydantic model
-    :return: person with multiple orcid pydantic model
+    Create a person with two last names json data
+    :return: person with two last names json data
     """
-    return _person_from_json_data(person_with_two_orcid_json_data)
+    return _person_json_data_from_file(_base_path, "person_with_two_last_names")
+
+
+@pytest_asyncio.fixture(name="person_with_two_last_names_pydantic_model")
+async def fixture_person_with_two_last_names_pydantic_model(_base_path) -> Person:
+    """
+    Create a basic person pydantic model with two last names
+    :return: basic person pydantic model with two last names
+    """
+    return _person_from_json_data(
+        _person_json_data_from_file(_base_path, "person_with_two_last_names")
+    )

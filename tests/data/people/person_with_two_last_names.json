@@ -1,0 +1,37 @@
+{
+  "names": [
+    {
+      "last_names": [
+        {
+          "value": "Done",
+          "language": "fr"
+        },
+        {
+          "value": "Mariée",
+          "language": "fr"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "Jane",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "orcid",
+      "value": "0000-0001-2345-6789"
+    },
+    {
+      "type": "local",
+      "value": "jdoe@univ-paris1.fr"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_id": "U123"
+    }
+  ]
+}
