@@ -1,0 +1,36 @@
+{
+  "names": [
+    {
+      "last_names": [
+        {
+          "value": "Dupont",
+          "language": "fr"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "Jean",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "orcid",
+      "value": "0000-0001-3645-3689"
+    },
+    {
+      "type": "local",
+      "value": "jdupont@univ-paris1.fr"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_uid": "local-U123"
+    },
+    {
+      "entity_uid": "local-U153"
+    }
+  ]
+}
