@@ -3,7 +3,7 @@ from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 
 
-async def test_create_source_record(person_persisted_pydantic_model: Person,
+async def test_create_source_record(persisted_person_pydantic_model: Person,
                                     scanr_thesis_source_record_pydantic_model: SourceRecord
                                     ) -> None:
     """
@@ -16,7 +16,7 @@ async def test_create_source_record(person_persisted_pydantic_model: Person,
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=scanr_thesis_source_record_pydantic_model,
-                                       harvested_for=person_persisted_pydantic_model)
+                                       harvested_for=persisted_person_pydantic_model)
     fetched_source_record = await service.get_source_record(
         scanr_thesis_source_record_pydantic_model.id)
     assert fetched_source_record.id == scanr_thesis_source_record_pydantic_model.id
@@ -35,5 +35,6 @@ async def test_create_source_record(person_persisted_pydantic_model: Person,
             for fetched_identifier in fetched_source_record.identifiers)
     for abstract in scanr_thesis_source_record_pydantic_model.abstracts:
         assert any(
-            fetched_abstract.language == abstract.language and fetched_abstract.value == abstract.value
+            fetched_abstract.language == abstract.language
+            and fetched_abstract.value == abstract.value
             for fetched_abstract in fetched_source_record.abstracts)

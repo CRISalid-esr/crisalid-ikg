@@ -7,8 +7,8 @@ from app.models.people import Person
 from tests.fixtures.common import _person_json_data_from_file, _person_from_json_data
 
 
-@pytest_asyncio.fixture(name="person_persisted_pydantic_model")
-async def fixture_person_persisted_pydantic_model(person_pydantic_model) -> Person:
+@pytest_asyncio.fixture(name="persisted_person_pydantic_model")
+async def fixture_persisted_person_pydantic_model(person_pydantic_model) -> Person:
     """
     Create a basic persisted person pydantic model
     :return: basic persisted person pydantic model
