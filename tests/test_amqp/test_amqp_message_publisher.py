@@ -18,12 +18,12 @@ async def test_publish_fetch_publications_taks(
     :param person_pydantic_model:
     :return:
     """
+    # pylint: disable=duplicate-code
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
     await dao.create(person_pydantic_model)
     local_identifier = person_pydantic_model.get_identifier(PersonIdentifierType.LOCAL)
     person = await dao.find_by_identifier(local_identifier.type, local_identifier.value)
-    person_id = person.id
     publisher = AMQPMessagePublisher(mocked_exchange)
     expected_sent_message_payload = {'type': 'person', 'reply': True,
                                      'identifiers_safe_mode': False,
@@ -38,7 +38,7 @@ async def test_publish_fetch_publications_taks(
     expected_sent_message_routing_key = "task.entity.references.retrieval"
     await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
                             AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
-                            {"person_id": person_id})
+                            {"person_uid": person.uid})
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
     assert mocked_exchange.publish.call_args[1]["routing_key"] == expected_sent_message_routing_key

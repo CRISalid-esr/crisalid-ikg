@@ -1,2 +1,2 @@
-MATCH (s:SourceRecord {id: $source_record_id})
+MATCH (s:SourceRecord {uid: $source_record_uid})
 RETURN s

@@ -11,7 +11,7 @@ class Membership(BaseModel):
     """
     Membership API model
     """
-    entity_id: str
+    entity_uid: str
     research_structure: Optional[ResearchStructure] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
@@ -24,6 +24,6 @@ class Membership(BaseModel):
             self.research_structure = ResearchStructure(
                 names=[],
                 identifiers=[AgentIdentifierService.compute_identifier_from_uid(
-                    ResearchStructure, self.entity_id)]
+                    ResearchStructure, self.entity_uid)]
             )
         return self

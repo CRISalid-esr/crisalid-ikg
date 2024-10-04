@@ -57,6 +57,6 @@ async def update_research_structure(
     :return: json response
     """
     updated_structure = await structure_service.update_structure(structure)
-    response_data = {"message": f"Research structure with id {structure.id} updated successfully",
+    response_data = {"message": f"Research structure with id {structure.uid} updated successfully",
                      "structure": updated_structure}
     return JSONResponse(jsonable_encoder(response_data), status_code=status.HTTP_200_OK)

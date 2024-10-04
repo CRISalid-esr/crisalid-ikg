@@ -17,8 +17,8 @@ def test_create_person_success(test_client: TestClient, person_json_data):
     response = test_client.post(API_PERSON_PATH, json=person_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "person" in response.json()
-    # id of the person should be generated
-    assert response.json()["person"]["id"] == "local-jdoe@univ-paris1.fr"
+    # uid of the person should be generated
+    assert response.json()["person"]["uid"] == "local-jdoe@univ-paris1.fr"
 
 
 def test_create_person_invalid_data(test_client: TestClient,
@@ -50,17 +50,17 @@ def test_create_person_twice(test_client: TestClient, person_json_data):
     response = test_client.post(API_PERSON_PATH, json=person_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "person" in response.json()
-    assert response.json()["person"]["id"] == "local-jdoe@univ-paris1.fr"
+    assert response.json()["person"]["uid"] == "local-jdoe@univ-paris1.fr"
     response = test_client.post(API_PERSON_PATH, json=person_json_data)
     assert response.status_code == status.HTTP_409_CONFLICT
     assert "error" in response.json()
-    assert response.json()["error"] == "Person with id local-jdoe@univ-paris1.fr already exists"
+    assert response.json()["error"] == "Person with uid local-jdoe@univ-paris1.fr already exists"
 
 
 def test_update_person_with_non_existent_identifier(test_client: TestClient,
                                                     person_json_data):
     """
-    Given a valid person json data with non existent id
+    Given a valid person json data with non existent uid
     When updating a person through REST API
     Then a 404 error should be raised
 
@@ -69,12 +69,12 @@ def test_update_person_with_non_existent_identifier(test_client: TestClient,
     :return:
     """
     person_with_non_existent_identifier_json_data = person_json_data \
-                                                    | {"id": "local-missing@univ-paris1.fr"}
+                                                    | {"uid": "local-missing@univ-paris1.fr"}
     response = test_client.put(API_PERSON_PATH,
                                json=person_with_non_existent_identifier_json_data)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert "error" in response.json()
-    assert response.json()["error"] == "Person with id local-missing@univ-paris1.fr does not exist"
+    assert response.json()["error"] == "Person with uid local-missing@univ-paris1.fr does not exist"
 
 
 def test_update_person_success(test_client: TestClient, person_json_data):
@@ -90,7 +90,7 @@ def test_update_person_success(test_client: TestClient, person_json_data):
     response = test_client.post(API_PERSON_PATH, json=person_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "person" in response.json()
-    assert response.json()["person"]["id"] == "local-jdoe@univ-paris1.fr"
+    assert response.json()["person"]["uid"] == "local-jdoe@univ-paris1.fr"
     assert response.json()["person"]["names"][0]["first_names"][0] == {
         "value": "John", "language": "fr"
     }

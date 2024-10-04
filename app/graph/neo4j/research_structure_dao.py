@@ -93,7 +93,7 @@ class ResearchStructureDAO(Neo4jDAO):
                                        for identifier in identifiers_data]
 
                         research_structure = ResearchStructure(
-                            id=research_structure_data["id"],
+                            uid=research_structure_data["uid"],
                             identifiers=identifiers,
                             names=names
                         )
@@ -104,9 +104,9 @@ class ResearchStructureDAO(Neo4jDAO):
     @classmethod
     async def _create_research_structure_transaction(cls, tx: AsyncSession,
                                                      research_structure: ResearchStructure):
-        research_structure.id = AgentIdentifierService.compute_uid_for(
+        research_structure.uid = AgentIdentifierService.compute_uid_for(
             research_structure)
-        if not research_structure.id:
+        if not research_structure.uid:
             raise ValueError(
                 "The submitted research_structure data is missing a required identifier")
         existing_research_structure = await cls._find_research_structure_by_id(
@@ -114,10 +114,10 @@ class ResearchStructureDAO(Neo4jDAO):
 
         if existing_research_structure is not None:
             raise ConflictError(
-                f"Research structure with id {research_structure.id} already exists")
+                f"Research structure with uid {research_structure.uid} already exists")
 
         create_research_structure_query = """
-                    CREATE (research_struct:Organisation:ResearchStructure {id: $research_structure_id})                    
+                    CREATE (research_struct:Organisation:ResearchStructure {uid: $research_structure_uid})                    
                     WITH research_struct
                     UNWIND $names AS name
                     CREATE (rs_name:Literal {value: name.value, language: name.language})
@@ -129,7 +129,7 @@ class ResearchStructureDAO(Neo4jDAO):
                 """
         await tx.run(
             create_research_structure_query,
-            research_structure_id=research_structure.id,
+            research_structure_uid=research_structure.uid,
             names=[name.dict() for name in research_structure.names],
             identifiers=[identifier.dict() for identifier in research_structure.identifiers]
         )
@@ -138,22 +138,22 @@ class ResearchStructureDAO(Neo4jDAO):
     @staticmethod
     async def _find_research_structure_by_id(research_structure, tx):
         find_research_structure_query = """
-                MATCH (s:ResearchStructure {id: $research_structure_id})
+                MATCH (s:ResearchStructure {uid: $research_structure_uid})
                 RETURN s
                 """
         result = await tx.run(find_research_structure_query,
-                              research_structure_id=research_structure.id)
+                              research_structure_uid=research_structure.uid)
         record = await result.single()
         return record
 
     @classmethod
     async def _update_research_structure_transaction(cls, tx: AsyncSession,
                                                      research_structure: ResearchStructure):
-        research_structure.id = research_structure.id or \
-                                AgentIdentifierService.compute_uid_for(
+        research_structure.uid = research_structure.uid or \
+                                 AgentIdentifierService.compute_uid_for(
                                     research_structure
                                 )
-        if not research_structure.id:
+        if not research_structure.uid:
             raise ValueError("The submitted research_structure data "
                              "is missing a required identifier")
         existing_research_structure = await cls._find_research_structure_by_id(
@@ -162,30 +162,30 @@ class ResearchStructureDAO(Neo4jDAO):
         )
 
         if existing_research_structure is None:
-            raise NotFoundError("Research structure with id "
-                                f"{research_structure.id} does not exist")
+            raise NotFoundError("Research structure with uid "
+                                f"{research_structure.uid} does not exist")
 
         delete_names_query = """
-                MATCH (s:ResearchStructure {id: $research_structure_id})-[:HAS_NAME]->(l:Literal)
+                MATCH (s:ResearchStructure {uid: $research_structure_uid})-[:HAS_NAME]->(l:Literal)
                 DETACH DELETE l
             """
-        await tx.run(delete_names_query, research_structure_id=research_structure.id)
+        await tx.run(delete_names_query, research_structure_uid=research_structure.uid)
 
         create_names_query = """
-                MATCH (s:ResearchStructure {id: $research_structure_id})
+                MATCH (s:ResearchStructure {uid: $research_structure_uid})
                 UNWIND $names AS name
                 CREATE (l:Literal {value: name.value, language: name.language})
                 CREATE (s)-[:HAS_NAME]->(l)
             """
         await tx.run(
             create_names_query,
-            research_structure_id=research_structure.id,
+            research_structure_uid=research_structure.uid,
             names=[name.dict() for name in research_structure.names]
         )
 
         # Delete identifiers that are not in the new set
         delete_identifiers_query = """
-                MATCH (s:ResearchStructure {id: $research_structure_id})-[:HAS_IDENTIFIER]->(i:AgentIdentifier)
+                MATCH (s:ResearchStructure {uid: $research_structure_uid})-[:HAS_IDENTIFIER]->(i:AgentIdentifier)
                 WHERE NOT (i.type IN $identifier_types AND i.value IN $identifier_values)
                 DETACH DELETE i
             """
@@ -193,14 +193,14 @@ class ResearchStructureDAO(Neo4jDAO):
         identifier_values = [identifier.value for identifier in research_structure.identifiers]
         await tx.run(
             delete_identifiers_query,
-            research_structure_id=research_structure.id,
+            research_structure_uid=research_structure.uid,
             identifier_types=identifier_types,
             identifier_values=identifier_values
         )
 
         # Create or update identifiers
         create_identifiers_query = """
-                MATCH (s:ResearchStructure {id: $research_structure_id})
+                MATCH (s:ResearchStructure {uid: $research_structure_uid})
                 UNWIND $identifiers AS identifier
                 MERGE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
                 ON CREATE SET i = identifier
@@ -209,7 +209,7 @@ class ResearchStructureDAO(Neo4jDAO):
             """
         await tx.run(
             create_identifiers_query,
-            research_structure_id=research_structure.id,
+            research_structure_uid=research_structure.uid,
             identifiers=[identifier.dict() for identifier in research_structure.identifiers]
         )
 

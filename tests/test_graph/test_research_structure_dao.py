@@ -22,7 +22,7 @@ async def test_create_research_structure(
     research_structure = await dao.find_by_identifier(local_identifier.type,
                                                       local_identifier.value)
     assert research_structure
-    assert research_structure.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    assert research_structure.uid == f"{local_identifier.type.value}-{local_identifier.value}"
     assert len(research_structure.identifiers) == 3
     rnsr_identifier = research_structure_pydantic_model.get_identifier(
         OrganizationIdentifierType.RNSR)
@@ -71,7 +71,7 @@ async def test_create_and_update_research_structure_with_same_data(
     research_structure = await dao.find_by_identifier(local_identifier.type,
                                                       local_identifier.value)
     assert research_structure
-    assert research_structure.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    assert research_structure.uid == f"{local_identifier.type.value}-{local_identifier.value}"
     assert len(research_structure.identifiers) == 3
     rnsr_identifier = research_structure_pydantic_model.get_identifier(
         OrganizationIdentifierType.RNSR)
@@ -129,7 +129,7 @@ async def test_switch_research_structure_identifier(
     research_structure = await dao.find_by_identifier(OrganizationIdentifierType.LOCAL,
                                                       local_identifier.value)
     assert research_structure
-    assert research_structure.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    assert research_structure.uid == f"{local_identifier.type.value}-{local_identifier.value}"
     assert len(research_structure.identifiers) == 3
     ror_identifier = research_structure_pydantic_model.get_identifier(
         OrganizationIdentifierType.ROR)
@@ -175,7 +175,7 @@ async def test_update_research_structure_rnsr_identifier(
     research_structure = await dao.find_by_identifier(OrganizationIdentifierType.LOCAL,
                                                       local_identifier.value)
     assert research_structure
-    assert research_structure.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    assert research_structure.uid == f"{local_identifier.type.value}-{local_identifier.value}"
     assert len(research_structure.identifiers) == 3
     ror_identifier = research_structure_pydantic_model.get_identifier(
         OrganizationIdentifierType.ROR)

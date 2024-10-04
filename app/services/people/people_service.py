@@ -19,9 +19,9 @@ class PeopleService:
         """
         factory = self._get_dao_factory()
         dao: PersonDAO = factory.get_dao(Person)
-        person_id, status, _ = await dao.create(person)
+        person_uid, status, _ = await dao.create(person)
         if status is PersonDAO.Status.CREATED:
-            await person_created.send_async(self, payload=person_id)
+            await person_created.send_async(self, payload=person_uid)
         return person
 
     async def update_person(self, person: Person) -> Person:
@@ -32,9 +32,9 @@ class PeopleService:
         """
         factory = self._get_dao_factory()
         dao: PersonDAO = factory.get_dao(Person)
-        person_id, status, update_status = await dao.update(person)
+        person_uid, status, update_status = await dao.update(person)
         if status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
-            await person_identifiers_updated.send_async(self, payload=person_id)
+            await person_identifiers_updated.send_async(self, payload=person_uid)
         return person
 
     async def create_or_update_person(self, person: Person) -> None:
@@ -45,21 +45,21 @@ class PeopleService:
         """
         factory = self._get_dao_factory()
         dao: PersonDAO = factory.get_dao(Person)
-        person_id, status, update_status = await dao.create_or_update(person)
+        person_uid, status, update_status = await dao.create_or_update(person)
         if status is PersonDAO.Status.CREATED:
-            await person_created.send_async(payload=person_id)
+            await person_created.send_async(payload=person_uid)
         elif status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
-            await person_identifiers_updated.send_async(payload=person_id)
+            await person_identifiers_updated.send_async(payload=person_uid)
 
-    async def get_person(self, person_id: str) -> Person:
+    async def get_person(self, person_uid: str) -> Person:
         """
         Get a person from the graph database
-        :param person_id: person id
+        :param person_uid: person uid
         :return: Pydantic Person object
         """
         factory = self._get_dao_factory()
         dao: PersonDAO = factory.get_dao(Person)
-        return await dao.get(person_id)
+        return await dao.get(person_uid)
 
     @staticmethod
     def _get_dao_factory() -> DAO:

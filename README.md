@@ -187,7 +187,7 @@ Here is an exemple of the payload of an incoming AMQP message for a people event
       ],
       "memberships": [
         {
-          "entity_id": "local-UR0456"
+          "entity_uid": "local-UR0456"
         }
       ]
     }

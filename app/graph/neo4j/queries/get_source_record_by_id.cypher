@@ -1,4 +1,4 @@
-MATCH (s:SourceRecord {id: $source_record_id})
+MATCH (s:SourceRecord {uid: $source_record_uid})
 OPTIONAL MATCH (s)-[:HAS_TITLE]->(t:Literal)
 OPTIONAL MATCH (s)-[:HAS_ABSTRACT]->(a:Literal)
 OPTIONAL MATCH (s)-[:HAS_IDENTIFIER]->(i:PublicationIdentifier)

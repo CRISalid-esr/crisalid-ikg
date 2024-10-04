@@ -16,6 +16,7 @@ async def test_create_person(
     :param person_pydantic_model:
     :return:
     """
+    #pylint: disable=duplicate-code
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
     await dao.create(person_pydantic_model)
@@ -25,7 +26,7 @@ async def test_create_person(
     )
     assert person_from_db
     assert (
-            person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
+            person_from_db.uid == f"{local_identifier.type.value}-{local_identifier.value}"
     )
     assert any(
         name
@@ -44,7 +45,7 @@ async def test_create_person(
     assert any(
         membership
         for membership in person_from_db.memberships
-        if membership.entity_id == persisted_research_structure_pydantic_model.id
+        if membership.entity_uid == persisted_research_structure_pydantic_model.uid
     )
 
 
@@ -59,6 +60,7 @@ async def test_create_and_update_person_with_same_data(person_pydantic_model: Pe
     :param person_pydantic_model:
     :return:
     """
+    # pylint: disable=duplicate-code
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
     await dao.create(person_pydantic_model)
@@ -68,7 +70,7 @@ async def test_create_and_update_person_with_same_data(person_pydantic_model: Pe
     await dao.update(person_pydantic_model)
     person = await dao.find_by_identifier(local_identifier.type, local_identifier.value)
     assert person
-    assert person.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    assert person.uid == f"{local_identifier.type.value}-{local_identifier.value}"
     literal_last_names = await dao.find_literals_by_value_and_language("Doe", "fr")
     literal_first_names = await dao.find_literals_by_value_and_language("John", "fr")
     assert len(literal_last_names) == 1
@@ -79,7 +81,7 @@ async def test_create_and_get_person(person_pydantic_model: Person):
     """
     Given a basic person Pydantic model
     When the create_person method is called
-    And the get_person method is called with the person id
+    And the get_person method is called with the person uid
     Then the person should be created in the database
     and the person should be retrieved
 
@@ -89,11 +91,11 @@ async def test_create_and_get_person(person_pydantic_model: Person):
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
     await dao.create(person_pydantic_model)
-    person = await dao.get(person_pydantic_model.id)
+    person = await dao.get(person_pydantic_model.uid)
     assert person
-    retrieved_person = await dao.get(person.id)
+    retrieved_person = await dao.get(person.uid)
     assert retrieved_person
-    assert retrieved_person.id == person.id
+    assert retrieved_person.uid == person.uid
     assert any(
         name
         for name in retrieved_person.names
@@ -120,6 +122,7 @@ async def test_create_person_with_two_names(
     :param person_with_two_names_pydantic_model:
     :return:
     """
+    # pylint: disable=duplicate-code
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
     await dao.create(person_with_two_names_pydantic_model)
@@ -131,7 +134,7 @@ async def test_create_person_with_two_names(
     )
     assert person_from_db
     assert (
-            person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
+            person_from_db.uid == f"{local_identifier.type.value}-{local_identifier.value}"
     )
     assert len(person_from_db.names) == 2
     assert any(
@@ -159,6 +162,7 @@ async def test_create_person_with_two_last_names(
     :param person_with_two_names_pydantic_model:
     :return:
     """
+    # pylint: disable=duplicate-code
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     dao = factory.get_dao(Person)
     await dao.create(person_with_two_last_names_pydantic_model)
@@ -170,7 +174,7 @@ async def test_create_person_with_two_last_names(
     )
     assert person_from_db
     assert (
-            person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
+            person_from_db.uid == f"{local_identifier.type.value}-{local_identifier.value}"
     )
     assert len(person_from_db.names) == 1
     assert len(person_from_db.names[0].last_names) == 2
@@ -209,7 +213,7 @@ async def test_create_person_with_names_in_multiple_lng(
     person_from_db = await dao.find_by_identifier(local_identifier.type,
                                                   local_identifier.value)
     assert person_from_db
-    assert person_from_db.id == f"{local_identifier.type.value}-{local_identifier.value}"
+    assert person_from_db.uid == f"{local_identifier.type.value}-{local_identifier.value}"
     assert len(person_from_db.names) == 1
     assert any(
         name for name in person_from_db.names if

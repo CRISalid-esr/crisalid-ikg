@@ -15,8 +15,8 @@ async def test_create_person(
     """
     service = PeopleService()
     await service.create_person(person_pydantic_model)
-    fetched_person = await service.get_person(person_pydantic_model.id)
-    assert fetched_person.id == person_pydantic_model.id
+    fetched_person = await service.get_person(person_pydantic_model.uid)
+    assert fetched_person.uid == person_pydantic_model.uid
     assert len(fetched_person.identifiers) == len(person_pydantic_model.identifiers)
     for identifier in person_pydantic_model.identifiers:
         assert any(

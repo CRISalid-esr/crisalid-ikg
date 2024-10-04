@@ -56,6 +56,6 @@ async def update_person(
     :return: json response
     """
     updated_person = await people_service.update_person(person)
-    response_data = {"message": f"Person with id {person.id} updated successfully",
+    response_data = {"message": f"Person with id {person.uid} updated successfully",
                      "person": updated_person}
     return JSONResponse(jsonable_encoder(response_data), status_code=status.HTTP_200_OK)

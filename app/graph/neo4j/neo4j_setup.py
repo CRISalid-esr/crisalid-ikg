@@ -20,7 +20,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
     @classmethod
     async def _create_constraints(cls, tx):
         settings = get_app_settings()
-        await cls._create_person_id_constraint(tx)
+        await cls._create_person_uid_constraint(tx)
         await cls._create_agent_identifier_unique_type_value_constraint(tx)
         if settings.neo4j_edition == "community":
             return
@@ -30,15 +30,15 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_has_name_relationship_constraint(tx)
 
     @staticmethod
-    async def _create_person_id_constraint(tx):
+    async def _create_person_uid_constraint(tx):
         query = """
-        CREATE CONSTRAINT person_id_unique IF NOT EXISTS
-        FOR (p:Person) REQUIRE p.id IS UNIQUE;
+        CREATE CONSTRAINT person_uid_unique IF NOT EXISTS
+        FOR (p:Person) REQUIRE p.uid IS UNIQUE;
         """
         try:
             await tx.run(query=query)
         except DatabaseError as e:
-            logger.error(f"Error creating person id unique constraint: {e}")
+            logger.error(f"Error creating person uid unique constraint: {e}")
             raise e
 
     @staticmethod

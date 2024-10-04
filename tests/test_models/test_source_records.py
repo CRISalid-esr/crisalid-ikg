@@ -59,7 +59,7 @@ def test_create_thesis_source_record_from_scanr_data(
         contribution.rank == 1 and contribution.contributor.name == "Doe, Jane"
         and contribution.contributor.affiliation == "University of Example"
     )
-    assert source_record.id is None
+    assert source_record.uid is None
 
 
 def test_create_thesis_source_record_from_idref_data(

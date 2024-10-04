@@ -78,11 +78,11 @@ class AMQPInterface:
         :param extra: extra parameters (payload of the message)
         :return: None
         """
-        person_id = extra["payload"]
+        person_uid = extra["payload"]
         publisher = AMQPMessagePublisher(self.pika_exchanges[self.settings.amqp_publications_topic])
         await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
                                 AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
-                                {"person_id": person_id})
+                                {"person_uid": person_uid})
 
     async def _attach_message_processing_workers(self, topic: str):
         self.inner_tasks_queues[topic] = asyncio.Queue(

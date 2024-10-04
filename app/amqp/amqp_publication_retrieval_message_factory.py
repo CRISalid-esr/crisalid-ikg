@@ -14,10 +14,10 @@ class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
 
     async def _build_payload(self) -> dict[str, Any]:
         harvesters = os.getenv("HARVESTERS", "idref,scanr,hal,openalex,scopus").split(",")
-        person_id = self.content.get("person_id")
-        print(f"Fetching publications for {person_id}")
+        person_uid = self.content.get("person_uid")
+        print(f"Fetching publications for {person_uid}")
         people_service = PeopleService()
-        person = await people_service.get_person(person_id)
+        person = await people_service.get_person(person_uid)
         return {
             "type": "person",
             "reply": True,
