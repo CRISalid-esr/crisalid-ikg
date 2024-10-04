@@ -1,4 +1,4 @@
-CREATE (p:Person {id: $person_id})
+CREATE (p:Person {uid: $person_uid})
 WITH p
 UNWIND $names AS name
 CREATE (pn:PersonName)

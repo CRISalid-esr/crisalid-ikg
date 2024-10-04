@@ -27,7 +27,7 @@ class SourceRecordService:
         people_dao: PersonDAO = factory.get_dao(Person)
         person = await people_dao.find(harvested_for)
         if not person:
-            raise ValueError(f"Person with id {harvested_for.id} does not exist")
+            raise ValueError(f"Person with uid {harvested_for.uid} does not exist")
         source_record_dao: SourceRecordDAO = factory.get_dao(SourceRecord)
         record_id, status, _ = await source_record_dao.create(source_record=source_record,
                                                               harvested_for=person)
@@ -35,15 +35,15 @@ class SourceRecordService:
             await source_record_created.send_async(self, payload=record_id)
         return source_record
 
-    async def get_source_record(self, source_record_id: str) -> SourceRecord:
+    async def get_source_record(self, source_record_uid: str) -> SourceRecord:
         """
         Get a source record from the graph database
-        :param source_record_id: source record id
+        :param source_record_uid: source record uid
         :return: Pydantic SourceRecord object
         """
         factory = self._get_dao_factory()
         dao: SourceRecordDAO = factory.get_dao(SourceRecord)
-        return await dao.get(source_record_id)
+        return await dao.get(source_record_uid)
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

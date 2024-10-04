@@ -28,7 +28,7 @@ class Person(Agent[PersonIdentifierType]):
     Person API model
     """
 
-    id: Optional[str] = None  # id from the database if exists
+    uid: Optional[str] = None  # uid from the database if exists
 
     names: List[PersonName] = []
 

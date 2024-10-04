@@ -1,2 +1,2 @@
-MATCH (p:Person {id: $person_id})
+MATCH (p:Person {uid: $person_uid})
 RETURN p

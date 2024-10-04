@@ -18,8 +18,8 @@ async def test_create_source_record(persisted_person_pydantic_model: Person,
     await service.create_source_record(source_record=scanr_thesis_source_record_pydantic_model,
                                        harvested_for=persisted_person_pydantic_model)
     fetched_source_record = await service.get_source_record(
-        scanr_thesis_source_record_pydantic_model.id)
-    assert fetched_source_record.id == scanr_thesis_source_record_pydantic_model.id
+        scanr_thesis_source_record_pydantic_model.uid)
+    assert fetched_source_record.uid == scanr_thesis_source_record_pydantic_model.uid
     assert fetched_source_record.source_identifier == \
            scanr_thesis_source_record_pydantic_model.source_identifier
     assert fetched_source_record.harvester == \

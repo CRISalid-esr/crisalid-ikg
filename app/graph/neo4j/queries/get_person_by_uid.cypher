@@ -1,4 +1,4 @@
-MATCH (person:Person {id: $person_id})
+MATCH (person:Person {uid: $person_uid})
 OPTIONAL MATCH (person)-[:HAS_NAME]->(pn:PersonName)
 OPTIONAL MATCH (pn)-[:HAS_FIRST_NAME]->(fn:Literal)
 OPTIONAL MATCH (pn)-[:HAS_LAST_NAME]->(ln:Literal)

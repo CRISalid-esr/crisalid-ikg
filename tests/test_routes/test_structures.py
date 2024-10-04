@@ -21,7 +21,7 @@ def test_create_research_structure_success(test_client: TestClient,
                                 json=research_structure_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "structure" in response.json()
-    assert response.json()["structure"]["id"] == "local-U123"
+    assert response.json()["structure"]["uid"] == "local-U123"
     assert any(
         name["value"] == "Laboratoire toto" for name in response.json()["structure"]["names"])
     assert any(
@@ -66,9 +66,9 @@ def test_create_research_structure_twice(test_client: TestClient,
                                 json=research_structure_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "structure" in response.json()
-    assert response.json()["structure"]["id"] == "local-U123"
+    assert response.json()["structure"]["uid"] == "local-U123"
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,
                                 json=research_structure_json_data)
     assert response.status_code == status.HTTP_409_CONFLICT
     assert "error" in response.json()
-    assert response.json()["error"] == "Research structure with id local-U123 already exists"
+    assert response.json()["error"] == "Research structure with uid local-U123 already exists"

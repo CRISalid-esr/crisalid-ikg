@@ -1,4 +1,4 @@
-MATCH (p:Person {id: $person_id})
+MATCH (p:Person {uid: $person_uid})
 UNWIND $names AS name
 CREATE (pn:PersonName)
 WITH p, pn, name

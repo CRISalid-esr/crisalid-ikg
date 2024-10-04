@@ -19,7 +19,7 @@ class ConceptDAO(Neo4jDAO):
         """
         Get a concept from the graph database
 
-        :param concept_id: concept id
+        :param concept_id: concept uid
         :return: concept object
         """
         async for driver in Neo4jConnexion().get_driver():
@@ -72,7 +72,7 @@ class ConceptDAO(Neo4jDAO):
         Create  a concept in the graph database
 
         :param concept: concept object
-        :return: concept id
+        :return: concept uid
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
@@ -84,7 +84,7 @@ class ConceptDAO(Neo4jDAO):
         Update a concept in the graph database
 
         :param concept: concept object
-        :return: concept id
+        :return: concept uid
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
@@ -103,7 +103,7 @@ class ConceptDAO(Neo4jDAO):
         return None
 
     @staticmethod
-    def _hydrate(record: dict) -> Person:
+    def _hydrate(record: dict) -> Concept:
         concept_data = record["concept"]
         pref_labels_data = record["pref_labels"]
         alt_labels_data = record["alt_labels"]
