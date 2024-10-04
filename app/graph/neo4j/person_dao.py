@@ -114,8 +114,9 @@ class PersonDAO(Neo4jDAO):
 
         :param identifier_type: identifier type
         :param identifier_value: identifier value
-        :return:
+        :return: person object or None
         """
+        # pylint: disable=duplicate-code
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
