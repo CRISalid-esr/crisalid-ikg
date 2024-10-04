@@ -48,7 +48,8 @@ class ConceptDAO(Neo4jDAO):
 
     async def find_concept_without_uri_by_pref_label(self, pref_label: Literal) -> Concept | None:
         """
-        Find a concept by its pref label
+        Find a concept without URI by its pref label
+        Note : no language filter is applied as pref labels are unique for concepts without URI
 
         :param pref_label: concept pref label
         :return: concept object
