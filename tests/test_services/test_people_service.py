@@ -31,3 +31,11 @@ async def test_create_person(
     assert len(fetched_person.memberships[0].research_structure.identifiers) == len(
         person_pydantic_model.memberships[0].research_structure.identifiers
     )
+    for fetched_membership in fetched_person.memberships:
+        for fetched_identifier in fetched_membership.research_structure.identifiers:
+            assert any(
+                identifier.type == fetched_identifier.type
+                and identifier.value == fetched_identifier.value
+                for membership in person_pydantic_model.memberships
+                for identifier in membership.research_structure.identifiers
+            )

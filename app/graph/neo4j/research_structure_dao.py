@@ -104,7 +104,7 @@ class ResearchStructureDAO(Neo4jDAO):
     @classmethod
     async def _create_research_structure_transaction(cls, tx: AsyncSession,
                                                      research_structure: ResearchStructure):
-        research_structure.id = AgentIdentifierService.compute_identifier_for(
+        research_structure.id = AgentIdentifierService.compute_uid_for(
             research_structure)
         if not research_structure.id:
             raise ValueError(
@@ -150,7 +150,7 @@ class ResearchStructureDAO(Neo4jDAO):
     async def _update_research_structure_transaction(cls, tx: AsyncSession,
                                                      research_structure: ResearchStructure):
         research_structure.id = research_structure.id or \
-                                AgentIdentifierService.compute_identifier_for(
+                                AgentIdentifierService.compute_uid_for(
                                     research_structure
                                 )
         if not research_structure.id:

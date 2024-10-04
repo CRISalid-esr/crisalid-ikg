@@ -152,7 +152,7 @@ class PersonDAO(Neo4jDAO):
 
     @staticmethod
     async def _create_person_transaction(tx: AsyncManagedTransaction, person: Person) -> None:
-        person.id = person.id or AgentIdentifierService.compute_identifier_for(person)
+        person.id = person.id or AgentIdentifierService.compute_uid_for(person)
         if not person.id:
             raise ValueError(f"Unable to compute primary key for person {person}")
         person_exists = await PersonDAO._person_exists(tx, person.id)
@@ -175,7 +175,7 @@ class PersonDAO(Neo4jDAO):
         except Neo4jError as neo4j_error:
             raise DatabaseError(f"Database error while creating person {person}") from neo4j_error
         for membership in person.memberships:
-            structure_id = AgentIdentifierService.compute_identifier_for(
+            structure_id = AgentIdentifierService.compute_uid_for(
                 membership.research_structure
             )
             if structure_id:
@@ -198,7 +198,7 @@ class PersonDAO(Neo4jDAO):
     @classmethod
     async def _update_person_transaction(cls, tx: AsyncSession,
                                          incoming_person: Person) -> UpdateStatus:
-        incoming_person.id = incoming_person.id or AgentIdentifierService.compute_identifier_for(
+        incoming_person.id = incoming_person.id or AgentIdentifierService.compute_uid_for(
             incoming_person)
         if not incoming_person.id:
             raise ValueError(f"Unable to compute primary key for person {incoming_person}")

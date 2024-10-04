@@ -31,7 +31,7 @@
   ],
   "memberships": [
     {
-      "entity_id": "U123"
+      "entity_id": "local-U123"
     }
   ]
 }

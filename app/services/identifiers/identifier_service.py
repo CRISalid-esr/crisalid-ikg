@@ -3,10 +3,9 @@ from typing import List
 from pydantic import BaseModel
 
 from app.config import get_app_settings
-from app.models.agent_identifiers import AgentIdentifier
-from app.models.identifier_types import AgentIdentifierType
-from app.models.people import Person
-from app.models.research_structures import ResearchStructure
+from app.models.agent_identifiers import AgentIdentifier, PersonIdentifier, OrganizationIdentifier
+from app.models.identifier_types import AgentIdentifierType, PersonIdentifierType, \
+    OrganizationIdentifierType
 
 
 class AgentIdentifierService:
@@ -16,7 +15,7 @@ class AgentIdentifierService:
     IDENTIFIER_SEPARATOR = "-"
 
     @classmethod
-    def compute_identifier_for(cls, entity: BaseModel) -> str:
+    def compute_uid_for(cls, entity: BaseModel) -> str:
         """
         Compute an ID based on the first identifier type in the given order.
         :param entity: The entity to compute the ID for.
@@ -39,6 +38,24 @@ class AgentIdentifierService:
                f"{cls.IDENTIFIER_SEPARATOR}" \
                f"{selected_identifier.value}"
 
+    @classmethod
+    def compute_identifier_from_uid(cls, entity_cls, unique_id: str) -> AgentIdentifier:
+        """
+        Compute an identifier from a unique ID.
+        :param unique_id: The unique ID.
+        :return: The computed identifier.
+        """
+        if cls.IDENTIFIER_SEPARATOR not in unique_id:
+            raise ValueError(f"Invalid unique ID format: {unique_id}")
+        identifier_type, identifier_value = unique_id.split(cls.IDENTIFIER_SEPARATOR, 1)
+        if entity_cls.__name__ == "Person":
+            return PersonIdentifier(type=PersonIdentifierType(identifier_type),
+                                    value=identifier_value)
+        if entity_cls.__name__ == "ResearchStructure":
+            return OrganizationIdentifier(type=OrganizationIdentifierType(identifier_type),
+                                          value=identifier_value)
+        raise ValueError(f"No identifier type defined for {entity_cls.__name__}.")
+
     @staticmethod
     def identifiers_are_identical(identifiers_1: list[AgentIdentifier],
                                   identifiers_2: list[AgentIdentifier]) -> bool:
@@ -59,8 +76,9 @@ class AgentIdentifierService:
         :return: The list of identifier types.
         """
         settings = get_app_settings()
-        if entity_cls is Person:
+        # check with string comparison to avoid circular imports
+        if entity_cls.__name__ == "Person":
             return settings.person_identifier_order
-        if entity_cls is ResearchStructure:
+        if entity_cls.__name__ == "ResearchStructure":
             return settings.research_structure_identifier_order
         raise ValueError(f"No identifier order defined for {entity_cls.__name__}.")
