@@ -1,0 +1,49 @@
+{
+  "names": [
+    {
+      "value": "Laboratoire toto bis",
+      "language": "fr"
+    },
+    {
+      "value": "Foobar bis Laboratory",
+      "language": "en"
+    }
+  ],
+  "acronym": "FBL",
+  "descriptions": [
+    {
+      "value": "Un autre laboratoire de recherche fictif",
+      "language": "fr"
+    },
+    {
+      "value": "Another imaginary laboratory",
+      "language": "en"
+    }
+  ],
+  "contacts": [
+    {
+      "type": "postal_address",
+      "format": "structured_physical_address",
+      "value": {
+        "country": "France",
+        "zip_code": "75005",
+        "city": "PARIS",
+        "street": "Sorbonne, 1 rue de la Sorbonne"
+      }
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "local",
+      "value": "U153"
+    },
+    {
+      "type": "RNSR",
+      "value": "852456928S"
+    },
+    {
+      "type": "ROR",
+      "value": "987654"
+    }
+  ]
+}

@@ -154,7 +154,7 @@ def test_create_person_with_invalid_identifier(invalid_identifier_data_fixture, 
     with pytest.raises(ValueError):
         Person(**person_data)
 
-        
+
 def test_create_person_with_two_orcid(person_with_two_orcid_json_data):
     """
     Given json person data with two orcid
@@ -165,3 +165,21 @@ def test_create_person_with_two_orcid(person_with_two_orcid_json_data):
     """
     with pytest.raises(ValueError):
         Person(**person_with_two_orcid_json_data)
+
+
+def test_create_person_with_two_memberships(
+        person_with_two_memberships_json_data
+):
+    """
+    Given json person data with two last names
+    When asked for different field values
+    Then the values should be returned correctly
+    :param person_with_two_memberships_json_data:
+    :return:
+    """
+    person = Person(**person_with_two_memberships_json_data)
+    assert len(person_with_two_memberships_json_data["memberships"]) == 2
+    assert len(person.memberships) == len(person_with_two_memberships_json_data["memberships"])
+
+    uids = {'local-U123', 'local-U153'}
+    assert uids.issubset({membership.entity_uid for membership in person.memberships})

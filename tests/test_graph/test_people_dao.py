@@ -231,3 +231,53 @@ async def test_create_person_with_names_in_multiple_lng(
             literal.value == "Бакунин" and literal.language == "ru"
         )
     )
+
+
+async def test_create_person_with_two_memberships(
+        person_with_two_memberships_pydantic_model: Person,
+        persisted_research_structure_pydantic_model: ResearchStructure,
+        persisted_research_structure_with_different_ids_pydantic_model: ResearchStructure,  #
+):
+    """
+    Given a basic person Pydantic model
+    When the create_person method is called
+    Then the person should be created in the database
+
+    :param person_with_two_memberships_pydantic_model:
+    :param persisted_research_structure_pydantic_model:
+    :return:
+    """
+    # pylint: disable=duplicate-code
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    dao = factory.get_dao(Person)
+    await dao.create(person_with_two_memberships_pydantic_model)
+    local_identifier = person_with_two_memberships_pydantic_model.get_identifier(
+        PersonIdentifierType.LOCAL
+    )
+    person_from_db = await dao.find_by_identifier(
+        local_identifier.type, local_identifier.value
+    )
+    assert person_from_db
+    assert (
+            person_from_db.uid == f"{local_identifier.type.value}-{local_identifier.value}"
+    )
+    assert len(person_with_two_memberships_pydantic_model.memberships) == 2
+    assert len(person_from_db.memberships) == len(
+        person_with_two_memberships_pydantic_model.memberships
+    )
+
+    assert all(
+        uid in {membership.entity_uid for membership in person_from_db.memberships}
+        for uid in {
+            membership.entity_uid
+            for membership in person_with_two_memberships_pydantic_model.memberships
+        }
+    )
+
+    assert all(
+        uid in {membership.entity_uid for membership in person_from_db.memberships}
+        for uid in [
+            persisted_research_structure_pydantic_model.uid,
+            persisted_research_structure_with_different_ids_pydantic_model.uid,
+        ]
+    )
