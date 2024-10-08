@@ -72,3 +72,25 @@ def test_create_research_structure_twice(test_client: TestClient,
     assert response.status_code == status.HTTP_409_CONFLICT
     assert "error" in response.json()
     assert response.json()["error"] == "Research structure with uid local-U123 already exists"
+
+
+def test_create_research_structure_without_name(
+        test_client: TestClient, research_structure_without_name_json_data
+):
+    """
+    Given a valid person json data
+    When creating a person through  REST API
+    Then the person should be created successfully
+
+    :param test_client:
+    :param research_structure_without_name_json_data:
+    :return:
+    """
+    response = test_client.post(
+        RESEARCH_STRUCTURE_API_PATH, json=research_structure_without_name_json_data
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    assert "structure" in response.json()
+    assert len(response.json()["structure"]["names"]) == 0
+    assert len(response.json()["structure"]["identifiers"]) == 3
+    assert response.json()["structure"]["uid"] == "local-U153"
