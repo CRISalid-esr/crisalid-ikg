@@ -202,3 +202,17 @@ def test_create_person_with_two_memberships(
     expected_uids = ['local-U123', 'local-U153']
     uids = list(map(lambda m: m.entity_uid, person.memberships))
     assert sorted(uids) == sorted(expected_uids)
+
+
+def test_create_person_without_name(person_without_name_json_data):
+    """
+    Given json person data with invalid identifier type
+    When asked for different field values
+    Then the values should be returned correctly
+
+    :param person_without_name_json_data: json data with name field empty
+    :return:
+    """
+    person = Person(**person_without_name_json_data)
+    assert len(person.names) == 0
+    assert len(person.identifiers) == 2

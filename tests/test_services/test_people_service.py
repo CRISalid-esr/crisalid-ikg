@@ -39,3 +39,23 @@ async def test_create_person(
                 for membership in person_pydantic_model.memberships
                 for identifier in membership.research_structure.identifiers
             )
+
+
+async def test_create_person_without_name(
+        person_without_name_pydantic_model: Person,
+        persisted_research_structure_pydantic_model,  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given a person without name pydantic model
+    When the person is added to the graph
+    Then the person can be read from the graph
+    :param person_without_name_pydantic_model:
+    :return:
+    """
+    service = PeopleService()
+    await service.create_person(person_without_name_pydantic_model)
+    fetched_person = await service.get_person(person_without_name_pydantic_model.uid)
+    assert fetched_person.uid == person_without_name_pydantic_model.uid
+    assert len(fetched_person.identifiers) == len(
+        person_without_name_pydantic_model.identifiers
+    )
