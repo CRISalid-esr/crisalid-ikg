@@ -19,8 +19,16 @@ WITH
   mb,
   rs,
   identifiers,
-  collect(DISTINCT {value: fn.value, language: fn.language}) AS first_names,
-  collect(DISTINCT {value: ln.value, language: ln.language}) AS last_names
+  collect(DISTINCT CASE
+    WHEN fn IS NOT NULL
+    THEN {value: fn.value, language: fn.language}
+    ELSE null
+  END) AS first_names,
+  collect(DISTINCT CASE
+    WHEN ln IS NOT NULL
+    THEN {value: ln.value, language: ln.language}
+    ELSE null
+  END) AS last_names
 RETURN
   person,
   identifiers,
