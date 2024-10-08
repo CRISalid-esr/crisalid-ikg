@@ -1,4 +1,5 @@
 from app.models.people import Person
+from app.models.research_structures import ResearchStructure
 from app.services.people.people_service import PeopleService
 
 
@@ -39,3 +40,40 @@ async def test_create_person(
                 for membership in person_pydantic_model.memberships
                 for identifier in membership.research_structure.identifiers
             )
+
+
+async def test_update_person_membership(
+        persisted_research_structure_pydantic_model: ResearchStructure,
+        persisted_research_structure_with_different_ids_pydantic_model: ResearchStructure,
+        persisted_person_pydantic_model: Person,
+        person_with_different_membership_pydantic_model: Person,
+) -> None:
+    """
+    Given an existing person pydantic model
+    When the person membership is updated
+    Then the person can be read from the graph with updated membership
+    :param person_pydantic_model:
+    :return:
+    """
+    service = PeopleService()
+    fetched_person = await service.get_person(persisted_person_pydantic_model.uid)
+    assert fetched_person.uid == persisted_person_pydantic_model.uid
+    assert len(fetched_person.memberships) == 1
+    assert any(
+        membership
+        for membership in fetched_person.memberships
+        if membership.entity_uid == persisted_research_structure_pydantic_model.uid
+    )
+    await service.update_person(person_with_different_membership_pydantic_model)
+    updated_fetched_person = await service.get_person(
+        persisted_person_pydantic_model.uid
+    )
+    assert updated_fetched_person.uid == persisted_person_pydantic_model.uid
+    assert len(updated_fetched_person.memberships) == len(fetched_person.memberships)
+    assert updated_fetched_person.memberships != fetched_person.memberships
+    assert any(
+        membership
+        for membership in updated_fetched_person.memberships
+        if membership.entity_uid
+        == persisted_research_structure_with_different_ids_pydantic_model.uid
+    )
