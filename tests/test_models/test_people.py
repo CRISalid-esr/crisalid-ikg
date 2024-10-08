@@ -81,6 +81,25 @@ def test_create_person_with_two_last_names(person_with_two_last_names_json_data)
     )
 
 
+def test_create_person_with_mononym(person_with_mononym_json_data):
+    """
+    Given json person data with a mononym
+    When creating a person object
+    Then the person object should be created correctly
+    :param person_with_mononym_json_data:
+    :return:
+    """
+    person = Person(**person_with_mononym_json_data)
+    assert len(person.names) == 1
+    assert len(person.identifiers) == 2
+    assert any(
+        name
+        for name in person.names
+        if any(literal for literal in name.first_names if literal.value == "Jeanne")
+        and not any(literal for literal in name.last_names)
+    )
+
+
 def test_create_person_with_name_in_multiple_lng(
         person_with_name_in_multiple_lng_json_data,
 ):
@@ -171,7 +190,7 @@ def test_create_person_with_two_memberships(
         person_with_two_memberships_json_data
 ):
     """
-    Given json person data with two last names
+    Given json person data with two memberships
     When asked for different field values
     Then the values should be returned correctly
     :param person_with_two_memberships_json_data:
@@ -180,6 +199,6 @@ def test_create_person_with_two_memberships(
     person = Person(**person_with_two_memberships_json_data)
     assert len(person_with_two_memberships_json_data["memberships"]) == 2
     assert len(person.memberships) == len(person_with_two_memberships_json_data["memberships"])
-
-    uids = {'local-U123', 'local-U153'}
-    assert uids.issubset({membership.entity_uid for membership in person.memberships})
+    expected_uids = ['local-U123', 'local-U153']
+    uids = list(map(lambda m: m.entity_uid, person.memberships))
+    assert sorted(uids) == sorted(expected_uids)
