@@ -58,3 +58,17 @@ def test_create_organization_with_duplicate_identifier(
     """
     with pytest.raises(ValueError):
         Organization(**research_structure_with_duplicate_identifiers_json_data)
+
+
+def test_create_organization_without_name(research_structure_without_name_json_data):
+    """
+    Given json person data with invalid identifier type
+    When asked for different field values
+    Then the values should be returned correctly
+
+    :param research_structure_without_name_json_data: json data with name field empty
+    :return:
+    """
+    organization = Organization(**research_structure_without_name_json_data)
+    assert len(organization.names) == 0
+    assert len(organization.identifiers) == 3
