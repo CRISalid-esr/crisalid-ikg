@@ -43,7 +43,6 @@ async def test_create_person(
 
 async def test_create_person_without_name(
         person_without_name_pydantic_model: Person,
-        persisted_research_structure_pydantic_model,  # pylint: disable=unused-argument
 ) -> None:
     """
     Given a person without name pydantic model
@@ -56,6 +55,8 @@ async def test_create_person_without_name(
     await service.create_person(person_without_name_pydantic_model)
     fetched_person = await service.get_person(person_without_name_pydantic_model.uid)
     assert fetched_person.uid == person_without_name_pydantic_model.uid
-    assert len(fetched_person.identifiers) == len(
-        person_without_name_pydantic_model.identifiers
+    assert len(person_without_name_pydantic_model.names) == 0
+    assert all(
+        not name.first_names and not name.last_names and not name.other_names
+        for name in fetched_person.names
     )
