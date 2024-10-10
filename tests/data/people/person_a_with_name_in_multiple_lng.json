@@ -25,12 +25,12 @@
   ],
   "identifiers": [
     {
-      "type": "scopus_eid",
-      "value": "bla"
+      "type": "orcid",
+      "value": "0000-0001-2345-6789"
     },
     {
       "type": "local",
-      "value": "jdoeuniv-paris1.fr"
+      "value": "jdoe@univ-domain.edu"
     }
   ],
   "memberships": [

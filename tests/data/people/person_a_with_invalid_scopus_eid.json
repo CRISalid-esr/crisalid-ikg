@@ -25,12 +25,12 @@
   ],
   "identifiers": [
     {
-      "type": "id_hal_s",
-      "value": "456"
+      "type": "scopus_eid",
+      "value": "bla"
     },
     {
       "type": "local",
-      "value": "jdoeuniv-paris1.fr"
+      "value": "jdoe@univ-domain.edu"
     }
   ],
   "memberships": [
