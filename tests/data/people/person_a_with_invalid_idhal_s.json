@@ -25,12 +25,12 @@
   ],
   "identifiers": [
     {
-      "type": "orcid",
-      "value": "0000-0001-2345-6789"
+      "type": "id_hal_s",
+      "value": "456"
     },
     {
       "type": "local",
-      "value": "jdoe@univ-paris1.fr"
+      "value": "jdoe@univ-domain.edu"
     }
   ],
   "memberships": [

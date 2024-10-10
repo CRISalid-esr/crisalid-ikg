@@ -14,7 +14,7 @@ def test_create_research_structure_success(test_client: TestClient,
     Then the person should be created successfully
 
     :param test_client:
-    :param person_json_data:
+    :param person_a_json_data:
     :return:
     """
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,

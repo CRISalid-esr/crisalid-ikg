@@ -3,13 +3,13 @@
     {
       "last_names": [
         {
-          "value": "Doe",
+          "value": "Dupont",
           "language": "fr"
         }
       ],
       "first_names": [
         {
-          "value": "John",
+          "value": "Jean",
           "language": "fr"
         }
       ]
@@ -17,17 +17,20 @@
   ],
   "identifiers": [
     {
-      "type": "InvalidIdentifier",
-      "value": "0000-0001-2345-6789"
+      "type": "orcid",
+      "value": "0000-0001-3645-3689"
     },
     {
       "type": "local",
-      "value": "jdoe@univ-paris1.fr"
+      "value": "jdupont@univ-domain.edu"
     }
   ],
   "memberships": [
     {
       "entity_uid": "local-U123"
+    },
+    {
+      "entity_uid": "local-U153"
     }
   ]
 }

@@ -3,17 +3,13 @@
     {
       "last_names": [
         {
-          "value": "Done",
-          "language": "fr"
-        },
-        {
-          "value": "Mariée",
+          "value": "Doe",
           "language": "fr"
         }
       ],
       "first_names": [
         {
-          "value": "Jane",
+          "value": "John",
           "language": "fr"
         }
       ]
@@ -26,7 +22,7 @@
     },
     {
       "type": "local",
-      "value": "jdoe@univ-paris1.fr"
+      "value": "jdoe@univ-domain.edu"
     }
   ],
   "memberships": [
