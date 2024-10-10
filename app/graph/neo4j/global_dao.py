@@ -3,6 +3,7 @@ from neo4j import AsyncSession
 from app.config import get_app_settings
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
+from app.graph.neo4j.utils import load_query
 from app.settings.app_env_types import AppEnvTypes
 
 
@@ -33,4 +34,4 @@ class GlobalDAO(Neo4jDAO):
         :param tx: Neo4j transaction
         :return: None
         """
-        await tx.run("MATCH (n) DETACH DELETE n")
+        await tx.run(load_query("reset_all"))
