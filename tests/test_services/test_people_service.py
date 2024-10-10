@@ -57,12 +57,9 @@ async def test_create_person_without_name(
     fetched_person = await service.get_person(person_without_name_pydantic_model.uid)
     assert fetched_person.uid == person_without_name_pydantic_model.uid
     assert len(person_without_name_pydantic_model.names) == 0
-    assert all(
-        not name.first_names and not name.last_names and not name.other_names
-        for name in fetched_person.name
-    )
+    assert len(fetched_person.names) == 0
 
-    
+
 async def test_update_person_membership(
         persisted_research_structure_pydantic_model: ResearchStructure,
         persisted_research_structure_with_different_ids_pydantic_model: ResearchStructure,
