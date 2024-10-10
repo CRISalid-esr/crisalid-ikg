@@ -229,3 +229,29 @@ async def fixture_person_a_without_name_pydantic_model(
     :return: basic person pydantic model
     """
     return _person_from_json_data(person_a_without_name_json_data)
+
+
+@pytest_asyncio.fixture(
+    name="person_a_with_different_name_new_hal_identifier_and_membership_json_data")
+async def fixture_person_a_with_different_name_new_hal_identifier_and_membership_json_data(
+        _base_path) -> dict:
+    """
+    Create a basic person json data
+    :return: basic person json data
+    """
+    return _person_json_data_from_file(
+        _base_path, "person_a_with_different_name_new_hal_identifier_and_membership"
+    )
+
+
+@pytest_asyncio.fixture(
+    name="person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model")
+async def fixture_person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model(
+        person_a_with_different_name_new_hal_identifier_and_membership_json_data,
+) -> Person:
+    """
+    Create a basic person pydantic model
+    :return: basic person pydantic model
+    """
+    return _person_from_json_data(
+        person_a_with_different_name_new_hal_identifier_and_membership_json_data)
