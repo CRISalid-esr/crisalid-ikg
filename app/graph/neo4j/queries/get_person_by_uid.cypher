@@ -21,30 +21,33 @@ WITH
   identifiers,
   collect(DISTINCT CASE
     WHEN fn IS NOT NULL
-    THEN {value: fn.value, language: fn.language}
+  THEN {value: fn.value, language: fn.language}
     ELSE null
-  END) AS first_names,
+    END) AS first_names,
   collect(DISTINCT CASE
     WHEN ln IS NOT NULL
-    THEN {value: ln.value, language: ln.language}
+  THEN {value: ln.value, language: ln.language}
     ELSE null
-  END) AS last_names
+    END) AS last_names
 WITH
   person,
   pn,
   mb,
   rs,
   identifiers,
-  collect(DISTINCT {
-    name:        id(pn),
+  collect(DISTINCT  CASE
+    WHEN pn IS NOT NULL
+  THEN {
     first_names: first_names,
     last_names:  last_names
-  }) AS names,
+  }
+    ELSE null
+    END) AS names,
   collect(DISTINCT CASE
     WHEN rs IS NOT NULL AND mb IS NOT NULL
-    THEN { research_structure: rs, membership: mb }
+  THEN {research_structure: rs, membership: mb}
     ELSE null
-  END) AS memberships
+    END) AS memberships
 WITH
   person,
   identifiers,

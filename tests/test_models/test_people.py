@@ -4,15 +4,15 @@ from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 
 
-def test_create_valid_person(person_json_data):
+def test_create_valid_person(person_a_json_data):
     """
     Given a valid person model
     When asked for different field values
     Then the values should be returned correctly
-    :param person_pydantic_model:
+    :param person_a_pydantic_model:
     :return:
     """
-    person = Person(**person_json_data)
+    person = Person(**person_a_json_data)
     assert len(person.names) == 1
     assert len(person.identifiers) == 2
     assert any(
@@ -31,32 +31,32 @@ def test_create_valid_person(person_json_data):
         identifier
         for identifier in person.identifiers
         if identifier.type == PersonIdentifierType.LOCAL
-        and identifier.value == "jdoe@univ-paris1.fr"
+        and identifier.value == "jdoe@univ-domain.edu"
     )
 
 
-def test_create_invalid_person(person_with_invalid_identifier_type_json_data):
+def test_create_invalid_person(person_a_with_invalid_identifier_type_json_data):
     """
     Given json person data with invalid identifier type
     When creating a person object
     Then a ValueError should be raised
 
-    :param person_with_invalid_identifier_type_json_data: json data with invalid identifier type
+    :param person_a_with_invalid_identifier_type_json_data: json data with invalid identifier type
     :return:
     """
     with pytest.raises(ValueError):
-        Person(**person_with_invalid_identifier_type_json_data)
+        Person(**person_a_with_invalid_identifier_type_json_data)
 
 
-def test_create_person_with_two_last_names(person_with_two_last_names_json_data):
+def test_create_person_c_with_two_last_names(person_c_with_two_last_names_json_data):
     """
     Given json person data with two last names
     When asked for different field values
     Then the values should be returned correctly
-    :param person_pydantic_model:
+    :param person_a_pydantic_model:
     :return:
     """
-    person = Person(**person_with_two_last_names_json_data)
+    person = Person(**person_c_with_two_last_names_json_data)
 
     assert len(person.names) == 1
     assert len(person.identifiers) == 2
@@ -77,7 +77,7 @@ def test_create_person_with_two_last_names(person_with_two_last_names_json_data)
         identifier
         for identifier in person.identifiers
         if identifier.type == PersonIdentifierType.LOCAL
-        and identifier.value == "jdoe@univ-paris1.fr"
+        and identifier.value == "jdone@univ-domain.edu"
     )
 
 
@@ -100,17 +100,17 @@ def test_create_person_with_mononym(person_with_mononym_json_data):
     )
 
 
-def test_create_person_with_name_in_multiple_lng(
-        person_with_name_in_multiple_lng_json_data,
+def test_create_person_a_with_name_in_multiple_lng(
+        person_a_with_name_in_multiple_lng_json_data,
 ):
     """
     Given json person data with name in multiple languages
     When creating a person object
     Then the person object should be created correctly
-    :param person_with_name_in_multiple_lng_json_data:
+    :param person_a_with_name_in_multiple_lng_json_data:
     :return:
     """
-    person = Person(**person_with_name_in_multiple_lng_json_data)
+    person = Person(**person_a_with_name_in_multiple_lng_json_data)
 
     assert len(person.names) == 1
     assert len(person.identifiers) == 2
@@ -143,18 +143,18 @@ def test_create_person_with_name_in_multiple_lng(
 @pytest.mark.parametrize(
     "invalid_identifier_data_fixture",
     [
-        "person_with_invalid_orcid_json_data",
-        "person_with_invalid_scopus_json_data",
-        "person_with_invalid_idref_json_data",
-        "person_with_invalid_idhal_s_json_data",
-        "person_with_invalid_idhal_i_json_data"
+        "person_a_with_invalid_orcid_json_data",
+        "person_a_with_invalid_scopus_json_data",
+        "person_a_with_invalid_idref_json_data",
+        "person_a_with_invalid_idhal_s_json_data",
+        "person_a_with_invalid_idhal_i_json_data"
     ],
     ids=[
-        "person_with_invalid_orcid_json_data",
-        "person_with_invalid_scopus_json_data",
-        "person_with_invalid_idref_json_data",
-        "person_with_invalid_idhal_s_json_data",
-        "person_with_invalid_idhal_i_json_data"
+        "person_a_with_invalid_orcid_json_data",
+        "person_a_with_invalid_scopus_json_data",
+        "person_a_with_invalid_idref_json_data",
+        "person_a_with_invalid_idhal_s_json_data",
+        "person_a_with_invalid_idhal_i_json_data"
     ]
 )
 def test_create_person_with_invalid_identifier(invalid_identifier_data_fixture, request):
@@ -174,31 +174,45 @@ def test_create_person_with_invalid_identifier(invalid_identifier_data_fixture, 
         Person(**person_data)
 
 
-def test_create_person_with_two_orcid(person_with_two_orcid_json_data):
+def test_create_person_a_with_two_orcid(person_a_with_two_orcid_json_data):
     """
     Given json person data with two orcid
     When creating a person object
     Then a ValueError should be raised
-    :param person_with_two_orcid_json_data: json data with two orcid
+    :param person_a_with_two_orcid_json_data: json data with two orcid
     :return:
     """
     with pytest.raises(ValueError):
-        Person(**person_with_two_orcid_json_data)
+        Person(**person_a_with_two_orcid_json_data)
 
 
-def test_create_person_with_two_memberships(
-        person_with_two_memberships_json_data
+def test_create_person_d_with_two_memberships(
+        person_d_with_two_memberships_json_data
 ):
     """
     Given json person data with two memberships
     When asked for different field values
     Then the values should be returned correctly
-    :param person_with_two_memberships_json_data:
+    :param person_d_with_two_memberships_json_data:
     :return:
     """
-    person = Person(**person_with_two_memberships_json_data)
-    assert len(person_with_two_memberships_json_data["memberships"]) == 2
-    assert len(person.memberships) == len(person_with_two_memberships_json_data["memberships"])
+    person = Person(**person_d_with_two_memberships_json_data)
+    assert len(person_d_with_two_memberships_json_data["memberships"]) == 2
+    assert len(person.memberships) == len(person_d_with_two_memberships_json_data["memberships"])
     expected_uids = ['local-U123', 'local-U153']
     uids = list(map(lambda m: m.entity_uid, person.memberships))
     assert sorted(uids) == sorted(expected_uids)
+
+
+def test_create_person_a_without_name(person_a_without_name_json_data):
+    """
+    Given json person data with invalid identifier type
+    When asked for different field values
+    Then the values should be returned correctly
+
+    :param person_a_without_name_json_data: json data with name field empty
+    :return:
+    """
+    person = Person(**person_a_without_name_json_data)
+    assert len(person.names) == 0
+    assert len(person.identifiers) == 2

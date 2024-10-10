@@ -5,32 +5,24 @@
         {
           "value": "Doe",
           "language": "fr"
-        },
-        {
-          "value": "Бакунин",
-          "language": "ru"
         }
       ],
       "first_names": [
         {
           "value": "John",
           "language": "fr"
-        },
-        {
-          "value": "Михаил Александрович",
-          "language": "ru"
         }
       ]
     }
   ],
   "identifiers": [
     {
-      "type": "idref",
-      "value": "bla"
+      "type": "InvalidIdentifier",
+      "value": "0000-0001-2345-6789"
     },
     {
       "type": "local",
-      "value": "jdoeuniv-paris1.fr"
+      "value": "jdoe@univ-domain.edu"
     }
   ],
   "memberships": [

@@ -3,7 +3,7 @@ from app.models.literal import Literal
 from app.services.concepts.concept_service import ConceptService
 
 
-async def test_create_concept_with_uri(concept_pydantic_model: Concept) -> None:
+async def test_create_concept_with_uri(concept_a_pydantic_model: Concept) -> None:
     """
     Given a concept pydantic model
     When the concept is created
@@ -11,19 +11,19 @@ async def test_create_concept_with_uri(concept_pydantic_model: Concept) -> None:
     :return:
     """
     service = ConceptService()
-    await service.create_or_update_concept(concept=concept_pydantic_model)
-    fetched_concept = await service.get_concept(concept_pydantic_model.uri)
+    await service.create_or_update_concept(concept=concept_a_pydantic_model)
+    fetched_concept = await service.get_concept(concept_a_pydantic_model.uri)
     assert fetched_concept
-    assert fetched_concept.uri == concept_pydantic_model.uri
+    assert fetched_concept.uri == concept_a_pydantic_model.uri
     assert len(fetched_concept.pref_labels) == 2
     assert len(fetched_concept.alt_labels) == 2
-    for preflabel in concept_pydantic_model.pref_labels:
+    for preflabel in concept_a_pydantic_model.pref_labels:
         assert any(
             preflabel.language == fetched_preflabel.language
             and preflabel.value == fetched_preflabel.value
             for fetched_preflabel in fetched_concept.pref_labels
         )
-    for altlabel in concept_pydantic_model.alt_labels:
+    for altlabel in concept_a_pydantic_model.alt_labels:
         assert any(
             altlabel.language == fetched_altlabel.language
             and altlabel.value == fetched_altlabel.value
@@ -31,8 +31,8 @@ async def test_create_concept_with_uri(concept_pydantic_model: Concept) -> None:
         )
 
 
-async def test_update_concept_with_uri(persisted_concept_pydantic_model: Concept,
-                                       concept_pydantic_model: Concept
+async def test_update_concept_with_uri(persisted_concept_a_pydantic_model: Concept,
+                                       concept_a_pydantic_model: Concept
                                        ) -> None:
     """
     Given a persisted concept pydantic model
@@ -42,48 +42,48 @@ async def test_update_concept_with_uri(persisted_concept_pydantic_model: Concept
     Then the concept should be returned with the modified labels
     :return:
     """
-    assert persisted_concept_pydantic_model.uri == concept_pydantic_model.uri
+    assert persisted_concept_a_pydantic_model.uri == concept_a_pydantic_model.uri
     service = ConceptService()
-    # modify the french preflabel of concept_pydantic_model
-    concept_pydantic_model.pref_labels = [
+    # modify the french preflabel of concept_a_pydantic_model
+    concept_a_pydantic_model.pref_labels = [
         Literal(
             value='Physique Galactique',
             language='fr'
         ) if pref_label.language == 'fr' else pref_label for pref_label in
-        concept_pydantic_model.pref_labels
+        concept_a_pydantic_model.pref_labels
     ]
     # add a russian preflabel
-    concept_pydantic_model.pref_labels.append(
+    concept_a_pydantic_model.pref_labels.append(
         Literal(
             value='Галактическая физика',
             language='ru'
         )
     )
     # remove the english altlabel
-    concept_pydantic_model.alt_labels = [
-        alt_label for alt_label in concept_pydantic_model.alt_labels if alt_label.language != 'en'
+    concept_a_pydantic_model.alt_labels = [
+        alt_label for alt_label in concept_a_pydantic_model.alt_labels if alt_label.language != 'en'
     ]
     # add a russian altlabel
-    concept_pydantic_model.alt_labels.append(
+    concept_a_pydantic_model.alt_labels.append(
         Literal(
             value='Галактическая астрофизика',
             language='ru'
         )
     )
-    await service.create_or_update_concept(concept=concept_pydantic_model)
-    fetched_concept = await service.get_concept(concept_pydantic_model.uri)
+    await service.create_or_update_concept(concept=concept_a_pydantic_model)
+    fetched_concept = await service.get_concept(concept_a_pydantic_model.uri)
     assert fetched_concept
-    assert fetched_concept.uri == concept_pydantic_model.uri
+    assert fetched_concept.uri == concept_a_pydantic_model.uri
     assert len(fetched_concept.pref_labels) == 3
     assert len(fetched_concept.alt_labels) == 3
-    for preflabel in concept_pydantic_model.pref_labels:
+    for preflabel in concept_a_pydantic_model.pref_labels:
         assert any(
             preflabel.language == fetched_preflabel.language
             and preflabel.value == fetched_preflabel.value
             for fetched_preflabel in fetched_concept.pref_labels
         )
     # the fetched concept should have kept the english altlabel and added the russian altlabel
-    for altlabel in concept_pydantic_model.alt_labels:
+    for altlabel in concept_a_pydantic_model.alt_labels:
         assert any(
             altlabel.language == fetched_altlabel.language
             and altlabel.value == fetched_altlabel.value
@@ -97,7 +97,7 @@ async def test_update_concept_with_uri(persisted_concept_pydantic_model: Concept
     )
 
 
-async def test_create_concept_without_uri(concept_without_uri_pydantic_model) -> None:
+async def test_create_concept_b_without_uri(concept_b_without_uri_pydantic_model) -> None:
     """
     Given a concept pydantic model without uri
     When the concept is created
@@ -105,21 +105,21 @@ async def test_create_concept_without_uri(concept_without_uri_pydantic_model) ->
     :return:
     """
     service = ConceptService()
-    await service.create_or_update_concept(concept=concept_without_uri_pydantic_model)
+    await service.create_or_update_concept(concept=concept_b_without_uri_pydantic_model)
     fetched_concept = await service.find_concept_without_uri_by_pref_label(
-        concept_without_uri_pydantic_model.pref_labels[0])
+        concept_b_without_uri_pydantic_model.pref_labels[0])
     assert fetched_concept
     assert fetched_concept.uri is None
     assert len(fetched_concept.pref_labels) == 1
     assert len(fetched_concept.alt_labels) == 0
-    assert fetched_concept.pref_labels[0].value == concept_without_uri_pydantic_model.pref_labels[
+    assert fetched_concept.pref_labels[0].value == concept_b_without_uri_pydantic_model.pref_labels[
         0].value
     assert fetched_concept.pref_labels[0].language == \
-           concept_without_uri_pydantic_model.pref_labels[0].language
+           concept_b_without_uri_pydantic_model.pref_labels[0].language
 
 
-async def test_update_concept_without_uri(persisted_concept_without_uri_pydantic_model: Concept,
-                                          concept_without_uri_pydantic_model: Concept
+async def test_update_concept_b_without_uri(persisted_concept_b_without_uri_pydantic_model: Concept,
+                                          concept_b_without_uri_pydantic_model: Concept
                                           ) -> None:
     """
     Given a persisted concept pydantic model without uri
@@ -127,21 +127,21 @@ async def test_update_concept_without_uri(persisted_concept_without_uri_pydantic
     Then no other concept should be created and the concept should be returned
     with the initial label
 
-    :param persisted_concept_without_uri_pydantic_model:
-    :param concept_without_uri_pydantic_model:
+    :param persisted_concept_b_without_uri_pydantic_model:
+    :param concept_b_without_uri_pydantic_model:
     :return:
     """
     service = ConceptService()
-    await service.create_or_update_concept(concept=concept_without_uri_pydantic_model)
+    await service.create_or_update_concept(concept=concept_b_without_uri_pydantic_model)
     fetched_concept = await service.find_concept_without_uri_by_pref_label(
-        concept_without_uri_pydantic_model.pref_labels[0])
+        concept_b_without_uri_pydantic_model.pref_labels[0])
     assert fetched_concept
     assert fetched_concept.uri is None
     assert len(fetched_concept.pref_labels) == 1
     assert len(fetched_concept.alt_labels) == 0
     assert fetched_concept.pref_labels[0].value == \
-           concept_without_uri_pydantic_model.pref_labels[
-               0].value == persisted_concept_without_uri_pydantic_model.pref_labels[0].value
+           concept_b_without_uri_pydantic_model.pref_labels[
+               0].value == persisted_concept_b_without_uri_pydantic_model.pref_labels[0].value
     assert fetched_concept.pref_labels[0].language == \
-           concept_without_uri_pydantic_model.pref_labels[0].language == \
-           persisted_concept_without_uri_pydantic_model.pref_labels[0].language
+           concept_b_without_uri_pydantic_model.pref_labels[0].language == \
+           persisted_concept_b_without_uri_pydantic_model.pref_labels[0].language

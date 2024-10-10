@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.errors.conflict_error import ConflictError
+from app.errors.reference_owner_not_found_error import ReferenceOwnerNotFoundError
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
@@ -44,6 +45,10 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         try:
             await self.service.create_source_record(source_record=source_record,
                                                     harvested_for=person)
+        except ReferenceOwnerNotFoundError as e:
+            logger.error(
+                f"Reference owner {person} not found while trying to create source record"
+                f" not found while trying to create source record {source_record} : {e}")
         except ConflictError as e:
             logger.error(
                 f"Identifier conflict while trying to create source record {source_record} : {e}")

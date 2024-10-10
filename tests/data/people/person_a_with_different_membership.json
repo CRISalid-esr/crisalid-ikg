@@ -22,12 +22,12 @@
     },
     {
       "type": "local",
-      "value": "jdoe@univ-paris1.fr"
+      "value": "jdoe@univ-domain.edu"
     }
   ],
   "memberships": [
     {
-      "entity_uid": "local-U123"
+      "entity_uid": "local-U153"
     }
   ]
 }

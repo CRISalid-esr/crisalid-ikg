@@ -3,20 +3,20 @@ from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 
 
-async def test_create_source_record(persisted_person_pydantic_model: Person,
+async def test_create_source_record(persisted_person_a_pydantic_model: Person,
                                     scanr_thesis_source_record_pydantic_model: SourceRecord
                                     ) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
     When the source record is added to the graph
     Then the source record can be read from the graph
-    :param person_pydantic_model:
+    :param person_a_pydantic_model:
     :param scanr_thesis_source_record_pydantic_model:
     :return:
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=scanr_thesis_source_record_pydantic_model,
-                                       harvested_for=persisted_person_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model)
     fetched_source_record = await service.get_source_record(
         scanr_thesis_source_record_pydantic_model.uid)
     assert fetched_source_record.uid == scanr_thesis_source_record_pydantic_model.uid
@@ -38,3 +38,8 @@ async def test_create_source_record(persisted_person_pydantic_model: Person,
             fetched_abstract.language == abstract.language
             and fetched_abstract.value == abstract.value
             for fetched_abstract in fetched_source_record.abstracts)
+    # only works if concepts have URIs
+    for subject in scanr_thesis_source_record_pydantic_model.subjects:
+        assert any(
+            fetched_subject.uri == subject.uri for fetched_subject in
+            fetched_source_record.subjects)

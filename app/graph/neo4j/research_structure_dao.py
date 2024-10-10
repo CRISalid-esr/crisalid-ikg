@@ -9,7 +9,7 @@ from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.research_structures import ResearchStructure
 from app.services.identifiers.identifier_service import AgentIdentifierService
-
+from app.graph.neo4j.utils import load_query
 
 class ResearchStructureDAO(Neo4jDAO):
     """
@@ -78,7 +78,7 @@ class ResearchStructureDAO(Neo4jDAO):
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(
-                        self._find_by_identifier_query,
+                        load_query("find_structure_by_identifier"),
                         identifier_type=identifier_type.value,
                         identifier_value=identifier_value
                     )
@@ -115,18 +115,7 @@ class ResearchStructureDAO(Neo4jDAO):
         if existing_research_structure is not None:
             raise ConflictError(
                 f"Research structure with uid {research_structure.uid} already exists")
-
-        create_research_structure_query = """
-                    CREATE (research_struct:Organisation:ResearchStructure {uid: $research_structure_uid})                    
-                    WITH research_struct
-                    UNWIND $names AS name
-                    CREATE (rs_name:Literal {value: name.value, language: name.language})
-                    CREATE (research_struct)-[:HAS_NAME]->(rs_name)                    
-                    WITH research_struct, count(name) as _ // count(name) is a trick to avoid cartesian product
-                    UNWIND $identifiers AS identifier
-                    CREATE (rs_identifier:AgentIdentifier {type: identifier.type, value: identifier.value})
-                    CREATE (research_struct)-[:HAS_IDENTIFIER]->(rs_identifier)
-                """
+        create_research_structure_query = load_query("create_research_structure")
         await tx.run(
             create_research_structure_query,
             research_structure_uid=research_structure.uid,
@@ -137,10 +126,7 @@ class ResearchStructureDAO(Neo4jDAO):
 
     @staticmethod
     async def _find_research_structure_by_id(research_structure, tx):
-        find_research_structure_query = """
-                MATCH (s:ResearchStructure {uid: $research_structure_uid})
-                RETURN s
-                """
+        find_research_structure_query = load_query("find_research_structure")
         result = await tx.run(find_research_structure_query,
                               research_structure_uid=research_structure.uid)
         record = await result.single()
@@ -151,8 +137,8 @@ class ResearchStructureDAO(Neo4jDAO):
                                                      research_structure: ResearchStructure):
         research_structure.uid = research_structure.uid or \
                                  AgentIdentifierService.compute_uid_for(
-                                    research_structure
-                                )
+                                     research_structure
+                                 )
         if not research_structure.uid:
             raise ValueError("The submitted research_structure data "
                              "is missing a required identifier")
@@ -165,18 +151,10 @@ class ResearchStructureDAO(Neo4jDAO):
             raise NotFoundError("Research structure with uid "
                                 f"{research_structure.uid} does not exist")
 
-        delete_names_query = """
-                MATCH (s:ResearchStructure {uid: $research_structure_uid})-[:HAS_NAME]->(l:Literal)
-                DETACH DELETE l
-            """
+        delete_names_query = load_query("delete_structure_names")
         await tx.run(delete_names_query, research_structure_uid=research_structure.uid)
 
-        create_names_query = """
-                MATCH (s:ResearchStructure {uid: $research_structure_uid})
-                UNWIND $names AS name
-                CREATE (l:Literal {value: name.value, language: name.language})
-                CREATE (s)-[:HAS_NAME]->(l)
-            """
+        create_names_query = load_query("create_structure_names")
         await tx.run(
             create_names_query,
             research_structure_uid=research_structure.uid,
@@ -184,11 +162,7 @@ class ResearchStructureDAO(Neo4jDAO):
         )
 
         # Delete identifiers that are not in the new set
-        delete_identifiers_query = """
-                MATCH (s:ResearchStructure {uid: $research_structure_uid})-[:HAS_IDENTIFIER]->(i:AgentIdentifier)
-                WHERE NOT (i.type IN $identifier_types AND i.value IN $identifier_values)
-                DETACH DELETE i
-            """
+        delete_identifiers_query = load_query("delete_structure_identifiers")
         identifier_types = [identifier.type.value for identifier in research_structure.identifiers]
         identifier_values = [identifier.value for identifier in research_structure.identifiers]
         await tx.run(
@@ -199,24 +173,9 @@ class ResearchStructureDAO(Neo4jDAO):
         )
 
         # Create or update identifiers
-        create_identifiers_query = """
-                MATCH (s:ResearchStructure {uid: $research_structure_uid})
-                UNWIND $identifiers AS identifier
-                MERGE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
-                ON CREATE SET i = identifier
-                ON MATCH SET i = identifier
-                MERGE (s)-[:HAS_IDENTIFIER]->(i)
-            """
+        create_identifiers_query = load_query("create_structure_identifiers")
         await tx.run(
             create_identifiers_query,
             research_structure_uid=research_structure.uid,
             identifiers=[identifier.dict() for identifier in research_structure.identifiers]
         )
-
-    _find_by_identifier_query = """
-        MATCH (s)-[:HAS_IDENTIFIER]->(:AgentIdentifier {type: $identifier_type, value: $identifier_value})
-        WITH s
-        MATCH (s)-[:HAS_IDENTIFIER]->(i:AgentIdentifier),
-        (s)-[:HAS_NAME]->(n:Literal)
-        RETURN s, collect(DISTINCT n) as names, collect(DISTINCT i) as identifiers
-    """

@@ -3,22 +3,18 @@
     {
       "last_names": [
         {
-          "value": "Doe",
+          "value": "Done",
           "language": "fr"
         },
         {
-          "value": "Бакунин",
-          "language": "ru"
+          "value": "Mariée",
+          "language": "fr"
         }
       ],
       "first_names": [
         {
-          "value": "John",
+          "value": "Jane",
           "language": "fr"
-        },
-        {
-          "value": "Михаил Александрович",
-          "language": "ru"
         }
       ]
     }
@@ -26,11 +22,11 @@
   "identifiers": [
     {
       "type": "orcid",
-      "value": "bla"
+      "value": "0000-0001-2345-6789"
     },
     {
       "type": "local",
-      "value": "jdoeuniv-paris1.fr"
+      "value": "jdone@univ-domain.edu"
     }
   ],
   "memberships": [

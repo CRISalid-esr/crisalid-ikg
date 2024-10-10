@@ -4,17 +4,17 @@ from app.models.identifier_types import OrganizationIdentifierType
 from app.models.organizations import Organization
 
 
-def test_create_valid_organization(research_structure_json_data):
+def test_create_valid_organization(research_structure_a_json_data):
     """
     Given a valid organization model
     When asked for different field values
     Then the values should be returned correctly
-    :param research_structure_json_data:
+    :param research_structure_a_json_data:
     :return:
     """
-    organization = Organization(**research_structure_json_data)
-    assert len(research_structure_json_data["names"]) == 2
-    assert len(organization.names) == len(research_structure_json_data["names"])
+    organization = Organization(**research_structure_a_json_data)
+    assert len(research_structure_a_json_data["names"]) == 2
+    assert len(organization.names) == len(research_structure_a_json_data["names"])
 
     assert any(
         literal.value == "Laboratoire toto" and literal.language == "fr"
@@ -26,9 +26,9 @@ def test_create_valid_organization(research_structure_json_data):
         for literal in organization.names
     )
 
-    assert len(research_structure_json_data["identifiers"]) == 3
+    assert len(research_structure_a_json_data["identifiers"]) == 3
     assert len(organization.identifiers) == len(
-        research_structure_json_data["identifiers"]
+        research_structure_a_json_data["identifiers"]
     )
     assert any(
         identifier.value == "U123" and identifier.type == OrganizationIdentifierType.LOCAL
@@ -58,3 +58,17 @@ def test_create_organization_with_duplicate_identifier(
     """
     with pytest.raises(ValueError):
         Organization(**research_structure_with_duplicate_identifiers_json_data)
+
+
+def test_create_organization_without_name(research_structure_b_without_name_json_data):
+    """
+    Given json person data with invalid identifier type
+    When asked for different field values
+    Then the values should be returned correctly
+
+    :param research_structure_b_without_name_json_data: json data with name field empty
+    :return:
+    """
+    organization = Organization(**research_structure_b_without_name_json_data)
+    assert len(organization.names) == 0
+    assert len(organization.identifiers) == 3

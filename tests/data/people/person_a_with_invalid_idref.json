@@ -25,12 +25,12 @@
   ],
   "identifiers": [
     {
-      "type": "id_hal_i",
+      "type": "idref",
       "value": "bla"
     },
     {
       "type": "local",
-      "value": "jdoeuniv-paris1.fr"
+      "value": "jdoe@univ-domain.edu"
     }
   ],
   "memberships": [
