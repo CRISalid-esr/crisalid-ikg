@@ -34,4 +34,4 @@ class GlobalDAO(Neo4jDAO):
         :param tx: Neo4j transaction
         :return: None
         """
-        await tx.run(load_query("reset_all_transactions"))
+        await tx.run(load_query("reset_all"))
