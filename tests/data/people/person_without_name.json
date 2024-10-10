@@ -1,0 +1,18 @@
+{
+  "names": [],
+  "identifiers": [
+    {
+      "type": "local",
+      "value": "anon123"
+    },
+    {
+      "type": "orcid",
+      "value": "0000-0002-1234-5678"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_uid": "local-U456"
+    }
+  ]
+}

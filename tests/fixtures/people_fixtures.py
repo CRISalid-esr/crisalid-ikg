@@ -209,3 +209,23 @@ async def fixture_person_with_invalid_idhal_i_json_data(_base_path) -> dict:
     :return: person with invalid id_hal_i json data
     """
     return _person_json_data_from_file(_base_path, "person_with_invalid_idhal_i")
+
+
+@pytest_asyncio.fixture(name="person_without_name_json_data")
+async def fixture_person_without_name_json_data(_base_path) -> dict:
+    """
+    Create a basic person json data
+    :return: basic person json data
+    """
+    return _person_json_data_from_file(_base_path, "person_without_name")
+
+
+@pytest_asyncio.fixture(name="person_without_name_pydantic_model")
+async def fixture_person_without_name_pydantic_model(
+        person_without_name_json_data,
+) -> Person:
+    """
+    Create a basic person pydantic model
+    :return: basic person pydantic model
+    """
+    return _person_from_json_data(person_without_name_json_data)
