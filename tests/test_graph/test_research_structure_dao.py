@@ -218,27 +218,27 @@ async def test_update_research_structure_name(
     assert len(research_structure.names) == len(
         persisted_research_structure_pydantic_model.names
     )
-    struct_names = Counter(
+    structure_names = Counter(
         (literal.value, literal.language) for literal in research_structure.names
     )
-    persist_struct_names = Counter(
+    persist_structure_names = Counter(
         (literal.value, literal.language)
         for literal in persisted_research_structure_pydantic_model.names
     )
-    assert struct_names == persist_struct_names
+    assert structure_names == persist_structure_names
 
     await dao.update(research_structure_with_updated_name_pydantic_model)
     updated_research_structure = await dao.find_by_identifier(
         local_identifier.type, local_identifier.value
     )
     assert updated_research_structure.uid == research_structure.uid
-    updated_struct_names = Counter(
+    updated_structure_names = Counter(
         (literal.value, literal.language)
         for literal in updated_research_structure.names
     )
-    updated_pyd_struct_names = Counter(
+    updated_pydantic_structure_names = Counter(
         (literal.value, literal.language)
         for literal in research_structure_with_updated_name_pydantic_model.names
     )
-    assert struct_names != updated_struct_names
-    assert updated_struct_names == updated_pyd_struct_names
+    assert structure_names != updated_structure_names
+    assert updated_structure_names == updated_pydantic_structure_names
