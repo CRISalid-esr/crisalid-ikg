@@ -315,3 +315,49 @@ async def test_create_person_with_two_memberships(
             persisted_research_structure_with_different_ids_pydantic_model.uid,
         ]
     )
+
+
+async def test_update_existing_person_membership(
+        persisted_research_structure_pydantic_model: ResearchStructure,
+        persisted_research_structure_with_different_ids_pydantic_model: ResearchStructure,
+        persisted_person_pydantic_model: Person,
+        person_with_different_membership_pydantic_model: Person,
+):
+    """
+    Given a basic person Pydantic model
+    When the create_person method is called
+    Then the person should be created in the database
+
+    :param person_with_two_memberships_pydantic_model:
+    :param persisted_research_structure_pydantic_model:
+    :return:
+    """
+    # pylint: disable=duplicate-code
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    dao = factory.get_dao(Person)
+    local_identifier = persisted_person_pydantic_model.get_identifier(
+        PersonIdentifierType.LOCAL
+    )
+    person_from_db = await dao.find_by_identifier(
+        local_identifier.type, local_identifier.value
+    )
+    assert person_from_db
+    assert len(person_from_db.memberships) == 1
+    assert any(
+        membership
+        for membership in person_from_db.memberships
+        if membership.entity_uid == persisted_research_structure_pydantic_model.uid
+
+    )
+    await dao.update(person_with_different_membership_pydantic_model)
+    person_from_db = await dao.find_by_identifier(
+        local_identifier.type, local_identifier.value
+    )
+    assert person_from_db
+    assert len(person_from_db.memberships) == 1
+    assert any(
+        membership
+        for membership in person_from_db.memberships
+        if membership.entity_uid == persisted_research_structure_with_different_ids_pydantic_model.uid
+
+    )

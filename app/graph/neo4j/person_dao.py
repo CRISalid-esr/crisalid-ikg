@@ -150,8 +150,8 @@ class PersonDAO(Neo4jDAO):
         record = await result.single()
         return record is not None
 
-    @staticmethod
-    async def _create_person_transaction(tx: AsyncManagedTransaction, person: Person) -> None:
+    @classmethod
+    async def _create_person_transaction(cls, tx: AsyncManagedTransaction, person: Person) -> None:
         person.uid = person.uid or AgentIdentifierService.compute_uid_for(person)
         if not person.uid:
             raise ValueError(f"Unable to compute primary key for person {person}")
@@ -174,26 +174,7 @@ class PersonDAO(Neo4jDAO):
                 f"Bad request error while creating person {person}") from client_error
         except Neo4jError as neo4j_error:
             raise DatabaseError(f"Database error while creating person {person}") from neo4j_error
-        for membership in person.memberships:
-            structure_uid = AgentIdentifierService.compute_uid_for(
-                membership.research_structure
-            )
-            if structure_uid:
-                find_structure_query = load_query("find_structure_by_uid")
-                result = await tx.run(find_structure_query, structure_uid=structure_uid)
-                structure = await result.single()
-                if structure:
-                    create_membership_query = load_query("create_membership")
-                    await tx.run(create_membership_query,
-                                 person_uid=person.uid,
-                                 structure_uid=structure_uid)
-                else:
-                    logger.error(f"Research structure with uid {structure_uid} not found")
-            else:
-                logger.error(
-                    "Unable to compute primary key for research structure "
-                    f"{membership.research_structure}"
-                )
+        await cls._create_memberships(person, tx)
 
     @classmethod
     async def _update_person_transaction(cls, tx: AsyncSession,
@@ -231,11 +212,76 @@ class PersonDAO(Neo4jDAO):
             existing_identifiers,
             incoming_person.identifiers
         )
+        # update person memberships
+        existing_memberships = existing_person.memberships
+        incoming_memberships = incoming_person.memberships
+        memberships_changed = not cls._memberships_are_identical(
+            existing_memberships,
+            incoming_memberships
+        )
+        if memberships_changed:
+            await tx.run(
+                load_query("delete_person_memberships"),
+                person_uid=incoming_person.uid
+            )
+            await cls._create_memberships(incoming_person, tx)
         return PersonDAO.UpdateStatus(
             identifiers_changed=identifiers_changed,
             names_changed=None,
-            memberships_changed=None
+            memberships_changed=memberships_changed
         )
+
+    @classmethod
+    async def _create_memberships(cls, incoming_person, tx):
+        for membership in incoming_person.memberships:
+            try:
+                structure_uid = AgentIdentifierService.compute_uid_for(
+                    membership.research_structure
+                )
+            except ValueError:
+                logger.error(
+                    "Unable to compute primary key for research structure "
+                    f"{membership.research_structure}"
+                )
+                continue
+            find_structure_query = load_query("find_structure_by_uid")
+            result = await tx.run(find_structure_query, structure_uid=structure_uid)
+            structure = await result.single()
+            if not structure:
+                logger.error(f"Research structure with uid {structure_uid} not found")
+                continue
+            create_membership_query = load_query("create_membership")
+            try:
+                await tx.run(create_membership_query,
+                             person_uid=incoming_person.uid,
+                             structure_uid=structure_uid)
+            except ConstraintError as constraint_error:
+                raise ConflictError(
+                    f"Schema constraint violation while creating membership "
+                    f"for person {incoming_person} and structure {structure_uid}"
+                ) from constraint_error
+            except ClientError as client_error:
+                raise ValueError(
+                    f"Bad request error while creating membership "
+                    f"for person {incoming_person} and structure {structure_uid}"
+                ) from client_error
+            except Neo4jError as neo4j_error:
+                raise DatabaseError(
+                    f"Database error while creating membership "
+                    f"for person {incoming_person} and structure {structure_uid}"
+                ) from neo4j_error
+
+    @staticmethod
+    def _memberships_are_identical(existing_memberships: list[Membership],
+                                   incoming_memberships: list[Membership]) -> bool:
+        """
+        Compare two lists of memberships to check identity
+        :param existing_memberships:
+        :param incoming_memberships:
+        :return:
+        """
+        return sorted(existing_memberships, key=lambda x: str(x.entity_uid)) == sorted(
+            incoming_memberships, key=lambda x: str(x.entity_uid))
 
     @staticmethod
     def _hydrate(record: dict) -> Person:

@@ -118,14 +118,17 @@ class ResearchStructureDAO(Neo4jDAO):
 
         create_research_structure_query = """
                     CREATE (research_struct:Organisation:ResearchStructure {uid: $research_structure_uid})                    
+                    WITH research_struct   
+                    FOREACH (name IN $names |
+                        CREATE (rs_name:Literal {value: name.value, language: name.language})
+                        CREATE (research_struct)-[:HAS_NAME]->(rs_name)
+                    )              
                     WITH research_struct
-                    UNWIND $names AS name
-                    CREATE (rs_name:Literal {value: name.value, language: name.language})
-                    CREATE (research_struct)-[:HAS_NAME]->(rs_name)                    
-                    WITH research_struct, count(name) as _ // count(name) is a trick to avoid cartesian product
-                    UNWIND $identifiers AS identifier
-                    CREATE (rs_identifier:AgentIdentifier {type: identifier.type, value: identifier.value})
-                    CREATE (research_struct)-[:HAS_IDENTIFIER]->(rs_identifier)
+                    FOREACH (identifier IN $identifiers |
+                        CREATE (rs_identifier:AgentIdentifier {type: identifier.type, 
+                        value: identifier.value})
+                        CREATE (research_struct)-[:HAS_IDENTIFIER]->(rs_identifier)
+                    )
                 """
         await tx.run(
             create_research_structure_query,
@@ -151,8 +154,8 @@ class ResearchStructureDAO(Neo4jDAO):
                                                      research_structure: ResearchStructure):
         research_structure.uid = research_structure.uid or \
                                  AgentIdentifierService.compute_uid_for(
-                                    research_structure
-                                )
+                                     research_structure
+                                 )
         if not research_structure.uid:
             raise ValueError("The submitted research_structure data "
                              "is missing a required identifier")
