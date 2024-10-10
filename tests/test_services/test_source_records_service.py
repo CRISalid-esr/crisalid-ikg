@@ -38,3 +38,8 @@ async def test_create_source_record(persisted_person_pydantic_model: Person,
             fetched_abstract.language == abstract.language
             and fetched_abstract.value == abstract.value
             for fetched_abstract in fetched_source_record.abstracts)
+    # only works if concepts have URIs
+    for subject in scanr_thesis_source_record_pydantic_model.subjects:
+        assert any(
+            fetched_subject.uri == subject.uri for fetched_subject in
+            fetched_source_record.subjects)

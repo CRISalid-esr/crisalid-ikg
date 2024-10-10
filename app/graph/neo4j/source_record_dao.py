@@ -6,6 +6,7 @@ from app.errors.conflict_error import ConflictError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
+from app.models.concepts import Concept
 from app.models.literal import Literal
 from app.models.people import Person
 from app.models.publication_identifiers import PublicationIdentifier
@@ -33,6 +34,7 @@ class SourceRecordDAO(Neo4jDAO):
         """
         Create  a source record in the graph database
 
+        :param harvested_for: person on behalf of whom the source record was harvested
         :param source_record: source record object
         :return: source record uid, operation status and update status details
         """
@@ -102,7 +104,8 @@ class SourceRecordDAO(Neo4jDAO):
             person_uid=harvested_for.uid,
             titles=[title.dict() for title in source_record.titles],
             abstracts=[abstract.dict() for abstract in source_record.abstracts],
-            identifiers=[identifier.dict() for identifier in source_record.identifiers]
+            identifiers=[identifier.dict() for identifier in source_record.identifiers],
+            subject_uris=[subject.uri for subject in source_record.subjects]
         )
 
     @staticmethod
@@ -120,6 +123,8 @@ class SourceRecordDAO(Neo4jDAO):
             source_record.abstracts.append(Literal(**abstract))
         for identifier in record["identifiers"]:
             source_record.identifiers.append(PublicationIdentifier(**identifier))
+        for subject in record["subjects"]:
+            source_record.subjects.append(Concept(uri=subject['uri']))
         return source_record
 
     @staticmethod
