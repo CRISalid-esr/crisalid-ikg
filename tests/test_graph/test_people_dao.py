@@ -6,7 +6,7 @@ from app.models.research_structures import ResearchStructure
 
 async def test_create_person(
         person_pydantic_model: Person,
-        persisted_research_structure_pydantic_model: ResearchStructure,
+        persisted_research_structure_a_pydantic_model: ResearchStructure,
 ):
     """
     Given a basic person Pydantic model
@@ -45,7 +45,7 @@ async def test_create_person(
     assert any(
         membership
         for membership in person_from_db.memberships
-        if membership.entity_uid == persisted_research_structure_pydantic_model.uid
+        if membership.entity_uid == persisted_research_structure_a_pydantic_model.uid
     )
 
 
@@ -267,10 +267,11 @@ async def test_create_person_with_mononym(
         if any(literal for literal in name.first_names if literal.value == "Jeanne")
     )
 
+
 async def test_create_person_with_two_memberships(
         person_with_two_memberships_pydantic_model: Person,
-        persisted_research_structure_pydantic_model: ResearchStructure,
-        persisted_research_structure_with_different_ids_pydantic_model: ResearchStructure,  #
+        persisted_research_structure_a_pydantic_model: ResearchStructure,
+        persisted_research_structure_b_pydantic_model: ResearchStructure,  #
 ):
     """
     Given a basic person Pydantic model
@@ -278,7 +279,7 @@ async def test_create_person_with_two_memberships(
     Then the person should be created in the database
 
     :param person_with_two_memberships_pydantic_model:
-    :param persisted_research_structure_pydantic_model:
+    :param persisted_research_structure_a_pydantic_model:
     :return:
     """
     # pylint: disable=duplicate-code
@@ -311,15 +312,15 @@ async def test_create_person_with_two_memberships(
     assert all(
         uid in {membership.entity_uid for membership in person_from_db.memberships}
         for uid in [
-            persisted_research_structure_pydantic_model.uid,
-            persisted_research_structure_with_different_ids_pydantic_model.uid,
+            persisted_research_structure_a_pydantic_model.uid,
+            persisted_research_structure_b_pydantic_model.uid,
         ]
     )
 
 
 async def test_update_existing_person_membership(
-        persisted_research_structure_pydantic_model: ResearchStructure,
-        persisted_research_structure_with_different_ids_pydantic_model: ResearchStructure,
+        persisted_research_structure_a_pydantic_model: ResearchStructure,
+        persisted_research_structure_b_pydantic_model: ResearchStructure,
         persisted_person_pydantic_model: Person,
         person_with_different_membership_pydantic_model: Person,
 ):
@@ -329,7 +330,7 @@ async def test_update_existing_person_membership(
     Then the person should be created in the database
 
     :param person_with_two_memberships_pydantic_model:
-    :param persisted_research_structure_pydantic_model:
+    :param persisted_research_structure_a_pydantic_model:
     :return:
     """
     # pylint: disable=duplicate-code
@@ -346,7 +347,7 @@ async def test_update_existing_person_membership(
     assert any(
         membership
         for membership in person_from_db.memberships
-        if membership.entity_uid == persisted_research_structure_pydantic_model.uid
+        if membership.entity_uid == persisted_research_structure_a_pydantic_model.uid
 
     )
     await dao.update(person_with_different_membership_pydantic_model)
@@ -358,6 +359,7 @@ async def test_update_existing_person_membership(
     assert any(
         membership
         for membership in person_from_db.memberships
-        if membership.entity_uid == persisted_research_structure_with_different_ids_pydantic_model.uid
+        if
+        membership.entity_uid == persisted_research_structure_b_pydantic_model.uid
 
     )

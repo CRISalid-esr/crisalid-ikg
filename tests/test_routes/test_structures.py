@@ -7,7 +7,7 @@ RESEARCH_STRUCTURE_API_PATH = "/api/v1/organization/research-structure"
 
 
 def test_create_research_structure_success(test_client: TestClient,
-                                           research_structure_json_data):
+                                           research_structure_a_json_data):
     """
     Given a valid person json data
     When creating a person through  REST API
@@ -18,7 +18,7 @@ def test_create_research_structure_success(test_client: TestClient,
     :return:
     """
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,
-                                json=research_structure_json_data)
+                                json=research_structure_a_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "structure" in response.json()
     assert response.json()["structure"]["uid"] == "local-U123"
@@ -37,45 +37,45 @@ def test_create_research_structure_success(test_client: TestClient,
 
 def test_create_research_structure_invalid_identifier_type(
         test_client: TestClient,
-        research_structure_with_invalid_identifier_type_json_data):
+        research_structure_a_with_invalid_identifier_type_json_data):
     """
     Given json research structure data with invalid identifier type
     When creating a person through REST API
     Then a 422 error should be raised
     :param test_client:
-    :param research_structure_with_invalid_identifier_type_json_data:
+    :param research_structure_a_with_invalid_identifier_type_json_data:
     :return:
     """
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,
-                                json=research_structure_with_invalid_identifier_type_json_data)
+                                json=research_structure_a_with_invalid_identifier_type_json_data)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 def test_create_research_structure_twice(test_client: TestClient,
-                                         research_structure_json_data):
+                                         research_structure_a_json_data):
     """
     Given a valid research structure json data
     When creating a research structure twice through REST API
     Then a 409 error should be raised
 
     :param test_client:
-    :param research_structure_json_data:
+    :param research_structure_a_json_data:
     :return:
     """
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,
-                                json=research_structure_json_data)
+                                json=research_structure_a_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "structure" in response.json()
     assert response.json()["structure"]["uid"] == "local-U123"
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,
-                                json=research_structure_json_data)
+                                json=research_structure_a_json_data)
     assert response.status_code == status.HTTP_409_CONFLICT
     assert "error" in response.json()
     assert response.json()["error"] == "Research structure with uid local-U123 already exists"
 
 
-def test_create_research_structure_without_name(
-        test_client: TestClient, research_structure_without_name_json_data
+def test_create_research_structure_b_without_name(
+        test_client: TestClient, research_structure_b_without_name_json_data
 ):
     """
     Given a valid person json data
@@ -83,11 +83,11 @@ def test_create_research_structure_without_name(
     Then the person should be created successfully
 
     :param test_client:
-    :param research_structure_without_name_json_data:
+    :param research_structure_b_without_name_json_data:
     :return:
     """
     response = test_client.post(
-        RESEARCH_STRUCTURE_API_PATH, json=research_structure_without_name_json_data
+        RESEARCH_STRUCTURE_API_PATH, json=research_structure_b_without_name_json_data
     )
     assert response.status_code == status.HTTP_201_CREATED
     assert "structure" in response.json()

@@ -5,7 +5,7 @@ from app.services.people.people_service import PeopleService
 
 async def test_create_person(
         person_pydantic_model: Person,
-        persisted_research_structure_pydantic_model  # pylint: disable=unused-argument
+        persisted_research_structure_a_pydantic_model  # pylint: disable=unused-argument
 ) -> None:
     """
     Given a basic person pydantic model
@@ -61,8 +61,8 @@ async def test_create_person_without_name(
 
 
 async def test_update_person_membership(
-        persisted_research_structure_pydantic_model: ResearchStructure,
-        persisted_research_structure_with_different_ids_pydantic_model: ResearchStructure,
+        persisted_research_structure_a_pydantic_model: ResearchStructure,
+        persisted_research_structure_b_pydantic_model: ResearchStructure,
         persisted_person_pydantic_model: Person,
         person_with_different_membership_pydantic_model: Person,
 ) -> None:
@@ -80,7 +80,7 @@ async def test_update_person_membership(
     assert any(
         membership
         for membership in fetched_person.memberships
-        if membership.entity_uid == persisted_research_structure_pydantic_model.uid
+        if membership.entity_uid == persisted_research_structure_a_pydantic_model.uid
     )
     await service.update_person(person_with_different_membership_pydantic_model)
     updated_fetched_person = await service.get_person(
@@ -93,5 +93,5 @@ async def test_update_person_membership(
         membership
         for membership in updated_fetched_person.memberships
         if membership.entity_uid
-        == persisted_research_structure_with_different_ids_pydantic_model.uid
+        == persisted_research_structure_b_pydantic_model.uid
     )
