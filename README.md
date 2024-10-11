@@ -30,7 +30,8 @@ Server side :
 
 ### Basic requirements
 
-Install Postgresql, RabbitMQ and the web server you want to use as a front-end.
+Install [Neo4j](https://neo4j.com/docs/operations-manual/current/installation/)
+and [RabbitMQ](https://www.rabbitmq.com/docs/download).
 
 Note that poetry is not required as requirements are exported to requirements.txt.
 
@@ -194,3 +195,17 @@ Here is an exemple of the payload of an incoming AMQP message for a people event
   }
 }
 ```
+
+# Documentation compilation and publication
+
+The documentation is written in reStructuredText and compiled with Sphinx.
+
+## HTML publication
+
+To export the documentation to HTML, run the following command from the `docs` directory :
+
+```bash
+python -m sphinx -b html source build/html
+```
+
+Then, copy the content of the `docs/build/html` directory to the server of your choice.
