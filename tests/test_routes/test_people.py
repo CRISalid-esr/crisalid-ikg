@@ -102,3 +102,25 @@ def test_update_person_success(test_client: TestClient, person_a_json_data):
     assert response.json()["person"]["names"][0]["first_names"][0] == {
         "value": "Joe", "language": "fr"
     }
+
+
+def test_update_person_with_non_authorized_identifier(test_client: TestClient,
+                                                      person_a_json_data):
+    """
+    Given a person json data with an invalid identifier type
+    When updating a person through REST API
+    Then a 422 error should be raised
+
+    :param test_client:
+    :param person_a_json_data:
+    :return:
+    """
+    person_with_non_authorized_identifier_json_data = person_a_json_data \
+                                                      | {"identifiers": person_a_json_data.get(
+        "identifiers", []) + [{
+        "type": "invalide",
+        "value": "blabla"
+    }]}
+    response = test_client.put(API_PERSON_PATH,
+                               json=person_with_non_authorized_identifier_json_data)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
