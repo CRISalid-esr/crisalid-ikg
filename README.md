@@ -65,7 +65,9 @@ poetry export -f requirements.txt --output requirements.txt
 
 The project uses [pytest](https://docs.pytest.org/en/stable/) for testing.
 
-Running the tests requires a test Neo4j instance running in a docker container.
+Running the tests requires test dependencies to be installed. The following command will install them :
+
+#### Neo4j 
 
 ```bash
 docker run --publish=7475:7474 --publish=7688:7687 --env=NEO4J_AUTH=none   neo4j:5-community
@@ -76,6 +78,11 @@ The 7688 port is the one used by the test suite to connect to the Neo4j instance
 neo4j_uri in test_app_settings.py, which can be overriden through .test.env or
 the NEO4J_URI environment variable.
 
+#### Elasticsearch
+
+```bash
+docker run --publish=9201:9200 --publish=9301:9300 --env="discovery.type=single-node" --env="xpack.security.enabled=false" docker.elastic.co/elasticsearch/elasticsearch:8.15.2
+```
 From project root :
 
 ```bash

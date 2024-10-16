@@ -36,3 +36,7 @@ class TestAppSettings(AppSettings):
     institution_name: str = "XYZ University • test"
 
     neo4j_uri: str = "bolt://localhost:7688"
+
+    es_enabled: bool = True
+    es_host: str = "http://localhost"
+    es_port: int = 9201
