@@ -40,7 +40,7 @@ def test_create_research_structure_invalid_identifier_type(
         research_structure_a_with_invalid_identifier_type_json_data):
     """
     Given json research structure data with invalid identifier type
-    When creating a person through REST API
+    When creating a structure through REST API
     Then a 422 error should be raised
     :param test_client:
     :param research_structure_a_with_invalid_identifier_type_json_data:
@@ -48,6 +48,22 @@ def test_create_research_structure_invalid_identifier_type(
     """
     response = test_client.post(RESEARCH_STRUCTURE_API_PATH,
                                 json=research_structure_a_with_invalid_identifier_type_json_data)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+def test_update_research_structure_invalid_identifier_type(
+        test_client: TestClient,
+        research_structure_a_with_invalid_identifier_type_json_data):
+    """
+    Given json research structure data with invalid identifier type
+    When updating a structure through REST API
+    Then a 422 error should be raised
+    :param test_client:
+    :param research_structure_a_with_invalid_identifier_type_json_data:
+    :return:
+    """
+    response = test_client.put(RESEARCH_STRUCTURE_API_PATH,
+                               json=research_structure_a_with_invalid_identifier_type_json_data)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
