@@ -18,6 +18,7 @@ def fixture_mock_source_record_index_add_source_record():
 
 @pytest.mark.current
 async def test_signal_source_record_created(
+        test_app,  # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         scanr_thesis_source_record_pydantic_model: SourceRecord,
         mock_source_record_index_add_source_record: mock.MagicMock):
@@ -25,6 +26,7 @@ async def test_signal_source_record_created(
     Given a new source record Pydantic model
     When the source record is added to the graph
     Then the source record index add_source_record method is called
+    :param test_app: juste to ensure bliker initialization (through CrisalidIKG constructor)
     """
     service = SourceRecordService()
     await service.create_source_record(
