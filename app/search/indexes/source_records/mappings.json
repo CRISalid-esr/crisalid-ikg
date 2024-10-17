@@ -1,0 +1,158 @@
+{
+  "properties": {
+    "uid": {
+      "type": "keyword"
+    },
+    "source_identifier": {
+      "type": "keyword"
+    },
+    "harvester": {
+      "type": "keyword"
+    },
+    "titles": {
+      "properties": {
+        "value": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            },
+            "normalized": {
+              "type": "text",
+              "analyzer": "custom_analyzer",
+              "search_analyzer": "custom_analyzer"
+            }
+          }
+        },
+        "language": {
+          "type": "keyword"
+        }
+      }
+    },
+    "identifiers": {
+      "properties": {
+        "type": {
+          "type": "keyword"
+        },
+        "value": {
+          "type": "keyword"
+        }
+      }
+    },
+    "abstracts": {
+      "properties": {
+        "value": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "language": {
+          "type": "keyword"
+        }
+      }
+    },
+    "subjects": {
+      "properties": {
+        "uri": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "pref_labels": {
+          "type": "nested",
+          "properties": {
+            "language": {
+              "type": "keyword"
+            },
+            "value": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                }
+              }
+            }
+          }
+        },
+        "alt_labels": {
+          "type": "nested",
+          "properties": {
+            "language": {
+              "type": "keyword"
+            },
+            "value": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "document_type": {
+      "type": "nested",
+      "properties": {
+        "label": {
+          "type": "keyword"
+        },
+        "uri": {
+          "type": "keyword"
+        }
+      }
+    },
+    "contributions": {
+      "type": "nested",
+      "properties": {
+        "contributor": {
+          "properties": {
+            "name": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 256
+                }
+              }
+            },
+            "last_name": {
+              "type": "text",
+              "fields": {
+                "normalized": {
+                  "type": "text",
+                  "analyzer": "custom_analyzer",
+                  "search_analyzer": "custom_analyzer"
+                }
+              }
+            },
+            "source": {
+              "type": "keyword"
+            },
+            "source_identifier": {
+              "type": "keyword"
+            }
+          }
+        },
+        "rank": {
+          "type": "long"
+        },
+        "role": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}

@@ -46,10 +46,10 @@ class SourceRecordService:
             except Neo4jError as e:
                 logger.error(f"Database error while creating or updating concept {subject} : {e}")
         source_record.subjects = registered_concepts
-        record_id, status, _ = await source_record_dao.create(source_record=source_record,
-                                                              harvested_for=person)
+        source_record_id, status, _ = await source_record_dao.create(source_record=source_record,
+                                                                     harvested_for=person)
         if status is SourceRecordDAO.Status.CREATED:
-            await source_record_created.send_async(self, payload=record_id)
+            await source_record_created.send_async(self, source_record_id=source_record_id)
         return source_record
 
     async def get_source_record(self, source_record_uid: str) -> SourceRecord:
