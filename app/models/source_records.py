@@ -2,11 +2,12 @@ from typing import Optional, List
 
 from pydantic import BaseModel
 
+from app.models.concepts import Concept
 from app.models.document_type import DocumentType
 from app.models.literal import Literal
 from app.models.publication_identifiers import PublicationIdentifier
 from app.models.source_contributions import SourceContribution
-from app.models.concepts import Concept
+from app.models.source_issue import SourceIssue
 
 
 class SourceRecord(BaseModel):
@@ -32,3 +33,5 @@ class SourceRecord(BaseModel):
     document_type: List[DocumentType] = []
 
     contributions: List[SourceContribution] = []
+
+    issue: Optional[SourceIssue] = None

@@ -42,3 +42,10 @@ class PublicationIdentifierType(Enum):
     SCIENCESPO = "sciencespo"
     URI = "uri"
     WOS = "wos"
+
+
+class JournalIdentifierType(Enum):
+    """Journal identifier types"""
+    DOI = "doi"
+    ISSN = "issn"
+    EISSN = "eissn"
