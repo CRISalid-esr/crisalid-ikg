@@ -1,0 +1,109 @@
+{
+  "source_identifier": "https://openalex.org/W123456789",
+  "harvester": "OpenAlex",
+  "harvester_version": "1.3.1",
+  "identifiers": [
+    {
+      "type": "doi",
+      "value": "https://doi.org/10.12345/bch.0000.00000"
+    },
+    {
+      "type": "openalex",
+      "value": "https://openalex.org/W123456789"
+    }
+  ],
+  "manifestations": [
+    {
+      "page": "https://doi.org/10.12345/bch.0000.00000",
+      "download_url": null,
+      "additional_files": []
+    }
+  ],
+  "titles": [
+    {
+      "value": "Sample Title: Anonymized Study on Historical Artifacts",
+      "language": "en"
+    }
+  ],
+  "subtitles": [
+    {
+      "value": "Subtitle: A Study on Historical Artifacts",
+      "language": "en"
+    }
+  ],
+  "abstracts": [
+    {
+      "value": "This is an abstract of the article.",
+      "language": "en"
+    }
+  ],
+  "subjects": [
+    {
+      "uri": "http://www.example.org/entity/123",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "history",
+          "language": "en"
+        },
+        {
+          "value": "histoire",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": []
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "example_source",
+        "source_identifier": "https://example.org/1234567",
+        "name": "John Doe",
+        "name_variants": [
+          "J. Doe",
+          "Jonathan Doe"
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "ExampleSource",
+    "source_identifier": "journal-issue-identifier",
+    "titles": [],
+    "volume": "105",
+    "number": [
+      "2"
+    ],
+    "rights": null,
+    "date": null,
+    "journal": {
+      "source": "OpenAlex",
+      "source_identifier": "https://openalex.org/S113942516",
+      "issn": [
+        "0007-4217",
+        "2241-0104"
+      ],
+      "eissn": ["1234-5678"],
+      "issn_l": "0007-4217",
+      "publisher": "Example Publisher",
+      "titles": [
+        "Sample Journal Title"
+      ]
+    }
+  },
+  "page": "1-10",
+  "book": null,
+  "issued": "2000-01-01T00:00:00",
+  "created": "2020-01-01T00:00:00",
+  "version": 2
+}
