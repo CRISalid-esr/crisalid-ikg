@@ -23,10 +23,6 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
     async def _process_message(self, key: str, payload: str):
         json_payload = json.loads(payload)
         logger.debug(f"Processing message {json_payload}")
-        # check that the three required keys are present in the payload
-        if not all(key in json_payload for key in ["reference_event", "entity"]):
-            logger.error(f"Missing keys in payload {json_payload}")
-            return
         event_data = json_payload["reference_event"]
         person_data = json_payload["entity"]
         event_type = event_data["type"]
@@ -39,7 +35,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
             raise e
         try:
             source_record = SourceRecord(**reference_data)
-        except (ValidationError, AttributeError) as e:
+        except ValidationError as e:
             logger.error(f"Error processing source record data {reference_data} : {e}")
             raise e
         if event_type == "created":
