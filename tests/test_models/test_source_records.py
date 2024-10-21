@@ -187,6 +187,7 @@ async def test_create_article_source_record_from_open_alex_data(
     assert source_record.issue.journal.source_identifier == "https://openalex.org/S113942516"
     assert source_record.issue.journal.publisher == "Example Publisher"
     assert source_record.issue.journal.titles == ["Sample Journal Title"]
+    assert source_record.issue.journal.uid == "openalex-https://openalex.org/S113942516"
 
 
 async def test_article_identifiers_from_open_alex_data(

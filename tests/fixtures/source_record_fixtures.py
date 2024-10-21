@@ -1,6 +1,7 @@
 import pytest_asyncio
 
 from app.models.people import Person
+from app.models.source_records import SourceRecord
 from tests.fixtures.common import _source_record_from_json_data, \
     _source_record_json_data_from_file
 
@@ -26,7 +27,7 @@ async def fixture_scanr_thesis_source_record_json_data(_base_path) -> dict:
 
 @pytest_asyncio.fixture(name="idref_thesis_source_record_pydantic_model")
 async def fixture_idref_thesis_source_record_pydantic_model(
-        idref_thesis_source_record_json_data) -> Person:
+        idref_thesis_source_record_json_data) -> SourceRecord:
     """
     Create a basic source record pydantic model from IdRef data
     :return: basic source record pydantic model from IdRef data
@@ -45,7 +46,7 @@ async def fixture_idref_thesis_source_record_json_data(_base_path) -> dict:
 
 @pytest_asyncio.fixture(name="open_alex_article_source_record_pydantic_model")
 async def fixture_open_alex_article_source_record_pydantic_model(
-        open_alex_article_source_record_json_data) -> Person:
+        open_alex_article_source_record_json_data) -> SourceRecord:
     """
     Create a basic source record pydantic model from OpenAlex data
     :return: basic source record pydantic model from OpenAlex data
