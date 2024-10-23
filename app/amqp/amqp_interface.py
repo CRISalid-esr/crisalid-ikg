@@ -121,6 +121,7 @@ class AMQPInterface:
         self.pika_exchanges[topic] = await self.pika_channel.declare_exchange(
             exchange_name,
             ExchangeType.TOPIC,
+            durable=True,
         )
 
     async def _bind_queue(self, topic: str, queue_name: str) -> None:
