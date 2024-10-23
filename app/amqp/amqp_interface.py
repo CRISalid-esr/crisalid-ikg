@@ -121,6 +121,7 @@ class AMQPInterface:
         self.pika_exchanges[topic] = await self.pika_channel.declare_exchange(
             exchange_name,
             ExchangeType.TOPIC,
+            # exchange must be declared as durable in all other clients
             durable=True,
         )
 
