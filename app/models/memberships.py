@@ -18,6 +18,15 @@ class Membership(BaseModel):
     past: bool = False
     future: bool = False
 
+    # If entity_uid is not pefixed, treat it as a local identifier by default
+    @model_validator(mode='before')
+    @classmethod
+    def _set_entity_uid(cls, values) -> dict:
+        if AgentIdentifierService.IDENTIFIER_SEPARATOR not in values['entity_uid']:
+            values['entity_uid'] = f"local{AgentIdentifierService.IDENTIFIER_SEPARATOR}" \
+                                   f"{values['entity_uid']}"
+        return values
+
     @model_validator(mode='after')
     def _set_research_structure(self) -> 'Membership':
         if self.research_structure is None:

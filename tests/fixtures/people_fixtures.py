@@ -57,6 +57,17 @@ async def fixture_person_a_with_different_membership_json_data(_base_path) -> di
     return _person_json_data_from_file(_base_path, "person_a_with_different_membership")
 
 
+@pytest_asyncio.fixture(name="person_a_with_implicit_local_membership_identifier_json_data")
+async def fixture_person_a_with_implicit_local_membership_identifier_json_data(_base_path) -> dict:
+    """
+    Create a person json data with membership entity uid without the "local" prefix
+    :return: basic person json data
+    """
+    return _person_json_data_from_file(_base_path,
+                                       "person_a_with_implicit_local_membership_identifier"
+                                       )
+
+
 @pytest_asyncio.fixture(name="person_b_with_two_names_pydantic_model")
 async def fixture_person_b_with_two_names_pydantic_model(_base_path) -> Person:
     """

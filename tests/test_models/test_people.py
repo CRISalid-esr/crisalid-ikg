@@ -216,3 +216,21 @@ def test_create_person_a_without_name(person_a_without_name_json_data):
     person = Person(**person_a_without_name_json_data)
     assert len(person.names) == 0
     assert len(person.identifiers) == 2
+
+
+@pytest.mark.current
+def test_create_person_with_implicit_local_membership_identifier(
+        person_a_with_implicit_local_membership_identifier_json_data
+) -> None:
+    """
+    Given json person data with a membership entity uid without the "local" prefix
+    When creating a person object
+    Then the person object should be created correctly
+    :param person_a_with_implicit_local_membership_identifier_json_data:
+    :return:
+    """
+    person = Person(**person_a_with_implicit_local_membership_identifier_json_data)
+    assert len(person.names) == 1
+    assert len(person.memberships) == 1
+    assert person.memberships[0].entity_uid ==\
+           "local-U123"  # pylint: disable=unsubscriptable-object
