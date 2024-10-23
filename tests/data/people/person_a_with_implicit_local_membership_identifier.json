@@ -1,0 +1,33 @@
+{
+  "names": [
+    {
+      "last_names": [
+        {
+          "value": "Doe",
+          "language": "fr"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "John",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "orcid",
+      "value": "0000-0001-2345-6789"
+    },
+    {
+      "type": "local",
+      "value": "jdoe@univ-domain.edu"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_uid": "U123"
+    }
+  ]
+}
