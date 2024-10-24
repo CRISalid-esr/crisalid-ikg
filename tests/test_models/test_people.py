@@ -218,7 +218,6 @@ def test_create_person_a_without_name(person_a_without_name_json_data):
     assert len(person.identifiers) == 2
 
 
-@pytest.mark.current
 def test_create_person_with_implicit_local_membership_identifier(
         person_a_with_implicit_local_membership_identifier_json_data
 ) -> None:

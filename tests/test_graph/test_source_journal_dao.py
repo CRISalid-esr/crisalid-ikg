@@ -57,3 +57,27 @@ async def test_update_source_journal(open_alex_source_journal_pydantic_model: So
     assert "0007-4217" not in [identifier.value for identifier in
                                source_journal_from_db.identifiers]
     assert "8765-4321" in [identifier.value for identifier in source_journal_from_db.identifiers]
+
+
+async def test_source_journal_without_identifiers_can_be_updated(
+        open_alex_source_journal_pydantic_model: SourceJournal
+):
+    """
+    Given a journal without identifiers persisted in the graph
+    When the journal is submitted again with modified information
+    Then the journal should be updated in the graph
+    :param open_alex_source_journal_pydantic_model:
+    :return:
+    """
+    # remove all identifiers from the journal
+    open_alex_source_journal_pydantic_model.identifiers = []
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    dao: SourceJournalDAO = factory.get_dao(SourceJournal)
+    await dao.create(open_alex_source_journal_pydantic_model)
+    source_journal_from_db = await dao.get_by_uid(open_alex_source_journal_pydantic_model.uid)
+    source_journal_from_db.publisher = "New publisher"
+    source_journal_from_db.titles.append("New title")
+    await dao.update(source_journal_from_db)
+    source_journal_from_db = await dao.get_by_uid(open_alex_source_journal_pydantic_model.uid)
+    assert source_journal_from_db.publisher == "New publisher"
+    assert "New title" in source_journal_from_db.titles
