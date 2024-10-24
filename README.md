@@ -32,7 +32,8 @@ Server side :
 
 Install Postgresql, RabbitMQ and the web server you want to use as a front-end.
 
-To enable Elasticsearch support, you need to install Elasticsearch or to run it in a container. The following command will run an Elasticsearch instance :
+To enable Elasticsearch support, you need to install Elasticsearch or to run it in a container. The following command
+will run an Elasticsearch instance :
 
 ```bash
 docker run --publish=9200:9200 --publish=9300:9300 --env="discovery.type=single-node" --env="xpack.security.enabled=false" docker.elastic.co/elasticsearch/elasticsearch:8.15.2

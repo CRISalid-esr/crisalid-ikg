@@ -119,7 +119,6 @@ class CrisalidIKG(FastAPI):
             logger.error("Cannot connect to RabbitMQ : Unknown error, will not retry")
             raise error
 
-
     def _register_person_events(self):
         person_created.connect(self.amqp_interface.fetch_publications)
         person_identifiers_updated.connect(self.amqp_interface.fetch_publications)

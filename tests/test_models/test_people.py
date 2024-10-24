@@ -231,5 +231,5 @@ def test_create_person_with_implicit_local_membership_identifier(
     person = Person(**person_a_with_implicit_local_membership_identifier_json_data)
     assert len(person.names) == 1
     assert len(person.memberships) == 1
-    assert person.memberships[0].entity_uid ==\
+    assert person.memberships[0].entity_uid == \
            "local-U123"  # pylint: disable=unsubscriptable-object
