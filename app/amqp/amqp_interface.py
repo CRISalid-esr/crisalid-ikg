@@ -4,6 +4,7 @@ from typing import List
 
 import aio_pika
 from aio_pika import ExchangeType
+from loguru import logger
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_message_processor_factory import AMQPMessageProcessorFactory
@@ -79,10 +80,15 @@ class AMQPInterface:
         :return: None
         """
         person_uid = extra["payload"]
-        publisher = AMQPMessagePublisher(self.pika_exchanges[self.settings.amqp_publications_topic])
-        await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
-                                AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
-                                {"person_uid": person_uid})
+        if self.settings.amqp_publications_topic in self.pika_exchanges:
+            publisher = AMQPMessagePublisher(
+                self.pika_exchanges[self.settings.amqp_publications_topic])
+            await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
+                                    AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
+                                    {"person_uid": person_uid})
+        else:
+            logger.error("Cannot fetch publications for person %s: "
+                         "AMQP exchange not declared", person_uid)
 
     async def _attach_message_processing_workers(self, topic: str):
         self.inner_tasks_queues[topic] = asyncio.Queue(
@@ -115,6 +121,7 @@ class AMQPInterface:
         self.pika_exchanges[topic] = await self.pika_channel.declare_exchange(
             exchange_name,
             ExchangeType.TOPIC,
+            durable=True,
         )
 
     async def _bind_queue(self, topic: str, queue_name: str) -> None:

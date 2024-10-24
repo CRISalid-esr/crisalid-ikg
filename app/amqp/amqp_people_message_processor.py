@@ -1,7 +1,6 @@
 import json
 
 from loguru import logger
-from pydantic import ValidationError
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.errors.conflict_error import ConflictError
@@ -27,7 +26,7 @@ class AMQPPeopleMessageProcessor(AMQPMessageProcessor):
         person_data = event_data["data"]
         try:
             person = Person(**person_data)
-        except ValidationError as e:
+        except ValueError as e:
             logger.error(f"Error processing person data {person_data} : {e}")
             raise e
         if event_type == "created":

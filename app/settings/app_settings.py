@@ -60,6 +60,17 @@ class AppSettings(BaseSettings):
     neo4j_user: str = "neo4j"
     neo4j_password: str = "password"
 
+    es_enabled: bool = True
+    es_host: str = "http://localhost"
+    es_port: int = 9200
+    es_user: str = "elastic"
+    es_password: str = "elastic"
+    es_indexes: dict[str, dict] = {
+        "source_records": {
+            "index_name": "source_records_index"
+        }
+    }
+
     person_identifier_order: list[PersonIdentifierType] = \
         [PersonIdentifierType.LOCAL,
          PersonIdentifierType.ORCID,

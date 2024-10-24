@@ -48,7 +48,7 @@ class Person(Agent[PersonIdentifierType]):
 
         type_pattern = {
             PersonIdentifierType.ORCID: "^([0-9]{4}-){3}[0-9]{3}[0-9X]$",
-            PersonIdentifierType.IDREF: "^[0-9]{1,9}$",
+            PersonIdentifierType.IDREF: "^[0-9]{1,9}[A-Z]?$",
             PersonIdentifierType.ID_HAL_S: "^([a-z]+-)*[a-z]+$",
             PersonIdentifierType.ID_HAL_I: "^[0-9]{1,9}$",
             PersonIdentifierType.SCOPUS_EID: "^[0-9]+$",

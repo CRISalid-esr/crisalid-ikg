@@ -1,3 +1,5 @@
+from collections import Counter
+
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.agent_identifiers import AgentIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
@@ -189,4 +191,54 @@ async def test_update_research_structure_rnsr_identifier(
         identifier for identifier in research_structure.identifiers if
         identifier.type == rnsr_identifier.type and identifier.value == rnsr_identifier.value
     )
-   
+
+
+async def test_update_research_structure_name(
+        persisted_research_structure_a_pydantic_model: ResearchStructure,
+        research_structure_a_with_updated_name_pydantic_model: ResearchStructure,
+):
+    """
+    Given a basic research structure Pydantic model
+    When the create_research_structure method is called
+    And the update_research_structure method is called with a different name
+    Then the research structure should be updated in the database
+    :param research_structure_pydantic_model:
+    :return:
+    """
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    dao = factory.get_dao(ResearchStructure)
+    local_identifier = persisted_research_structure_a_pydantic_model.get_identifier(
+        OrganizationIdentifierType.LOCAL
+    )
+    research_structure = await dao.find_by_identifier(
+        local_identifier.type, local_identifier.value
+    )
+    assert research_structure
+    assert research_structure.uid == "local-U123"
+    assert len(research_structure.names) == len(
+        persisted_research_structure_a_pydantic_model.names
+    )
+    structure_names = Counter(
+        (literal.value, literal.language) for literal in research_structure.names
+    )
+    persist_structure_names = Counter(
+        (literal.value, literal.language)
+        for literal in persisted_research_structure_a_pydantic_model.names
+    )
+    assert structure_names == persist_structure_names
+
+    await dao.update(research_structure_a_with_updated_name_pydantic_model)
+    updated_research_structure = await dao.find_by_identifier(
+        local_identifier.type, local_identifier.value
+    )
+    assert updated_research_structure.uid == research_structure.uid
+    updated_structure_names = Counter(
+        (literal.value, literal.language)
+        for literal in updated_research_structure.names
+    )
+    updated_pydantic_structure_names = Counter(
+        (literal.value, literal.language)
+        for literal in research_structure_a_with_updated_name_pydantic_model.names
+    )
+    assert structure_names != updated_structure_names
+    assert updated_structure_names == updated_pydantic_structure_names
