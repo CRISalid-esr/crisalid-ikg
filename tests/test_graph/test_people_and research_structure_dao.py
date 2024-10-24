@@ -3,10 +3,6 @@ from app.models.identifier_types import PersonIdentifierType, OrganizationIdenti
 from app.models.people import Person
 from app.models.research_structures import ResearchStructure
 
-
-# TODO: Can't be fully done: acronym, description and contacts are not implemented in ResearchStructure
-#   check https://github.com/CRISalid-esr/crisalid-ikg/issues/65
-
 async def test_update_people_and_structure(
         persisted_research_structure_a_pydantic_model: ResearchStructure,
         persisted_research_structure_b_pydantic_model: ResearchStructure,
@@ -87,14 +83,20 @@ async def test_update_people_and_structure(
         people_local_identifier.type, people_local_identifier.value
     )
     assert updated_person_from_db
-    await assert_memberships_match(updated_person_from_db,
-                                   person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model)
+    await assert_memberships_match(
+        updated_person_from_db,
+        person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model
+    )
 
-    await assert_names_match(updated_person_from_db,
-                             person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model)
+    await assert_names_match(
+        updated_person_from_db,
+        person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model
+    )
 
-    await assert_identifiers_match(updated_person_from_db,
-                                   person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model)
+    await assert_identifiers_match(
+        updated_person_from_db,
+        person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model
+    )
 
     # update structure a
     await structure_dao.update(
@@ -103,7 +105,11 @@ async def test_update_people_and_structure(
         structure_local_identifier.type, structure_local_identifier.value
     )
     assert updated_structure_from_db
-    await assert_identifiers_match(updated_structure_from_db,
-                                   research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model)
-    await assert_names_match(updated_structure_from_db,
-                             research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model)
+    await assert_identifiers_match(
+        updated_structure_from_db,
+        research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model
+    )
+    await assert_names_match(
+        updated_structure_from_db,
+        research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model
+    )
