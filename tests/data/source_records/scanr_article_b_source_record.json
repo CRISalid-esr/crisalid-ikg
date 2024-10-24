@@ -1,0 +1,91 @@
+{
+  "source_identifier": "doi10.3847/1538-4357/ad0cc1",
+  "harvester": "ScanR",
+  "harvester_version": "1.2.0",
+  "identifiers": [
+    {
+      "type": "doi",
+      "value": "10.3847/1538-4357/ad0cc1"
+    }
+  ],
+  "manifestations": [],
+  "titles": [
+    {
+      "value": "The Role of Cosmic Rays in the Formation of Star-Forming Regions",
+      "language": "en"
+    }
+  ],
+  "subtitles": [],
+  "abstracts": [],
+  "subjects": [
+    {
+      "uri": "http://www.wikidata.org/entity/Q218295",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Cosmic rays",
+          "language": "en"
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q102828",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Star formation",
+          "language": "en"
+        }
+      ],
+      "alt_labels": []
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 0,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": null,
+        "name": "J. L. West",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "ScanR",
+    "source_identifier": "the_astrophysical_journal-ScanR",
+    "titles": [],
+    "volume": null,
+    "number": [],
+    "rights": null,
+    "date": null,
+    "journal": {
+      "source": "ScanR",
+      "source_identifier": "0004-637X-1538-4357-the_astrophysical_journal-american_astronomical_society-ScanR",
+      "issn": [
+        "0004-637X",
+        "1538-4357"
+      ],
+      "eissn": [],
+      "issn_l": null,
+      "publisher": "American Astronomical Society",
+      "titles": [
+        "The Astrophysical Journal"
+      ]
+    }
+  },
+  "page": null,
+  "book": null,
+  "issued": "2024-01-15 00:00:00",
+  "created": null,
+  "version": 0
+}
