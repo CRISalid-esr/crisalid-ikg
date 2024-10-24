@@ -1,0 +1,197 @@
+{
+  "source_identifier": "doi10.3847/1538-4357/ad0cc0",
+  "harvester": "ScanR",
+  "harvester_version": "1.2.0",
+  "identifiers": [
+    {
+      "type": "doi",
+      "value": "10.3847/1538-4357/ad0cc0"
+    }
+  ],
+  "manifestations": [],
+  "titles": [
+    {
+      "value": "All We Are Is Dust in the WIM: Constraints on Dust Properties in the Milky Way\u2019s Warm Ionized Medium",
+      "language": "en"
+    }
+  ],
+  "subtitles": [],
+  "abstracts": [],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/02734004x/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Analyse des donn\u00e9es",
+          "language": null
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.idref.fr/027818055/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Mati\u00e8re interstellaire",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Milieu interstellaire",
+          "language": null
+        }
+      ]
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q210521",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "r\u00e9solution num\u00e9rique",
+          "language": "fr"
+        },
+        {
+          "value": "image resolution",
+          "language": "en"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "pixel count",
+          "language": "en"
+        },
+        {
+          "value": "resolution",
+          "language": "en"
+        }
+      ]
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 0,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": null,
+        "name": "J. L. West",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 3,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": null,
+        "name": "N. Mahajan",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 2,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "idref078115361",
+        "name": "M.-A. Miville-Desch\u00eanes",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "idref074532944",
+        "name": "B. M. Gaensler",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 6,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": null,
+        "name": "P. G. Martin",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 5,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": null,
+        "name": "F. Boulanger",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 7,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": null,
+        "name": "I. A. Zelko",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 4,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": null,
+        "name": "J. Dechant",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "ScanR",
+    "source_identifier": "the_astrophysical_journal-ScanR",
+    "titles": [],
+    "volume": null,
+    "number": [],
+    "rights": null,
+    "date": null,
+    "journal": {
+      "source": "ScanR",
+      "source_identifier": "0004-637X-1538-4357-the_astrophysical_journal-american_astronomical_society-ScanR",
+      "issn": [
+        "0004-637X",
+        "1538-4357"
+      ],
+      "eissn": [],
+      "issn_l": null,
+      "publisher": "American Astronomical Society",
+      "titles": [
+        "The Astrophysical Journal"
+      ]
+    }
+  },
+  "page": null,
+  "book": null,
+  "issued": "2023-12-01 00:00:00",
+  "created": null,
+  "version": 0
+}
