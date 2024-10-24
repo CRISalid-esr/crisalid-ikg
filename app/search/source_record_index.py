@@ -29,7 +29,7 @@ class SourceRecordIndex:
         """
 
         if not self._init_es_client():
-            logger.error(
+            logger.debug(
                 "Elasticsearch client is not set up, cannot add source record %s to the index",
                 source_record_id)
             return False
