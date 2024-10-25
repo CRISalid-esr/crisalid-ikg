@@ -42,7 +42,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         except (ValidationError, AttributeError) as e:
             logger.error(f"Error processing source record data {reference_data} : {e}")
             raise e
-        if event_type == "created":
+        if event_type in ["created", "unchanged"]:
             await self._create_source_record(source_record, person)
 
     async def _create_source_record(self, source_record, person):
