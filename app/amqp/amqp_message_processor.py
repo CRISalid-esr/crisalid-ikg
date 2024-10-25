@@ -34,10 +34,10 @@ class AMQPMessageProcessor(ABC):
         :param worker_id: queue worker identifier
         :return: None
         """
-        message: IncomingMessage | None = None
-        try:
-            while True:
-                message = await self.tasks_queue.get()
+
+        while True:
+            try:
+                message: IncomingMessage | None = await self.tasks_queue.get()
                 start_time = datetime.now()
                 async with message.process(ignore_processed=True):
                     payload = message.body
@@ -50,15 +50,15 @@ class AMQPMessageProcessor(ABC):
                         f"Performance : Message  processed by {worker_id} "
                         f"in {end_time - start_time} for payload {payload}"
                     )
-        except KeyboardInterrupt:
-            await message.nack(requeue=True)
-            logger.warning(f"Amqp connect worker {worker_id} has been cancelled")
-        except Exception as exception:
-            await message.nack(requeue=True)
-            logger.error(
-                f"Exception during {worker_id} message processing : {exception}"
-            )
-            raise exception
+            except KeyboardInterrupt as keyboard_interrupt:
+                await message.nack(requeue=True)
+                logger.warning(f"Amqp connect worker {worker_id} has been cancelled")
+                raise keyboard_interrupt
+            except Exception as exception:
+                await message.nack(requeue=True)
+                logger.error(
+                    f"Exception during {worker_id} message processing : {exception}"
+                )
 
     @abstractmethod
     async def _process_message(self, key:str, payload: str) -> None:
