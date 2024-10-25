@@ -5,10 +5,8 @@ RETURN concept,
        collect(DISTINCT CASE
          WHEN pref_label IS NOT NULL
        THEN {value: pref_label.value, language: pref_label.language}
-         ELSE null
          END) AS pref_labels,
        collect(DISTINCT CASE
          WHEN alt_label IS NOT NULL
        THEN {value: alt_label.value, language: alt_label.language}
-         ELSE null
          END) AS alt_labels
