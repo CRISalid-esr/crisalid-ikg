@@ -46,6 +46,12 @@ class Person(Agent[PersonIdentifierType]):
                     f"Invalid identifier with type {identifier.type} and value {identifier.value}"
                 )
                 continue
+            if not PersonIdentifierType.validate_identifier(identifier.type, identifier.value):
+                logger.warning(
+                    "Invalid identifier with type "
+                    f"{str(identifier.type)} and value {identifier.value}"
+                )
+                continue
 
             valid_identifiers.append(identifier)
 
