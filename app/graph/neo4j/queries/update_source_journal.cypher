@@ -7,9 +7,10 @@ WITH s
 OPTIONAL MATCH (s)-[hi:HAS_IDENTIFIER]->(JournalIdentifier)
 DELETE hi
 WITH s
-UNWIND $identifiers AS identifier
-CREATE (j:JournalIdentifier {
-  type:  identifier.type,
-  value: identifier.value
-})
-CREATE (s)-[:HAS_IDENTIFIER]->(j)
+FOREACH (identifier IN $identifiers |
+  MERGE (j:JournalIdentifier {
+    type:  identifier.type,
+    value: identifier.value
+  })
+  MERGE (s)-[:HAS_IDENTIFIER]->(j)
+)

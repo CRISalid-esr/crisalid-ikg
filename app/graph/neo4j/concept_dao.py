@@ -1,8 +1,8 @@
 from neo4j import AsyncManagedTransaction
-from neo4j.exceptions import ConstraintError, ClientError, Neo4jError, DatabaseError
+from neo4j.exceptions import ConstraintError, ClientError, Neo4jError
 
 from app.errors.conflict_error import ConflictError
-from app.errors.database_error import handle_database_errors
+from app.errors.database_error import handle_database_errors, DatabaseError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
@@ -78,9 +78,14 @@ class ConceptDAO(Neo4jDAO):
         :param concept: concept object
         :return: concept uid
         """
+        existing_concept = await self.find_by_uri(concept.uri)
+        if not concept:
+            raise ConflictError(
+                f"Concept identified by {concept.uri} cannot be updated as it does not exist")
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                await session.write_transaction(self._update_concept_transaction, concept)
+                await session.write_transaction(self._update_concept_transaction, concept,
+                                                existing_concept)
         return concept.uri
 
     @staticmethod
@@ -113,33 +118,44 @@ class ConceptDAO(Neo4jDAO):
         )
 
     @staticmethod
-    async def _update_concept_transaction(tx: AsyncManagedTransaction, concept: Concept) -> None:
-        concept_exists = await ConceptDAO._concept_exists_by_uri(tx, concept.uri)
-        if not concept_exists:
-            raise ConflictError(
-                f"Concept identified by {concept.uri} cannot be updated as it does not exist")
-        delete_labels_query = load_query("delete_concept_labels")
-        create_labels_query = load_query("create_concept_labels")
+    async def _update_concept_transaction(tx: AsyncManagedTransaction, new_concept: Concept,
+                                          existing_concept: Concept
+                                          ) -> None:
+        preflabels_to_delete = [pref_label for pref_label in existing_concept.pref_labels
+                                if pref_label not in new_concept.pref_labels]
+        altlabels_to_delete = []
+
+        pref_labels_to_create = [pref_label for pref_label in new_concept.pref_labels
+
+                                 if pref_label not in existing_concept.pref_labels]
+        alt_labels_to_create = [alt_label for alt_label in new_concept.alt_labels
+                                if alt_label not in existing_concept.alt_labels]
         try:
-            await tx.run(
-                delete_labels_query,
-                uri=concept.uri
-            )
-            await tx.run(
-                create_labels_query,
-                uri=concept.uri,
-                pref_labels=[pref_label.dict() for pref_label in concept.pref_labels],
-                alt_labels=[alt_label.dict() for alt_label in concept.alt_labels]
-            )
+            if preflabels_to_delete or altlabels_to_delete:
+                delete_labels_query = load_query("delete_concept_labels")
+                await tx.run(
+                    delete_labels_query,
+                    uri=new_concept.uri,
+                    pref_labels=[pref_label.dict() for pref_label in preflabels_to_delete],
+                    alt_labels=[alt_label.dict() for alt_label in altlabels_to_delete]
+                )
+            if pref_labels_to_create or alt_labels_to_create:
+                create_labels_query = load_query("create_concept_labels")
+                await tx.run(
+                    create_labels_query,
+                    uri=new_concept.uri,
+                    pref_labels=[pref_label.dict() for pref_label in pref_labels_to_create],
+                    alt_labels=[alt_label.dict() for alt_label in alt_labels_to_create]
+                )
         except ConstraintError as constraint_error:
             raise ConflictError(
-                f"Schema constraint violation while updating concept {concept}") \
+                f"Schema constraint violation while updating concept {new_concept}") \
                 from constraint_error
         except ClientError as client_error:
             raise ValueError(
-                f"Bad request error while updating concept {concept}") from client_error
+                f"Bad request error while updating concept {new_concept}") from client_error
         except Neo4jError as neo4j_error:
-            raise DatabaseError(f"Database error while updating concept {concept}") \
+            raise DatabaseError(f"Database error while updating concept {new_concept}") \
                 from neo4j_error
 
     @staticmethod

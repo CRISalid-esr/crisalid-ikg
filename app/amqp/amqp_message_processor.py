@@ -35,45 +35,44 @@ class AMQPMessageProcessor(ABC):
         """
 
         while True:
-            try:
-                message: IncomingMessage | None = await self.tasks_queue.get()
-                start_time = datetime.now()
-                async with message.process(ignore_processed=True):
-                    payload = message.body
-                    key = message.routing_key
-                    try:
-                        await self._process_message(key, payload)
-                        await message.ack()
-                    except ValueError as error:
-                        logger.error(
-                            f"Invalid message received by {worker_id} : {error}"
-                        )
-                    except DatabaseError as database_error:
-                        logger.error(
-                            f"Database error during {worker_id} "
-                            f"message processing : {database_error}"
-                        )
-                        await message.nack(requeue=True)
-                    except KeyboardInterrupt as keyboard_interrupt:
-                        logger.warning(f"Amqp connect worker {worker_id} has been cancelled")
-                        await message.nack(requeue=True)
-                        raise keyboard_interrupt
-                    finally:
-                        self.tasks_queue.task_done()
-                        if not message.processed:
-                            await message.nack(requeue=False)
-                        end_time = datetime.now()
-                        logger.warning(
-                            f"Performance : Message  processed by {worker_id} "
-                            f"in {end_time - start_time} for payload {payload}"
-                        )
-
-            except Exception as exception:
-                logger.error(
-                    f"Unexpected exception during {worker_id} message processing : {exception}"
-                )
-                if not message.processed:
+            message: IncomingMessage | None = await self.tasks_queue.get()
+            start_time = datetime.now()
+            requeue = False
+            print("waiting")
+            async with message.process(ignore_processed=True):
+                payload = message.body
+                key = message.routing_key
+                try:
+                    await self._process_message(key, payload)
+                    await message.ack()
+                    self.tasks_queue.task_done()
+                except ValueError as error:
+                    logger.error(
+                        f"Invalid message received by {worker_id} : {error}"
+                    )
+                except DatabaseError as database_error:
+                    logger.error(
+                        f"Database error during {worker_id} "
+                        f"message processing : {database_error}"
+                    )
+                    requeue = True
+                except KeyboardInterrupt as keyboard_interrupt:
+                    logger.warning(f"Amqp connect worker {worker_id} has been cancelled")
                     await message.nack(requeue=True)
+                    raise keyboard_interrupt
+                except Exception as exception:
+                    logger.error(
+                        f"Unexpected exception during {worker_id} message processing : {exception}"
+                    )
+                finally:
+                    if not message.processed:
+                        await message.nack(requeue=requeue)
+                        self.tasks_queue.task_done()
+                    end_time = datetime.now()
+                    logger.warning(
+                        f"Performance : Message  processed by {worker_id} "
+                        f"in {end_time - start_time} for payload {payload}"
+                    )
 
     @abstractmethod
     async def _process_message(self, key: str, payload: str) -> None:

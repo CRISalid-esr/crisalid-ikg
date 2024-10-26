@@ -22,6 +22,8 @@ class Neo4jSetup(Setup[AsyncDriver]):
         settings = get_app_settings()
         await cls._create_person_uid_constraint(tx)
         await cls._create_agent_identifier_unique_type_value_constraint(tx)
+        await cls._create_journal_identifier_uid_constraint(tx)
+
         if settings.neo4j_edition == "community":
             return
         assert settings.neo4j_version == "enterprise"
@@ -86,4 +88,28 @@ class Neo4jSetup(Setup[AsyncDriver]):
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating has name relationship constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_journal_identifier_uid_constraint(tx):
+        query = """
+        CREATE CONSTRAINT journal_identifier_uid_unique IF NOT EXISTS
+        FOR (j:JournalIdentifier) REQUIRE j.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating journal identifier uid unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_source_journal_source_identifier_constraint(tx):
+        query = """
+        CREATE CONSTRAINT source_journal_source_identifier_unique IF NOT EXISTS
+        FOR (j:SourceJournal) REQUIRE j.source_identifier IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating source journal source identifier unique constraint: {e}")
             raise e
