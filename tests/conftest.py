@@ -1,6 +1,8 @@
 from os import environ
 
+from _pytest.logging import LogCaptureFixture
 from fastapi import FastAPI
+from loguru import logger
 from starlette.testclient import TestClient
 
 from tests.fixtures.common import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
@@ -39,3 +41,25 @@ async def reset_graph():
     await global_dao.reset_all()
     setup = factory.get_setup()
     await setup.run()
+
+
+@pytest.fixture(autouse=True)
+def caplog(caplog: LogCaptureFixture):  # pylint: disable=redefined-outer-name
+    """
+    Make pytest work with loguru. See:
+    https://loguru.readthedocs.io/en/stable/resources/migration.html#making-things-work-with-pytest-and-caplog
+    :param caplog: pytest fixture
+    :return: loguru compatible caplog
+    """
+    handler_id = logger.add(
+        caplog.handler,
+        format="{message}",
+        level=0,
+        filter=lambda record: record["level"].no >= caplog.handler.level,
+        enqueue=False,
+    )
+    yield caplog
+    try:
+        logger.remove(handler_id)
+    except ValueError:
+        pass

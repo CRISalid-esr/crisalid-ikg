@@ -6,6 +6,7 @@ from neo4j.exceptions import ConstraintError, ClientError, Neo4jError, DatabaseE
 
 from app.config import get_app_settings
 from app.errors.conflict_error import ConflictError
+from app.errors.database_error import handle_database_errors
 from app.errors.not_found_error import NotFoundError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
@@ -31,6 +32,7 @@ class PersonDAO(Neo4jDAO):
         names_changed: bool
         memberships_changed: bool
 
+    @handle_database_errors
     async def get(self, person_uid: str) -> Person | None:
         """
         Get a person from the graph database
@@ -43,6 +45,7 @@ class PersonDAO(Neo4jDAO):
                 async with await session.begin_transaction() as tx:
                     return await PersonDAO._get_person_by_uid(tx, person_uid)
 
+    @handle_database_errors
     async def create(self, person: Person) -> Tuple[str, Neo4jDAO.Status, UpdateStatus | None]:
         """
         Create  a person in the graph database
@@ -55,6 +58,7 @@ class PersonDAO(Neo4jDAO):
                 await session.write_transaction(self._create_person_transaction, person)
         return person.uid, PersonDAO.Status.CREATED, None
 
+    @handle_database_errors
     async def update(self, person: Person) -> Tuple[str, Neo4jDAO.Status, UpdateStatus | None]:
         """
         Update a person in the graph database
@@ -68,6 +72,7 @@ class PersonDAO(Neo4jDAO):
                                                                 person)
         return person.uid, PersonDAO.Status.UPDATED, update_status
 
+    @handle_database_errors
     async def create_or_update(self, person: Person) -> Tuple[
         str, Neo4jDAO.Status, UpdateStatus | None]:
         """
@@ -89,6 +94,7 @@ class PersonDAO(Neo4jDAO):
                     status = self.Status.UPDATED
         return person.uid, status, update_status
 
+    @handle_database_errors
     async def find(self, person: Person) -> Person | None:
         """
         Find a person by one of its identifiers
@@ -107,6 +113,7 @@ class PersonDAO(Neo4jDAO):
                     return found_person
         return None
 
+    @handle_database_errors
     async def find_by_identifier(self, identifier_type: PersonIdentifierType,
                                  identifier_value: str) -> Person | None:
         """

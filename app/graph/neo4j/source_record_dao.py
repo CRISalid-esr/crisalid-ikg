@@ -3,6 +3,7 @@ from typing import Tuple, NamedTuple
 from neo4j import AsyncManagedTransaction
 
 from app.errors.conflict_error import ConflictError
+from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
@@ -30,6 +31,7 @@ class SourceRecordDAO(Neo4jDAO):
         titles_changed: bool
         contributors_changed: bool
 
+    @handle_database_errors
     async def create(self, source_record: SourceRecord,
                      harvested_for: Person
                      ) -> Tuple[
@@ -49,6 +51,7 @@ class SourceRecordDAO(Neo4jDAO):
                                                 )
         return source_record.uid, SourceRecordDAO.Status.CREATED, None
 
+    @handle_database_errors
     async def get(self, source_record_uid: str) -> SourceRecord:
         """
         Get a source record from the graph database

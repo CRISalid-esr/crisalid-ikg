@@ -1,6 +1,7 @@
 from neo4j import AsyncSession
 
 from app.config import get_app_settings
+from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
@@ -12,6 +13,7 @@ class GlobalDAO(Neo4jDAO):
     Global DAO to manage global operations on the database
     """
 
+    @handle_database_errors
     async def reset_all(self) -> None:
         """
         Reset the database by deleting all nodes and relationships
