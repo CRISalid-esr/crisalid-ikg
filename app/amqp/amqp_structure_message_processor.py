@@ -1,7 +1,4 @@
-import json
-
 from loguru import logger
-from pydantic import ValidationError
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.errors.conflict_error import ConflictError
@@ -20,14 +17,17 @@ class AMQPStructureMessageProcessor(AMQPMessageProcessor):
         self.service = ResearchStructureService()
 
     async def _process_message(self, key: str, payload: str):
-        json_payload = json.loads(payload)
+        json_payload = await self._read_message_json(payload)
         logger.debug(f"Processing message {json_payload}")
+        self._check_keys(json_payload, {
+            "structures_event": ["type", "data"],
+        })
         event_data = json_payload["structures_event"]
         event_type = event_data["type"]
         structure_data = event_data["data"]
         try:
             structure = ResearchStructure(**structure_data)
-        except ValidationError as e:
+        except (ValueError, AttributeError) as e:
             logger.error(f"Error processing structure data {structure_data} : {e}")
             raise e
         if event_type == "created":

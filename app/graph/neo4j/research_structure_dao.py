@@ -1,6 +1,7 @@
 from neo4j import AsyncSession
 
 from app.errors.conflict_error import ConflictError
+from app.errors.database_error import handle_database_errors
 from app.errors.not_found_error import NotFoundError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
@@ -16,6 +17,7 @@ class ResearchStructureDAO(Neo4jDAO):
     Data access object for research structures and the neo4j database
     """
 
+    @handle_database_errors
     async def create(self, research_structure: ResearchStructure) -> ResearchStructure:
         """
         Create a research_structure in the graph database
@@ -29,6 +31,7 @@ class ResearchStructureDAO(Neo4jDAO):
                                                 research_structure)
         return research_structure
 
+    @handle_database_errors
     async def update(self, research_structure: ResearchStructure) -> ResearchStructure:
         """
         Update a research_structure in the graph database
@@ -42,6 +45,7 @@ class ResearchStructureDAO(Neo4jDAO):
                                                 research_structure)
         return research_structure
 
+    @handle_database_errors
     async def create_or_update(self, research_structure: ResearchStructure) -> ResearchStructure:
         """
         Create or update a research_structure in the graph database
@@ -65,6 +69,7 @@ class ResearchStructureDAO(Neo4jDAO):
                                                     research_structure)
         return research_structure
 
+    @handle_database_errors
     async def find_by_identifier(self, identifier_type: OrganizationIdentifierType,
                                  identifier_value: str) -> ResearchStructure | None:
         """
@@ -172,7 +177,6 @@ class ResearchStructureDAO(Neo4jDAO):
             identifier_values=identifier_values
         )
 
-        # Create or update identifiers
         create_identifiers_query = load_query("create_structure_identifiers")
         await tx.run(
             create_identifiers_query,

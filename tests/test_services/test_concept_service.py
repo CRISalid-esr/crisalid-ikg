@@ -30,7 +30,6 @@ async def test_create_concept_with_uri(concept_a_pydantic_model: Concept) -> Non
             for fetched_altlabel in fetched_concept.alt_labels
         )
 
-
 async def test_update_concept_with_uri(persisted_concept_a_pydantic_model: Concept,
                                        concept_a_pydantic_model: Concept
                                        ) -> None:

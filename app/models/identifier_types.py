@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 
 
@@ -5,6 +6,7 @@ class AgentIdentifierType(Enum):
     """Base class for agent identifier types"""
 
 
+# Access pattern through a class method in PersonIdentifierType
 class PersonIdentifierType(AgentIdentifierType):
     """Person identifier types"""
     ORCID = "orcid"
@@ -13,6 +15,29 @@ class PersonIdentifierType(AgentIdentifierType):
     ID_HAL_I = "id_hal_i"
     SCOPUS_EID = "scopus_eid"
     LOCAL = "local"
+
+    @classmethod
+    def get_pattern(cls, identifier_type):
+        """Retrieve the pattern for a given identifier type, if it exists"""
+        return PERSON_IDENTIFIER_PATTERNS.get(identifier_type)
+
+    @classmethod
+    def validate_identifier(cls, identifier_type, value):
+        """Validate an identifier value against its type-specific pattern"""
+        pattern = cls.get_pattern(identifier_type)
+        if pattern:
+            return bool(re.fullmatch(pattern, value))
+        # Return True if there's no pattern (e.g., for 'LOCAL')
+        return True
+
+
+PERSON_IDENTIFIER_PATTERNS = {
+    PersonIdentifierType.ORCID: "^([0-9]{4}-){3}[0-9]{3}[0-9X]$",
+    PersonIdentifierType.IDREF: "^[0-9]{1,9}[A-Z]?$",
+    PersonIdentifierType.ID_HAL_S: "^([a-z]+-)*[a-z]+$",
+    PersonIdentifierType.ID_HAL_I: "^[0-9]{1,9}$",
+    PersonIdentifierType.SCOPUS_EID: "^[0-9]+$",
+}
 
 
 class OrganizationIdentifierType(AgentIdentifierType):

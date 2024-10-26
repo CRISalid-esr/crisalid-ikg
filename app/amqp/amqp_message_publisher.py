@@ -8,8 +8,6 @@ from loguru import logger
 from app.amqp.amqp_publication_retrieval_message_factory import \
     AMQPPublicationRetrievalMessageFactory
 
-DEFAULT_RESULT_TIMEOUT = 600
-
 
 class AMQPMessagePublisher:
     """Rabbitmq Publisher abstraction"""

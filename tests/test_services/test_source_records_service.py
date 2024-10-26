@@ -1,7 +1,5 @@
 from typing import List
 
-import pytest
-
 from app.models.identifier_types import JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.people import Person
@@ -83,7 +81,6 @@ async def test_journal_from_scanr_article(
                for identifier in journal_identifiers)
 
 
-@pytest.mark.current
 async def test_two_scanr_articles_from_same_journal_and_person(
         scanr_article_a_source_record_pydantic_model: SourceRecord,
         scanr_article_b_source_record_pydantic_model: SourceRecord,

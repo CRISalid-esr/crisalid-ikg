@@ -31,7 +31,6 @@ RETURN
   person,
   identifiers,
   collect(DISTINCT {
-    name:        id(pn),
     first_names: first_names,
     last_names:  last_names
   }) AS names,
