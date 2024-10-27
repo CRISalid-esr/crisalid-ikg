@@ -3,7 +3,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao import DAO
 from app.graph.neo4j.person_dao import PersonDAO
 from app.models.people import Person
-from app.signals import person_created, person_identifiers_updated
+from app.signals import person_created, person_identifiers_updated, person_unchanged
 
 
 class PeopleService:
@@ -50,6 +50,8 @@ class PeopleService:
             await person_created.send_async(payload=person_uid)
         elif status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
             await person_identifiers_updated.send_async(payload=person_uid)
+        else:
+            await person_unchanged.send_async(payload=person_uid)
 
     async def get_person(self, person_uid: str) -> Person:
         """

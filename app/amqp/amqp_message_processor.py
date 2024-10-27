@@ -38,7 +38,6 @@ class AMQPMessageProcessor(ABC):
             message: IncomingMessage | None = await self.tasks_queue.get()
             start_time = datetime.now()
             requeue = False
-            print("waiting")
             async with message.process(ignore_processed=True):
                 payload = message.body
                 key = message.routing_key
@@ -60,7 +59,7 @@ class AMQPMessageProcessor(ABC):
                     logger.warning(f"Amqp connect worker {worker_id} has been cancelled")
                     await message.nack(requeue=True)
                     raise keyboard_interrupt
-                except Exception as exception:
+                except Exception as exception: # pylint: disable=broad-exception-caught
                     logger.error(
                         f"Unexpected exception during {worker_id} message processing : {exception}"
                     )
