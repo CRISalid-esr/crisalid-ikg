@@ -5,10 +5,10 @@ OPTIONAL MATCH (s)-[:HAS_IDENTIFIER]->(i:PublicationIdentifier)
 OPTIONAL MATCH (s)-[:HARVESTED_FOR]->(p:Person)
 OPTIONAL MATCH (s)-[:HAS_SUBJECT]->(c:Concept)
 RETURN s,
-       collect(t) AS titles,
-       collect(i) AS identifiers,
-       collect(a) AS abstracts,
-       collect(p) AS persons,
-       collect(c) AS subjects
+       collect(DISTINCT t) AS titles,
+       collect(DISTINCT i) AS identifiers,
+       collect(DISTINCT a) AS abstracts,
+       collect(DISTINCT p) AS persons,
+       collect(DISTINCT c) AS subjects
 
 
