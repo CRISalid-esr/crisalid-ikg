@@ -126,3 +126,42 @@ async def test_two_scanr_articles_from_same_journal_and_person(
     assert fetched_source_record_a.issue.number == fetched_source_record_b.issue.number
     assert fetched_source_record_a.issue.rights == fetched_source_record_b.issue.rights
     assert fetched_source_record_a.issue.date == fetched_source_record_b.issue.date
+
+
+async def test_create_two_source_records_with_same_concepts(
+        persisted_person_a_pydantic_model: Person,
+        idref_record_with_person_a_as_contributor_pydantic_model: SourceRecord,
+        scanr_record_with_person_a_as_contributor_pydantic_model: SourceRecord
+) -> None:
+    """
+    Given a persisted person Pydantic model,
+    When two source record are added for this person with concepts in common,
+    Then the records should share the concepts in common
+
+    :param persisted_person_a_pydantic_model:
+    :param idref_record_with_person_a_as_contributor_pydantic_model:
+    :return:
+    """
+    service = SourceRecordService()
+    await service.create_source_record(
+        source_record=idref_record_with_person_a_as_contributor_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+    fetched_idref_source_record = await service.get_source_record(
+        idref_record_with_person_a_as_contributor_pydantic_model.uid)
+    assert (
+            fetched_idref_source_record.uid ==
+            idref_record_with_person_a_as_contributor_pydantic_model.uid
+    )
+    await service.create_source_record(
+        source_record=scanr_record_with_person_a_as_contributor_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+    fetched_scanr_source_record = await service.get_source_record(
+        scanr_record_with_person_a_as_contributor_pydantic_model.uid)
+    assert (
+            fetched_scanr_source_record.uid ==
+            scanr_record_with_person_a_as_contributor_pydantic_model.uid
+    )
+    assert any(
+        (concept in fetched_scanr_source_record.subjects for concept in
+         fetched_idref_source_record.subjects)
+    )
