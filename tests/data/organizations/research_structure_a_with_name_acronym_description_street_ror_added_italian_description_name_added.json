@@ -1,0 +1,57 @@
+{
+  "names": [
+    {
+      "value": "Laboratoire toto renommé",
+      "language": "fr"
+    },
+    {
+      "value": "Foobar Laboratory renamed",
+      "language": "en"
+    },
+    {
+      "value": "La version italienne",
+      "language": "it"
+    }
+  ],
+  "acronym": "FLR",
+  "descriptions": [
+    {
+      "value": "Un laboratoire de recherche fictif modifié",
+      "language": "fr"
+    },
+    {
+      "value": "A modified imaginary laboratory",
+      "language": "en"
+    },
+    {
+      "value": "la traduction en italien",
+      "language": "it"
+    }
+  ],
+  "contacts": [
+    {
+      "type": "postal_address",
+      "format": "structured_physical_address",
+      "value": {
+        "country": "France",
+        "zip_code": "75005",
+        "city": "PARIS",
+        "street": "Sorbonne, 1 place du Panthéon"
+      }
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "local",
+      "value": "U123"
+    },
+    {
+      "type": "RNSR",
+      "value": "200012123S"
+    },
+    {
+      "type": "ROR",
+      "value": "123496"
+    }
+  ]
+}

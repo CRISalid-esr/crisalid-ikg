@@ -59,6 +59,29 @@ async def fixture_research_structure_a_with_updated_name_json_data(_base_path) -
     return _organization_json_data_from_file(_base_path, "research_structure_a_with_updated_name")
 
 
+@pytest_asyncio.fixture(
+    name="research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model")
+async def fixture_research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model(
+        research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_json_data) -> ResearchStructure:
+    """
+    Create a basic structure pydantic model
+    :return: basic structure pydantic model
+    """
+    return _research_structure_from_json_data(
+        research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_json_data)
+
+
+@pytest_asyncio.fixture(
+    name="research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_json_data")
+async def fixture_research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_json_data(
+        _base_path) -> dict:
+    """
+    Create a basic structure json data
+    :return: basic structure json data
+    """
+    return _organization_json_data_from_file(_base_path,
+                                             "research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added")
+
 @pytest_asyncio.fixture(name="persisted_research_structure_b_pydantic_model")
 async def fixture_persisted_research_structure_b_pydantic_model(
         research_structure_b_pydantic_model) -> ResearchStructure:
