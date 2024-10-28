@@ -61,3 +61,22 @@ async def fixture_open_alex_article_source_record_json_data(_base_path) -> dict:
     :return: basic source record dict from OpenAlex data
     """
     return _source_record_json_data_from_file(_base_path, "open_alex_article_source_record")
+
+
+@pytest_asyncio.fixture(name="idref_record_with_person_a_as_contributor_pydantic_model")
+async def fixture_idref_record_with_person_a_as_contributor_pydantic_model(
+        open_alex_article_source_record_json_data) -> SourceRecord:
+    """
+    Create a basic source record pydantic model from IdRef data
+    :return: basic source record pydantic model from IdRef data
+    """
+    return _source_record_from_json_data(open_alex_article_source_record_json_data)
+
+
+@pytest_asyncio.fixture(name="idref_record_with_person_a_as_contributor_json_data")
+async def fixture_idref_record_with_person_a_as_contributor_json_data(_base_path) -> dict:
+    """
+    Create a thesis source record dict from IdRef data
+    :return: basic source record dict from IdRef data
+    """
+    return _source_record_json_data_from_file(_base_path, "idref_record_with_person_a_as_contributor")
