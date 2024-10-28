@@ -1,0 +1,413 @@
+{
+  "source_identifier": "nnt2023upasp135",
+  "harvester": "ScanR",
+  "harvester_version": "1.2.0",
+  "identifiers": [
+    {
+      "type": "nnt",
+      "value": "2023upasp135"
+    }
+  ],
+  "manifestations": [],
+  "titles": [
+    {
+      "value": "The HI structures of the Small Magellanic Cloud periphery with high-resolution ASKAP data",
+      "language": "en"
+    }
+  ],
+  "subtitles": [],
+  "abstracts": [
+    {
+      "value": "In this work I present the results of an analysis of the HI emission spectra survey of the Small Magellanic Cloud (SMC) with the new SKA pathfinder interferometer the Australian Square Kilometre Array Pathfinder (AKSAP).The Galactic ASKAP collaboration (GASKAP) is conducting a large HI emission survey of the 21cm line to map part of the Galactic plane and the Magellanic system. One of the first areas observed as part of the survey was the SMC. HI emission captures both phases of the neutral atomic medium, the cold and the warm, and previous surveys of the SMC have uncovered new structures in the periphery of the SMC. Previous absorption studies of the SMC have found differing fractions of cold to warm neutral medium (CNM and WNM) so in this work I analyse the emission spectra of individual clouds around the SMC to uncover the distribution of the two phases in physical and velocity space. The first part of this work focused on three large structures previously identified in the commissioning data obtained by GASKAP, all residing in the northern outskirts of the galaxy. These structures are 100s of pc long, well resolved by the 30\u201d synthesised beam of ASKAP and were analysed using the ROHSA algorithm. ROHSA is a Gaussian decomposition algorithm, which is a common technique used to analyse emission spectra for HI. In this work I use this algorithm to model these three structures and reconstruct maps of each phase for analysis. I find that each cloud has large internal variations of their CNM fractions and in some cases a reduction of CNM fraction as they get further from the galaxy. Similarly the radial velocity changes as we move away from the galaxy with indication that the different phases travel at different velocities. The second part of this project focused on searching for smaller clouds of HI around the SMC that were offset by at least 250pc or 20 km/s from any other small-scale structure. I found 31 clouds by using a combination of automated searching methods and human verification. To analyse these small clouds, I again used the ROHSA algorithm to isolate the CNM structure in them and characterised their shape using filament defining packages. This way I obtained lower limits on the density of these clouds. This combine with temperatures derived from the linewidths allowed me to estimate the extragalactic conditions in the areas these clouds reside. This thesis presents the first results of phase decomposition on the GASKAP SMC dataset, the first part of the pilot survey. It highlights the detail in which we can now analyse structures in HI and gives insight into the processes in the extreme environment of the SMC periphery. The SMC is an extremely dynamically disturbed system as it is interacting strongly with its partner the Large Magellanic Cloud (LMC). From this interaction, the SMC is experiencing large tidal forces so it is no surprise that we find a plethora of gas on large and small scales at significant distances from the galaxy. The analysis done in this work help us better understand the unusual dynamics of the system and the forces that shaped them. Further planned observations of the SMC with ASKAP, combined with surveys in other gas tracers and stellar dynamics will be able to build a more complete picture of the galaxy structure in 3D and velocity space to increase our understanding of one of the Milky Way's nearest neighbours.",
+      "language": "en"
+    },
+    {
+      "value": "Dans ce travail, je pr\u00e9sente les r\u00e9sultats d'une analyse de l'\u00e9mission HI du Petit Nuage de Magellan (SMC) avec le nouvel interf\u00e9rom\u00e8tre SKA pathfinder, l'Australian Square Kilometre Array Pathfinder (AKSAP). Ce travail se place dans le cadre de la collaboration Galactic ASKAP (GASKAP) d\u00e9di\u00e9 \u00e0 un vaste relev\u00e9 de l'\u00e9mission \u00e0 21 cm de l'hydrog\u00e8ne atomique neutre, le HI, d'une partie du plan galactique et du syst\u00e8me de Magellan. L'une des premi\u00e8res zones observ\u00e9es dans le cadre de ce projet fut le SMC. Les \u00e9tudes pr\u00e9liminaires ont permis de d\u00e9couvrir l'\u00e9mission 21 cm de nouvelles structures en p\u00e9riph\u00e9rie du SMC, ainsi qu'une variabilit\u00e9 de la fraction du HI froid (CNM) \u00e0 l'aide d'observations en absorption sur un grand nombre de sources radio. Dans ce travail, j'utilise le fait que l'\u00e9mission \u00e0 21 cm permet de cartographier l'information sur les phases du HI (du CNM au WNM). J'analyse les donn\u00e9es hyper-spectrales de l'\u00e9mission de nuages individuels autour du SMC pour r\u00e9v\u00e9ler la distribution des phases du HI dans l'espace physique et dans l'espace des vitesses. La premi\u00e8re partie de ce travail s'est concentr\u00e9e sur trois structures ayant des tailles de plusieurs centaines de pc, toutes situ\u00e9es dans la p\u00e9riph\u00e9rie nord de la galaxie, et pr\u00e9c\u00e9demment identifi\u00e9es dans les donn\u00e9es de mise en service obtenues par GASKAP. Ces structures, bien r\u00e9solues par le faisceau de 30\" d'ASKAP, ont \u00e9t\u00e9 analys\u00e9es \u00e0 l'aide de ROHSA, un algorithme de d\u00e9composition en gaussienne qui est une technique couramment utilis\u00e9e pour analyser les spectres d'\u00e9mission de HI. Dans ce travail, j'utilise cet algorithme pour mod\u00e9liser ces trois structures et reconstruire des cartes de chaque phase. Je trouve que chaque nuage a de grandes variations internes de leurs fractions CNM et dans certains cas une r\u00e9duction de la fraction CNM \u00e0 mesure qu'ils s'\u00e9loignent de la galaxie. De m\u00eame, la vitesse radiale change \u00e0 mesure que l'on s'\u00e9loigne de la galaxie, ce qui indique que les diff\u00e9rentes phases se d\u00e9placent \u00e0 des vitesses diff\u00e9rentes. La deuxi\u00e8me partie de ce projet s'est concentr\u00e9e sur la recherche de nuages HI plus petits autour du SMC qui \u00e9taient d\u00e9cal\u00e9s d'au moins 250pc ou 20 km/s de toute autre structure dans l'espace position-position-vitesse. J'ai trouv\u00e9 31 nuages en utilisant une combinaison de m\u00e9thodes de recherche automatique et de v\u00e9rification humaine. Pour analyser ces petits nuages, j'ai de nouveau utilis\u00e9 l'algorithme ROHSA pour isoler la structure du CNM en leur sein. En faisant l'hypoth\u00e8se que ces nuages sont filamentaires, j'ai obtenu des limites inf\u00e9rieures sur la densit\u00e9 de ces nuages ce qui, combin\u00e9 aux temp\u00e9ratures d\u00e9riv\u00e9es des largeurs de raies, m'a permis d'estimer les conditions physiques de l'environnement o\u00f9 r\u00e9sident ces nuages. Cette th\u00e8se pr\u00e9sente les premiers r\u00e9sultats de la d\u00e9composition en phase des donn\u00e9es 21 cm du SMC, la premi\u00e8re partie de l'\u00e9tude pilote du projet GASKAP. Elle met en \u00e9vidence les d\u00e9tails avec lesquels nous pouvons maintenant analyser les structures interstellaires HI et donne un aper\u00e7u des processus dans l'environnement extr\u00eame de la p\u00e9riph\u00e9rie du SMC. Le SMC est un syst\u00e8me extr\u00eamement perturb\u00e9 sur le plan dynamique, car il interagit fortement avec son partenaire, le Grand Nuage de Magellan (LMC). Du fait de cette interaction, le SMC subit d'importantes forces de mar\u00e9e et il n'est donc pas surprenant que nous trouvions une pl\u00e9thore de nuages neutres, petits et grands, \u00e0 des distances significatives de la galaxie. L'analyse effectu\u00e9e dans le cadre de ce travail nous aide \u00e0 mieux comprendre la dynamique inhabituelle du syst\u00e8me et les forces qui l'ont fa\u00e7onn\u00e9e. D'autres observations pr\u00e9vues du SMC avec ASKAP, combin\u00e9es \u00e0 des \u00e9tudes sur d'autres traceurs de gaz et sur la dynamique stellaire, permettront de dresser un tableau plus complet de la structure de la galaxie en 3D et dans l'espace des vitesses, afin d'am\u00e9liorer notre compr\u00e9hension de l'un des voisins les plus proches de la Voie lact\u00e9e.",
+      "language": "fr"
+    }
+  ],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/02734004x/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Analyse de donnée",
+          "language": null
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Data analysis",
+          "language": "en"
+        }
+      ]
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q203247",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Nuages",
+          "language": "fr"
+        },
+        {
+          "value": "Nuages",
+          "language": "en"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Clouds",
+          "language": "en"
+        },
+        {
+          "value": "Nuages (jazz)",
+          "language": "fr"
+        }
+      ]
+    },
+    {
+      "uri": "http://www.idref.fr/027818055/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Mati\u00e8re interstellaire",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Milieu interstellaire",
+          "language": null
+        }
+      ]
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q41872",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "interstellar medium",
+          "language": "en"
+        },
+        {
+          "value": "milieu interstellaire",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "cosmic matter",
+          "language": "en"
+        },
+        {
+          "value": "interstellar matter",
+          "language": "en"
+        },
+        {
+          "value": "interstellar gas",
+          "language": "en"
+        },
+        {
+          "value": "ISM",
+          "language": "en"
+        },
+        {
+          "value": "mati\u00e8re cosmique",
+          "language": "fr"
+        },
+        {
+          "value": "gaz interstellaire",
+          "language": "fr"
+        },
+        {
+          "value": "vent galactique",
+          "language": "fr"
+        },
+        {
+          "value": "vide interstellaire",
+          "language": "fr"
+        },
+        {
+          "value": "mati\u00e8re inter-stellaire",
+          "language": "fr"
+        },
+        {
+          "value": "intersid\u00e9ral",
+          "language": "fr"
+        },
+        {
+          "value": "espace intersid\u00e9ral",
+          "language": "fr"
+        },
+        {
+          "value": "mati\u00e8re interstellaire",
+          "language": "fr"
+        },
+        {
+          "value": "espace interstellaire",
+          "language": "fr"
+        }
+      ]
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q50028",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "nuages de Magellan",
+          "language": "fr"
+        },
+        {
+          "value": "Magellanic Clouds",
+          "language": "en"
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q3917556",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Australian Square Kilometre Array Pathfinder",
+          "language": "fr"
+        },
+        {
+          "value": "Australian Square Kilometre Array Pathfinder",
+          "language": "en"
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q49984",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Petit Nuage de Magellan",
+          "language": "fr"
+        },
+        {
+          "value": "Small Magellanic Cloud",
+          "language": "en"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "SMC",
+          "language": "en"
+        }
+      ]
+    },
+    {
+      "uri": "http://www.idref.fr/035513772/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "R\u00e9gions H I (astrophysique)",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "R\u00e9gions H 1 (astrophysique)",
+          "language": null
+        },
+        {
+          "value": "R\u00e9gions H (astrophysique)",
+          "language": null
+        },
+        {
+          "value": "R\u00e9gions d'hydrog\u00e8ne neutre",
+          "language": null
+        },
+        {
+          "value": "Nuages H I",
+          "language": null
+        },
+        {
+          "value": "Nuages de gaz H I",
+          "language": null
+        },
+        {
+          "value": "H I, R\u00e9gions (astrophysique)",
+          "language": null
+        }
+      ]
+    },
+    {
+      "uri": "http://www.idref.fr/027831922/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Magellan, Nuages de",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Petit Nuage de Magellan",
+          "language": null
+        },
+        {
+          "value": "Nuages de Magellan",
+          "language": null
+        },
+        {
+          "value": "Grand Nuage de Magellan",
+          "language": null
+        }
+      ]
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q210521",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "r\u00e9solution num\u00e9rique",
+          "language": "fr"
+        },
+        {
+          "value": "image resolution",
+          "language": "en"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "pixel count",
+          "language": "en"
+        },
+        {
+          "value": "resolution",
+          "language": "en"
+        }
+      ]
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q1406191",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "raie \u00e0 21 centim\u00e8tres",
+          "language": "fr"
+        },
+        {
+          "value": "hydrogen line",
+          "language": "en"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "21 centimeter line",
+          "language": "en"
+        },
+        {
+          "value": "21 cm line",
+          "language": "en"
+        },
+        {
+          "value": "H one line",
+          "language": "en"
+        },
+        {
+          "value": "HI line",
+          "language": "en"
+        },
+        {
+          "value": "H I line",
+          "language": "en"
+        }
+      ]
+    },
+    {
+      "uri": null,
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "21 cm",
+          "language": null
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q2914363",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "structure formation",
+          "language": "en"
+        },
+        {
+          "value": "Formation des structures",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Formation des grandes structures",
+          "language": "fr"
+        }
+      ]
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q1988917",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "data analysis",
+          "language": "en"
+        },
+        {
+          "value": "analyse des donn\u00e9es",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "analyse descriptive multidimensionnelle",
+          "language": "fr"
+        },
+        {
+          "value": "\u00e9cole fran\u00e7aise d'analyse des donn\u00e9es",
+          "language": "fr"
+        },
+        {
+          "value": "analyse exploratoire des donn\u00e9es",
+          "language": "fr"
+        },
+        {
+          "value": "analyse de donn\u00e9es",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Thesis",
+      "label": "Thesis"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 0,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "idref012345678",
+        "name": "Durand, Jeanne",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": null,
+  "page": null,
+  "book": null,
+  "issued": "2023-10-26 00:00:00",
+  "created": null,
+  "version": 0
+}
