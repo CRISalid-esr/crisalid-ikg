@@ -65,18 +65,43 @@ async def fixture_open_alex_article_source_record_json_data(_base_path) -> dict:
 
 @pytest_asyncio.fixture(name="idref_record_with_person_a_as_contributor_pydantic_model")
 async def fixture_idref_record_with_person_a_as_contributor_pydantic_model(
-        open_alex_article_source_record_json_data) -> SourceRecord:
+        idref_record_with_person_a_as_contributor_json_data) -> SourceRecord:
     """
     Create a basic source record pydantic model from IdRef data
     :return: basic source record pydantic model from IdRef data
     """
-    return _source_record_from_json_data(open_alex_article_source_record_json_data)
+    return _source_record_from_json_data(idref_record_with_person_a_as_contributor_json_data)
 
 
 @pytest_asyncio.fixture(name="idref_record_with_person_a_as_contributor_json_data")
 async def fixture_idref_record_with_person_a_as_contributor_json_data(_base_path) -> dict:
     """
-    Create a thesis source record dict from IdRef data
-    :return: basic source record dict from IdRef data
+    Create a source record dict from IdRef data
+    :return: source record dict from IdRef data
     """
-    return _source_record_json_data_from_file(_base_path, "idref_record_with_person_a_as_contributor")
+    return _source_record_json_data_from_file(
+        _base_path,
+        "idref_record_with_person_a_as_contributor"
+    )
+
+
+@pytest_asyncio.fixture(name="scanr_record_with_person_a_as_contributor_pydantic_model")
+async def fixture_scanr_record_with_person_a_as_contributor_pydantic_model(
+        scanr_record_with_person_a_as_contributor_json_data) -> SourceRecord:
+    """
+    Create a source record pydantic model from IdRef data
+    :return: source record pydantic model from IdRef data
+    """
+    return _source_record_from_json_data(scanr_record_with_person_a_as_contributor_json_data)
+
+
+@pytest_asyncio.fixture(name="scanr_record_with_person_a_as_contributor_json_data")
+async def fixture_scanr_record_with_person_a_as_contributor_json_data(_base_path) -> dict:
+    """
+    Create a source record dict from scanr data
+    :return: source record dict from scanr data
+    """
+    return _source_record_json_data_from_file(
+        _base_path,
+        "scanr_record_with_person_a_as_contributor"
+    )
