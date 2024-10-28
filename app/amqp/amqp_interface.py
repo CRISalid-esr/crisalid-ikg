@@ -11,8 +11,6 @@ from app.amqp.amqp_message_processor_factory import AMQPMessageProcessorFactory
 from app.amqp.amqp_message_publisher import AMQPMessagePublisher
 from app.settings.app_settings import AppSettings
 
-DEFAULT_RESULT_TIMEOUT = 600
-
 
 # pylint: disable=too-many-instance-attributes
 class AMQPInterface:

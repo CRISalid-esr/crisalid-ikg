@@ -3,13 +3,17 @@ from typing import Tuple, NamedTuple
 from neo4j import AsyncManagedTransaction
 
 from app.errors.conflict_error import ConflictError
+from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.concepts import Concept
+from app.models.journal_identifiers import JournalIdentifier
 from app.models.literal import Literal
 from app.models.people import Person
 from app.models.publication_identifiers import PublicationIdentifier
+from app.models.source_issue import SourceIssue
+from app.models.source_journal import SourceJournal
 from app.models.source_records import SourceRecord
 from app.services.identifiers.identifier_service import AgentIdentifierService
 
@@ -27,6 +31,7 @@ class SourceRecordDAO(Neo4jDAO):
         titles_changed: bool
         contributors_changed: bool
 
+    @handle_database_errors
     async def create(self, source_record: SourceRecord,
                      harvested_for: Person
                      ) -> Tuple[
@@ -46,6 +51,7 @@ class SourceRecordDAO(Neo4jDAO):
                                                 )
         return source_record.uid, SourceRecordDAO.Status.CREATED, None
 
+    @handle_database_errors
     async def get(self, source_record_uid: str) -> SourceRecord:
         """
         Get a source record from the graph database
@@ -71,7 +77,7 @@ class SourceRecordDAO(Neo4jDAO):
     async def _get_source_record_by_uid(cls, tx: AsyncManagedTransaction,
                                         source_record_uid: str) -> SourceRecord | None:
         result = await tx.run(
-            load_query("get_source_record_by_id"),
+            load_query("get_source_record_by_uid"),
             source_record_uid=source_record_uid
         )
         record = await result.single()
@@ -96,12 +102,19 @@ class SourceRecordDAO(Neo4jDAO):
         if source_record_exists:
             raise ConflictError(f"Source record with uid {source_record.uid} already exists")
         create_source_record_query = load_query("create_source_record")
+        # issue is issue=source_record.issue.dict()  except for the journal key
+        issue = source_record.issue.dict() if source_record.issue else None
+        if issue:
+            issue.pop("journal", None)
         await tx.run(
             create_source_record_query,
             source_record_uid=source_record.uid,
             source_identifier=source_record.source_identifier,
             harvester=source_record.harvester,
             person_uid=harvested_for.uid,
+            issue=issue,
+            journal_uid=source_record.issue.journal.uid if source_record.issue and
+                                                           source_record.issue.journal else None,
             titles=[title.dict() for title in source_record.titles],
             abstracts=[abstract.dict() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
@@ -125,6 +138,15 @@ class SourceRecordDAO(Neo4jDAO):
             source_record.identifiers.append(PublicationIdentifier(**identifier))
         for subject in record["subjects"]:
             source_record.subjects.append(Concept(uri=subject['uri']))
+        if record["journal"]:
+            journal = SourceJournal(**record["journal"])
+            if record["journal_identifiers"]:
+                for identifier in record["journal_identifiers"]:
+                    journal.identifiers.append(  # pylint: disable=no-member
+                        JournalIdentifier(**identifier))
+            if record["issue"]:
+                issue = dict(record["issue"]) | {"journal": journal}
+                source_record.issue = SourceIssue(**issue)
         return source_record
 
     @staticmethod

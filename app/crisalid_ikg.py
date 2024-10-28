@@ -16,7 +16,8 @@ from app.routes.api import router as api_router
 from app.routes.healthness import router as healthness_router
 from app.search.search_engine import SearchEngine
 from app.search.source_record_index import SourceRecordIndex
-from app.signals import person_created, person_identifiers_updated, source_record_created
+from app.signals import person_created, person_identifiers_updated, source_record_created, \
+    person_unchanged
 
 
 class CrisalidIKG(FastAPI):
@@ -93,7 +94,6 @@ class CrisalidIKG(FastAPI):
         await self.search_engine.close_elasticsearch()
         logger.info("Elasticsearch connexion has been closed")
 
-
     @logger.catch(reraise=True)
     async def open_rabbitmq_connexion(self) -> None:  # pragma: no cover
         """Init AMQP connexion at boot time"""
@@ -119,11 +119,10 @@ class CrisalidIKG(FastAPI):
             logger.error("Cannot connect to RabbitMQ : Unknown error, will not retry")
             raise error
 
-
     def _register_person_events(self):
         person_created.connect(self.amqp_interface.fetch_publications)
+        person_unchanged.connect(self.amqp_interface.fetch_publications)
         person_identifiers_updated.connect(self.amqp_interface.fetch_publications)
-
 
     async def close_rabbitmq_connexion(self) -> None:  # pragma: no cover
         """Handle last tasks before shutdown"""

@@ -2,10 +2,10 @@
 Person model
 """
 
-import re
 from typing import List, Optional, Annotated
 
-from pydantic import field_validator, BeforeValidator, Field
+from loguru import logger
+from pydantic import BeforeValidator, Field, field_validator
 
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.agents import Agent
@@ -39,33 +39,25 @@ class Person(Agent[PersonIdentifierType]):
     @field_validator("identifiers", mode="after")
     @staticmethod
     def _validate_identifiers(identifiers):
-        if identifiers and any(
-                ident.type not in PersonIdentifierType for ident in identifiers
-        ):
-            raise ValueError(
-                "All identifiers for a Person must be of type PersonIdentifierType"
-            )
-
-        type_pattern = {
-            PersonIdentifierType.ORCID: "^([0-9]{4}-){3}[0-9]{3}[0-9X]$",
-            PersonIdentifierType.IDREF: "^[0-9]{1,9}[A-Z]?$",
-            PersonIdentifierType.ID_HAL_S: "^([a-z]+-)*[a-z]+$",
-            PersonIdentifierType.ID_HAL_I: "^[0-9]{1,9}$",
-            PersonIdentifierType.SCOPUS_EID: "^[0-9]+$",
-        }
+        valid_identifiers = []
         for identifier in identifiers:
-            if identifier.type != PersonIdentifierType.LOCAL:
-                if identifier.type in type_pattern:
-                    pattern = type_pattern[identifier.type]
-                    if not re.fullmatch(pattern, identifier.value):
-                        raise ValueError(
-                            f"Value {identifier.value} for"
-                            f" {identifier.type} does not match the expected pattern {pattern}"
-                        )
+            if not PersonIdentifierType.validate_identifier(identifier.type, identifier.value):
+                logger.warning(
+                    f"Invalid identifier with type {identifier.type} and value {identifier.value}"
+                )
+                continue
+            if not PersonIdentifierType.validate_identifier(identifier.type, identifier.value):
+                logger.warning(
+                    "Invalid identifier with type "
+                    f"{str(identifier.type)} and value {identifier.value}"
+                )
+                continue
 
-        Person._prevent_duplicate_identifiers(identifiers)
+            valid_identifiers.append(identifier)
 
-        return identifiers
+        Person._prevent_duplicate_identifiers(valid_identifiers)
+
+        return valid_identifiers
 
     def get_identifier(self, identifier_type: PersonIdentifierType) -> PersonIdentifier:
         """

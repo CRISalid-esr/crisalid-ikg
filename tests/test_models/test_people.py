@@ -157,7 +157,7 @@ def test_create_person_a_with_name_in_multiple_lng(
         "person_a_with_invalid_idhal_i_json_data"
     ]
 )
-def test_create_person_with_invalid_identifier(invalid_identifier_data_fixture, request):
+def test_create_person_with_invalid_identifier(invalid_identifier_data_fixture, request, caplog):
     """
     Given json person data with an invalid identifier type
     When creating a person object
@@ -170,8 +170,8 @@ def test_create_person_with_invalid_identifier(invalid_identifier_data_fixture, 
     # Retrieve the fixture dynamically using the request object
     person_data = request.getfixturevalue(invalid_identifier_data_fixture)
 
-    with pytest.raises(ValueError):
-        Person(**person_data)
+    Person(**person_data)
+    assert "Invalid identifier with type" in caplog.text
 
 
 def test_create_person_a_with_two_orcid(person_a_with_two_orcid_json_data):
@@ -231,5 +231,5 @@ def test_create_person_with_implicit_local_membership_identifier(
     person = Person(**person_a_with_implicit_local_membership_identifier_json_data)
     assert len(person.names) == 1
     assert len(person.memberships) == 1
-    assert person.memberships[0].entity_uid ==\
+    assert person.memberships[0].entity_uid == \
            "local-U123"  # pylint: disable=unsubscriptable-object

@@ -3,12 +3,12 @@ from typing import NamedTuple
 from neo4j import AsyncManagedTransaction
 
 from app.errors.conflict_error import ConflictError
+from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.source_journal import SourceJournal
-from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
 class SourceJournalDAO(Neo4jDAO):
@@ -23,6 +23,7 @@ class SourceJournalDAO(Neo4jDAO):
         identifiers_changed: bool
         titles_changed: bool
 
+    @handle_database_errors
     async def create(self, source_journal: SourceJournal
                      ) -> SourceJournal:
         """
@@ -38,6 +39,7 @@ class SourceJournalDAO(Neo4jDAO):
                                                 )
         return source_journal
 
+    @handle_database_errors
     async def update(self, source_journal: SourceJournal) -> SourceJournal:
         """
         Update a source journal in the graph database
@@ -57,6 +59,7 @@ class SourceJournalDAO(Neo4jDAO):
                                                                   source_journal)
                     return source_journal
 
+    @handle_database_errors
     async def get_by_uid(self, source_journal_uid: str) -> SourceJournal:
         """
         Get a source journal from the graph database
@@ -141,12 +144,3 @@ class SourceJournalDAO(Neo4jDAO):
             source_journal.identifiers = source_journal.identifiers + [
                 JournalIdentifier(**identifier)]
         return source_journal
-
-    @staticmethod
-    def _compute_source_journal_uid(source_journal: SourceJournal) -> str:
-        if not source_journal.source_identifier or not source_journal.harvester:
-            raise ValueError(
-                f"Source journal {source_journal} must have a source identifier and a harvester")
-        return f"{source_journal.harvester}" \
-               f"{AgentIdentifierService.IDENTIFIER_SEPARATOR}" \
-               f"{source_journal.source_identifier}"
