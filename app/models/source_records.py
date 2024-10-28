@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from app.models.concepts import Concept
 from app.models.document_type import DocumentType
@@ -35,3 +35,9 @@ class SourceRecord(BaseModel):
     contributions: List[SourceContribution] = []
 
     issue: Optional[SourceIssue] = None
+
+    @model_validator(mode="after")
+    def validate_titles(self):
+        """Validate that the title field is not empty"""
+        if not self.titles:
+            raise ValueError("Source Record titles cannot be empty")

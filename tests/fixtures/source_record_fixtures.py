@@ -97,3 +97,12 @@ async def fixture_open_alex_article_source_record_json_data(_base_path) -> dict:
     :return: basic source record dict from OpenAlex data
     """
     return _source_record_json_data_from_file(_base_path, "open_alex_article_source_record")
+
+
+@pytest_asyncio.fixture(name="source_record_without_title_json_data")
+async def fixture_source_record_without_title_record_json_data(_base_path) -> dict:
+    """
+    Create an invalid source record without title
+    :return: invalid source record dict without title
+    """
+    return _source_record_json_data_from_file(_base_path, "source_record_without_title")
