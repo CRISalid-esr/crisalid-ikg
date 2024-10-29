@@ -36,8 +36,10 @@ class SourceRecord(BaseModel):
 
     issue: Optional[SourceIssue] = None
 
-    @field_validator(mode="after")
-    def validate_titles(self):
-        """Validate that the title field is not empty"""
-        if not self.titles:
+    @field_validator("titles", mode="after")
+    @classmethod
+    def validate_titles(cls, value):
+        """Validate that the titles field is not empty."""
+        if not value:
             raise ValueError("Source Record titles cannot be empty")
+        return value
