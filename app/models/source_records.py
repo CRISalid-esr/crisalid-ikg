@@ -2,6 +2,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel, field_validator
 
+from app.models.agents import Agent
 from app.models.concepts import Concept
 from app.models.document_type import DocumentType
 from app.models.literal import Literal
@@ -35,6 +36,10 @@ class SourceRecord(BaseModel):
     contributions: List[SourceContribution] = []
 
     issue: Optional[SourceIssue] = None
+
+    harvested_for_uids: List[str] = []
+
+    harvested_for: List[Agent] = []
 
     @field_validator("titles", mode="after")
     @classmethod

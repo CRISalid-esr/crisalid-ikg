@@ -48,6 +48,8 @@ async def test_create_source_record(persisted_person_a_pydantic_model: Person,
             fetched_subject.uri == subject.uri for fetched_subject in
             fetched_source_record.subjects)
 
+    assert persisted_person_a_pydantic_model.uid in fetched_source_record.harvested_for_uids
+
 
 async def test_journal_from_scanr_article(
         scanr_article_a_source_record_pydantic_model: SourceRecord,
