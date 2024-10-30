@@ -1,11 +1,12 @@
 """ Person routes"""
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from starlette import status
 from starlette.responses import JSONResponse
 
+from app.errors.reference_owner_not_found_error import ReferenceOwnerNotFoundError
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
@@ -37,10 +38,12 @@ async def create_source_record(
     :param person: entity built from fields
     :return: json response
     """
-
-    created_source_record = await source_record_service.create_source_record(
-        source_record=source_record,
-        harvested_for=person)
+    try:
+        created_source_record = await source_record_service.create_source_record(
+            source_record=source_record,
+            harvested_for=person)
+    except ReferenceOwnerNotFoundError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
     response_data = {"message": "Source record created successfully", "source_record":
         created_source_record}
     return JSONResponse(jsonable_encoder(response_data), status_code=status.HTTP_201_CREATED)
