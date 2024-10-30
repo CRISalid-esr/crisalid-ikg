@@ -7,7 +7,6 @@ from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
-from app.models.agents import Agent
 from app.models.concepts import Concept
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.literal import Literal
@@ -129,8 +128,7 @@ class SourceRecordDAO(Neo4jDAO):
             source_identifier=record["s"]["source_identifier"],
             harvester=record["s"]["harvester"],
             titles=[Literal(**title) for title in record["titles"]],
-            identifiers=[],
-            harvested_for= []
+            harvested_for_uids=record['harvested_for_uids'],
         )
         for abstract in record["abstracts"]:
             source_record.abstracts.append(Literal(**abstract))
@@ -138,8 +136,6 @@ class SourceRecordDAO(Neo4jDAO):
             source_record.identifiers.append(PublicationIdentifier(**identifier))
         for subject in record["subjects"]:
             source_record.subjects.append(Concept(uri=subject['uri']))
-        for person in record["persons"]:
-            source_record.harvested_for.append(Agent(**person))
         if record["journal"]:
             journal = SourceJournal(**record["journal"])
             if record["journal_identifiers"]:

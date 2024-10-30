@@ -37,6 +37,8 @@ class SourceRecord(BaseModel):
 
     issue: Optional[SourceIssue] = None
 
+    harvested_for_uids: List[str] = []
+
     harvested_for: List[Agent] = []
 
     @field_validator("titles", mode="after")
