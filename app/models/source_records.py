@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.models.agents import Agent
 from app.models.concepts import Concept
@@ -38,3 +38,11 @@ class SourceRecord(BaseModel):
     issue: Optional[SourceIssue] = None
 
     harvested_for: List[Agent] = []
+
+    @field_validator("titles", mode="after")
+    @classmethod
+    def validate_titles(cls, value):
+        """Validate that the titles field is not empty."""
+        if not value:
+            raise ValueError("Source Record titles cannot be empty")
+        return value

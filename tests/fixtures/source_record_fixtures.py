@@ -141,3 +141,12 @@ async def fixture_scanr_record_with_person_a_as_contributor_json_data(_base_path
         _base_path,
         "scanr_record_with_person_a_as_contributor"
     )
+
+
+@pytest_asyncio.fixture(name="source_record_without_title_json_data")
+async def fixture_source_record_without_title_record_json_data(_base_path) -> dict:
+    """
+    Create an invalid source record without title
+    :return: invalid source record dict without title
+    """
+    return _source_record_json_data_from_file(_base_path, "source_record_without_title")

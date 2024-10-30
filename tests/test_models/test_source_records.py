@@ -1,3 +1,5 @@
+import pytest
+
 from app.models.identifier_types import PublicationIdentifierType, JournalIdentifierType
 from app.models.source_records import SourceRecord
 
@@ -215,3 +217,16 @@ async def test_article_identifiers_from_open_alex_data(
         identifier for identifier in source_record.issue.journal.identifiers if
         identifier.type == JournalIdentifierType.EISSN and identifier.value == "1234-5678"
     )
+
+
+def test_create_invalid_source_record(source_record_without_title_json_data):
+    """
+    Given json source record data with no titles
+    When creating a source record object
+    Then a ValueError should be raised
+
+    :param source_record_without_title_json_data: json data with invalid identifier type
+    :return:
+    """
+    with pytest.raises(ValueError):
+        SourceRecord(**source_record_without_title_json_data)
