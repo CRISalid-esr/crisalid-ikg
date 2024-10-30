@@ -1,10 +1,8 @@
-from typing import List
-
-from app.models.literal import Literal
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.concepts.concept_service import ConceptService
 from app.services.source_records.source_record_service import SourceRecordService
+
 
 async def test_create_two_source_records_with_common_concepts_and_different_alt_labels(
         persisted_person_a_pydantic_model: Person,
@@ -24,21 +22,19 @@ async def test_create_two_source_records_with_common_concepts_and_different_alt_
     :param scanr_record_with_person_b_as_contributor_pydantic_model:
     :return:
     """
-    def _get_alt_labels_to_check(existing_list, source_record) -> List[Literal]:
-        for subject in source_record.subjects:
-            if subject.uri == concept_uri:
-                existing_list.extend(alt_label for alt_label in subject.alt_labels if
-                                           alt_label not in existing_list)
-        return existing_list
 
     record_service = SourceRecordService()
     concept_service = ConceptService()
 
     concept_uri = "http://www.idref.fr/02734004x/id"
     alt_labels_to_check = []
-    alt_labels_to_check = _get_alt_labels_to_check(
-        alt_labels_to_check,
-        scanr_record_with_person_a_as_contributor_and_additional_alt_labels_pydantic_model
+
+    alt_labels_to_check.extend(
+        alt_label
+        for subject in
+        scanr_record_with_person_a_as_contributor_and_additional_alt_labels_pydantic_model.subjects
+        if subject.uri == concept_uri
+        for alt_label in subject.alt_labels if alt_label not in alt_labels_to_check
     )
 
     await record_service.create_source_record(
@@ -67,9 +63,12 @@ async def test_create_two_source_records_with_common_concepts_and_different_alt_
             fetched_scanr_source_record_for_person_b.uid ==
             scanr_record_with_person_b_as_contributor_pydantic_model.uid
     )
-    alt_labels_to_check = _get_alt_labels_to_check(
-        alt_labels_to_check,
-        scanr_record_with_person_b_as_contributor_pydantic_model
+
+    alt_labels_to_check.extend(
+        alt_label
+        for subject in scanr_record_with_person_b_as_contributor_pydantic_model.subjects if
+        subject.uri == concept_uri
+        for alt_label in subject.alt_labels if alt_label not in alt_labels_to_check
     )
 
     fetched_concept = await concept_service.get_concept(concept_uri)
