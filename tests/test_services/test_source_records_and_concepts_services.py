@@ -4,6 +4,36 @@ from app.services.concepts.concept_service import ConceptService
 from app.services.source_records.source_record_service import SourceRecordService
 
 
+async def test_create_source_records_with_a_unreferenced_concept(
+        persisted_person_b_pydantic_model: Person,
+        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord
+) -> None:
+    """
+    Given a persisted person pydantic_model,
+    When a source record for person b with an unreferenced concept is created
+    Then the concept should be created
+    And the record values should be returned correctly
+
+    :param persisted_person_b_pydantic_model:
+    :param scanr_record_with_person_b_as_contributor_pydantic_model:
+    :return:
+    """
+
+    record_service = SourceRecordService()
+
+    await record_service.create_source_record(
+        source_record=scanr_record_with_person_b_as_contributor_pydantic_model,
+        harvested_for=persisted_person_b_pydantic_model)
+    fetched_scanr_source_record_for_person_b = await record_service.get_source_record(
+        scanr_record_with_person_b_as_contributor_pydantic_model.uid)
+    assert (
+            fetched_scanr_source_record_for_person_b.uid ==
+            scanr_record_with_person_b_as_contributor_pydantic_model.uid
+    )
+    assert (len(fetched_scanr_source_record_for_person_b.subjects) == len(
+        scanr_record_with_person_b_as_contributor_pydantic_model.subjects))
+
+
 async def test_create_two_source_records_with_common_concepts_and_different_alt_labels(
         persisted_person_a_pydantic_model: Person,
         scanr_record_with_person_a_as_contrib_and_additional_alt_labels_pyd_model: SourceRecord,
