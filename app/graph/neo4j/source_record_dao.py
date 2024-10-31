@@ -128,7 +128,7 @@ class SourceRecordDAO(Neo4jDAO):
             source_identifier=record["s"]["source_identifier"],
             harvester=record["s"]["harvester"],
             titles=[Literal(**title) for title in record["titles"]],
-            identifiers=[]
+            harvested_for_uids=record['harvested_for_uids'],
         )
         for abstract in record["abstracts"]:
             source_record.abstracts.append(Literal(**abstract))
