@@ -193,7 +193,6 @@ async def fixture_scanr_record_with_person_b_as_contributor_json_data(_base_path
         "scanr_record_with_person_b_as_contributor"
     )
 
- 
 @pytest_asyncio.fixture(name="source_record_without_title_json_data")
 async def fixture_source_record_without_title_record_json_data(_base_path) -> dict:
     """
