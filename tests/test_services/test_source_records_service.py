@@ -167,3 +167,23 @@ async def test_create_two_source_records_with_same_concepts(
         (concept in fetched_scanr_source_record.subjects for concept in
          fetched_idref_source_record.subjects)
     )
+
+
+async def test_create_source_record_with_issue(persisted_person_a_pydantic_model: Person,
+                                    open_alex_article_source_record_with_issue_title_pydantic_model: SourceRecord
+                                    ) -> None:
+    """
+    Given a persisted person pydantic model and a non persisted source record pydantic model
+    When the source record is added to the graph
+    Then the source record can be read from the graph
+    :param person_a_pydantic_model:
+    :param scanr_thesis_source_record_pydantic_model:
+    :return:
+    """
+    service = SourceRecordService()
+    assert len(open_alex_article_source_record_with_issue_title_pydantic_model.issue.titles) > 0
+    await service.create_source_record(source_record=open_alex_article_source_record_with_issue_title_pydantic_model,
+                                       harvested_for=persisted_person_a_pydantic_model)
+    fetched_source_record = await service.get_source_record(
+        open_alex_article_source_record_with_issue_title_pydantic_model.uid)
+    assert len(fetched_source_record.issue) > 0

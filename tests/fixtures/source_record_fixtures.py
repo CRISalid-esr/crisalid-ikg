@@ -201,3 +201,22 @@ async def fixture_source_record_without_title_record_json_data(_base_path) -> di
     :return: invalid source record dict without title
     """
     return _source_record_json_data_from_file(_base_path, "source_record_without_title")
+
+
+@pytest_asyncio.fixture(name="open_alex_article_source_record_with_issue_title_pydantic_model")
+async def fixture_open_alex_article_source_record_with_issue_title_pydantic_model(
+        open_alex_article_source_record_with_issue_title_json_data) -> SourceRecord:
+    """
+    Create a basic source record pydantic model from OpenAlex data
+    :return: basic source record pydantic model from OpenAlex data
+    """
+    return _source_record_from_json_data(open_alex_article_source_record_with_issue_title_json_data)
+
+
+@pytest_asyncio.fixture(name="open_alex_article_source_record_with_issue_title_json_data")
+async def fixture_open_alex_article_source_record_with_issue_title_json_data(_base_path) -> dict:
+    """
+    Create a thesis source record dict from OpenAlex data
+    :return: basic source record dict from OpenAlex data
+    """
+    return _source_record_json_data_from_file(_base_path, "open_alex_article_source_record_with_issue_title")

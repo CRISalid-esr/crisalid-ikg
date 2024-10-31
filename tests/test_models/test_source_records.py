@@ -230,3 +230,25 @@ def test_create_invalid_source_record(source_record_without_title_json_data):
     """
     with pytest.raises(ValueError):
         SourceRecord(**source_record_without_title_json_data)
+
+
+async def test_create_article_source_record_from_open_alex_data_with_issue_title(
+        open_alex_article_source_record_with_issue_title_json_data: dict
+):
+    """
+    Given a valid source record model representing an article harvested from OpenAlex
+    When asked for different field values
+    Then the values should be returned correctly
+    :param scanr_thesis_source_record_pydantic_model:
+    :return:
+    """
+    source_record = SourceRecord(**open_alex_article_source_record_with_issue_title_json_data)
+    assert source_record
+    assert source_record.harvester == "OpenAlex"
+    assert source_record.issue
+    assert source_record.issue.source == "ExampleSource"
+    assert len(source_record.issue.titles) > 0
+    assert any(
+        title for title in source_record.issue.titles if
+        title.value == "Some title" and title.language == "en"
+    )
