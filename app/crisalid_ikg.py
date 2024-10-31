@@ -10,6 +10,8 @@ from app.amqp.amqp_interface import AMQPInterface
 from app.config import get_app_settings
 from app.errors.conflict_error import conflicting_entity_error_handler, ConflictError
 from app.errors.not_found_error import not_found_entity_error_handler, NotFoundError
+from app.errors.reference_owner_not_found_error import ReferenceOwnerNotFoundError, \
+    not_found_reference_owner_error_handler
 from app.errors.validation_error import invalid_entity_error_handler
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.routes.api import router as api_router
@@ -46,6 +48,10 @@ class CrisalidIKG(FastAPI):
         self.add_exception_handler(NotFoundError, not_found_entity_error_handler)
         self.add_exception_handler(ConflictError, conflicting_entity_error_handler)
         self.add_exception_handler(ValidationError, invalid_entity_error_handler)
+        self.add_exception_handler(
+            ReferenceOwnerNotFoundError,
+            not_found_reference_owner_error_handler
+        )
 
         self.add_event_handler("startup", self.setup_graph)
 
