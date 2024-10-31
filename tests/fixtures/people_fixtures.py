@@ -68,17 +68,6 @@ async def fixture_person_a_with_implicit_local_membership_identifier_json_data(_
                                        )
 
 
-@pytest_asyncio.fixture(name="person_b_with_two_names_pydantic_model")
-async def fixture_person_b_with_two_names_pydantic_model(_base_path) -> Person:
-    """
-    Create a basic person pydantic model with two names
-    :return: basic person pydantic model with two names
-    """
-    return _person_from_json_data(
-        _person_json_data_from_file(_base_path, "person_b_with_two_names")
-    )
-
-
 @pytest_asyncio.fixture(name="person_a_with_name_in_multiple_lng_pydantic_model")
 async def fixture_person_a_with_name_in_multiple_lng_pydantic_model(
         person_a_with_name_in_multiple_lng_json_data) -> Person:
@@ -116,6 +105,30 @@ async def fixture_person_a_with_two_orcid_json_data(_base_path) -> dict:
     :return: person with multiple orcid json data
     """
     return _person_json_data_from_file(_base_path, "person_a_with_two_orcid")
+
+
+@pytest_asyncio.fixture(name="persisted_person_b_pydantic_model")
+async def fixture_persisted_person_b_pydantic_model(
+        person_b_with_two_names_pydantic_model) -> Person:
+    """
+    Create a basic persisted person pydantic model
+    :return: basic persisted person pydantic model
+    """
+    factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
+    people_dao: PersonDAO = factory.get_dao(Person)
+    await people_dao.create(person_b_with_two_names_pydantic_model)
+    return person_b_with_two_names_pydantic_model
+
+
+@pytest_asyncio.fixture(name="person_b_with_two_names_pydantic_model")
+async def fixture_person_b_with_two_names_pydantic_model(_base_path) -> Person:
+    """
+    Create a basic person pydantic model with two names
+    :return: basic person pydantic model with two names
+    """
+    return _person_from_json_data(
+        _person_json_data_from_file(_base_path, "person_b_with_two_names")
+    )
 
 
 @pytest_asyncio.fixture(name="person_c_with_two_last_names_json_data")
