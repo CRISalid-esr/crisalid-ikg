@@ -144,9 +144,9 @@ async def fixture_scanr_record_with_person_a_as_contributor_json_data(_base_path
 
 
 @pytest_asyncio.fixture(
-    name="scanr_record_with_person_a_as_contributor_and_additional_alt_labels_pydantic_model")
+    name="scanr_record_with_person_a_as_contrib_and_additional_alt_labels_pyd_model")
 async def \
-        fixture_scanr_record_with_person_a_as_contributor_and_additional_alt_labels_pydantic_model(
+        fixture_scanr_record_with_person_a_as_contrib_and_additional_alt_labels_pyd_model(
         scanr_record_with_person_a_as_contributor_and_additional_alt_labels_json_data
 ) -> SourceRecord:
     """
