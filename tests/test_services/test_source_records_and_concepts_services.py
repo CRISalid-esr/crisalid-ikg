@@ -1,9 +1,12 @@
+import pytest
+
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.concepts.concept_service import ConceptService
 from app.services.source_records.source_record_service import SourceRecordService
 
 
+@pytest.mark.current
 async def test_create_two_source_records_with_same_concepts(
         persisted_person_a_pydantic_model: Person,
         persisted_person_b_pydantic_model: Person,
@@ -38,9 +41,8 @@ async def test_create_two_source_records_with_same_concepts(
     fetched_concept = await concept_service.get_concept(concept_uri)
     assert fetched_concept
     assert len(fetched_concept.pref_labels) == 1
-    assert any( initial_pref_label == pref_label.value for pref_label in
-                fetched_concept.pref_labels )
-
+    assert any(initial_pref_label == pref_label.value for pref_label in
+               fetched_concept.pref_labels)
     await record_service.create_source_record(
         source_record=scanr_record_with_person_b_as_contributor_pydantic_model,
         harvested_for=persisted_person_b_pydantic_model)
@@ -53,5 +55,5 @@ async def test_create_two_source_records_with_same_concepts(
     fetched_concept = await concept_service.get_concept(concept_uri)
     assert fetched_concept
     assert len(fetched_concept.pref_labels) == 1
-    assert any( updated_pref_label == pref_label.value for pref_label in
-                fetched_concept.pref_labels )
+    assert any(updated_pref_label == pref_label.value for pref_label in
+               fetched_concept.pref_labels)
