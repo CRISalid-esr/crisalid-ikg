@@ -1,8 +1,9 @@
 """
 Agent identifiers model
 """
+from loguru import logger
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 from app.models.identifier_types import PublicationIdentifierType
 
@@ -15,3 +16,11 @@ class PublicationIdentifier(BaseModel):
 
     def dict(self, **kwargs):
         return super().dict(**kwargs) | {"type": self.type.value}
+
+    @validator('type', pre=True, always=True)
+    @classmethod
+    def _allow_unknown_identifier_type(cls, value):
+        if value not in [member.value for member in PublicationIdentifierType]:
+            logger.warning("Unknown publication identifier type submitted: %s", value)
+            return PublicationIdentifierType.UNKNOWN.value
+        return value
