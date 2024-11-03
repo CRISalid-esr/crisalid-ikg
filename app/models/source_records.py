@@ -1,6 +1,7 @@
-from typing import Optional, List
+from typing import Optional, List, ClassVar
 
-from pydantic import BaseModel, field_validator
+from loguru import logger
+from pydantic import BaseModel, field_validator, model_validator
 
 from app.models.agents import Agent
 from app.models.concepts import Concept
@@ -16,6 +17,8 @@ class SourceRecord(BaseModel):
     Source Bibliographic Record API model
     (store raw references received from external sources before deduplication)
     """
+
+    IDENTIFIER_SEPARATOR: ClassVar[str] = "-"
 
     uid: Optional[str] = None  # uid from the database if exists
 
@@ -48,3 +51,16 @@ class SourceRecord(BaseModel):
         if not value:
             raise ValueError("Source Record titles cannot be empty")
         return value
+
+    @model_validator(mode="before")
+    @classmethod
+    def _build_uid(cls, values):
+        harvester = values.get("harvester")
+        source_identifier = values.get("source_identifier")
+        if not harvester or not source_identifier:
+            logger.warning(
+                f"Source record {values} must have "
+                "a source identifier and a harvester to have its uid computed")
+            return values
+        values["uid"] = f"{harvester.lower()}{cls.IDENTIFIER_SEPARATOR}{source_identifier}"
+        return values
