@@ -230,3 +230,23 @@ def test_create_invalid_source_record(source_record_without_title_json_data):
     """
     with pytest.raises(ValueError):
         SourceRecord(**source_record_without_title_json_data)
+
+
+def test_create_source_record_with_unknown_identifier(
+        source_record_with_unknown_source_json_data, caplog):
+    """
+    Given json source record data with an unknown identifier
+    When creating a source record object
+    Then the value should be returned correctly
+
+    :param source_record_with_unknown_source_json_data: json data with invalid identifier type
+    :return:
+    """
+    source_record = SourceRecord(**source_record_with_unknown_source_json_data)
+    assert source_record
+    assert len(source_record.identifiers) == 1
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.UNKNOWN and identifier.value == "not_known_source"
+    )
+    assert  "Unknown publication identifier type submitted" in caplog.text

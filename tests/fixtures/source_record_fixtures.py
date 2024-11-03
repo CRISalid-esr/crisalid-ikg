@@ -42,6 +42,8 @@ async def fixture_scanr_article_a_source_record_json_data(_base_path) -> dict:
     :return: basic source record dict from ScanR data
     """
     return _source_record_json_data_from_file(_base_path, "scanr_article_a_source_record")
+
+
 @pytest_asyncio.fixture(name="scanr_article_b_source_record_pydantic_model")
 async def fixture_scanr_article_b_source_record_pydantic_model(
         scanr_article_b_source_record_json_data) -> SourceRecord:
@@ -200,3 +202,12 @@ async def fixture_source_record_without_title_record_json_data(_base_path) -> di
     :return: invalid source record dict without title
     """
     return _source_record_json_data_from_file(_base_path, "source_record_without_title")
+
+
+@pytest_asyncio.fixture(name="source_record_with_unknown_source_json_data")
+async def fixture_source_record_with_unknown_source_json_data(_base_path) -> dict:
+    """
+    Create a source record with an unknown source
+    :return:  record from an unknown source
+    """
+    return _source_record_json_data_from_file(_base_path, "source_record_with_unknown_source")
