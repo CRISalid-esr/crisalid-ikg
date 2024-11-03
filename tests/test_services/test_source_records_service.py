@@ -169,9 +169,10 @@ async def test_create_two_source_records_with_same_concepts(
     )
 
 
-async def test_create_source_record_with_issue(persisted_person_a_pydantic_model: Person,
-                                    open_alex_article_source_record_with_issue_title_pydantic_model: SourceRecord
-                                    ) -> None:
+async def test_create_source_record_with_issue(
+        persisted_person_a_pydantic_model: Person,
+        open_alex_article_source_record_with_issue_title_pydantic_model: SourceRecord
+) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
     When the source record is added to the graph
@@ -182,8 +183,12 @@ async def test_create_source_record_with_issue(persisted_person_a_pydantic_model
     """
     service = SourceRecordService()
     assert len(open_alex_article_source_record_with_issue_title_pydantic_model.issue.titles) > 0
-    await service.create_source_record(source_record=open_alex_article_source_record_with_issue_title_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+    await service.create_source_record(
+        source_record=open_alex_article_source_record_with_issue_title_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
     fetched_source_record = await service.get_source_record(
         open_alex_article_source_record_with_issue_title_pydantic_model.uid)
-    assert len(fetched_source_record.issue) > 0
+    assert fetched_source_record.issue
+    assert len(fetched_source_record.issue.titles) == 2
+    assert 'Some title' in fetched_source_record.issue.titles
+    assert 'Some other title' in fetched_source_record.issue.titles

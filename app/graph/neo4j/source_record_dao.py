@@ -102,8 +102,7 @@ class SourceRecordDAO(Neo4jDAO):
         if source_record_exists:
             raise ConflictError(f"Source record with uid {source_record.uid} already exists")
         create_source_record_query = load_query("create_source_record")
-        # issue is issue=source_record.issue.dict()  except for the journal key
-        issue = source_record.issue.dict() if source_record.issue else None
+        issue = source_record.issue.model_dump() if source_record.issue else None
         if issue:
             issue.pop("journal", None)
         await tx.run(

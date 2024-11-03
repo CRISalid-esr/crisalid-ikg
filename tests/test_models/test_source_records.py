@@ -180,7 +180,7 @@ async def test_create_article_source_record_from_open_alex_data(
     assert source_record.issue
     assert source_record.issue.source == "ExampleSource"
     assert source_record.issue.source_identifier == "journal-issue-identifier"
-    assert source_record.issue.titles == []
+    assert len(source_record.issue.titles) == 0
     assert source_record.issue.volume == "105"
     assert source_record.issue.number == ["2"]
     assert source_record.issue.rights is None
@@ -248,10 +248,9 @@ async def test_create_article_source_record_from_open_alex_data_with_issue_title
     assert source_record.issue
     assert source_record.issue.source == "ExampleSource"
     assert len(source_record.issue.titles) > 0
-    assert any(
-        title for title in source_record.issue.titles if
-        title.value == "Some title" and title.language == "en"
-    )
+    expected_issue_titles = ['Some title', 'Some other title']
+    assert sorted(source_record.issue.titles) == sorted(expected_issue_titles)
+
 
 def test_create_source_record_with_unknown_identifier(
         source_record_with_unknown_source_json_data, caplog):

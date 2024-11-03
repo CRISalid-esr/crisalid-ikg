@@ -80,10 +80,8 @@
     "source": "ExampleSource",
     "source_identifier": "journal-issue-identifier",
     "titles": [
-      {
-        "value": "Some title",
-        "language": "en"
-      }
+      "Some title",
+      "Some other title"
     ],
     "volume": "105",
     "number": [
