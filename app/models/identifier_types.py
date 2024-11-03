@@ -67,6 +67,7 @@ class PublicationIdentifierType(Enum):
     SCIENCESPO = "sciencespo"
     URI = "uri"
     WOS = "wos"
+    UNKNOWN = "unknown"
 
 
 class JournalIdentifierType(Enum):

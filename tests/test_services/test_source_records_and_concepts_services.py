@@ -4,6 +4,58 @@ from app.services.concepts.concept_service import ConceptService
 from app.services.source_records.source_record_service import SourceRecordService
 
 
+async def test_create_two_source_records_with_same_concepts(
+        persisted_person_a_pydantic_model: Person,
+        persisted_person_b_pydantic_model: Person,
+        scanr_record_with_person_a_as_contributor_pydantic_model: SourceRecord,
+        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord
+) -> None:
+    """
+    Given two persisted person pydantic_model,
+    When a source record for person a with concepts is created
+    And a source record for person b with a concept in common but with a new pref_label is created
+    Then the records should share the same concept with an updated pref_label.
+
+    :param persisted_person_a_pydantic_model:
+    :param idref_record_with_person_a_as_contributor_pydantic_model:
+    :return:
+    """
+    record_service = SourceRecordService()
+    concept_service = ConceptService()
+    concept_uri = "http://www.idref.fr/02734004x/id"
+    initial_pref_label = "Analyse des donn\u00e9es"
+    updated_pref_label = "Analyse de donnée"
+
+    await record_service.create_source_record(
+        source_record=scanr_record_with_person_a_as_contributor_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+    fetched_scanr_source_record_for_person_a = await record_service.get_source_record(
+        scanr_record_with_person_a_as_contributor_pydantic_model.uid)
+    assert (
+            fetched_scanr_source_record_for_person_a.uid ==
+            scanr_record_with_person_a_as_contributor_pydantic_model.uid
+    )
+    fetched_concept = await concept_service.get_concept(concept_uri)
+    assert fetched_concept
+    assert len(fetched_concept.pref_labels) == 1
+    assert any(initial_pref_label == pref_label.value for pref_label in
+               fetched_concept.pref_labels)
+    await record_service.create_source_record(
+        source_record=scanr_record_with_person_b_as_contributor_pydantic_model,
+        harvested_for=persisted_person_b_pydantic_model)
+    fetched_scanr_source_record_for_person_b = await record_service.get_source_record(
+        scanr_record_with_person_b_as_contributor_pydantic_model.uid)
+    assert (
+            fetched_scanr_source_record_for_person_b.uid ==
+            scanr_record_with_person_b_as_contributor_pydantic_model.uid
+    )
+    fetched_concept = await concept_service.get_concept(concept_uri)
+    assert fetched_concept
+    assert len(fetched_concept.pref_labels) == 1
+    assert any(updated_pref_label == pref_label.value for pref_label in
+               fetched_concept.pref_labels)
+
+
 async def test_create_two_source_records_with_common_concepts_and_different_alt_labels(
         persisted_person_a_pydantic_model: Person,
         scanr_record_with_person_a_as_contrib_and_additional_alt_labels_pyd_model: SourceRecord,
