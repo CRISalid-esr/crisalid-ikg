@@ -14,7 +14,7 @@ async def test_create_source_record(persisted_person_a_pydantic_model: Person,
     Given a persisted person pydantic model and a non persisted source record pydantic model
     When the source record is added to the graph
     Then the source record can be read from the graph
-    :param person_a_pydantic_model:
+    :param persisted_person_a_pydantic_model:
     :param scanr_thesis_source_record_pydantic_model:
     :return:
     """
@@ -177,8 +177,8 @@ async def test_create_source_record_with_issue(
     Given a persisted person pydantic model and a non persisted source record pydantic model
     When the source record is added to the graph
     Then the source record can be read from the graph
-    :param person_a_pydantic_model:
-    :param scanr_thesis_source_record_pydantic_model:
+    :param persisted_person_a_pydantic_model:
+    :param open_alex_article_source_record_with_issue_title_pydantic_model:
     :return:
     """
     service = SourceRecordService()

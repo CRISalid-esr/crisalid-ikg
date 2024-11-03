@@ -11,7 +11,7 @@ def test_create_thesis_source_record_from_scanr_data(
     Given a source record model representing a thesis harvested from ScanR
     When asked for different field values
     Then the values should be returned correctly
-    :param scanr_thesis_source_record_pydantic_model:
+    :param scanr_thesis_source_record_json_data:
     :return:
     """
     source_record = SourceRecord(**scanr_thesis_source_record_json_data)
@@ -70,7 +70,7 @@ def test_create_thesis_source_record_from_idref_data(
     Given a valid source record model representing a thesis harvested from IdRef
     When asked for different field values
     Then the values should be returned correctly
-    :param scanr_thesis_source_record_pydantic_model:
+    :param idref_thesis_source_record_json_data:
     :return:
     """
     source_record = SourceRecord(**idref_thesis_source_record_json_data)
@@ -133,7 +133,7 @@ async def test_create_article_source_record_from_open_alex_data(
     Given a valid source record model representing an article harvested from OpenAlex
     When asked for different field values
     Then the values should be returned correctly
-    :param scanr_thesis_source_record_pydantic_model:
+    :param open_alex_article_source_record_json_data:
     :return:
     """
     source_record = SourceRecord(**open_alex_article_source_record_json_data)
@@ -239,7 +239,7 @@ async def test_create_article_source_record_from_open_alex_data_with_issue_title
     Given a valid source record model representing an article harvested from OpenAlex
     When asked for different field values
     Then the values should be returned correctly
-    :param scanr_thesis_source_record_pydantic_model:
+    :param open_alex_article_source_record_with_issue_title_json_data:
     :return:
     """
     source_record = SourceRecord(**open_alex_article_source_record_with_issue_title_json_data)
@@ -267,6 +267,7 @@ def test_create_source_record_with_unknown_identifier(
     assert len(source_record.identifiers) == 1
     assert any(
         identifier for identifier in source_record.identifiers if
-        identifier.type == PublicationIdentifierType.UNKNOWN and identifier.value == "not_known_source"
+        identifier.type == PublicationIdentifierType.UNKNOWN
+        and identifier.value == "not_known_source"
     )
-    assert  "Unknown publication identifier type submitted" in caplog.text
+    assert "Unknown publication identifier type submitted" in caplog.text

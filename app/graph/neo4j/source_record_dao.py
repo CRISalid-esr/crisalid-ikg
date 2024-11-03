@@ -114,8 +114,8 @@ class SourceRecordDAO(Neo4jDAO):
             issue=issue,
             journal_uid=source_record.issue.journal.uid if source_record.issue and
                                                            source_record.issue.journal else None,
-            titles=[title.dict() for title in source_record.titles],
-            abstracts=[abstract.dict() for abstract in source_record.abstracts],
+            titles=[title.model_dump() for title in source_record.titles],
+            abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
             subject_uris=[subject.uri for subject in source_record.subjects]
         )
