@@ -1,40 +1,42 @@
 MERGE (s:SourceRecord {uid: $source_record_uid})
-  ON CREATE SET s.harvester = $harvester, s.source_identifier = $source_identifier
   ON MATCH SET s.harvester = $harvester, s.source_identifier = $source_identifier
-
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_TITLE]->()
-DELETE r
+OPTIONAL MATCH (s)-[r:HAS_TITLE]->(t:Literal)
+DELETE r, t
 FOREACH (title IN $titles |
   CREATE (t:Literal {value: title.value, language: title.language})
   CREATE (s)-[:HAS_TITLE]->(t)
 )
-
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->()
-DELETE r
+OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(a:Literal)
+DELETE r, a
 FOREACH (abstract IN $abstracts |
   CREATE (a:Literal {value: abstract.value, language: abstract.language})
   CREATE (s)-[:HAS_ABSTRACT]->(a)
 )
-
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_IDENTIFIER]->()
+OPTIONAL MATCH (s)-[r:HAS_IDENTIFIER]->(i:PublicationIdentifier)
 DELETE r
+WITH s, i
+  WHERE NOT (i)--(:SourceRecord)
+DELETE i
 FOREACH (identifier IN $identifiers |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
   MERGE (s)-[:HAS_IDENTIFIER]->(i)
 )
-
 WITH s
-OPTIONAL MATCH (s)-[:PUBLISHED_IN]->(i:SourceIssue)-[r:ISSUED_BY]->(:SourceJournal)
-DELETE r
+OPTIONAL MATCH (s)-[p:PUBLISHED_IN]->(i:SourceIssue)
+DELETE p
+WITH s, i
+  WHERE NOT (i)--(:SourceRecord)
+DETACH DELETE i
+
 FOREACH (_ IN CASE WHEN $issue IS NOT NULL THEN [1]
 ELSE []
 END |
-MERGE (i:SourceIssue {source_identifier:$issue.source_identifier})
-ON CREATE SET i.source = $issue.source, i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
-ON MATCH SET  i.source = $issue.source, i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
+MERGE (i:SourceIssue {source_identifier:$issue.source_identifier, source:$issue.source})
+ON MATCH SET  i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
+ON CREATE SET i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
 MERGE (s)- [:PUBLISHED_IN] - >(i)
 
 FOREACH (_ IN CASE WHEN $journal_uid IS NOT NULL THEN [1]
@@ -48,15 +50,18 @@ MERGE (i)- [:ISSUED_BY] - >(j)
 WITH s, $person_uid AS person_uid
 MATCH (p:Person {uid:person_uid})
 MERGE (s)- [:HARVESTED_FOR] - >(p)
-WITH s, $subject_uris AS subject_uris
-OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >()
-DELETE r
 
 WITH s
-OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >()
+OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)- [:HAS_PREF_LABEL|:HAS_ALT_LABEL] - >(l:Literal)
 DELETE r
+WITH s, c, l
+WHERE NOT (c)- -(:SourceRecord)
+DETACH DELETE c
+WITH s, l
+WHERE NOT (l)- -(:Concept)
+DELETE l
 
-WITH s, $subject_uris AS subject_uris
-UNWIND subject_uris AS subject_uri
+WITH s
+UNWIND $subject_uris AS subject_uri
 MATCH (sub:Concept {uri:subject_uri})
 MERGE (s)- [:HAS_SUBJECT] - >(sub)

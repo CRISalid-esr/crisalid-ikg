@@ -116,7 +116,7 @@ class SourceRecordDAO(Neo4jDAO):
         source_record_exists = await SourceRecordDAO._source_record_exists(tx, source_record.uid)
         if source_record_exists:
             raise ConflictError(f"Source record with uid {source_record.uid} already exists")
-        create_source_record_query = load_query("create_or_update_source_record")
+        create_source_record_query = load_query("create_source_record")
         issue = source_record.issue.model_dump() if source_record.issue else None
         if issue:
             issue.pop("journal", None)
@@ -150,7 +150,7 @@ class SourceRecordDAO(Neo4jDAO):
         source_record_exists = await SourceRecordDAO._source_record_exists(tx, source_record.uid)
         if not source_record_exists:
             raise ValueError(f"Source record with uid {source_record.uid} does not exist")
-        update_source_record_query = load_query("create_or_update_source_record")
+        update_source_record_query = load_query("update_source_record")
         issue = source_record.issue.model_dump() if source_record.issue else None
         if issue:
             issue.pop("journal", None)
