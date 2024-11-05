@@ -32,15 +32,36 @@ class SourceRecordService:
         person = await self._handle_source_record_owner(harvested_for)
         await self._handle_source_record_subjects(source_record)
         await self._handle_source_record_journal(source_record)
-        await self._handle_source_record(source_record, person)
+        await self._create_source_record(source_record, person)
         return source_record
 
-    async def _handle_source_record(self, source_record, person):
+    async def update_source_record(self, source_record: SourceRecord,
+                                   harvested_for: Person) -> SourceRecord:
+        """
+        Update a source bibliographic record in the graph database
+        from a Pydantic SourceRecord object and a Pydantic Person object
+        :param source_record: Pydantic SourceRecord object
+        :param harvested_for: Pydantic Person object.
+               The person the reference has been harvested for
+        :return:
+        """
+        person = await self._handle_source_record_owner(harvested_for)
+        await self._handle_source_record_subjects(source_record)
+        await self._handle_source_record_journal(source_record)
+        await self._update_source_record(source_record, person)
+        return source_record
+
+    async def _create_source_record(self, source_record, person):
         source_record_dao: SourceRecordDAO = self._get_dao_factory().get_dao(SourceRecord)
         source_record_id, status, _ = await source_record_dao.create(source_record=source_record,
                                                                      harvested_for=person)
         if status is SourceRecordDAO.Status.CREATED:
             await source_record_created.send_async(self, source_record_id=source_record_id)
+
+    async def _update_source_record(self, source_record, person):
+        source_record_dao: SourceRecordDAO = self._get_dao_factory().get_dao(SourceRecord)
+        await source_record_dao.update(source_record=source_record, harvested_for=person
+                                       )
 
     async def _handle_source_record_journal(self, source_record: SourceRecord) -> None:
         if not source_record.issue or not source_record.issue.journal:

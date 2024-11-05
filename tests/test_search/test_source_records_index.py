@@ -34,5 +34,5 @@ async def test_signal_source_record_created(
     )
     mock_source_record_index_add_source_record.assert_called_once_with(
         service,
-        source_record_id='ScanR-nnt2023xyz135'
+        source_record_id='scanr-nnt2023xyz135'
     )

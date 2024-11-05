@@ -1,4 +1,5 @@
-CREATE (s:SourceRecord {uid: $source_record_uid, harvester: $harvester, source_identifier: $source_identifier})
+MERGE (s:SourceRecord {uid: $source_record_uid})
+  ON CREATE SET s.harvester = $harvester, s.source_identifier = $source_identifier
 WITH s
 FOREACH (title IN $titles |
   CREATE (t:Literal {value: title.value, language: title.language})
@@ -12,17 +13,15 @@ FOREACH (identifier IN $identifiers |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
   MERGE (s)-[:HAS_IDENTIFIER]->(i)
 )
-WITH s, $issue AS issue, $journal_uid AS journal_uid
-
-FOREACH (_ IN CASE WHEN issue IS NOT NULL THEN [1] ELSE [] END |
-  MERGE (i:SourceIssue {source_identifier: issue.source_identifier})
-  ON CREATE SET i.source = issue.source, i.volume = issue.volume, i.number = issue.number, i.rights = issue.rights, i.date = issue.date, i.titles = issue.titles
-  ON MATCH SET  i.source = issue.source, i.volume = issue.volume, i.number = issue.number, i.rights = issue.rights, i.date = issue.date, i.titles = issue.titles
+WITH s
+FOREACH (_ IN CASE WHEN $issue IS NOT NULL THEN [1] ELSE [] END |
+  MERGE (i:SourceIssue {source_identifier: $issue.source_identifier})
+  ON CREATE SET i.source = $issue.source, i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
+  ON MATCH SET  i.source = $issue.source, i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
   MERGE (s)-[:PUBLISHED_IN]->(i)
 
-  // If journal_uid is provided, conditionally link SourceJournal
-  FOREACH (_ IN CASE WHEN journal_uid IS NOT NULL THEN [1] ELSE [] END |
-    MERGE (j:SourceJournal {uid: journal_uid})
+  FOREACH (_ IN CASE WHEN $journal_uid IS NOT NULL THEN [1] ELSE [] END |
+    MERGE (j:SourceJournal {uid: $journal_uid})
     MERGE (i)-[:ISSUED_BY]->(j)
   )
 )

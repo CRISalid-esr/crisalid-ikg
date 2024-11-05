@@ -40,8 +40,10 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         except (ValueError, AttributeError) as e:
             logger.error(f"Error processing source record data {reference_data} : {e}")
             raise e
-        if event_type in ["created", "unchanged"]:  # TODO temporary use create for unchanged
+        if event_type in ["created"]:
             await self._create_source_record(source_record, person)
+        elif event_type in ["updated", "unchanged"]:
+            await self._update_source_record(source_record, person)
 
     async def _create_source_record(self, source_record, person):
         try:
@@ -50,7 +52,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         except ReferenceOwnerNotFoundError as e:
             logger.error(
                 f"Reference owner {person} not found while trying to create source record"
-                f" not found while trying to create source record {source_record} : {e}")
+                f"{source_record} : {e}")
             raise e
         except ConflictError as e:
             logger.error(
@@ -60,4 +62,22 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         except DatabaseError as e:
             logger.error(
                 f"Database error while trying to create source record {source_record} : {e}")
+            raise e
+
+    async def _update_source_record(self, source_record, person):
+        try:
+            await self.service.update_source_record(source_record=source_record,
+                                                    harvested_for=person)
+        except ReferenceOwnerNotFoundError as e:
+            logger.error(
+                f"Reference owner {person} not found while trying to update source record"
+                f" {source_record} : {e}")
+            raise e
+        except ConflictError as e:
+            logger.error(
+                f"Identifier conflict while trying to update source record {source_record} : {e}")
+            raise e
+        except DatabaseError as e:
+            logger.error(
+                f"Database error while trying to update source record {source_record} : {e}")
             raise e
