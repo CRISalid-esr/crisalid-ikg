@@ -5,12 +5,13 @@ from app.errors.database_error import handle_database_errors
 from app.errors.not_found_error import NotFoundError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
+from app.graph.neo4j.utils import load_query
 from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.research_structures import ResearchStructure
 from app.services.identifiers.identifier_service import AgentIdentifierService
-from app.graph.neo4j.utils import load_query
+
 
 class ResearchStructureDAO(Neo4jDAO):
     """
@@ -97,14 +98,14 @@ class ResearchStructureDAO(Neo4jDAO):
                         names = [Literal(**name) for name in names_data]
                         identifiers = [OrganizationIdentifier(**identifier)
                                        for identifier in identifiers_data]
-                        descriptions= [Literal(**description) for description in descriptions_data]
 
                         research_structure = ResearchStructure(
                             uid=research_structure_data["uid"],
                             identifiers=identifiers,
                             names=names,
-                            acronym= research_structure_data["acronym"],
-                            descriptions=descriptions
+                            acronym=research_structure_data["acronym"],
+                            descriptions=[Literal(**description)
+                                          for description in descriptions_data]
                         )
 
                         return research_structure
