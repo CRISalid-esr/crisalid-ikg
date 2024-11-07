@@ -1,13 +1,12 @@
+//Create source record v1.x
 MERGE (s:SourceRecord {uid: $source_record_uid})
   ON CREATE SET s.harvester = $harvester, s.source_identifier = $source_identifier
 WITH s
 FOREACH (title IN $titles |
-  CREATE (t:Literal {value: title.value, language: title.language})
-  CREATE (s)-[:HAS_TITLE]->(t)
+  MERGE (s)-[:HAS_TITLE]->(t:Literal {value: title.value, language: title.language})
 )
 FOREACH (abstract IN $abstracts |
-  CREATE (a:Literal {value: abstract.value, language: abstract.language})
-  CREATE (s)-[:HAS_ABSTRACT]->(a)
+  MERGE (s)-[:HAS_ABSTRACT]->(a:Literal {value: abstract.value, language: abstract.language})
 )
 FOREACH (identifier IN $identifiers |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
@@ -29,7 +28,20 @@ FOREACH (_ IN CASE WHEN $issue IS NOT NULL THEN [1] ELSE [] END |
 WITH s, $person_uid AS person_uid
 MATCH (p:Person {uid: person_uid})
 MERGE (s)-[:HARVESTED_FOR]->(p)
-WITH s, $subject_uris AS subject_uris
-UNWIND subject_uris AS subject_uri
-MATCH (sub:Concept {uri: subject_uri})
-MERGE (s)-[:HAS_SUBJECT]->(sub)
+
+
+//WITH s, $subject_uris AS subject_uris
+//UNWIND subject_uris AS subject_uri
+//MATCH (sub:Concept {uri: subject_uri})
+//MERGE (s)-[:HAS_SUBJECT]->(sub)
+
+//UNWIND $subject_uris AS subject_uri
+//RETURN subject_uri
+//FOREACH (s_uri in subject_uri|
+//MERGE(s)-[:HAS_SUBJECT]->(sub:Concept{uri:s_uri})
+//)
+
+FOREACH (subject_uri in $subject_uris|
+  MERGE (sub:Concept{uri:subject_uri})
+  MERGE(s)-[:HAS_SUBJECT]->(sub)
+)

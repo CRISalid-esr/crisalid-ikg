@@ -1,18 +1,19 @@
+//v1.x Update source record
 MERGE (s:SourceRecord {uid: $source_record_uid})
   ON MATCH SET s.harvester = $harvester, s.source_identifier = $source_identifier
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_TITLE]->(t:Literal)
-DELETE r, t
+OPTIONAL MATCH (s)-[r:HAS_TITLE]->(existingTitle:Literal)
+DELETE r, existingTitle
 FOREACH (title IN $titles |
-  CREATE (t:Literal {value: title.value, language: title.language})
-  CREATE (s)-[:HAS_TITLE]->(t)
+  MERGE (s)-[:HAS_TITLE]->(newTitle:Literal {value: title.value, language: title.language})
 )
+
+
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(a:Literal)
-DELETE r, a
+OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(existingAbstract:Literal)
+DELETE r, existingAbstract
 FOREACH (abstract IN $abstracts |
-  CREATE (a:Literal {value: abstract.value, language: abstract.language})
-  CREATE (s)-[:HAS_ABSTRACT]->(a)
+  MERGE (s)-[:HAS_ABSTRACT]->(newAbstract:Literal {value: abstract.value, language: abstract.language})
 )
 WITH s
 OPTIONAL MATCH (s)-[r:HAS_IDENTIFIER]->(i:PublicationIdentifier)
@@ -61,7 +62,16 @@ WITH s, l
 WHERE NOT (l)- -(:Concept)
 DELETE l
 
-WITH s
-UNWIND $subject_uris AS subject_uri
-MATCH (sub:Concept {uri:subject_uri})
-MERGE (s)- [:HAS_SUBJECT] - >(sub)
+//WITH s
+//UNWIND $subject_uris AS subject_uri
+//MATCH (sub:Concept {uri:subject_uri})
+//MERGE (s)- [:HAS_SUBJECT] - >(sub)
+
+with s
+OPTIONAL MATCH (s)-[r:HAS_SUBJECT]->(existingSubject:Concept)
+DELETE r
+WITH s, existingSubject
+FOREACH (subject_uri in $subject_uris|
+  MERGE (sub:Concept{uri:subject_uri})
+  MERGE(s)-[:HAS_SUBJECT]->(sub)
+)

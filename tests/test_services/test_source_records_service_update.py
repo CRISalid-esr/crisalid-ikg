@@ -1,3 +1,5 @@
+import pytest
+
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -54,6 +56,7 @@ async def test_update_scanr_article_source_record(
         fetched_source_record.identifiers)
 
 
+@pytest.mark.current
 async def test_double_update_scanr_article_source_record(
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
@@ -77,6 +80,19 @@ async def test_double_update_scanr_article_source_record(
         identifier.value == "hal-00000000" and identifier.type == PublicationIdentifierType.HAL for
         identifier in
         fetched_source_record_v2.identifiers)
+    # test abstracts
+    assert len(fetched_source_record_v2.abstracts) == len(
+        scanr_article_a_v2_source_record_pydantic_model.abstracts)
+    # test titles
+    assert len(fetched_source_record_v2.titles) == len(
+        scanr_article_a_v2_source_record_pydantic_model.titles)
+    # test identifiers
+    assert len(fetched_source_record_v2.identifiers) == len(
+        scanr_article_a_v2_source_record_pydantic_model.identifiers)
+    # test subjects
+    assert len(fetched_source_record_v2.subjects) == len(
+        scanr_article_a_v2_source_record_pydantic_model.subjects)
+
     assert scanr_article_a_v3_source_record_pydantic_model.uid == common_uid
     await service.update_source_record(
         source_record=scanr_article_a_v3_source_record_pydantic_model,
@@ -93,10 +109,8 @@ async def test_double_update_scanr_article_source_record(
     assert len(scanr_article_a_v3_source_record_pydantic_model.subjects) == len(
         fetched_source_record_v3.subjects)
 
-    deduped_titles = list({(title.value, title.language) for title in
-                           fetched_source_record_v2.titles})
-    assert len(fetched_source_record_v3.titles) == len(deduped_titles)
+    assert len(fetched_source_record_v3.titles) == len(
+        scanr_article_a_v3_source_record_pydantic_model.titles)
 
-    deduped_abstracts = list(
-        {(abstract.value, abstract.language) for abstract in fetched_source_record_v2.abstracts})
-    assert len(fetched_source_record_v3.abstracts) == len(deduped_abstracts)
+    assert len(fetched_source_record_v3.abstracts) == len(
+        scanr_article_a_v3_source_record_pydantic_model.abstracts)
