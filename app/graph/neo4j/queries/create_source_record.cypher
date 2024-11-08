@@ -1,4 +1,3 @@
-//Create source record v1.x
 MERGE (s:SourceRecord {uid: $source_record_uid})
   ON CREATE SET s.harvester = $harvester, s.source_identifier = $source_identifier
 WITH s
@@ -30,18 +29,7 @@ MATCH (p:Person {uid: person_uid})
 MERGE (s)-[:HARVESTED_FOR]->(p)
 
 
-//WITH s, $subject_uris AS subject_uris
-//UNWIND subject_uris AS subject_uri
-//MATCH (sub:Concept {uri: subject_uri})
-//MERGE (s)-[:HAS_SUBJECT]->(sub)
-
-//UNWIND $subject_uris AS subject_uri
-//RETURN subject_uri
-//FOREACH (s_uri in subject_uri|
-//MERGE(s)-[:HAS_SUBJECT]->(sub:Concept{uri:s_uri})
-//)
-
-FOREACH (subject_uri in $subject_uris|
-  MERGE (sub:Concept{uri:subject_uri})
-  MERGE(s)-[:HAS_SUBJECT]->(sub)
-)
+WITH s, $subject_uris AS subject_uris
+UNWIND subject_uris AS subject_uri
+MATCH (sub:Concept {uri: subject_uri})
+MERGE (s)-[:HAS_SUBJECT]->(sub)

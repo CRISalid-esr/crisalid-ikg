@@ -1,5 +1,3 @@
-import pytest
-
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -56,7 +54,7 @@ async def test_update_scanr_article_source_record(
         fetched_source_record.identifiers)
 
 
-@pytest.mark.current
+
 async def test_double_update_scanr_article_source_record(
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
