@@ -1,4 +1,7 @@
-CREATE (research_struct:Organisation:ResearchStructure {uid: $research_structure_uid})
+CREATE (research_struct:Organisation:ResearchStructure {
+  uid: $research_structure_uid,
+  acronym: $acronym
+})
 WITH research_struct
 FOREACH (name IN $names |
   CREATE (rs_name:Literal {value: name.value, language: name.language})
@@ -9,4 +12,10 @@ FOREACH (identifier IN $identifiers |
   CREATE (rs_identifier:AgentIdentifier {type:  identifier.type,
                                          value: identifier.value})
   CREATE (research_struct)-[:HAS_IDENTIFIER]->(rs_identifier)
+)
+
+WITH research_struct
+FOREACH (description IN $descriptions |
+  CREATE (rs_description:Literal {value: description.value, language: description.language})
+  CREATE(research_struct)-[:HAS_DESCRIPTION]->(rs_description)
 )
