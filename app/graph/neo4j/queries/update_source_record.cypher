@@ -1,19 +1,19 @@
-//v1.x Update source record
 MERGE (s:SourceRecord {uid: $source_record_uid})
   ON MATCH SET s.harvester = $harvester, s.source_identifier = $source_identifier
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_TITLE]->(existingTitle:Literal)
-DELETE r, existingTitle
+MATCH (s)-[r:HAS_TITLE]->(t:Literal)
+DELETE r, t
+WITH s
 FOREACH (title IN $titles |
-  MERGE (s)-[:HAS_TITLE]->(newTitle:Literal {value: title.value, language: title.language})
+  MERGE (s)-[:HAS_TITLE]->(t:Literal {value: title.value, language: title.language})
 )
 
-
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(existingAbstract:Literal)
-DELETE r, existingAbstract
+OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(a:Literal)
+DELETE r, a
+WITH s
 FOREACH (abstract IN $abstracts |
-  MERGE (s)-[:HAS_ABSTRACT]->(newAbstract:Literal {value: abstract.value, language: abstract.language})
+  MERGE (s)-[:HAS_ABSTRACT]->(a:Literal {value: abstract.value, language: abstract.language})
 )
 WITH s
 OPTIONAL MATCH (s)-[r:HAS_IDENTIFIER]->(i:PublicationIdentifier)
@@ -52,8 +52,10 @@ WITH s, $person_uid AS person_uid
 MATCH (p:Person {uid:person_uid})
 MERGE (s)- [:HARVESTED_FOR] - >(p)
 
-WITH s
-OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)- [:HAS_PREF_LABEL|:HAS_ALT_LABEL] - >(l:Literal)
+WITH s, $subject_uris AS subject_uris
+OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)
+WHERE NOT c.uri IN subject_uris
+OPTIONAL MATCH (c)- [:HAS_PREF_LABEL|:HAS_ALT_LABEL] - >(l:Literal)
 DELETE r
 WITH s, c, l
 WHERE NOT (c)- -(:SourceRecord)
@@ -62,16 +64,7 @@ WITH s, l
 WHERE NOT (l)- -(:Concept)
 DELETE l
 
-//WITH s
-//UNWIND $subject_uris AS subject_uri
-//MATCH (sub:Concept {uri:subject_uri})
-//MERGE (s)- [:HAS_SUBJECT] - >(sub)
-
-with s
-OPTIONAL MATCH (s)-[r:HAS_SUBJECT]->(existingSubject:Concept)
-DELETE r
-WITH s, existingSubject
-FOREACH (subject_uri in $subject_uris|
-  MERGE (sub:Concept{uri:subject_uri})
-  MERGE(s)-[:HAS_SUBJECT]->(sub)
-)
+WITH s, $subject_uris AS subject_uris
+UNWIND subject_uris AS subject_uri
+MATCH (c:Concept {uri:subject_uri})
+MERGE (s)- [:HAS_SUBJECT] - >(c)
