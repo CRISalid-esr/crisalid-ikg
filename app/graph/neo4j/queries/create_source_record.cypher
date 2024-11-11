@@ -1,5 +1,4 @@
-MERGE (s:SourceRecord {uid: $source_record_uid})
-  ON CREATE SET s.harvester = $harvester, s.source_identifier = $source_identifier
+CREATE (s:SourceRecord {uid: $source_record_uid, harvester: $harvester, source_identifier: $source_identifier})
 WITH s
 FOREACH (title IN $titles |
   CREATE (t:Literal {value: title.value, language: title.language})
@@ -11,7 +10,7 @@ FOREACH (abstract IN $abstracts |
 )
 FOREACH (identifier IN $identifiers |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
-  MERGE (s)-[:HAS_IDENTIFIER]->(i)
+  CREATE (s)-[:HAS_IDENTIFIER]->(i)
 )
 WITH s
 FOREACH (_ IN CASE WHEN $issue IS NOT NULL THEN [1] ELSE [] END |
@@ -25,7 +24,6 @@ FOREACH (_ IN CASE WHEN $issue IS NOT NULL THEN [1] ELSE [] END |
     MERGE (i)-[:ISSUED_BY]->(j)
   )
 )
-
 WITH s, $person_uid AS person_uid
 MATCH (p:Person {uid: person_uid})
 MERGE (s)-[:HARVESTED_FOR]->(p)

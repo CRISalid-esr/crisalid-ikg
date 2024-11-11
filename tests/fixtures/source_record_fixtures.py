@@ -80,6 +80,25 @@ async def fixture_scanr_article_a_v2_source_record_json_data(_base_path) -> dict
     return _source_record_json_data_from_file(_base_path, "scanr_article_a_v2_source_record")
 
 
+@pytest_asyncio.fixture(name="scanr_article_a_v3_source_record_pydantic_model")
+async def fixture_scanr_article_a_v3_source_record_pydantic_model(
+        scanr_article_a_v3_source_record_json_data) -> SourceRecord:
+    """
+    Create the v3 of an article source record pydantic model from ScanR data
+    :return: basic source record pydantic model from ScanR data
+    """
+    return _source_record_from_json_data(scanr_article_a_v3_source_record_json_data)
+
+
+@pytest_asyncio.fixture(name="scanr_article_a_v3_source_record_json_data")
+async def fixture_scanr_article_a_v3_source_record_json_data(_base_path) -> dict:
+    """
+    Create the v3 of an article source record dict from ScanR data
+    :return: basic source record dict from ScanR data
+    """
+    return _source_record_json_data_from_file(_base_path, "scanr_article_a_v3_source_record")
+
+
 @pytest_asyncio.fixture(name="scanr_article_b_source_record_pydantic_model")
 async def fixture_scanr_article_b_source_record_pydantic_model(
         scanr_article_b_source_record_json_data) -> SourceRecord:

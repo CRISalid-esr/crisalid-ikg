@@ -1,29 +1,34 @@
 MERGE (s:SourceRecord {uid: $source_record_uid})
   ON MATCH SET s.harvester = $harvester, s.source_identifier = $source_identifier
+
 WITH s
 OPTIONAL MATCH (s)-[r:HAS_TITLE]->(t:Literal)
 DELETE r, t
+WITH DISTINCT s
 FOREACH (title IN $titles |
-  CREATE (t:Literal {value: title.value, language: title.language})
-  CREATE (s)-[:HAS_TITLE]->(t)
+  CREATE (s)-[:HAS_TITLE]->(t:Literal {value: title.value, language: title.language})
 )
+
 WITH s
 OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(a:Literal)
 DELETE r, a
+WITH DISTINCT s
 FOREACH (abstract IN $abstracts |
-  CREATE (a:Literal {value: abstract.value, language: abstract.language})
-  CREATE (s)-[:HAS_ABSTRACT]->(a)
+  CREATE (s)-[:HAS_ABSTRACT]->(a:Literal {value: abstract.value, language: abstract.language})
 )
+
 WITH s
 OPTIONAL MATCH (s)-[r:HAS_IDENTIFIER]->(i:PublicationIdentifier)
 DELETE r
 WITH s, i
   WHERE NOT (i)--(:SourceRecord)
 DELETE i
+WITH DISTINCT s
 FOREACH (identifier IN $identifiers |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
-  MERGE (s)-[:HAS_IDENTIFIER]->(i)
+  CREATE (s)-[:HAS_IDENTIFIER]->(i)
 )
+
 WITH s
 OPTIONAL MATCH (s)-[p:PUBLISHED_IN]->(i:SourceIssue)
 DELETE p
@@ -31,6 +36,7 @@ WITH s, i
   WHERE NOT (i)--(:SourceRecord)
 DETACH DELETE i
 
+WITH DISTINCT s
 FOREACH (_ IN CASE WHEN $issue IS NOT NULL THEN [1]
 ELSE []
 END |
@@ -47,12 +53,14 @@ MERGE (i)- [:ISSUED_BY] - >(j)
 )
 )
 
-WITH s, $person_uid AS person_uid
-MATCH (p:Person {uid:person_uid})
+WITH DISTINCT s
+MATCH (p:Person {uid:$person_uid})
 MERGE (s)- [:HARVESTED_FOR] - >(p)
 
-WITH s
-OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)- [:HAS_PREF_LABEL|:HAS_ALT_LABEL] - >(l:Literal)
+WITH DISTINCT s
+OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)
+WHERE NOT c.uri IN $subject_uris
+OPTIONAL MATCH (c)- [:HAS_PREF_LABEL|:HAS_ALT_LABEL] - >(l:Literal)
 DELETE r
 WITH s, c, l
 WHERE NOT (c)- -(:SourceRecord)
@@ -61,7 +69,7 @@ WITH s, l
 WHERE NOT (l)- -(:Concept)
 DELETE l
 
-WITH s
+WITH DISTINCT s
 UNWIND $subject_uris AS subject_uri
-MATCH (sub:Concept {uri:subject_uri})
-MERGE (s)- [:HAS_SUBJECT] - >(sub)
+MATCH (c:Concept {uri:subject_uri})
+MERGE (s)- [:HAS_SUBJECT] - >(c)

@@ -52,3 +52,63 @@ async def test_update_scanr_article_source_record(
         and identifier.type == PublicationIdentifierType.DOI
         for identifier in
         fetched_source_record.identifiers)
+
+
+
+async def test_double_update_scanr_article_source_record(
+        scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_v3_source_record_pydantic_model: SourceRecord,
+        persisted_person_a_pydantic_model: Person
+):
+    """
+        Given a valid source record model representing an article harvested from ScanR
+        When asked for different field values
+        Then the values should be returned correctly
+        """
+    service = SourceRecordService()
+    common_uid = scanr_persisted_article_a_source_record_pydantic_model.uid
+    assert scanr_article_a_v2_source_record_pydantic_model.uid == common_uid
+    await service.update_source_record(
+        source_record=scanr_article_a_v2_source_record_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+    fetched_source_record_v2 = await service.get_source_record(
+        scanr_article_a_v2_source_record_pydantic_model.uid)
+    assert any(
+        identifier.value == "hal-00000000" and identifier.type == PublicationIdentifierType.HAL for
+        identifier in
+        fetched_source_record_v2.identifiers)
+    # test abstracts
+    assert len(fetched_source_record_v2.abstracts) == len(
+        scanr_article_a_v2_source_record_pydantic_model.abstracts)
+    # test titles
+    assert len(fetched_source_record_v2.titles) == len(
+        scanr_article_a_v2_source_record_pydantic_model.titles)
+    # test identifiers
+    assert len(fetched_source_record_v2.identifiers) == len(
+        scanr_article_a_v2_source_record_pydantic_model.identifiers)
+    # test subjects
+    assert len(fetched_source_record_v2.subjects) == len(
+        scanr_article_a_v2_source_record_pydantic_model.subjects)
+
+    assert scanr_article_a_v3_source_record_pydantic_model.uid == common_uid
+    await service.update_source_record(
+        source_record=scanr_article_a_v3_source_record_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model
+    )
+    fetched_source_record_v3 = await service.get_source_record(
+        scanr_article_a_v3_source_record_pydantic_model.uid
+    )
+    assert not any(
+        identifier.type == PublicationIdentifierType.HAL for
+        identifier in
+        fetched_source_record_v3.identifiers)
+
+    assert len(scanr_article_a_v3_source_record_pydantic_model.subjects) == len(
+        fetched_source_record_v3.subjects)
+
+    assert len(fetched_source_record_v3.titles) == len(
+        scanr_article_a_v3_source_record_pydantic_model.titles)
+
+    assert len(fetched_source_record_v3.abstracts) == len(
+        scanr_article_a_v3_source_record_pydantic_model.abstracts)
