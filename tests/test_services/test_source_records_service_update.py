@@ -1,3 +1,5 @@
+import pytest
+
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -52,7 +54,6 @@ async def test_update_scanr_article_source_record(
         and identifier.type == PublicationIdentifierType.DOI
         for identifier in
         fetched_source_record.identifiers)
-
 
 
 async def test_double_update_scanr_article_source_record(
@@ -112,3 +113,63 @@ async def test_double_update_scanr_article_source_record(
 
     assert len(fetched_source_record_v3.abstracts) == len(
         scanr_article_a_v3_source_record_pydantic_model.abstracts)
+
+
+@pytest.mark.current
+async def test_update_record_with_shared_concept(
+        persisted_person_b_pydantic_model: Person,
+        scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        scanr_persisted_article_c_source_record_pydantic_model: SourceRecord,
+        scanr_article_c_v2_source_record_pydantic_model: SourceRecord
+):
+    """
+        Given two persisted source records with a shared concept
+        When the update of scanr article c remove the relation to the shared concept and add a
+        new concept
+        Then the values should be returned correctly for both source records
+    """
+    service = SourceRecordService()
+    shared_concept_uri = "http://www.idref.fr/027818055/id"
+
+    fetched_source_record_a = await service.get_source_record(
+        scanr_persisted_article_a_source_record_pydantic_model.uid)
+    assert all(
+        concept in fetched_source_record_a.subjects for concept in
+        scanr_persisted_article_a_source_record_pydantic_model.subjects
+    )
+
+    fetched_source_record_c = await service.get_source_record(
+        scanr_persisted_article_c_source_record_pydantic_model.uid)
+    assert all(
+        concept in fetched_source_record_c.subjects for concept in
+        scanr_persisted_article_c_source_record_pydantic_model.subjects
+    )
+    assert any(
+        shared_concept_uri == subject.uri for subject in fetched_source_record_a.subjects
+    )
+    assert any(
+        shared_concept_uri == subject.uri for subject in fetched_source_record_c.subjects
+    )
+
+    await service.update_source_record(
+        source_record=scanr_article_c_v2_source_record_pydantic_model,
+        harvested_for=persisted_person_b_pydantic_model)
+    fetched_source_record_c_v2 = await service.get_source_record(
+        scanr_article_c_v2_source_record_pydantic_model.uid)
+
+    post_update_fetched_source_record_a = await service.get_source_record(
+        scanr_persisted_article_a_source_record_pydantic_model.uid)
+    assert post_update_fetched_source_record_a == fetched_source_record_a
+    assert any(
+        shared_concept_uri == subject.uri for subject in
+        post_update_fetched_source_record_a.subjects
+    )
+    assert not any(
+        shared_concept_uri == subject.uri for subject in fetched_source_record_c_v2.subjects
+    )
+
+    assert fetched_source_record_c.subjects != fetched_source_record_c_v2.subjects
+    assert all(
+        concept in fetched_source_record_c_v2.subjects for concept in
+        scanr_article_c_v2_source_record_pydantic_model.subjects
+    )
