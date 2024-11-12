@@ -1,5 +1,7 @@
 from typing import List
 
+import pytest
+
 from app.models.identifier_types import JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.people import Person
@@ -192,3 +194,50 @@ async def test_create_source_record_with_issue(
     assert len(fetched_source_record.issue.titles) == 2
     assert 'Some title' in fetched_source_record.issue.titles
     assert 'Some other title' in fetched_source_record.issue.titles
+
+
+@pytest.mark.current
+async def test_create_source_record_for_two_person(
+        persisted_person_a_pydantic_model: Person,
+        persisted_person_b_pydantic_model: Person,
+        scanr_article_a_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_v2_source_record_pydantic_model: SourceRecord
+):
+    """
+    Given two persisted person pydantic model and two version of a source record pydantic model
+    When the source record is harvested for person a, and after the source record with some
+    update is harvested for person b
+    Then the updated source record can be read from the graph and have a relation with both
+    person pydantic model
+    """
+    service = SourceRecordService()
+
+    await service.create_source_record(
+        source_record=scanr_article_a_source_record_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+
+    fetched_source_record = await service.get_source_record(
+        scanr_article_a_source_record_pydantic_model.uid
+    )
+    assert all(
+        title in fetched_source_record.titles for title in
+        scanr_article_a_source_record_pydantic_model.titles
+    )
+    assert persisted_person_a_pydantic_model.uid in fetched_source_record.harvested_for_uids
+    assert (scanr_article_a_source_record_pydantic_model.uid ==
+            scanr_article_a_v2_source_record_pydantic_model.uid)
+
+    await service.create_source_record(
+        source_record=scanr_article_a_v2_source_record_pydantic_model,
+        harvested_for=persisted_person_b_pydantic_model)
+
+    fetch_updated_source_record = await service.get_source_record(
+        scanr_article_a_v2_source_record_pydantic_model.uid
+    )
+    assert fetch_updated_source_record.uid == fetched_source_record.uid
+    assert all(
+        title in fetch_updated_source_record.titles for title in
+        scanr_article_a_v2_source_record_pydantic_model.titles
+    )
+    assert persisted_person_b_pydantic_model.uid in fetch_updated_source_record.harvested_for_uids
+    assert persisted_person_a_pydantic_model.uid in fetch_updated_source_record.harvested_for_uids
