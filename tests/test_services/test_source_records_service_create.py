@@ -1,7 +1,5 @@
 from typing import List
 
-import pytest
-
 from app.models.identifier_types import JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.people import Person
@@ -196,12 +194,12 @@ async def test_create_source_record_with_issue(
     assert 'Some other title' in fetched_source_record.issue.titles
 
 
-@pytest.mark.current
 async def test_create_source_record_for_two_person(
         persisted_person_a_pydantic_model: Person,
         persisted_person_b_pydantic_model: Person,
         scanr_article_a_source_record_pydantic_model: SourceRecord,
-        scanr_article_a_v2_source_record_pydantic_model: SourceRecord
+        scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
+        caplog
 ):
     """
     Given two persisted person pydantic model and two version of a source record pydantic model
@@ -241,3 +239,7 @@ async def test_create_source_record_for_two_person(
     )
     assert persisted_person_b_pydantic_model.uid in fetch_updated_source_record.harvested_for_uids
     assert persisted_person_a_pydantic_model.uid in fetch_updated_source_record.harvested_for_uids
+
+    assert "INFO" in caplog.text
+    assert (f"{fetch_updated_source_record.uid} already exists in the database, the system will "
+            f"try to update it") in caplog.text

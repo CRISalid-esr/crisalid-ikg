@@ -1,8 +1,8 @@
 from typing import Tuple, NamedTuple
 
+from loguru import logger
 from neo4j import AsyncManagedTransaction
 
-from app.errors.conflict_error import ConflictError
 from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
@@ -114,26 +114,30 @@ class SourceRecordDAO(Neo4jDAO):
                 f"Source record {source_record} must be related to a person"
                 "on behalf of whom it was harvested")
         source_record_exists = await SourceRecordDAO._source_record_exists(tx, source_record.uid)
-        if source_record_exists:
-            raise ConflictError(f"Source record with uid {source_record.uid} already exists")
-        create_source_record_query = load_query("create_source_record")
-        issue = source_record.issue.model_dump() if source_record.issue else None
-        if issue:
-            issue.pop("journal", None)
-        await tx.run(
-            create_source_record_query,
-            source_record_uid=source_record.uid,
-            source_identifier=source_record.source_identifier,
-            harvester=source_record.harvester,
-            person_uid=harvested_for.uid,
-            issue=issue,
-            journal_uid=source_record.issue.journal.uid if source_record.issue and
-                                                           source_record.issue.journal else None,
-            titles=[title.model_dump() for title in source_record.titles],
-            abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
-            identifiers=[identifier.dict() for identifier in source_record.identifiers],
-            subject_uris=[subject.uri for subject in source_record.subjects]
-        )
+
+        if not source_record_exists:
+            create_source_record_query = load_query("create_source_record")
+            issue = source_record.issue.model_dump() if source_record.issue else None
+            if issue:
+                issue.pop("journal", None)
+            await tx.run(
+                create_source_record_query,
+                source_record_uid=source_record.uid,
+                source_identifier=source_record.source_identifier,
+                harvester=source_record.harvester,
+                person_uid=harvested_for.uid,
+                issue=issue,
+                journal_uid=source_record.issue.journal.uid if source_record.issue and
+                                                               source_record.issue.journal else None,
+                titles=[title.model_dump() for title in source_record.titles],
+                abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
+                identifiers=[identifier.dict() for identifier in source_record.identifiers],
+                subject_uris=[subject.uri for subject in source_record.subjects]
+            )
+        else:
+            logger.info(f"{source_record.uid} already exists in the database, the system will try "
+                        f"to update it")
+            await cls._update_source_record_transaction(tx, source_record, harvested_for)
 
     @classmethod
     async def _update_source_record_transaction(cls, tx: AsyncManagedTransaction,
