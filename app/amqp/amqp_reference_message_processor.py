@@ -58,7 +58,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
             logger.error(
                 f"Identifier conflict while trying to create source record {source_record} : {e}")
             logger.error("Will try to update the source record instead")
-            raise e
+            await self._update_source_record(source_record, person)
         except DatabaseError as e:
             logger.error(
                 f"Database error while trying to create source record {source_record} : {e}")

@@ -107,42 +107,33 @@ def test_create_source_record_with_missing_record_data(
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
-def test_create_source_record_for_two_person(
+def test_create_source_record_twice(
         test_client: TestClient,
         persisted_person_a_pydantic_model,  # pylint: disable=unused-argument
-        persisted_person_b_pydantic_model,  # pylint: disable=unused-argument
         idref_record_with_person_a_as_contributor_json_data,
-        person_a_json_data,
-        person_b_with_two_names_json_data,
-):
+        person_a_json_data):
     """
-    Given a valid source record json data harvested for two person referenced in the database
-    When creating the source record for each person
-    Then the source record should be created successfully
+    Given a valid source record json data and json data from an existing person_a_pydantic_model
+    When creating a source record twice through REST API
+    Then a 409 error should be raised
 
     :param test_client:
     :param idref_record_with_person_a_as_contributor_json_data:
     :param person_a_json_data:
-    :param person_b_with_two_names_json_data:
     :return:
     """
-    model_a = {
+    model = {
         "source_record": idref_record_with_person_a_as_contributor_json_data,
         "person": person_a_json_data
     }
 
-    response = test_client.post(API_SOURCE_RECORDS_PATH, json=model_a)
+    response = test_client.post(API_SOURCE_RECORDS_PATH, json=model)
     assert response.status_code == status.HTTP_201_CREATED
     assert "source_record" in response.json()
-    assert (response.json()["source_record"]["source_identifier"] ==
-           idref_record_with_person_a_as_contributor_json_data["source_identifier"])
-
-    model_b = {
-        "source_record": idref_record_with_person_a_as_contributor_json_data,
-        "person": person_b_with_two_names_json_data
-    }
-    response_b = test_client.post(API_SOURCE_RECORDS_PATH, json=model_b)
-    assert response_b.status_code == status.HTTP_201_CREATED
-    assert "source_record" in response_b.json()
-    assert (response_b.json()["source_record"]["source_identifier"] ==
-            idref_record_with_person_a_as_contributor_json_data["source_identifier"])
+    assert response.json()["source_record"]["source_identifier"] == \
+           idref_record_with_person_a_as_contributor_json_data["source_identifier"]
+    response = test_client.post(API_SOURCE_RECORDS_PATH, json=model)
+    assert response.status_code == status.HTTP_409_CONFLICT
+    assert "error" in response.json()
+    assert (response.json()["error"] ==
+            "Source record with uid idref-http://www.idref.fr/247889784/id already exists")
