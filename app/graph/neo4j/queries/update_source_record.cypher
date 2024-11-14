@@ -18,11 +18,8 @@ FOREACH (abstract IN $abstracts |
 )
 
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_IDENTIFIER]->(i:PublicationIdentifier)
+OPTIONAL MATCH (s)-[r:HAS_IDENTIFIER]->(:PublicationIdentifier)
 DELETE r
-WITH s, i
-  WHERE NOT (i)--(:SourceRecord)
-DELETE i
 WITH DISTINCT s
 FOREACH (identifier IN $identifiers |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
@@ -60,14 +57,7 @@ MERGE (s)- [:HARVESTED_FOR] - >(p)
 WITH DISTINCT s
 OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)
 WHERE NOT c.uri IN $subject_uris
-OPTIONAL MATCH (c)- [:HAS_PREF_LABEL|:HAS_ALT_LABEL] - >(l:Literal)
 DELETE r
-WITH s, c, l
-WHERE NOT (c)- -(:SourceRecord)
-DETACH DELETE c
-WITH s, l
-WHERE NOT (l)- -(:Concept)
-DELETE l
 
 WITH DISTINCT s
 UNWIND $subject_uris AS subject_uri

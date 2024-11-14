@@ -170,6 +170,6 @@ async def test_update_record_with_shared_concept(
 
     assert fetched_source_record_c.subjects != fetched_source_record_c_v2.subjects
     assert all(
-        concept in fetched_source_record_c_v2.subjects for concept in
-        scanr_article_c_v2_source_record_pydantic_model.subjects
+        concept.uri in map(lambda x: x.uri, fetched_source_record_c_v2.subjects)
+        for concept in scanr_article_c_v2_source_record_pydantic_model.subjects
     )
