@@ -31,10 +31,11 @@ def test_create_source_records_success(
            idref_record_with_person_a_as_contributor_json_data["source_identifier"]
 
 
-def test_create_source_records_for_unknown_person(test_client: TestClient,
-                                                   idref_record_with_person_a_as_contributor_json_data,
-                                                   person_a_json_data
-                                                   ):
+def test_create_source_records_for_unknown_person(
+        test_client: TestClient,
+        idref_record_with_person_a_as_contributor_json_data,
+        person_a_json_data
+):
     """
     Given a valid source record data, with an unknown person a json_data,
     When creating a source record through REST API
@@ -135,4 +136,4 @@ def test_create_source_record_twice(
     assert response.status_code == status.HTTP_409_CONFLICT
     assert "error" in response.json()
     assert (response.json()["error"] ==
-            "Source record with uid Idref-http://www.idref.fr/247889784/id already exists")
+            "Source record with uid idref-http://www.idref.fr/247889784/id already exists")

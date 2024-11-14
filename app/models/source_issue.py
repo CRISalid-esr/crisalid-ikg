@@ -2,7 +2,6 @@ from typing import Optional, List
 
 from pydantic import BaseModel
 
-from app.models.literal import Literal
 from app.models.source_journal import SourceJournal
 
 
@@ -16,7 +15,7 @@ class SourceIssue(BaseModel):
 
     source: str
 
-    titles: List[Literal] = []
+    titles: List[str] = []
 
     volume: Optional[str] = None
 

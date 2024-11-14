@@ -15,7 +15,6 @@ from app.models.publication_identifiers import PublicationIdentifier
 from app.models.source_issue import SourceIssue
 from app.models.source_journal import SourceJournal
 from app.models.source_records import SourceRecord
-from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
 class SourceRecordDAO(Neo4jDAO):
@@ -50,6 +49,24 @@ class SourceRecordDAO(Neo4jDAO):
                                                 harvested_for
                                                 )
         return source_record.uid, SourceRecordDAO.Status.CREATED, None
+
+    @handle_database_errors
+    async def update(self, source_record: SourceRecord,
+                     harvested_for: Person
+                     ) -> Tuple[
+        str, Neo4jDAO.Status, UpdateStatus | None]:
+        """
+        Update a source record in the graph database
+
+        :param harvested_for: person on behalf of whom the source record was harvested
+        :param source_record: source record object
+        :return: source record uid, operation status and update status details
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await self._update_source_record_transaction(tx, source_record,
+                                                                        harvested_for)
 
     @handle_database_errors
     async def get(self, source_record_uid: str) -> SourceRecord:
@@ -90,8 +107,6 @@ class SourceRecordDAO(Neo4jDAO):
                                                 source_record: SourceRecord,
                                                 harvested_for: Person
                                                 ):
-        source_record.uid = source_record.uid or cls._compute_source_record_uid(
-            source_record)
         if not source_record.uid:
             raise ValueError(f"Unable to compute primary key for source record {source_record}")
         if harvested_for is None:
@@ -102,8 +117,7 @@ class SourceRecordDAO(Neo4jDAO):
         if source_record_exists:
             raise ConflictError(f"Source record with uid {source_record.uid} already exists")
         create_source_record_query = load_query("create_source_record")
-        # issue is issue=source_record.issue.dict()  except for the journal key
-        issue = source_record.issue.dict() if source_record.issue else None
+        issue = source_record.issue.model_dump() if source_record.issue else None
         if issue:
             issue.pop("journal", None)
         await tx.run(
@@ -115,11 +129,46 @@ class SourceRecordDAO(Neo4jDAO):
             issue=issue,
             journal_uid=source_record.issue.journal.uid if source_record.issue and
                                                            source_record.issue.journal else None,
-            titles=[title.dict() for title in source_record.titles],
-            abstracts=[abstract.dict() for abstract in source_record.abstracts],
+            titles=[title.model_dump() for title in source_record.titles],
+            abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
             subject_uris=[subject.uri for subject in source_record.subjects]
         )
+
+    @classmethod
+    async def _update_source_record_transaction(cls, tx: AsyncManagedTransaction,
+                                                source_record: SourceRecord,
+                                                harvested_for: Person
+                                                ) -> Tuple[
+        str, Neo4jDAO.Status, UpdateStatus | None]:
+        if not source_record.uid:
+            raise ValueError(f"Unable to compute primary key for source record {source_record}")
+        if harvested_for is None:
+            raise ValueError(
+                f"Source record {source_record} must be related to a person"
+                "on behalf of whom it was harvested")
+        source_record_exists = await SourceRecordDAO._source_record_exists(tx, source_record.uid)
+        if not source_record_exists:
+            raise ValueError(f"Source record with uid {source_record.uid} does not exist")
+        update_source_record_query = load_query("update_source_record")
+        issue = source_record.issue.model_dump() if source_record.issue else None
+        if issue:
+            issue.pop("journal", None)
+        await tx.run(
+            update_source_record_query,
+            source_record_uid=source_record.uid,
+            source_identifier=source_record.source_identifier,
+            harvester=source_record.harvester,
+            person_uid=harvested_for.uid,
+            issue=issue,
+            journal_uid=source_record.issue.journal.uid if source_record.issue and
+                                                           source_record.issue.journal else None,
+            titles=[title.model_dump() for title in source_record.titles],
+            abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
+            identifiers=[identifier.dict() for identifier in source_record.identifiers],
+            subject_uris=[subject.uri for subject in source_record.subjects]
+        )
+        return source_record.uid, SourceRecordDAO.Status.UPDATED, None
 
     @staticmethod
     def _hydrate(record) -> SourceRecord:
@@ -146,12 +195,3 @@ class SourceRecordDAO(Neo4jDAO):
                 issue = dict(record["issue"]) | {"journal": journal}
                 source_record.issue = SourceIssue(**issue)
         return source_record
-
-    @staticmethod
-    def _compute_source_record_uid(source_record: SourceRecord) -> str:
-        if not source_record.source_identifier or not source_record.harvester:
-            raise ValueError(
-                f"Source record {source_record} must have a source identifier and a harvester")
-        return f"{source_record.harvester}" \
-               f"{AgentIdentifierService.IDENTIFIER_SEPARATOR}" \
-               f"{source_record.source_identifier}"

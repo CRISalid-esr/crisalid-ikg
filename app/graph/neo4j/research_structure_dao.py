@@ -5,12 +5,13 @@ from app.errors.database_error import handle_database_errors
 from app.errors.not_found_error import NotFoundError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
+from app.graph.neo4j.utils import load_query
 from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.research_structures import ResearchStructure
 from app.services.identifiers.identifier_service import AgentIdentifierService
-from app.graph.neo4j.utils import load_query
+
 
 class ResearchStructureDAO(Neo4jDAO):
     """
@@ -92,6 +93,7 @@ class ResearchStructureDAO(Neo4jDAO):
                         research_structure_data = record["s"]
                         names_data = record["names"]
                         identifiers_data = record["identifiers"]
+                        descriptions_data = record["descriptions"]
 
                         names = [Literal(**name) for name in names_data]
                         identifiers = [OrganizationIdentifier(**identifier)
@@ -100,7 +102,10 @@ class ResearchStructureDAO(Neo4jDAO):
                         research_structure = ResearchStructure(
                             uid=research_structure_data["uid"],
                             identifiers=identifiers,
-                            names=names
+                            names=names,
+                            acronym=research_structure_data["acronym"],
+                            descriptions=[Literal(**description)
+                                          for description in descriptions_data]
                         )
 
                         return research_structure
@@ -124,8 +129,10 @@ class ResearchStructureDAO(Neo4jDAO):
         await tx.run(
             create_research_structure_query,
             research_structure_uid=research_structure.uid,
+            acronym=research_structure.acronym,
             names=[name.dict() for name in research_structure.names],
-            identifiers=[identifier.dict() for identifier in research_structure.identifiers]
+            identifiers=[identifier.dict() for identifier in research_structure.identifiers],
+            descriptions=[description.dict() for description in research_structure.descriptions],
         )
         return research_structure
 

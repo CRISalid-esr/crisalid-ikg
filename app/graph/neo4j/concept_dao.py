@@ -130,21 +130,30 @@ class ConceptDAO(Neo4jDAO):
         alt_labels_to_create = [alt_label for alt_label in new_concept.alt_labels
                                 if alt_label not in existing_concept.alt_labels]
         try:
-            if preflabels_to_delete or altlabels_to_delete:
-                delete_labels_query = load_query("delete_concept_labels")
+            if preflabels_to_delete:
+                delete_pref_labels_query = load_query("delete_concept_pref_labels")
                 await tx.run(
-                    delete_labels_query,
+                    delete_pref_labels_query,
+                    uri=new_concept.uri,
+                    pref_labels=[pref_label.model_dump(exclude_none=True) for pref_label in
+                                 preflabels_to_delete]
+                )
+            if altlabels_to_delete:
+                delete_alt_labels_query = load_query("delete_concept_alt_labels")
+                await tx.run(
+                    delete_alt_labels_query,
                     uid=new_concept.uid,
-                    pref_labels=[pref_label.dict() for pref_label in preflabels_to_delete],
-                    alt_labels=[alt_label.dict() for alt_label in altlabels_to_delete]
+                    uri=new_concept.uri,
+                    alt_labels=[alt_label.model_dump(exclude_none=True) for alt_label in
+                                altlabels_to_delete]
                 )
             if pref_labels_to_create or alt_labels_to_create:
                 create_labels_query = load_query("create_concept_labels")
                 await tx.run(
                     create_labels_query,
                     uid=new_concept.uid,
-                    pref_labels=[pref_label.dict() for pref_label in pref_labels_to_create],
-                    alt_labels=[alt_label.dict() for alt_label in alt_labels_to_create]
+                    pref_labels=[pref_label.model_dump() for pref_label in pref_labels_to_create],
+                    alt_labels=[alt_label.model_dump() for alt_label in alt_labels_to_create]
                 )
         except ConstraintError as constraint_error:
             raise ConflictError(
