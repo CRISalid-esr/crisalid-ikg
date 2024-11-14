@@ -1,5 +1,4 @@
-MATCH (concept:Concept)-[:HAS_PREF_LABEL]->(pl:Literal {value: $label})
-  WHERE concept.uri IS NULL
+MATCH (concept:Concept {uid: $uid})
 OPTIONAL MATCH (concept)-[:HAS_PREF_LABEL]->(pref_label:Literal)
 OPTIONAL MATCH (concept)-[:HAS_ALT_LABEL]->(alt_label:Literal)
 RETURN concept,

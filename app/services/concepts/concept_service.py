@@ -3,7 +3,6 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao import DAO
 from app.graph.neo4j.concept_dao import ConceptDAO
 from app.models.concepts import Concept
-from app.models.literal import Literal
 
 
 class ConceptService:
@@ -19,24 +18,19 @@ class ConceptService:
         """
         factory = self._get_dao_factory()
         dao: ConceptDAO = factory.get_dao(Concept)
-        if concept.uri:
-            existing_concept = await dao.find_by_uri(concept.uri)
-            # case when the concept already exists in the database
-            if existing_concept:
-                await self._update_concept(existing_concept, concept, dao)
-                return existing_concept
-            # case when the concept does not exist in the database
-            await dao.create(concept)
-            return concept
-        # case when the concept has no uri
-        if len(concept.pref_labels) > 1 or concept.alt_labels:
-            raise ValueError(
-                "Concept with more than one pref_label or with alt_labels should have an uri")
-        existing_concept = await dao.find_concept_without_uri_by_pref_label(concept.pref_labels[0])
+        if not concept.uri:
+            if len(concept.pref_labels) > 1 or concept.alt_labels:
+                raise ValueError(
+                    "Concept with more than one pref_label or with alt_labels should have an uri")
+        existing_concept = await dao.find_by_uid(concept.uid)
         # case when the concept already exists in the database
         if existing_concept:
+            # concepts without uri cannot be updated
+            # as they don't carry any information apart from their unique pref_label
+            if concept.uri:
+                await self._update_concept(existing_concept, concept, dao)
             return existing_concept
-        # case when the concept does not exist in the database
+            # case when the concept does not exist in the database
         await dao.create(concept)
         return concept
 
@@ -67,25 +61,25 @@ class ConceptService:
                 existing_concept.alt_labels.append(alt_label)
         await dao.update(existing_concept)
 
-    async def get_concept(self, uri: str) -> Concept:
+    async def get_concept(self, uid: str) -> Concept:
         """
         Get a concept from the graph database by its uri
-        :param uri: uri of the concept
+        :param uid: uri of the concept
         :return: concept
         """
         factory = self._get_dao_factory()
         dao: ConceptDAO = factory.get_dao(Concept)
-        return await dao.find_by_uri(uri)
+        return await dao.find_by_uid(uid)
 
-    async def find_concept_without_uri_by_pref_label(self, pref_label: Literal) -> Concept:
+    async def find_concept_by_uid(self, uid: str) -> Concept:
         """
-        Get a concept from the graph database by its pref_label
-        :param pref_label: pref_label of the concept
-        :return: concept
+        Get a concept from the graph database by its uid
+        :param uid: uid of the concept : the uri if present, a md5 hash of the pref_label otherwise
+        :return: concept object
         """
         factory = self._get_dao_factory()
         dao: ConceptDAO = factory.get_dao(Concept)
-        return await dao.find_concept_without_uri_by_pref_label(pref_label)
+        return await dao.find_by_uid(uid)
 
     @staticmethod
     def _get_dao_factory() -> DAO:

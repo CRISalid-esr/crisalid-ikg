@@ -30,6 +30,7 @@ FOREACH (_ IN CASE WHEN issue IS NOT NULL THEN [1] ELSE [] END |
 WITH s, $person_uid AS person_uid
 MATCH (p:Person {uid: person_uid})
 MERGE (s)-[:HARVESTED_FOR]->(p)
+
 WITH s, $subject_uris AS subject_uris
 UNWIND subject_uris AS subject_uri
 MATCH (sub:Concept {uri: subject_uri})

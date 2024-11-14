@@ -12,7 +12,7 @@ async def test_create_concept_with_uri(concept_a_pydantic_model: Concept) -> Non
     """
     service = ConceptService()
     await service.create_or_update_concept(concept=concept_a_pydantic_model)
-    fetched_concept = await service.get_concept(concept_a_pydantic_model.uri)
+    fetched_concept = await service.get_concept(concept_a_pydantic_model.uid)
     assert fetched_concept
     assert fetched_concept.uri == concept_a_pydantic_model.uri
     assert len(fetched_concept.pref_labels) == 2
@@ -70,7 +70,7 @@ async def test_update_concept_with_uri(persisted_concept_a_pydantic_model: Conce
         )
     )
     await service.create_or_update_concept(concept=concept_a_pydantic_model)
-    fetched_concept = await service.get_concept(concept_a_pydantic_model.uri)
+    fetched_concept = await service.get_concept(concept_a_pydantic_model.uid)
     assert fetched_concept
     assert fetched_concept.uri == concept_a_pydantic_model.uri
     assert len(fetched_concept.pref_labels) == 3
@@ -105,8 +105,8 @@ async def test_create_concept_b_without_uri(concept_b_without_uri_pydantic_model
     """
     service = ConceptService()
     await service.create_or_update_concept(concept=concept_b_without_uri_pydantic_model)
-    fetched_concept = await service.find_concept_without_uri_by_pref_label(
-        concept_b_without_uri_pydantic_model.pref_labels[0])
+    fetched_concept = await service.find_concept_by_uid(
+        concept_b_without_uri_pydantic_model.uid)
     assert fetched_concept
     assert fetched_concept.uri is None
     assert len(fetched_concept.pref_labels) == 1
@@ -132,8 +132,8 @@ async def test_update_concept_b_without_uri(persisted_concept_b_without_uri_pyda
     """
     service = ConceptService()
     await service.create_or_update_concept(concept=concept_b_without_uri_pydantic_model)
-    fetched_concept = await service.find_concept_without_uri_by_pref_label(
-        concept_b_without_uri_pydantic_model.pref_labels[0])
+    fetched_concept = await service.find_concept_by_uid(
+        concept_b_without_uri_pydantic_model.uid)
     assert fetched_concept
     assert fetched_concept.uri is None
     assert len(fetched_concept.pref_labels) == 1

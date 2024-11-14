@@ -1,4 +1,4 @@
-MATCH (c:Concept {uri: $uri})-[r:HAS_PREF_LABEL]->(l:Literal)
+MATCH (c:Concept {uid: $uid})-[r:HAS_PREF_LABEL]->(l:Literal)
 WHERE l.value IN [label IN $pref_labels | label.value] AND l.language IN [label IN $pref_labels | label.language]
 DELETE r, l
 
