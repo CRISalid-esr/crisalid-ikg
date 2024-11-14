@@ -132,7 +132,7 @@ class SourceRecordDAO(Neo4jDAO):
             titles=[title.model_dump() for title in source_record.titles],
             abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
-            subject_uris=[subject.uri for subject in source_record.subjects]
+            subject_uids=[subject.uid for subject in source_record.subjects]
         )
 
     @classmethod
@@ -166,7 +166,7 @@ class SourceRecordDAO(Neo4jDAO):
             titles=[title.model_dump() for title in source_record.titles],
             abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
-            subject_uris=[subject.uri for subject in source_record.subjects]
+            subject_uids=[subject.uid for subject in source_record.subjects]
         )
         return source_record.uid, SourceRecordDAO.Status.UPDATED, None
 
@@ -184,7 +184,9 @@ class SourceRecordDAO(Neo4jDAO):
         for identifier in record["identifiers"]:
             source_record.identifiers.append(PublicationIdentifier(**identifier))
         for subject in record["subjects"]:
-            source_record.subjects.append(Concept(uri=subject['uri']))
+            source_record.subjects.append(Concept(
+                uid=subject['uid'],
+                uri=subject['uri']))
         if record["journal"]:
             journal = SourceJournal(**record["journal"])
             if record["journal_identifiers"]:

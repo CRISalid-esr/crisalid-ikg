@@ -1,11 +1,9 @@
-import pytest
-
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.concepts.concept_service import ConceptService
 from app.services.source_records.source_record_service import SourceRecordService
 
-@pytest.mark.current
+
 async def test_create_source_records_with_a_unreferenced_concept(
         persisted_person_b_pydantic_model: Person,
         scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord
