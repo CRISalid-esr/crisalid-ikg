@@ -1,0 +1,109 @@
+{
+  "source_identifier": "doi10.1016/j.astron.2024.05.018",
+  "harvester": "ScanR",
+  "harvester_version": "1.2.0",
+  "identifiers": [
+    {
+      "type": "doi",
+      "value": "10.1016/j.astron.2024.05.018"
+    }
+  ],
+  "manifestations": [],
+  "titles": [
+    {
+      "value": "Tracing Dust Dynamics in Galactic Halos: Observational Constraints and Modeling Approaches",
+      "language": "en"
+    }
+  ],
+  "subtitles": [],
+  "abstracts": [],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/027818055/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Matière interstellaire",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Milieu interstellaire",
+          "language": null
+        }
+      ]
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 0,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": null,
+        "name": "A. C. Smith",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 2,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": null,
+        "name": "L. F. Johnson",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "idref075678345",
+        "name": "R. A. Garcia",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "ScanR",
+    "source_identifier": "astronomy_and_astrophysics_scanr",
+    "titles": [],
+    "volume": "29",
+    "number": [
+      "5"
+    ],
+    "rights": null,
+    "date": "2024-05-15",
+    "journal": {
+      "source": "ScanR",
+      "source_identifier": "0004-6361-1432-0746-astronomy_and_astrophysics-ScanR",
+      "issn": [
+        "0004-6361",
+        "1432-0746"
+      ],
+      "eissn": [],
+      "issn_l": null,
+      "publisher": "European Southern Observatory",
+      "titles": [
+        "Astronomy and Astrophysics"
+      ]
+    }
+  },
+  "page": "230-245",
+  "book": null,
+  "issued": "2024-05-15 00:00:00",
+  "created": null,
+  "version": 0
+}
