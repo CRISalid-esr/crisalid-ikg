@@ -32,6 +32,18 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_has_name_relationship_constraint(tx)
 
     @staticmethod
+    async def _create_concept_uid_constraint(tx):
+        query = """
+        CREATE CONSTRAINT concept_uid_unique IF NOT EXISTS
+        FOR (c:Concept) REQUIRE c.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating concept uid unique constraint: {e}")
+            raise e
+
+    @staticmethod
     async def _create_person_uid_constraint(tx):
         query = """
         CREATE CONSTRAINT person_uid_unique IF NOT EXISTS

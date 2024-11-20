@@ -16,6 +16,25 @@ class ConceptDAO(Neo4jDAO):
     """
 
     @handle_database_errors
+    async def find_by_uid(self, uid: str) -> Concept | None:
+        """
+        Find a concept by its uid
+
+        :param uid: concept uid
+        :return: concept object
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        load_query("find_concept_by_uid"),
+                        uid=uid
+                    )
+                    record = await result.single()
+                    if record:
+                        return self._hydrate(record)
+
+    @handle_database_errors
     async def find_by_uri(self, uri: str) -> Concept | None:
         """
         Find a concept by its uri
@@ -29,28 +48,6 @@ class ConceptDAO(Neo4jDAO):
                     result = await tx.run(
                         load_query("find_concept_by_uri"),
                         uri=uri
-                    )
-                    record = await result.single()
-                    if record:
-                        return self._hydrate(record)
-                    return None
-
-    @handle_database_errors
-    async def find_concept_without_uri_by_pref_label(self, pref_label: Literal) -> Concept | None:
-        """
-        Find a concept without URI by its pref label
-        Note : no language filter is applied as pref labels are unique for concepts without URI
-
-        :param pref_label: concept pref label
-        :return: concept object
-        """
-        # pylint: disable=duplicate-code
-        async for driver in Neo4jConnexion().get_driver():
-            async with driver.session() as session:
-                async with await session.begin_transaction() as tx:
-                    result = await tx.run(
-                        load_query("find_concept_without_uri_by_label"),
-                        label=pref_label.value,
                     )
                     record = await result.single()
                     if record:
@@ -96,6 +93,7 @@ class ConceptDAO(Neo4jDAO):
         pref_labels = [Literal(**pref_label_data) for pref_label_data in pref_labels_data]
         alt_labels = [Literal(**alt_label_data) for alt_label_data in alt_labels_data]
         concept = Concept(
+            uid=concept_data["uid"],
             uri=concept_data["uri"],
             pref_labels=pref_labels,
             alt_labels=alt_labels
@@ -104,17 +102,18 @@ class ConceptDAO(Neo4jDAO):
 
     @staticmethod
     async def _create_concept_transaction(tx: AsyncManagedTransaction, concept: Concept) -> None:
-        concept_exists = await ConceptDAO._concept_exists_by_uri(tx, concept.uri) if concept.uri \
-            else await ConceptDAO._concept_exists_by_preflabel(tx, concept.pref_labels[0])
+        concept_exists = await ConceptDAO._concept_exists_by_uid(tx, concept.uid)
         if concept_exists:
-            raise ConflictError(f"Concept identified by {concept.uri or concept.pref_labels[0]} "
+            raise ConflictError(f"Concept identified by "
+                                f"{concept.uri or concept.pref_labels[0]} (uid : {concept.uid}) "
                                 "already exists")
         create_concept_query = load_query("create_concept")
         await tx.run(
             create_concept_query,
+            uid=concept.uid,
             uri=concept.uri,
-            pref_labels=[pref_label.dict() for pref_label in concept.pref_labels],
-            alt_labels=[alt_label.dict() for alt_label in concept.alt_labels]
+            pref_labels=[pref_label.model_dump() for pref_label in concept.pref_labels],
+            alt_labels=[alt_label.model_dump() for alt_label in concept.alt_labels]
         )
 
     @staticmethod
@@ -143,6 +142,7 @@ class ConceptDAO(Neo4jDAO):
                 delete_alt_labels_query = load_query("delete_concept_alt_labels")
                 await tx.run(
                     delete_alt_labels_query,
+                    uid=new_concept.uid,
                     uri=new_concept.uri,
                     alt_labels=[alt_label.model_dump(exclude_none=True) for alt_label in
                                 altlabels_to_delete]
@@ -151,11 +151,9 @@ class ConceptDAO(Neo4jDAO):
                 create_labels_query = load_query("create_concept_labels")
                 await tx.run(
                     create_labels_query,
-                    uri=new_concept.uri,
-                    pref_labels=[pref_label.model_dump(exclude_none=True) for pref_label in
-                                 pref_labels_to_create],
-                    alt_labels=[alt_label.model_dump(exclude_none=True) for alt_label in
-                                alt_labels_to_create]
+                    uid=new_concept.uid,
+                    pref_labels=[pref_label.model_dump() for pref_label in pref_labels_to_create],
+                    alt_labels=[alt_label.model_dump() for alt_label in alt_labels_to_create]
                 )
         except ConstraintError as constraint_error:
             raise ConflictError(
@@ -169,18 +167,17 @@ class ConceptDAO(Neo4jDAO):
                 from neo4j_error
 
     @staticmethod
-    async def _concept_exists_by_uri(tx: AsyncManagedTransaction, uri: str) -> bool:
+    async def _concept_exists_by_uid(tx: AsyncManagedTransaction, uid: str) -> bool:
         result = await tx.run(
-            load_query("find_concept_by_uri"),
-            uri=uri
+            load_query("find_concept_by_uid"),
+            uid=uid
         )
         return bool(await result.single())
 
     @staticmethod
-    async def _concept_exists_by_preflabel(tx: AsyncManagedTransaction,
-                                           pref_label: Literal) -> bool:
+    async def _concept_exists_by_uri(tx: AsyncManagedTransaction, uri: str) -> bool:
         result = await tx.run(
-            load_query("find_concept_without_uri_by_label"),
-            label=pref_label.value,
+            load_query("find_concept_by_uri"),
+            uri=uri
         )
         return bool(await result.single())

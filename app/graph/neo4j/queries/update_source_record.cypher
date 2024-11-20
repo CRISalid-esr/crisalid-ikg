@@ -56,10 +56,11 @@ MERGE (s)- [:HARVESTED_FOR] - >(p)
 
 WITH DISTINCT s
 OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)
-WHERE NOT c.uri IN $subject_uris
+WHERE NOT c.uid IN $subject_uids
+OPTIONAL MATCH (c)- [:HAS_PREF_LABEL|:HAS_ALT_LABEL] - >(l:Literal)
 DELETE r
 
 WITH DISTINCT s
-UNWIND $subject_uris AS subject_uri
-MATCH (c:Concept {uri:subject_uri})
+UNWIND $subject_uids AS subject_uid
+MATCH (c:Concept {uid:subject_uid})
 MERGE (s)- [:HAS_SUBJECT] - >(c)

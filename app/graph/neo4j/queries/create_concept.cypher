@@ -1,4 +1,4 @@
-CREATE (c:Concept {uri: $uri})
+CREATE (c:Concept {uid: $uid, uri: $uri})
 WITH c
 UNWIND $pref_labels AS pref_label
 CREATE (c)-[:HAS_PREF_LABEL]->(:Literal {value: pref_label.value, language: pref_label.language})

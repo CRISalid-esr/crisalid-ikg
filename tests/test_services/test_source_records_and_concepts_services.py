@@ -4,6 +4,36 @@ from app.services.concepts.concept_service import ConceptService
 from app.services.source_records.source_record_service import SourceRecordService
 
 
+async def test_create_source_records_with_a_unreferenced_concept(
+        persisted_person_b_pydantic_model: Person,
+        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord
+) -> None:
+    """
+    Given a persisted person pydantic_model,
+    When a source record for person b with an unreferenced concept is created
+    Then the concept should be created
+    And the record values should be returned correctly
+
+    :param persisted_person_b_pydantic_model:
+    :param scanr_record_with_person_b_as_contributor_pydantic_model:
+    :return:
+    """
+
+    record_service = SourceRecordService()
+
+    await record_service.create_source_record(
+        source_record=scanr_record_with_person_b_as_contributor_pydantic_model,
+        harvested_for=persisted_person_b_pydantic_model)
+    fetched_scanr_source_record_for_person_b = await record_service.get_source_record(
+        scanr_record_with_person_b_as_contributor_pydantic_model.uid)
+    assert (
+            fetched_scanr_source_record_for_person_b.uid ==
+            scanr_record_with_person_b_as_contributor_pydantic_model.uid
+    )
+    assert (len(fetched_scanr_source_record_for_person_b.subjects) == len(
+        scanr_record_with_person_b_as_contributor_pydantic_model.subjects))
+
+
 async def test_create_two_source_records_with_same_concepts(
         persisted_person_a_pydantic_model: Person,
         persisted_person_b_pydantic_model: Person,
@@ -79,7 +109,7 @@ async def test_create_two_source_records_with_common_concepts_and_different_alt_
     record_service = SourceRecordService()
     concept_service = ConceptService()
 
-    concept_uri = "http://www.idref.fr/02734004x/id"
+    concept_uid = concept_uri = "http://www.idref.fr/02734004x/id"
     alt_labels_to_check = []
 
     subject = next(
@@ -102,7 +132,7 @@ async def test_create_two_source_records_with_common_concepts_and_different_alt_
             scanr_record_with_person_a_as_contrib_and_additional_alt_labels_pyd_model.uid
     )
 
-    fetched_concept = await concept_service.get_concept(concept_uri)
+    fetched_concept = await concept_service.get_concept(concept_uid)
     assert fetched_concept
     assert len(fetched_concept.alt_labels) == len(alt_labels_to_check)
     assert all(
@@ -129,7 +159,7 @@ async def test_create_two_source_records_with_common_concepts_and_different_alt_
         for alt_label in subject.alt_labels if alt_label not in alt_labels_to_check
     )
 
-    fetched_concept = await concept_service.get_concept(concept_uri)
+    fetched_concept = await concept_service.get_concept(concept_uid)
     assert fetched_concept
     assert len(fetched_concept.alt_labels) == len(alt_labels_to_check)
     assert all(

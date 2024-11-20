@@ -1,0 +1,19 @@
+{
+  "uri": null,
+  "pref_labels": [
+    {
+      "value": "Physique Galactique",
+      "language": "fr"
+    }
+  ],
+  "alt_labels": [
+    {
+      "value": "Galactic Astrophysics",
+      "language": "en"
+    },
+    {
+      "value": "Astrophysique Galactique",
+      "language": "fr"
+    }
+  ]
+}

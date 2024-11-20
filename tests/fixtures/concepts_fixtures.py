@@ -31,8 +31,8 @@ async def fixture_concept_a_pydantic_model(concept_a_json_data) -> Concept:
 @pytest_asyncio.fixture(name="concept_a_json_data")
 async def fixture_concept_a_json_data(_base_path) -> dict:
     """
-    Create a basic person json data
-    :return: basic person json data
+    Create a basic concept json data
+    :return: basic concept json data
     """
     return _concept_json_data_from_file(_base_path, "concept_a")
 
@@ -66,6 +66,15 @@ async def fixture_concept_b_without_uri_json_data(_base_path) -> dict:
     :return: basic person json data
     """
     return _concept_json_data_from_file(_base_path, "concept_b_without_uri")
+
+
+@pytest_asyncio.fixture(name="invalid_concept_a_without_uri_json_data")
+async def fixture_concept_a_without_uri_json_data(_base_path) -> dict:
+    """
+    Create an invalid concept json data without uri but with alt_labels
+    :return: an invalid concept json data without uri but with alt_labels
+    """
+    return _concept_json_data_from_file(_base_path, "invalid_concept_a_without_uri")
 
 
 @pytest_asyncio.fixture(name="invalid_concept_b_without_uri_json_data")
