@@ -115,7 +115,6 @@ async def test_double_update_scanr_article_source_record(
         scanr_article_a_v3_source_record_pydantic_model.abstracts)
 
 
-@pytest.mark.current
 async def test_update_record_with_shared_concept(
         persisted_person_b_pydantic_model: Person,
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
@@ -173,3 +172,35 @@ async def test_update_record_with_shared_concept(
         concept.uri in map(lambda x: x.uri, fetched_source_record_c_v2.subjects)
         for concept in scanr_article_c_v2_source_record_pydantic_model.subjects
     )
+
+
+@pytest.mark.current
+async def test_update_source_record_issue(
+        persisted_person_a_pydantic_model: Person,
+        scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_source_record_with_updated_issue_pydantic_model: SourceRecord,
+):
+    """
+    Given a persisted source record with an issue
+    When the update of that source record update the issue
+    Then the values should be updated and returned correctly
+    """
+    service = SourceRecordService()
+    fetched_source_record = await service.get_source_record(
+        scanr_persisted_article_a_source_record_pydantic_model.uid)
+    assert fetched_source_record.uid == scanr_persisted_article_a_source_record_pydantic_model.uid
+    assert (fetched_source_record.issue ==
+            scanr_persisted_article_a_source_record_pydantic_model.issue)
+    await service.update_source_record(
+        source_record=scanr_article_a_source_record_with_updated_issue_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+
+    fetched_source_record_updated = await service.get_source_record(
+        scanr_article_a_source_record_with_updated_issue_pydantic_model.uid)
+    assert fetched_source_record_updated.uid == fetched_source_record.uid
+    assert fetched_source_record_updated.issue != fetched_source_record.issue
+    assert (fetched_source_record_updated.issue.journal.uid ==
+            fetched_source_record.issue.journal.uid)
+    assert "Ceci est un titre d'issue" in fetched_source_record_updated.issue.titles
+    assert fetched_source_record_updated.issue.volume == "1"
+    assert "1" in fetched_source_record_updated.issue.number
