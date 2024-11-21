@@ -69,6 +69,18 @@ class SourceRecordDAO(Neo4jDAO):
                                                                         harvested_for)
 
     @handle_database_errors
+    async def get_inferred_equivalents(self, source_record_id: str):
+        """
+        Get the equivalents of a source record inferred from shared publication identifiers
+        :param source_record_id:
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await self._get_inferred_equivalents(tx, source_record_id)
+
+    @handle_database_errors
     async def get(self, source_record_uid: str) -> SourceRecord:
         """
         Get a source record from the graph database
@@ -169,6 +181,14 @@ class SourceRecordDAO(Neo4jDAO):
             subject_uids=[subject.uid for subject in source_record.subjects]
         )
         return source_record.uid, SourceRecordDAO.Status.UPDATED, None
+
+    @classmethod
+    async def _get_inferred_equivalents(cls, tx: AsyncManagedTransaction, source_record_uid: str):
+        result = await tx.run(
+            load_query("get_inferred_equivalents"),
+            source_record_uid=source_record_uid
+        )
+        return [cls._hydrate(record) async for record in result]
 
     @staticmethod
     def _hydrate(record) -> SourceRecord:

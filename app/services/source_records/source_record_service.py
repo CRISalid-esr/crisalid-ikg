@@ -11,7 +11,7 @@ from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.concepts.concept_service import ConceptService
 from app.services.source_journals.source_journal_service import SourceJournalService
-from app.signals import source_record_created
+from app.signals import source_record_created, source_record_updated
 
 
 class SourceRecordService:
@@ -62,6 +62,7 @@ class SourceRecordService:
         source_record_dao: SourceRecordDAO = self._get_dao_factory().get_dao(SourceRecord)
         await source_record_dao.update(source_record=source_record, harvested_for=person
                                        )
+        await source_record_updated.send_async(self, source_record_id=source_record.uid)
 
     async def _handle_source_record_journal(self, source_record: SourceRecord) -> None:
         if not source_record.issue or not source_record.issue.journal:

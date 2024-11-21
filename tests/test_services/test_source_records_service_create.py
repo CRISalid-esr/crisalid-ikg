@@ -1,5 +1,7 @@
 from typing import List
 
+import pytest
+
 from app.models.identifier_types import JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.people import Person
@@ -129,7 +131,7 @@ async def test_two_scanr_articles_from_same_journal_and_person(
     assert fetched_source_record_a.issue.rights == fetched_source_record_b.issue.rights
     assert fetched_source_record_a.issue.date == fetched_source_record_b.issue.date
 
-
+@pytest.mark.current
 async def test_create_two_source_records_with_same_concepts(
         persisted_person_a_pydantic_model: Person,
         idref_record_with_person_a_as_contributor_pydantic_model: SourceRecord,
