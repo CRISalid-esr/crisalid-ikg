@@ -55,10 +55,9 @@ class EquivalenceService:
 
         await self._update_inferred_equivalence_relationships()
 
-    def _gather(self, source_record_uid, source_records_with_shared_identifier_uids):
-        source_records_with_shared_identifier_uids = list(
-            set(source_records_with_shared_identifier_uids + [source_record_uid]))
-        return source_records_with_shared_identifier_uids
+    def _gather(self, source_record_uid, other_uids):
+        return list(
+            set(other_uids + [source_record_uid]))
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:
