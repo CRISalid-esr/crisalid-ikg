@@ -22,24 +22,43 @@ class EquivalenceService:
         """
         print(f"beginning to update source record with id {source_record_id}")
         self.source_records_to_update.append(source_record_id)
-        await self._update_equivalents()
+        await self._update_inferred_equivalence_relationships()
 
-    async def _update_equivalents(self) -> None:
+    async def _update_inferred_equivalence_relationships(self) -> None:
         """
         Update the equivalent source records
         :return:
         """
-
-        # pop the first element of source_records_to_update; if empty, abort
         if not self.source_records_to_update:
             return
-        source_record_id = self.source_records_to_update.pop(0)
-
+        source_record_uid = self.source_records_to_update.pop(0)
         factory = self._get_dao_factory()
         dao: SourceRecordDAO = factory.get_dao(SourceRecord)
-        new_inferred_equivalents = await dao.get_inferred_equivalents(source_record_id)
-        await self._update_equivalents()
+        sr_with_shared_identifier_uids = self._gather(
+            source_record_uid,
+            await (
+                dao.get_source_records_with_shared_identifier_uids(
+                    source_record_uid)
+            ))
+        existing_inferred_equiv_sr_uids = self._gather(
+            source_record_uid,
+            await dao.get_source_records_inferred_equivalent_uids(
+                source_record_uid))
+        obsolete_inferred_equiv_sr_uids = [x for x in existing_inferred_equiv_sr_uids if
+                                           x not in sr_with_shared_identifier_uids]
+        for source_record_uid in obsolete_inferred_equiv_sr_uids:
+            await dao.delete_inferred_equivalence_relationships(source_record_uid,
+                                                                sr_with_shared_identifier_uids)
+            self.source_records_to_update.append(source_record_uid)
+        await dao.create_inferred_equivalence_relationships(
+            sr_with_shared_identifier_uids)
 
+        await self._update_inferred_equivalence_relationships()
+
+    def _gather(self, source_record_uid, source_records_with_shared_identifier_uids):
+        source_records_with_shared_identifier_uids = list(
+            set(source_records_with_shared_identifier_uids + [source_record_uid]))
+        return source_records_with_shared_identifier_uids
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

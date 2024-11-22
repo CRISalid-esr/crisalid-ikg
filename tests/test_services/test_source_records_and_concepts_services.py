@@ -1,5 +1,3 @@
-import pytest
-
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.concepts.concept_service import ConceptService
@@ -35,7 +33,7 @@ async def test_create_source_records_with_a_unreferenced_concept(
     assert (len(fetched_scanr_source_record_for_person_b.subjects) == len(
         scanr_record_with_person_b_as_contributor_pydantic_model.subjects))
 
-@pytest.mark.current
+
 async def test_create_two_source_records_with_same_concepts(
         persisted_person_a_pydantic_model: Person,
         persisted_person_b_pydantic_model: Person,

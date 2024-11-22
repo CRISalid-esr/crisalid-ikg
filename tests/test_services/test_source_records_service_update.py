@@ -1,5 +1,3 @@
-import pytest
-
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -174,7 +172,6 @@ async def test_update_record_with_shared_concept(
     )
 
 
-@pytest.mark.current
 async def test_update_source_record_issue(
         persisted_person_a_pydantic_model: Person,
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
