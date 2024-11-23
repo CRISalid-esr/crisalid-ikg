@@ -10,7 +10,7 @@ async def test_update_scanr_article_source_record(
         persisted_person_a_pydantic_model: Person
 ):
     """
-        Given a valid source record model representing an article harvested from ScanR
+        Given a valid source record model recording an article harvested from ScanR
         When asked for different field values
         Then the values should be returned correctly
         """
@@ -61,7 +61,7 @@ async def test_double_update_scanr_article_source_record(
         persisted_person_a_pydantic_model: Person
 ):
     """
-        Given a valid source record model representing an article harvested from ScanR
+        Given a valid source record model recording an article harvested from ScanR
         When asked for different field values
         Then the values should be returned correctly
         """

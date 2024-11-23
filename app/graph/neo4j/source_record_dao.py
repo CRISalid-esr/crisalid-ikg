@@ -1,4 +1,5 @@
-from typing import Tuple, NamedTuple
+from enum import Enum
+from typing import Tuple, NamedTuple, List
 
 from neo4j import AsyncManagedTransaction
 
@@ -29,6 +30,15 @@ class SourceRecordDAO(Neo4jDAO):
         identifiers_changed: bool
         titles_changed: bool
         contributors_changed: bool
+
+    class EquivalenceType(Enum):
+        """
+        Enum for equivalence between source records types
+        """
+        ALL = ":INFERRED_EQUIVALENT|:ASSERTED_EQUIVALENT|:PREDICTED_EQUIVALENT"
+        INFERRED = ":INFERRED_EQUIVALENT"
+        ASSERTED = ":ASSERTED_EQUIVALENT"
+        PREDICTED = ":PREDICTED_EQUIVALENT"
 
     @handle_database_errors
     async def create(self, source_record: SourceRecord,
@@ -83,18 +93,19 @@ class SourceRecordDAO(Neo4jDAO):
                         source_record_id)
 
     @handle_database_errors
-    async def get_source_records_inferred_equivalent_uids(self, source_record_uid: str):
+    async def get_source_records_equivalent_uids(self, source_record_uid: str,
+                                                 equivalence_type: EquivalenceType) -> List[str]:
         """
-        Get the inferred equivalent of a source record
-        :param source_record_uid:
-        :return:
+        Get the equivalent UIDs of a source record based on the specified equivalence type.
+        :param source_record_uid: The UID of the source record.
+        :param equivalence_type: The type of equivalence (INFERRED, ASSERTED, PREDICTED).
+        :return: A list of equivalent UIDs.
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
-                    return await self._get_source_records_inferred_equivalent_uids(
-                        tx,
-                        source_record_uid)
+                    return await self._get_source_records_equivalent_uids(tx, source_record_uid,
+                                                                          equivalence_type)
 
     @handle_database_errors
     async def delete_inferred_equivalence_relationships(self, source_record_uid: str,
@@ -238,11 +249,21 @@ class SourceRecordDAO(Neo4jDAO):
         return record["uids"] if record else []
 
     @classmethod
-    async def _get_source_records_inferred_equivalent_uids(cls, tx: AsyncManagedTransaction,
-                                                           source_record_uid: str):
+    async def _get_source_records_equivalent_uids(cls, tx: AsyncManagedTransaction,
+                                                  source_record_uid: str,
+                                                  equivalence_type: EquivalenceType) -> List[str]:
+        """
+        Internal method to fetch equivalent UIDs based on equivalence type.
+        :param tx: The database transaction.
+        :param source_record_uid: The UID of the source record.
+        :param equivalence_type: The type of equivalence (INFERRED, ASSERTED, PREDICTED).
+        :return: A list of equivalent UIDs.
+        """
+        query = load_query("get_source_records_equivalent_uids")
         result = await tx.run(
-            load_query("get_source_records_inferred_equivalent_uids"),
-            source_record_uid=source_record_uid
+            query,
+            source_record_uid=source_record_uid,
+            relationship_filter=f"{equivalence_type.value}"
         )
         record = await result.single()
         return record["uids"] if record else []

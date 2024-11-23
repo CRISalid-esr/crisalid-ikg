@@ -8,6 +8,7 @@ from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.neo4j_setup import Neo4jSetup
 from app.models.concepts import Concept
+from app.models.document import Document
 from app.models.people import Person
 from app.models.research_structures import ResearchStructure
 from app.models.source_journal import SourceJournal
@@ -21,33 +22,29 @@ class Neo4jDAOFactory(DAOFactory):
 
     def __init__(self):
         self.driver: AsyncDriver = Neo4jConnexion().get_driver()
+        # Mapping of model types to their corresponding DAO classes
+        self.dao_mapping = {
+            Person: "app.graph.neo4j.person_dao.PersonDAO",
+            ResearchStructure: "app.graph.neo4j.research_structure_dao.ResearchStructureDAO",
+            SourceRecord: "app.graph.neo4j.source_record_dao.SourceRecordDAO",
+            Concept: "app.graph.neo4j.concept_dao.ConceptDAO",
+            SourceJournal: "app.graph.neo4j.source_journal_dao.SourceJournalDAO",
+            Document: "app.graph.neo4j.document_dao.DocumentDAO",
+        }
 
     def get_dao(self, object_type: Type[BaseModel] = None) -> Neo4jDAO:
         if object_type is None:
             from app.graph.neo4j.global_dao import \
                 GlobalDAO  # pylint: disable=import-outside-toplevel
             return GlobalDAO(driver=self.driver)
-        if object_type.__name__ == Person.__name__:
-            from app.graph.neo4j.person_dao import \
-                PersonDAO  # pylint: disable=import-outside-toplevel
-            return PersonDAO(driver=self.driver)
-        if object_type.__name__ == ResearchStructure.__name__:
-            from app.graph.neo4j.research_structure_dao import \
-                ResearchStructureDAO  # pylint: disable=import-outside-toplevel
-            return ResearchStructureDAO(driver=self.driver)
-        if object_type.__name__ == SourceRecord.__name__:
-            from app.graph.neo4j.source_record_dao import \
-                SourceRecordDAO  # pylint: disable=import-outside-toplevel
-            return SourceRecordDAO(driver=self.driver)
-        if object_type.__name__ == Concept.__name__:
-            from app.graph.neo4j.concept_dao import \
-                ConceptDAO  # pylint: disable=import-outside-toplevel
-            return ConceptDAO(driver=self.driver)
-        if object_type.__name__ == SourceJournal.__name__:
-            from app.graph.neo4j.source_journal_dao import \
-                SourceJournalDAO  # pylint: disable=import-outside-toplevel
-            return SourceJournalDAO(driver=self.driver)
-        raise ValueError(f"Unsupported object type: {object_type}")
+
+        dao_class_path = self.dao_mapping.get(object_type)
+        if dao_class_path is None:
+            raise ValueError(f"Unsupported object type: {object_type}")
+        module_path, class_name = dao_class_path.rsplit('.', 1)
+        dao_module = __import__(module_path, fromlist=[class_name])
+        dao_class = getattr(dao_module, class_name)
+        return dao_class(driver=self.driver)
 
     def get_setup(self) -> Neo4jSetup:
         return Neo4jSetup(driver=self.driver)
