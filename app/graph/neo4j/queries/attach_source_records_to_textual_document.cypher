@@ -1,4 +1,4 @@
-CREATE (doc:Document:TextualDocument)
+MATCH (doc:Document:TextualDocument {uid: $document_uid})
 SET doc.to_be_recomputed = true
 WITH doc
 UNWIND $source_record_uids AS uid
