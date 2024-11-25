@@ -1,0 +1,125 @@
+from typing import cast
+
+from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from app.graph.neo4j.document_dao import DocumentDAO
+from app.graph.neo4j.source_record_dao import SourceRecordDAO
+from app.models.document import Document
+from app.models.people import Person
+from app.models.source_records import SourceRecord
+from app.services.source_records.equivalence_service import EquivalenceService
+from app.services.source_records.source_record_service import SourceRecordService
+
+
+async def test_infer_source_record_equivalents(
+        source_record_id_doi_1_persisted_model: SourceRecord,
+        source_record_id_hal_1_persisted_model: SourceRecord,
+        source_record_id_doi_1_hal_1_persisted_model: SourceRecord
+) -> None:
+    """
+    Test that the equivalence service can infer equivalent source records
+    :param source_record_id_doi_1_persisted_model: Pydantic SourceRecord object with DOI identifier
+    :param source_record_id_hal_1_persisted_model: Pydantic SourceRecord object with HAL identifier
+    :param source_record_id_doi_1_hal_1_persisted_model: Pydantic SourceRecord object with both
+    DOI and HAL identifiers (the same as the other two)
+    """
+    service = EquivalenceService()
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    source_record_dao: SourceRecordDAO = cast(SourceRecordDAO, factory.get_dao(SourceRecord))
+    document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
+    await service.update_source_record(None, source_record_id_doi_1_persisted_model.uid)
+    equivalent_uids = await source_record_dao.get_source_records_equivalent_uids(
+        source_record_id_doi_1_persisted_model.uid, SourceRecordDAO.EquivalenceType.INFERRED)
+    assert source_record_id_doi_1_hal_1_persisted_model.uid in equivalent_uids
+    assert source_record_id_hal_1_persisted_model.uid in equivalent_uids
+    document = await document_dao.get_textual_document_by_source_record_uid(
+        source_record_id_doi_1_persisted_model.uid)
+    assert document is not None
+    assert document.to_be_recomputed is True
+    assert sorted(document.source_record_uids) == sorted([
+        source_record_id_doi_1_persisted_model.uid,
+        source_record_id_hal_1_persisted_model.uid,
+        source_record_id_doi_1_hal_1_persisted_model.uid
+    ])
+    assert document.uid is not None
+
+
+async def test_attach_new_source_record_to_existing_document(
+        source_record_id_doi_1_persisted_model: SourceRecord,
+        source_record_id_doi_1_hal_1_pydantic_model: SourceRecord,
+        persisted_person_a_pydantic_model: Person
+) -> None:
+    """
+    Test that the equivalence service can infer equivalent source records
+    :param source_record_id_doi_1_persisted_model: Pydantic SourceRecord object with DOI identifier
+    :param source_record_id_doi_1_hal_1_persisted_model: Pydantic SourceRecord object with both
+    DOI and HAL identifiers (the same as the other two)
+    """
+    source_record_service = SourceRecordService()
+    equivalence_service = EquivalenceService()
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    source_record_dao: SourceRecordDAO = cast(SourceRecordDAO, factory.get_dao(SourceRecord))
+    document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
+    await equivalence_service.update_source_record(None, source_record_id_doi_1_persisted_model.uid)
+    equivalent_uids = await source_record_dao.get_source_records_equivalent_uids(
+        source_record_id_doi_1_persisted_model.uid, SourceRecordDAO.EquivalenceType.INFERRED)
+    assert len(equivalent_uids) == 0
+    await source_record_service.create_source_record(source_record_id_doi_1_hal_1_pydantic_model,
+                                                     persisted_person_a_pydantic_model)
+    # equivalence service will not be called automatically as blinker signals are not connected
+    await equivalence_service.update_source_record(None, source_record_id_doi_1_persisted_model.uid)
+    equivalent_uids = await source_record_dao.get_source_records_equivalent_uids(
+        source_record_id_doi_1_persisted_model.uid, SourceRecordDAO.EquivalenceType.INFERRED)
+    assert source_record_id_doi_1_hal_1_pydantic_model.uid in equivalent_uids
+    document = await document_dao.get_textual_document_by_source_record_uid(
+        source_record_id_doi_1_persisted_model.uid)
+    assert document is not None
+    assert document.to_be_recomputed is True
+    assert sorted(document.source_record_uids) == sorted([
+        source_record_id_doi_1_persisted_model.uid,
+        source_record_id_doi_1_hal_1_pydantic_model.uid
+    ])
+
+
+async def test_merge_two_existing_documents(
+        source_record_id_doi_1_persisted_model: SourceRecord,
+        source_record_id_hal_1_persisted_model: SourceRecord,
+        source_record_id_doi_1_hal_1_pydantic_model: SourceRecord,
+        persisted_person_a_pydantic_model: Person
+) -> None:
+    """
+    Test that the equivalence service can infer equivalent source records
+    :param source_record_id_doi_1_persisted_model: Pydantic SourceRecord object with DOI identifier
+    :param source_record_id_doi_1_hal_1_persisted_model: Pydantic SourceRecord object with both
+    DOI and HAL identifiers (the same as the other two)
+    """
+    source_record_service = SourceRecordService()
+    equivalence_service = EquivalenceService()
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    source_record_dao: SourceRecordDAO = cast(SourceRecordDAO, factory.get_dao(SourceRecord))
+    document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
+    await equivalence_service.update_source_record(None, source_record_id_doi_1_persisted_model.uid)
+    await equivalence_service.update_source_record(None, source_record_id_hal_1_persisted_model.uid)
+    # for the moment, the two documents have no equivalents
+    equivalent_uids_1 = await source_record_dao.get_source_records_equivalent_uids(
+        source_record_id_doi_1_persisted_model.uid, SourceRecordDAO.EquivalenceType.INFERRED)
+    assert len(equivalent_uids_1) == 0
+    equivalent_uids_2 = await source_record_dao.get_source_records_equivalent_uids(
+        source_record_id_hal_1_persisted_model.uid, SourceRecordDAO.EquivalenceType.INFERRED)
+    assert len(equivalent_uids_2) == 0
+    # create a new source record with the same identifiers as the two existing ones
+    await source_record_service.create_source_record(source_record_id_doi_1_hal_1_pydantic_model,
+                                                     persisted_person_a_pydantic_model)
+    # equivalence service will not be called automatically as blinker signals are not connected
+    await equivalence_service.update_source_record(None, source_record_id_doi_1_persisted_model.uid)
+    equivalent_uids_1 = await source_record_dao.get_source_records_equivalent_uids(
+        source_record_id_doi_1_persisted_model.uid, SourceRecordDAO.EquivalenceType.INFERRED)
+    assert source_record_id_doi_1_hal_1_pydantic_model.uid in equivalent_uids_1
+    document = await document_dao.get_textual_document_by_source_record_uid(
+        source_record_id_doi_1_persisted_model.uid)
+    assert document is not None
+    assert document.to_be_recomputed is True
+    assert sorted(document.source_record_uids) == sorted([
+        source_record_id_doi_1_persisted_model.uid,
+        source_record_id_hal_1_persisted_model.uid,
+        source_record_id_doi_1_hal_1_pydantic_model.uid
+    ])

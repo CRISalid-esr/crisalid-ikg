@@ -56,7 +56,7 @@ async def test_journal_from_scanr_article(
         persisted_person_a_pydantic_model: Person
 ):
     """
-        Given a valid source record model representing an article harvested from ScanR
+        Given a valid source record model recording an article harvested from ScanR
         When asked for different field values
         Then the values should be returned correctly
         """

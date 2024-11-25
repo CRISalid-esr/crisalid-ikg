@@ -74,7 +74,7 @@ The project uses [pytest](https://docs.pytest.org/en/stable/) for testing.
 Running the tests requires test dependencies to be installed. The following command will install Neo4j :
 
 ```bash
-docker run --publish=7475:7474 --publish=7688:7687 --env=NEO4J_AUTH=none   neo4j:5-community
+docker run --publish=7475:7474 --publish=7688:7687 --env=NEO4J_AUTH=none -e NEO4J_apoc_export_file_enabled=true -e NEO4J_apoc_import_file_enabled=true -e NEO4J_apoc_import_file_use__neo4j__config=true -e NEO4JLABS_PLUGINS=\[\"apoc\"\]  neo4j:5-community
 ```
 
 The 7475 port is only intended to allow you to check test behaviour through the Neo4j browser.

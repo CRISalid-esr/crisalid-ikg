@@ -1,5 +1,3 @@
-import pytest
-
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -12,7 +10,7 @@ async def test_update_scanr_article_source_record(
         persisted_person_a_pydantic_model: Person
 ):
     """
-        Given a valid source record model representing an article harvested from ScanR
+        Given a valid source record model recording an article harvested from ScanR
         When asked for different field values
         Then the values should be returned correctly
         """
@@ -63,7 +61,7 @@ async def test_double_update_scanr_article_source_record(
         persisted_person_a_pydantic_model: Person
 ):
     """
-        Given a valid source record model representing an article harvested from ScanR
+        Given a valid source record model recording an article harvested from ScanR
         When asked for different field values
         Then the values should be returned correctly
         """
@@ -174,7 +172,6 @@ async def test_update_record_with_shared_concept(
     )
 
 
-@pytest.mark.current
 async def test_update_source_record_issue(
         persisted_person_a_pydantic_model: Person,
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,

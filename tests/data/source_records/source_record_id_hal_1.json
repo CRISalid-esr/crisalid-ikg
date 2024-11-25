@@ -1,0 +1,16 @@
+{
+  "source_identifier": "source_record_id_hal_1",
+  "harvester": "Hal",
+  "identifiers": [
+    {
+      "type": "hal",
+      "value": "hal-00000001"
+    }
+  ],
+  "titles": [
+    {
+      "value": "Example Article with HAL",
+      "language": "en"
+    }
+  ]
+}

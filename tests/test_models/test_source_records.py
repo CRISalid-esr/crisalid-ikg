@@ -8,7 +8,7 @@ def test_create_thesis_source_record_from_scanr_data(
         scanr_thesis_source_record_json_data: dict
 ):
     """
-    Given a source record model representing a thesis harvested from ScanR
+    Given a source record model recording a thesis harvested from ScanR
     When asked for different field values
     Then the values should be returned correctly
     :param scanr_thesis_source_record_json_data:
@@ -67,7 +67,7 @@ def test_create_thesis_source_record_from_idref_data(
         idref_thesis_source_record_json_data: dict
 ):
     """
-    Given a valid source record model representing a thesis harvested from IdRef
+    Given a valid source record model recording a thesis harvested from IdRef
     When asked for different field values
     Then the values should be returned correctly
     :param idref_thesis_source_record_json_data:
@@ -130,7 +130,7 @@ async def test_create_article_source_record_from_open_alex_data(
         open_alex_article_source_record_json_data: dict
 ):
     """
-    Given a valid source record model representing an article harvested from OpenAlex
+    Given a valid source record model recording an article harvested from OpenAlex
     When asked for different field values
     Then the values should be returned correctly
     :param open_alex_article_source_record_json_data:
@@ -196,7 +196,7 @@ async def test_article_identifiers_from_open_alex_data(
         open_alex_article_source_record_json_data: dict
 ):
     """
-    Given a valid source record model representing an article harvested from OpenAlex
+    Given a valid source record model recording an article harvested from OpenAlex
     When asked for identifiers
     Then the values should be returned correctly
     :param open_alex_article_source_record_json_data:
@@ -236,7 +236,7 @@ async def test_create_article_source_record_from_open_alex_data_with_issue_title
         open_alex_article_source_record_with_issue_title_json_data: dict
 ):
     """
-    Given a valid source record model representing an article harvested from OpenAlex
+    Given a valid source record model recording an article harvested from OpenAlex
     When asked for different field values
     Then the values should be returned correctly
     :param open_alex_article_source_record_with_issue_title_json_data:
