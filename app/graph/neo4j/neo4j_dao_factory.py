@@ -22,7 +22,7 @@ class Neo4jDAOFactory(DAOFactory):
 
     def __init__(self):
         self.driver: AsyncDriver = Neo4jConnexion().get_driver()
-        # Mapping of model types to their corresponding DAO classes
+
         self.dao_mapping = {
             Person: "app.graph.neo4j.person_dao.PersonDAO",
             ResearchStructure: "app.graph.neo4j.research_structure_dao.ResearchStructureDAO",
