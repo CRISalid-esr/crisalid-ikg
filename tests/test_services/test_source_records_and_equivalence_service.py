@@ -1,7 +1,5 @@
 from typing import cast
 
-import pytest
-
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.models.document import Document
@@ -11,7 +9,6 @@ from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 
 
-@pytest.mark.current
 async def test_create_multiple_source_records_with_common_id_for_multiple_person(
         persisted_person_a_pydantic_model: Person,
         persisted_person_b_pydantic_model: Person,
