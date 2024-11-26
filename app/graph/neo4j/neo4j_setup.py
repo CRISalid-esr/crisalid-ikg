@@ -27,7 +27,8 @@ class Neo4jSetup(Setup[AsyncDriver]):
         # environment
         # Waiting for https://github.com/CRISalid-esr/crisalid-ikg/issues/157 to be fixed
         # await cls._create_source_journal_source_identifier_constraint(tx)
-        await cls._create_concept_uid_constraint(tx)
+        # Idem https://github.com/CRISalid-esr/crisalid-ikg/issues/161
+        # await cls._create_concept_uid_constraint(tx)
         await cls._create_document_uid_constraint(tx)
 
         if settings.neo4j_edition == "community":
