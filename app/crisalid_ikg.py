@@ -20,7 +20,7 @@ from app.search.search_engine import SearchEngine
 from app.search.source_record_index import SourceRecordIndex
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
-    person_unchanged
+    person_unchanged, source_record_updated
 
 
 class CrisalidIKG(FastAPI):
@@ -95,6 +95,7 @@ class CrisalidIKG(FastAPI):
         source_record_created.connect(self.source_record_index.add_source_record)
         self.equivalence_service = EquivalenceService()
         source_record_created.connect(self.equivalence_service.update_source_record)
+        source_record_updated.connect(self.equivalence_service.update_source_record)
 
     @logger.catch(reraise=True)
     async def close_elasticsearch(self) -> None:  # pragma: no cover
