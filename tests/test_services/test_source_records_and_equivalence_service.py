@@ -66,3 +66,55 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
         hal_article_a_source_record_pydantic_model.uid,
         open_alex_article_a_source_record_pydantic_model.uid
     ])
+
+
+async def test_update_one_source_record_between_multiple_related_source_records(
+        persisted_person_b_pydantic_model: Person,
+        hal_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        open_alex_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        scanr_persisted_article_a_v2_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model: SourceRecord
+) -> None:
+    """
+    Given 3 persisted source records with common hal identifier and a TextualDocument in common
+    When one of the source records is updated
+    Then the changes should be reflected to the source record, the existing TextualDocument
+    should be updated in consequence and a new one should be created with the SourceRecord who
+    lost the common identifier.
+    """
+    source_record_service = SourceRecordService()
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
+    initial_document = await document_dao.get_textual_document_by_source_record_uid(
+        open_alex_persisted_article_a_source_record_pydantic_model.uid)
+    assert initial_document is not None
+    assert initial_document.to_be_recomputed is True
+    assert sorted(initial_document.source_record_uids) == sorted([
+        scanr_persisted_article_a_v2_source_record_pydantic_model.uid,
+        hal_persisted_article_a_source_record_pydantic_model.uid,
+        open_alex_persisted_article_a_source_record_pydantic_model.uid
+    ])
+
+    await source_record_service.update_source_record(
+        source_record=scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model,
+        harvested_for=persisted_person_b_pydantic_model)
+    updated_fetched_source_record = await source_record_service.get_source_record(
+        scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model.uid)
+    assert updated_fetched_source_record
+
+    new_document = await document_dao.get_textual_document_by_source_record_uid(
+        scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model.uid
+    )
+    assert new_document
+    assert new_document != initial_document
+    assert sorted(new_document.source_record_uids) == sorted([
+        scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model.uid
+    ])
+
+    initial_document_updated = await document_dao.get_textual_document_by_source_record_uid(
+        open_alex_persisted_article_a_source_record_pydantic_model.uid)
+    assert initial_document_updated != initial_document
+    assert sorted(initial_document_updated.source_record_uids) == sorted([
+        open_alex_persisted_article_a_source_record_pydantic_model.uid,
+        hal_persisted_article_a_source_record_pydantic_model.uid
+    ])
