@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, model_validator
 
+from app.models.concepts import Concept
 from app.models.literal import Literal
 
 
@@ -12,7 +13,9 @@ class Document(BaseModel):
     """
 
     uid: Optional[str] = None
-    titles: Optional[List[Literal]] = None
+    titles: List[Literal] = []
+    abstracts: List[Literal] = []
+    subjects: List[Concept] = []
     to_be_recomputed: bool = False
     to_be_deleted: bool = False
     to_be_merged_into_uid: Optional[str] = None

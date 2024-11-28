@@ -4,7 +4,6 @@ import pytest
 
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
-from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.document import Document
 from app.models.source_records import SourceRecord
 from app.services.documents.textual_document_service import TextualDocumentService
@@ -26,9 +25,7 @@ async def test_recompute_textual_document_from_three_documents(
     DOI and HAL identifiers (the same as the other two)
     """
     equivalence_service = EquivalenceService()
-    textual_document_service = TextualDocumentService()
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
-    source_record_dao: SourceRecordDAO = cast(SourceRecordDAO, factory.get_dao(SourceRecord))
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
     # update any of the source records, does not matter which one
     await equivalence_service.update_source_record(None, source_record_id_doi_1_persisted_model.uid)
@@ -37,6 +34,6 @@ async def test_recompute_textual_document_from_three_documents(
         source_record_id_doi_1_persisted_model.uid)
     assert document is not None
     assert document.to_be_recomputed is True
-    await textual_document_service.recompute_metadata(document.uid)
-    document = await document_dao.get_textual_document_by_source_record_uid(
+    await TextualDocumentService(document.uid).recompute_metadata()
+    await document_dao.get_textual_document_by_source_record_uid(
         source_record_id_doi_1_persisted_model.uid)

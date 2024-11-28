@@ -7,26 +7,26 @@ harvesters:
   - scanr
   - scopus
   - openalex
-policies:
+strategies:
   # Example policy 1: strategy for articles, documents of unknown type, and default documents.
   # "global_richest" prioritizes sources based on the richness of metadata for a source record taken as a whole.
   - types:
       - default     # Used as a fallback for documents with no specific type.
-      - unknown     # Used for documents whose type is unknown.
-      - article     # Applied to articles.
+      - Unknown     # Used for documents whose type is unknown.
+      - Article     # Applied to articles.
     type: "global_richest"
     parameters:
       # Scoring weights for metadata fields.
-      title: 10       # Each character in the title is worth 10 points.
-      abstract: 1     # Each character in the abstract is worth 1 point.
-      authors: 40     # Each author is worth 40 points.
-      keywords: 30    # Each keyword is worth 30 points.
+      titles: 10       # Each character in the title is worth 10 points.
+      abstracts: 1     # Each character in the abstract is worth 1 point.
+      contributions: 40     # Each contributor is worth 40 points.
+      subjects: 30    # Each keyword is worth 30 points.
   # Example policy 2: Strategy for books and theses.
   # "source_order" retrieves information in the order of specified harvesters.
   # Harvesters not listed here will be ignored for this type of document.
   - types:
-      - book          # Applied to books.
-      - thesis        # Applied to theses.
+      - Book          # Applied to books.
+      - Thesis        # Applied to theses.
     type: "source_order"
     harvesters:
       - idref

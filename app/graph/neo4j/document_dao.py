@@ -60,7 +60,9 @@ class DocumentDAO(Neo4jDAO):
             source_record_uids=textual_document.source_record_uids,
             to_be_recomputed=textual_document.to_be_recomputed,
             to_be_deleted=textual_document.to_be_deleted,
-            to_be_merged_into_uid=textual_document.to_be_merged_into_uid
+            to_be_merged_into_uid=textual_document.to_be_merged_into_uid,
+            titles=[title.model_dump() for title in textual_document.titles],
+            abstracts=[abstract.model_dump() for abstract in textual_document.abstracts]
         )
 
     @classmethod

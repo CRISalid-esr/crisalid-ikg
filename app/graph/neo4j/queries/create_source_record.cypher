@@ -1,4 +1,4 @@
-CREATE (s:SourceRecord {uid: $source_record_uid, harvester: $harvester, source_identifier: $source_identifier})
+CREATE (s:SourceRecord {uid: $source_record_uid, harvester: $harvester, source_identifier: $source_identifier, document_types: $document_types})
 WITH s
 FOREACH (title IN $titles |
   CREATE (t:Literal {value: title.value, language: title.language})

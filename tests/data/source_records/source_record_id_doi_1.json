@@ -12,5 +12,11 @@
       "value": "Example Article with DOI",
       "language": "en"
     }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
   ]
 }

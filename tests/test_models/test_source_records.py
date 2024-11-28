@@ -1,5 +1,6 @@
 import pytest
 
+from app.models.document_type import DocumentTypeEnum
 from app.models.identifier_types import PublicationIdentifierType, JournalIdentifierType
 from app.models.source_records import SourceRecord
 
@@ -50,17 +51,14 @@ def test_create_thesis_source_record_from_scanr_data(
         subject.uri == "http://example.org/subject/galactic_physics"
     )
     assert len(source_record.document_type) == 1
-    assert any(
-        document_type for document_type in source_record.document_type
-        if
-        document_type.uri == "http://purl.org/ontology/bibo/Thesis"
-    )
+    assert DocumentTypeEnum.THESIS in source_record.document_type
     assert len(source_record.contributions) == 1
     assert any(
         contribution for contribution in source_record.contributions if
         contribution.rank == 1 and contribution.contributor.name == "Doe, Jane"
         and contribution.contributor.affiliation == "University of Example"
     )
+    assert DocumentTypeEnum.THESIS in source_record.document_type
 
 
 def test_create_thesis_source_record_from_idref_data(
@@ -101,16 +99,10 @@ def test_create_thesis_source_record_from_idref_data(
         subject.uri == "http://www.example.fr/subject/123456"
     )
     assert len(source_record.document_type) == 2
-    assert any(
-        document_type for document_type in source_record.document_type
-        if
-        document_type.uri == "http://purl.org/ontology/bibo/Book"
-    )
-    assert any(
-        document_type for document_type in source_record.document_type
-        if
-        document_type.uri == "http://purl.org/ontology/bibo/Thesis"
-    )
+
+    assert DocumentTypeEnum.THESIS in source_record.document_type
+
+    assert DocumentTypeEnum.THESIS in source_record.document_type
     assert len(source_record.contributions) == 3
     assert any(
         contribution for contribution in source_record.contributions if
@@ -167,11 +159,7 @@ async def test_create_article_source_record_from_open_alex_data(
         subject.uri == "http://www.example.org/entity/123"
     )
     assert len(source_record.document_type) == 1
-    assert any(
-        document_type for document_type in source_record.document_type
-        if
-        document_type.uri == "http://purl.org/ontology/bibo/Article"
-    )
+    assert DocumentTypeEnum.ARTICLE in source_record.document_type
     assert len(source_record.contributions) == 1
     assert any(
         contribution for contribution in source_record.contributions if
