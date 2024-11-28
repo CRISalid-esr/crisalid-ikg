@@ -108,6 +108,22 @@ class SourceRecordDAO(Neo4jDAO):
                                                                           equivalence_type)
 
     @handle_database_errors
+    async def get_source_records_by_textual_document_uid(
+            self, textual_document_uid: str) -> List[SourceRecord]:
+        """
+        Get source records by textual document UID
+        :param textual_document_uid:
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("get_source_records_by_textual_document_uid"),
+                    textual_document_uid=textual_document_uid
+                )
+                return [SourceRecordDAO._hydrate(record) async for record in result]
+
+    @handle_database_errors
     async def delete_inferred_equivalence_relationships(self, source_record_uid: str,
                                                         target_uids: list[str]):
         """

@@ -117,6 +117,7 @@ class EquivalenceService:
         if len(recorded_textual_documents) == 1:
             textual_document = recorded_textual_documents[0]
             textual_document.source_record_uids = equivalent_source_record_uids
+            textual_document.to_be_recomputed = True
             await document_dao.create_or_update_textual_document(
                 textual_document=textual_document
             )
