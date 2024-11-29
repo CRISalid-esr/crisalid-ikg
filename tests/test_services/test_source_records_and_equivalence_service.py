@@ -1,5 +1,6 @@
 from typing import cast
 
+
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.models.document import Document
@@ -69,7 +70,7 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
 
 
 async def test_create_source_records_with_one_having_common_id_with_others(
-        test_app, # pylint: disable=unused-argument # connect signal listeners
+        test_app,  # pylint: disable=unused-argument # connect signal listeners
         persisted_person_a_pydantic_model: Person,
         scanr_article_a_source_record_pydantic_model: SourceRecord,
         open_alex_article_b_source_record_pydantic_model: SourceRecord,
@@ -101,6 +102,54 @@ async def test_create_source_records_with_one_having_common_id_with_others(
     assert document.to_be_recomputed is True
     assert sorted(document.source_record_uids) == sorted([
         scanr_article_a_source_record_pydantic_model.uid,
+        open_alex_article_b_source_record_pydantic_model.uid,
+        idref_article_a_source_record_pydantic_model.uid
+    ])
+
+
+async def test_persisted_source_records_with_multiple_relations_in_common_lose_one_relation(
+        persisted_person_a_pydantic_model: Person,
+        open_alex_article_b_source_record_pydantic_model: SourceRecord,
+        idref_article_a_source_record_with_doi_pydantic_model: SourceRecord,
+        idref_article_a_source_record_pydantic_model: SourceRecord,
+) -> None:
+    """
+    Given 2 source records with Hal and doi identifiers in common,
+    When one of the source records lose the doi identifier after an update,
+    Then the relation between the 2 source records should remain.
+    """
+
+    assert (idref_article_a_source_record_pydantic_model.uid ==
+            idref_article_a_source_record_with_doi_pydantic_model.uid)
+
+    source_record_service = SourceRecordService()
+
+    await source_record_service.create_source_record(
+        source_record=open_alex_article_b_source_record_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+
+    await source_record_service.create_source_record(
+        source_record=idref_article_a_source_record_with_doi_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
+    document = await document_dao.get_textual_document_by_source_record_uid(
+        open_alex_article_b_source_record_pydantic_model.uid)
+
+    assert sorted(document.source_record_uids) == sorted([
+        open_alex_article_b_source_record_pydantic_model.uid,
+        idref_article_a_source_record_pydantic_model.uid
+    ])
+
+    await source_record_service.update_source_record(
+        source_record=idref_article_a_source_record_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+
+    document_after_update = await document_dao.get_textual_document_by_source_record_uid(
+        idref_article_a_source_record_pydantic_model.uid)
+
+    assert sorted(document_after_update.source_record_uids) == sorted([
         open_alex_article_b_source_record_pydantic_model.uid,
         idref_article_a_source_record_pydantic_model.uid
     ])

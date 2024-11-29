@@ -459,8 +459,8 @@ async def fixture_open_alex_article__source_record_json_data(_base_path) -> dict
 async def fixture_idref_article_a_source_record_pydantic_model(
         idref_article_a_source_record_json_data) -> SourceRecord:
     """
-    Create an article source record pydantic model from open_alex data
-    :return: basic source record pydantic model from open_alex data
+    Create an article source record pydantic model from idref data
+    :return: basic source record pydantic model from idref data
     """
     return _source_record_from_json_data(idref_article_a_source_record_json_data)
 
@@ -468,7 +468,26 @@ async def fixture_idref_article_a_source_record_pydantic_model(
 @pytest_asyncio.fixture(name="idref_article_a_source_record_json_data")
 async def fixture_idref_article_a_source_record_json_data(_base_path) -> dict:
     """
-    Create an article source record dict from open_alex data
-    :return: basic source record dict from open_alex data
+    Create an article source record dict from idref data
+    :return: basic source record dict from idref data
     """
     return _source_record_json_data_from_file(_base_path, "idref_article_a_source_record")
+
+
+@pytest_asyncio.fixture(name="idref_article_a_source_record_with_doi_pydantic_model")
+async def fixture_idref_article_a_source_with_doi_record_pydantic_model(
+        idref_article_a_source_record_with_doi_json_data) -> SourceRecord:
+    """
+    Create an article source record pydantic model from idref data
+    :return: basic source record pydantic model from idref data
+    """
+    return _source_record_from_json_data(idref_article_a_source_record_with_doi_json_data)
+
+
+@pytest_asyncio.fixture(name="idref_article_a_source_record_with_doi_json_data")
+async def fixture_idref_article_a_source_record_with_doi_json_data(_base_path) -> dict:
+    """
+    Create an article source record dict from idref data
+    :return: basic source record dict from idref data
+    """
+    return _source_record_json_data_from_file(_base_path, "idref_article_a_source_record_with_doi")
