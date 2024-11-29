@@ -163,6 +163,7 @@ async def test_create_source_records_with_one_having_common_id_with_others(
 
 
 async def test_create_source_record_with_common_id_with_persisted_source_records(
+        test_app, # pylint: disable=unused-argument # connect signal listeners
         persisted_person_a_pydantic_model: Person,
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
         idref_persisted_article_a_source_record_pydantic_model: SourceRecord,
