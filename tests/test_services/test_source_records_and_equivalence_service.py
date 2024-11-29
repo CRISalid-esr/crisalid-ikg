@@ -182,7 +182,7 @@ async def test_create_source_record_with_common_id_with_persisted_source_records
     document_b = await document_dao.get_textual_document_by_source_record_uid(
         idref_persisted_article_a_source_record_pydantic_model.uid
     )
-    assert document_a != document_b
+    assert document_a.uid != document_b.uid
 
     await source_record_service.create_source_record(
         source_record=open_alex_article_b_source_record_pydantic_model,
