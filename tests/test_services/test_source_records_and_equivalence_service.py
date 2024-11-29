@@ -67,6 +67,7 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
         open_alex_article_a_source_record_pydantic_model.uid
     ])
 
+
 # pylint: disable=too-many-arguments
 async def test_update_one_source_record_between_multiple_related_source_records(
         test_app,  # pylint: disable=unused-argument # connect signal listeners
@@ -118,10 +119,11 @@ async def test_update_one_source_record_between_multiple_related_source_records(
     assert sorted(initial_document_updated.source_record_uids) == sorted([
         open_alex_persisted_article_a_source_record_pydantic_model.uid,
         hal_persisted_article_a_source_record_pydantic_model.uid
+    ])
 
 
 async def test_create_source_records_with_one_having_common_id_with_others(
-        test_app, # pylint: disable=unused-argument # connect signal listeners
+        test_app,  # pylint: disable=unused-argument # connect signal listeners
         persisted_person_a_pydantic_model: Person,
         scanr_article_a_source_record_pydantic_model: SourceRecord,
         open_alex_article_b_source_record_pydantic_model: SourceRecord,
