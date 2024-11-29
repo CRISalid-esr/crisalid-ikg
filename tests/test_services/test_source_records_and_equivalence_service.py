@@ -48,7 +48,7 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
 
     for record in [open_alex_fetched_source_record, scanr_fetched_source_record,
                    hal_fetched_source_record]:
-        assert open_alex_fetched_source_record
+        assert record
         assert any(
             fetched_identifier.type == PublicationIdentifierType.HAL
             and fetched_identifier.value == "hal-00000000"

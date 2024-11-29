@@ -446,7 +446,7 @@ async def fixture_hal_article_a_source_record_json_data(_base_path) -> dict:
 @pytest_asyncio.fixture(name="open_alex_persisted_article_a_source_record_pydantic_model")
 async def fixture_open_alex_persisted_article_a_source_record_pydantic_model(
         open_alex_article_a_source_record_pydantic_model: SourceRecord,
-        persisted_person_b_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from open_alex data
@@ -455,7 +455,7 @@ async def fixture_open_alex_persisted_article_a_source_record_pydantic_model(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=open_alex_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model
+        harvested_for=persisted_person_a_pydantic_model
     )
     return await service.get_source_record(
         open_alex_article_a_source_record_pydantic_model.uid)
