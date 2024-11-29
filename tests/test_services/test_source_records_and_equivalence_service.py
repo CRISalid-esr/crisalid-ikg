@@ -158,3 +158,47 @@ async def test_create_source_records_with_one_having_common_id_with_others(
         open_alex_article_b_source_record_pydantic_model.uid,
         idref_article_a_source_record_pydantic_model.uid
     ])
+
+
+
+
+async def test_create_source_record_with_common_id_with_persisted_source_records(
+        test_app, # pylint: disable=unused-argument # connect signal listeners
+        persisted_person_a_pydantic_model: Person,
+        scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        idref_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        open_alex_article_b_source_record_pydantic_model: SourceRecord,
+) -> None:
+    """
+    Given 2 persisted source record with no identifiers in common,
+    When a new source record with identifiers in common with both persisted source records is added,
+    Then the new source record is added, they becomre related to each other with relationship,
+    and one of the existing document is updated and related to the 3 source records.
+    """
+    source_record_service = SourceRecordService()
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
+    document_a = await document_dao.get_textual_document_by_source_record_uid(
+        scanr_persisted_article_a_source_record_pydantic_model.uid)
+    document_b = await document_dao.get_textual_document_by_source_record_uid(
+        idref_persisted_article_a_source_record_pydantic_model.uid
+    )
+    assert document_a.uid != document_b.uid
+
+    await source_record_service.create_source_record(
+        source_record=open_alex_article_b_source_record_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+
+    document_after_update = await document_dao.get_textual_document_by_source_record_uid(
+        open_alex_article_b_source_record_pydantic_model.uid
+    )
+    assert document_after_update
+    assert any(
+        document_after_update.uid == record.uid
+        for record in [document_a, document_b]
+    )
+    assert sorted(document_after_update.source_record_uids) == sorted([
+        scanr_persisted_article_a_source_record_pydantic_model.uid,
+        open_alex_article_b_source_record_pydantic_model.uid,
+        idref_persisted_article_a_source_record_pydantic_model.uid
+    ])
