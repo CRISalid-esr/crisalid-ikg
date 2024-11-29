@@ -30,7 +30,7 @@ class MergeStrategyFactory(Generic[T]):
     def create_strategy(strategy_type: StrategyType,
                         source_records: List[SourceRecord],
                         parameters: Dict,
-                        document_type: Type[T],
+                        document_class: Type[T],
                         textual_document_uid: str = None
                         ) -> MergeStrategy:
         """
@@ -38,7 +38,7 @@ class MergeStrategyFactory(Generic[T]):
         :param strategy_type: The type of strategy (e.g., "global_richest", "source_order")
         :param source_records: List of source records
         :param parameters: Strategy parameters
-        :param document_type: The pydantic class to instantiate
+        :param document_class: The pydantic class to instantiate
         :param textual_document_uid: The textual document uid
         :return: MergeStrategy instance
         """
@@ -52,6 +52,6 @@ class MergeStrategyFactory(Generic[T]):
         if strategy_class is not None:
             return strategy_class(source_records=source_records,
                                   parameters=parameters,
-                                  document_type=document_type,
+                                  document_type=document_class,
                                   textual_document_uid=textual_document_uid)
         raise ValueError(f"Unknown strategy type: {strategy_type}")

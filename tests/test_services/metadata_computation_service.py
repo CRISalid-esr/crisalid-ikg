@@ -6,7 +6,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.models.document import Document
 from app.models.source_records import SourceRecord
-from app.services.documents.textual_document_service import TextualDocumentService
+from app.services.documents.metadata_computation_service import MetadataComputationService
 from app.services.source_records.equivalence_service import EquivalenceService
 
 
@@ -34,6 +34,6 @@ async def test_recompute_textual_document_from_three_documents(
         source_record_id_doi_1_persisted_model.uid)
     assert document is not None
     assert document.to_be_recomputed is True
-    await TextualDocumentService(document.uid).recompute_metadata()
+    await MetadataComputationService().recompute_metadata(None, textual_document_uid=document.uid)
     await document_dao.get_textual_document_by_source_record_uid(
         source_record_id_doi_1_persisted_model.uid)

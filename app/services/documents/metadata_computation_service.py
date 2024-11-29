@@ -17,7 +17,7 @@ from app.models.textual_document import TextualDocument
 from app.services.documents.merge_strategies.merge_strategy_factory import MergeStrategyFactory
 
 
-class TextualDocumentService:
+class MetadataComputationService:
     """
     Service to handle operations on publication data
     """
@@ -29,31 +29,30 @@ class TextualDocumentService:
         DocumentTypeEnum.PROCEEDINGS: Proceedings
     }
 
-    def __init__(self, textual_document_uid: str = None):
-        self.textual_document_uid = textual_document_uid
-        settings = get_app_settings()
-        self.policies = settings.publication_source_policies
+    def __init__(self):
+        self.textual_document_uid = None
         self.source_records: List[SourceRecord] = []
         self.document_type: DocumentTypeEnum = DocumentTypeEnum.UNKNOWN
-        self.strategy = None
 
-    async def recompute_metadata(self):
+    async def recompute_metadata(self, _, textual_document_uid: str):
         """
         Recompute metadata for a publication
         :param publication_uid: publication uid
         :return:
         """
+        self.textual_document_uid = textual_document_uid
         await self._fetch_publication_sources()
-        self._sort_source_records()
-        self._choose_document_type()
-        self._elect_strategy()
-        document = self.strategy.merge()
-        dao:DocumentDAO = self._get_dao_factory().get_dao(Document)
+        strategy = self._elect_strategy()
+        document = strategy.merge()
+        # set it explicitly to False for code clarity although it is the default value
+        document.to_be_recomputed = False
+        document.to_be_deleted = False
+        dao: DocumentDAO = self._get_dao_factory().get_dao(Document)
         await dao.create_or_update_textual_document(document)
 
     async def _sort_source_records(self):
         self.source_records = sorted(self.source_records, key=lambda
-            x: self.policies.harvesters.index(
+            x: self._get_harvesters().index(
             x.harvester))
 
     async def _fetch_publication_sources(self) -> List[SourceRecord]:
@@ -85,18 +84,29 @@ class TextualDocumentService:
         Elect the appropriate policy for the document type
         :param document_type: The document type
         """
+        self._sort_source_records()
+        self._choose_document_type()
         expected_document_class = self._textual_document_class()
-        for strategy in self.policies['strategies']:
+        for strategy in self._get_strategies():
             document_type_values = [document_type.value for document_type in self.document_type]
             if any(doc_type in strategy['types'] for doc_type in document_type_values):
-                self.strategy = (MergeStrategyFactory[expected_document_class].create_strategy(
+                strategy = (MergeStrategyFactory[expected_document_class].create_strategy(
                     strategy_type=MergeStrategyFactory.StrategyType(strategy['type']),
                     source_records=self.source_records,
                     parameters=strategy.get("parameters", {}),
-                    document_type=expected_document_class,
+                    document_class=expected_document_class,
                     textual_document_uid=self.textual_document_uid
                 ))
-                return
+                return strategy
+
+    def _get_policies(self):
+        return get_app_settings().publication_source_policies
+
+    def _get_strategies(self):
+        return self._get_policies()['strategies']
+
+    def _get_harvesters(self):
+        return self._get_policies()['harvesters']
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

@@ -18,9 +18,10 @@ from app.routes.api import router as api_router
 from app.routes.healthness import router as healthness_router
 from app.search.search_engine import SearchEngine
 from app.search.source_record_index import SourceRecordIndex
+from app.services.documents.metadata_computation_service import MetadataComputationService
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
-    person_unchanged
+    person_unchanged, textual_document_updated
 
 
 class CrisalidIKG(FastAPI):
@@ -65,6 +66,7 @@ class CrisalidIKG(FastAPI):
             self.add_event_handler("shutdown", self.close_elasticsearch)
 
         self._register_source_record_events()
+        self._register_textual_document_events()
         self._register_person_events()
 
     @logger.catch(reraise=True)
@@ -95,6 +97,10 @@ class CrisalidIKG(FastAPI):
         source_record_created.connect(self.source_record_index.add_source_record)
         self.equivalence_service = EquivalenceService()
         source_record_created.connect(self.equivalence_service.update_source_record)
+
+    def _register_textual_document_events(self):
+        self.metadata_computation_service = MetadataComputationService()
+        textual_document_updated.connect(self.metadata_computation_service.recompute_metadata)
 
     @logger.catch(reraise=True)
     async def close_elasticsearch(self) -> None:  # pragma: no cover

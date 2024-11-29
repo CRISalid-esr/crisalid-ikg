@@ -34,7 +34,6 @@ async def test_infer_source_record_equivalents(
     document = await document_dao.get_textual_document_by_source_record_uid(
         source_record_id_doi_1_persisted_model.uid)
     assert document is not None
-    assert document.to_be_recomputed is True
     assert sorted(document.source_record_uids) == sorted([
         source_record_id_doi_1_persisted_model.uid,
         source_record_id_hal_1_persisted_model.uid,
