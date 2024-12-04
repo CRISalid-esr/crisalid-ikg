@@ -1,5 +1,6 @@
 from typing import cast
 
+
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
@@ -9,8 +10,8 @@ from app.models.source_records import SourceRecord
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.services.source_records.source_record_service import SourceRecordService
 
-
 async def test_infer_source_record_equivalents(
+        test_app,  # pylint: disable=unused-argument
         source_record_id_doi_1_persisted_model: SourceRecord,
         source_record_id_hal_1_persisted_model: SourceRecord,
         source_record_id_doi_1_hal_1_persisted_model: SourceRecord
@@ -40,6 +41,8 @@ async def test_infer_source_record_equivalents(
         source_record_id_doi_1_hal_1_persisted_model.uid
     ])
     assert document.uid is not None
+    assert len(document.titles) == 1
+    assert document.titles[0].value == "Example Article with DOI and HAL"
 
 
 async def test_attach_new_source_record_to_existing_document(

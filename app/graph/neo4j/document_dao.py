@@ -5,6 +5,7 @@ from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.document import Document
+from app.models.literal import Literal
 from app.models.textual_document import TextualDocument
 
 
@@ -109,8 +110,10 @@ class DocumentDAO(Neo4jDAO):
         :param document:
         :return:
         """
-        if record is not None:
-            document = Document(**record['document'])
-            document.source_record_uids = record['source_record_uids']
-            return document
-        return None
+        if record is None:
+            return None
+        document = Document(**record['document'])
+        document.source_record_uids = record['source_record_uids']
+        for title in record['titles']:
+            document.titles.append(Literal(**title))
+        return document
