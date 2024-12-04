@@ -2,5 +2,5 @@ MATCH (document:Document)-[:RECORDED_BY]->(:SourceRecord {uid: $source_record_ui
 OPTIONAL MATCH (document)-[:HAS_TITLE]->(t:Literal)
 MATCH (document)-[:RECORDED_BY]->(s:SourceRecord)
 RETURN document,
-       collect(s.uid) AS source_record_uids,
+       collect(DISTINCT s.uid) AS source_record_uids,
        collect(DISTINCT t) AS titles
