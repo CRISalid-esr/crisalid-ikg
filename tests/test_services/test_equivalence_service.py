@@ -97,7 +97,7 @@ async def test_merge_two_existing_documents(
     """
     Test that the equivalence service can infer equivalent source records
     :param source_record_id_doi_1_persisted_model: Pydantic SourceRecord object with DOI identifier
-    :param source_record_id_doi_1_hal_1_persisted_model: Pydantic SourceRecord object with both
+    :param source_record_id_doi_1_hal_1_pydantic_model: Pydantic SourceRecord object with both
     DOI and HAL identifiers (the same as the other two)
     """
     source_record_service = SourceRecordService()
