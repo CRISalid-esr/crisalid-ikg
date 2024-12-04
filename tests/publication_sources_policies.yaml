@@ -32,5 +32,11 @@ strategies:
       - idref
       - hal
       - openalex
-# Another available strategy could be "richest_by_field"
-# which priorities the metadata field by field based on their richness.
+  # Example policy 3: Strategy for proceedings.
+  # "richest_by_field" prioritizes metadata field by field based on their richness.
+  # Excludes harvester will be ignored for this type of document.
+  - types:
+      - Proceedings     # Applied to proceedings.
+    type: "richest_by_field"
+    excluded_harvesters:
+      - scanr

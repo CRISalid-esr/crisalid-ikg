@@ -9,6 +9,7 @@ from app.models.journal_article import JournalArticle
 from app.models.proceedings import Proceedings
 from app.models.source_records import SourceRecord
 from app.models.textual_document import TextualDocument
+from app.services.documents.merge_strategies.abstract_merge_strategy import MergeStrategy
 from app.services.documents.merge_strategies.merge_strategy_factory import MergeStrategyFactory
 
 
@@ -31,22 +32,25 @@ class MetadataComputationService:
         :param source_records: the source records to be merged
         """
         self.source_records = source_records
-        self._elected_document_type = None
+        self.settings = get_app_settings()
+        self._sort_source_records()
+        self._elected_document_type = self._elect_document_type()
+        self._elected_strategy = self._elect_strategy()
 
     def merge(self) -> TextualDocument:
         """
         Merge the source records into a single document
-        :return:
+        :return: the TextualDocument instance
         """
-        return self._elected_strategy().merge()
+        return self._elected_strategy.merge()
 
     def _sort_source_records(self):
         self.source_records = sorted(self.source_records, key=lambda
             x: self._get_harvesters().index(
             x.harvester))
 
-    def _elect_document_type(self) -> None:
-        self._elected_document_type = next(
+    def _elect_document_type(self) -> List[DocumentTypeEnum]:
+        return next(
             (source_record.document_type for source_record in self.source_records if
              source_record.document_type and source_record.document_type != [
                  DocumentTypeEnum.UNKNOWN]),
@@ -59,12 +63,12 @@ class MetadataComputationService:
                 return self.DOCUMENT_CLASS_BY_DOCUMENT_TYPE[document_type]
         return TextualDocument
 
-    def _elected_strategy(self):
+    def _elect_strategy(self) -> MergeStrategy:
         """
         Elect the appropriate policy for the document type
+
+        :return: MergeStrategy instance
         """
-        self._sort_source_records()
-        self._elect_document_type()
         expected_document_class = self._textual_document_class()
         for strategy in self._get_strategies():
             document_type_values = [document_type.value for document_type in
@@ -78,7 +82,7 @@ class MetadataComputationService:
         assert default_strategy is not None, "No default strategy found"
         return self._instantiate_strategy(expected_document_class, default_strategy)
 
-    def _instantiate_strategy(self, expected_document_class: Type, strategy: dict):
+    def _instantiate_strategy(self, expected_document_class: Type, strategy: dict) -> MergeStrategy:
         return MergeStrategyFactory[expected_document_class].create_strategy(
             strategy_type=MergeStrategyFactory.StrategyType(strategy['type']),
             source_records=self.source_records,
@@ -87,10 +91,24 @@ class MetadataComputationService:
         )
 
     def _get_policies(self):
-        return get_app_settings().publication_source_policies
+        return self.settings.publication_source_policies
 
     def _get_strategies(self):
         return self._get_policies()['strategies']
 
     def _get_harvesters(self):
         return self._get_policies()['harvesters']
+
+    def get_elected_strategy(self) -> MergeStrategy:
+        """
+        Get the elected strategy
+        :return: MergeStrategy
+        """
+        return self._elected_strategy
+
+    def get_elected_document_type(self) -> List[DocumentTypeEnum]:
+        """
+        Get the elected document type
+        :return: List of DocumentTypeEnum
+        """
+        return self._elected_document_type

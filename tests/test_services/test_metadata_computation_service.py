@@ -8,6 +8,12 @@ from app.models.document_type import DocumentTypeEnum
 from app.models.journal_article import JournalArticle
 from app.models.proceedings import Proceedings
 from app.models.source_records import SourceRecord
+from app.services.documents.merge_strategies.global_richest_merge_strategy import \
+    GlobalRichestMergeStrategy
+from app.services.documents.merge_strategies.richest_by_field_merge_strategy import \
+    RichestByFieldMergeStrategy
+from app.services.documents.merge_strategies.source_order_merge_strategy import \
+    SourceOrderMergeStrategy
 from app.services.documents.metadata_computation_service import MetadataComputationService
 
 
@@ -34,25 +40,30 @@ async def test_recompute_textual_document_from_three_documents(
 
 
 @pytest.mark.parametrize(
-    "harvester_order, source_document_types, expected_document_type, expected_document_class", [
+    "harvester_order,"
+    "source_document_types,"
+    "expected_document_type,"
+    "expected_document_class,"
+    "expected_strategy",
+    [
         (["Hal", "ScanR", "OpenAlex"],
          [DocumentTypeEnum.UNKNOWN, DocumentTypeEnum.ARTICLE, DocumentTypeEnum.BOOK],
-         DocumentTypeEnum.ARTICLE, JournalArticle),
+         DocumentTypeEnum.ARTICLE, JournalArticle, GlobalRichestMergeStrategy),
         (["Scopus", "ScanR", "OpenAlex"], [DocumentTypeEnum.BOOK, DocumentTypeEnum.UNKNOWN,
                                            DocumentTypeEnum.ARTICLE],
-         DocumentTypeEnum.BOOK, Book),
+         DocumentTypeEnum.BOOK, Book, SourceOrderMergeStrategy),
         (["Idref", "Hal", "ScanR"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.UNKNOWN,
                                      DocumentTypeEnum.BOOK],
-         DocumentTypeEnum.ARTICLE, JournalArticle),
+         DocumentTypeEnum.ARTICLE, JournalArticle, GlobalRichestMergeStrategy),
         (["Scopus", "OpenAlex", "Hal"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.BOOK,
                                          DocumentTypeEnum.UNKNOWN],
-         DocumentTypeEnum.ARTICLE, JournalArticle),
+         DocumentTypeEnum.ARTICLE, JournalArticle, GlobalRichestMergeStrategy),
         (["Idref", "Hal", "ScanR"], [DocumentTypeEnum.PROCEEDINGS, DocumentTypeEnum.UNKNOWN,
                                      DocumentTypeEnum.ARTICLE],
-         DocumentTypeEnum.PROCEEDINGS, Proceedings),
+         DocumentTypeEnum.PROCEEDINGS, Proceedings, RichestByFieldMergeStrategy),
         (["ScanR", "Scopus", "Hal"], [DocumentTypeEnum.CHAPTER, DocumentTypeEnum.ARTICLE,
                                       DocumentTypeEnum.UNKNOWN],
-         DocumentTypeEnum.CHAPTER, BookChapter)
+         DocumentTypeEnum.CHAPTER, BookChapter, GlobalRichestMergeStrategy)
     ])
 # pylint: disable=too-many-arguments
 async def test_merge_document_with_inconsistent_types(
@@ -62,7 +73,8 @@ async def test_merge_document_with_inconsistent_types(
         harvester_order: List[str],
         source_document_types: List[DocumentTypeEnum],
         expected_document_type: DocumentTypeEnum,
-        expected_document_class: type
+        expected_document_class: type,
+        expected_strategy: type
 ) -> None:
     """
     Test that when 3 source records with inconsistent types are merged,
@@ -94,8 +106,10 @@ async def test_merge_document_with_inconsistent_types(
     ])
     document = service_under_test.merge()
     assert document is not None
-    assert (len(service_under_test._elected_document_type)  # pylint: disable=protected-access
+    assert (len(service_under_test.get_elected_document_type())  # pylint: disable=protected-access
             == 1)
-    assert (service_under_test._elected_document_type[0]  # pylint: disable=protected-access
+    assert (service_under_test.get_elected_document_type()[0]  # pylint: disable=protected-access
             == expected_document_type)
+    assert isinstance(service_under_test.get_elected_strategy(),
+                      expected_strategy)  # pylint: disable=protected-access
     assert isinstance(document, expected_document_class)
