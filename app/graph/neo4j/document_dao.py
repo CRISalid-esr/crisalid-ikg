@@ -1,4 +1,4 @@
-from neo4j import AsyncManagedTransaction, Record
+from neo4j import Record, AsyncTransaction
 
 from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
@@ -50,7 +50,7 @@ class DocumentDAO(Neo4jDAO):
 
     @classmethod
     async def _create_or_update_textual_document_transaction(
-            cls, tx: AsyncManagedTransaction,
+            cls, tx: AsyncTransaction,
             textual_document: TextualDocument) -> TextualDocument:
         create_textual_document_query = load_query(
             "create_or_update_textual_document"
@@ -68,7 +68,7 @@ class DocumentDAO(Neo4jDAO):
 
     @classmethod
     async def _attach_source_records_to_textual_document_transaction(
-            cls, tx: AsyncManagedTransaction, document_uid: str,
+            cls, tx: AsyncTransaction, document_uid: str,
             source_record_uids: list[str]) -> None:
         attach_source_records_to_textual_document_query = load_query(
             "attach_source_records_to_textual_document"
@@ -94,7 +94,7 @@ class DocumentDAO(Neo4jDAO):
                                                                                  source_record_uid)
 
     @classmethod
-    async def _get_textual_document_by_source_record_uid(cls, tx: AsyncManagedTransaction,
+    async def _get_textual_document_by_source_record_uid(cls, tx: AsyncTransaction,
                                                          source_record_uid: str) -> Document | None:
         result = await tx.run(
             load_query("get_textual_document_by_source_record_uid"),
@@ -107,7 +107,7 @@ class DocumentDAO(Neo4jDAO):
     def _hydrate(record: Record) -> Document | None:
         """
         Hydrate a document object from a Neo4j record
-        :param document:
+        :param record: Neo4j record
         :return:
         """
         if record is None:

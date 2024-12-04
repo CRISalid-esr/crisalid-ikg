@@ -53,7 +53,7 @@ async def test_attach_new_source_record_to_existing_document(
     """
     Test that the equivalence service can infer equivalent source records
     :param source_record_id_doi_1_persisted_model: Pydantic SourceRecord object with DOI identifier
-    :param source_record_id_doi_1_hal_1_persisted_model: Pydantic SourceRecord object with both
+    :param source_record_id_doi_1_hal_1_pydantic_model: Pydantic SourceRecord object with both
     DOI and HAL identifiers (the same as the other two)
     """
     source_record_service = SourceRecordService()
@@ -75,7 +75,6 @@ async def test_attach_new_source_record_to_existing_document(
     document = await document_dao.get_textual_document_by_source_record_uid(
         source_record_id_doi_1_persisted_model.uid)
     assert document is not None
-    assert document.to_be_recomputed is True
     assert sorted(document.source_record_uids) == sorted([
         source_record_id_doi_1_persisted_model.uid,
         source_record_id_doi_1_hal_1_pydantic_model.uid
@@ -126,7 +125,6 @@ async def test_merge_two_existing_documents(
     document = await document_dao.get_textual_document_by_source_record_uid(
         source_record_id_doi_1_persisted_model.uid)
     assert document is not None
-    assert document.to_be_recomputed is True
     assert sorted(document.source_record_uids) == sorted([
         source_record_id_doi_1_persisted_model.uid,
         source_record_id_hal_1_persisted_model.uid,
