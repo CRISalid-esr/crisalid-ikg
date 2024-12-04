@@ -1,6 +1,5 @@
 from typing import cast
 
-
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
@@ -46,6 +45,7 @@ async def test_infer_source_record_equivalents(
 
 
 async def test_attach_new_source_record_to_existing_document(
+        test_app,  # pylint: disable=unused-argument
         source_record_id_doi_1_persisted_model: SourceRecord,
         source_record_id_doi_1_hal_1_pydantic_model: SourceRecord,
         persisted_person_a_pydantic_model: Person
@@ -75,6 +75,8 @@ async def test_attach_new_source_record_to_existing_document(
     document = await document_dao.get_textual_document_by_source_record_uid(
         source_record_id_doi_1_persisted_model.uid)
     assert document is not None
+    assert len(document.titles) == 1
+    assert document.titles[0].value == "Example Article with DOI and HAL"
     assert sorted(document.source_record_uids) == sorted([
         source_record_id_doi_1_persisted_model.uid,
         source_record_id_doi_1_hal_1_pydantic_model.uid
@@ -89,6 +91,7 @@ async def test_attach_new_source_record_to_existing_document(
 
 
 async def test_merge_two_existing_documents(
+        test_app,  # pylint: disable=unused-argument
         source_record_id_doi_1_persisted_model: SourceRecord,
         source_record_id_hal_1_persisted_model: SourceRecord,
         source_record_id_doi_1_hal_1_pydantic_model: SourceRecord,
@@ -130,6 +133,8 @@ async def test_merge_two_existing_documents(
         source_record_id_hal_1_persisted_model.uid,
         source_record_id_doi_1_hal_1_pydantic_model.uid
     ])
+    assert len(document.titles) == 1
+    assert document.titles[0].value == "Example Article with DOI and HAL"
     source_records = await source_record_dao.get_source_records_by_textual_document_uid(
         document.uid)
     assert source_records is not None
