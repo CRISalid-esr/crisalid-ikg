@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Type
 
 from app.config import get_app_settings
 from app.models.book import Book
@@ -45,7 +45,7 @@ class MetadataComputationService:
             x: self._get_harvesters().index(
             x.harvester))
 
-    def _elect_document_type(self) -> List[DocumentTypeEnum]:
+    def _elect_document_type(self) -> None:
         self._elected_document_type = next(
             (source_record.document_type for source_record in self.source_records if
              source_record.document_type and source_record.document_type != [
@@ -62,7 +62,6 @@ class MetadataComputationService:
     def _elected_strategy(self):
         """
         Elect the appropriate policy for the document type
-        :param document_type: The document type
         """
         self._sort_source_records()
         self._elect_document_type()
@@ -79,7 +78,7 @@ class MetadataComputationService:
         assert default_strategy is not None, "No default strategy found"
         return self._instantiate_strategy(expected_document_class, default_strategy)
 
-    def _instantiate_strategy(self, expected_document_class:type, strategy: dict):
+    def _instantiate_strategy(self, expected_document_class: Type, strategy: dict):
         return MergeStrategyFactory[expected_document_class].create_strategy(
             strategy_type=MergeStrategyFactory.StrategyType(strategy['type']),
             source_records=self.source_records,

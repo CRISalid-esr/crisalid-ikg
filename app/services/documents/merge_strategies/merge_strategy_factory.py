@@ -38,7 +38,6 @@ class MergeStrategyFactory(Generic[T]):
         :param source_records: List of source records
         :param parameters: Strategy parameters
         :param document_class: The pydantic class to instantiate
-        :param textual_document_uid: The textual document uid
         :return: MergeStrategy instance
         """
         strategy_class = None
