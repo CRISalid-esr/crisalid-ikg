@@ -115,7 +115,12 @@ class DocumentType(BaseModel):
     uri: str
     label: str
 
-    def to_enum(self):
+    def to_enum(self) -> DocumentTypeEnum:
+        """
+        Get the enum value from the URI
+
+        :return: the enum value
+        """
         enum_value = DocumentTypeEnum.from_uri(self.uri)
         if not enum_value:
             logger.error(f"Unsupported document type URI: {self.uri}")
