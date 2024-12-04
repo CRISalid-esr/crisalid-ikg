@@ -21,8 +21,7 @@ from app.search.source_record_index import SourceRecordIndex
 from app.services.documents.textual_document_service import TextualDocumentService
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
-    person_unchanged, textual_document_updated
-
+    person_unchanged, textual_document_updated, source_record_updated
 
 class CrisalidIKG(FastAPI):
     """Main application, routing logic, middlewares and startup/shutdown events"""
@@ -97,6 +96,7 @@ class CrisalidIKG(FastAPI):
         source_record_created.connect(self.source_record_index.add_source_record)
         self.equivalence_service = EquivalenceService()
         source_record_created.connect(self.equivalence_service.update_source_record)
+        source_record_updated.connect(self.equivalence_service.update_source_record)
 
     def _register_textual_document_events(self):
         self.textual_document_service = TextualDocumentService()

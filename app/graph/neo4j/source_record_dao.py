@@ -126,19 +126,20 @@ class SourceRecordDAO(Neo4jDAO):
 
     @handle_database_errors
     async def delete_inferred_equivalence_relationships(self, source_record_uid: str,
-                                                        target_uids: list[str]):
+                                                        target_source_record_uids: list[str]):
         """
         Delete inferred equivalent relationships between a source record and other source records
         :param source_record_uid:
-        :param target_uids:
+        :param target_source_record_uids:
         :return:
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
-                    return await self._delete_inferred_equivalence_relationships(tx,
-                                                                                 source_record_uid,
-                                                                                 target_uids)
+                    return await self._delete_inferred_equivalence_relationships(
+                        tx,
+                        source_record_uid,
+                        target_source_record_uids)
 
     @handle_database_errors
     async def create_inferred_equivalence_relationships(self, source_record_uids: list[str]):
@@ -290,11 +291,11 @@ class SourceRecordDAO(Neo4jDAO):
     @classmethod
     async def _delete_inferred_equivalence_relationships(cls, tx: AsyncManagedTransaction,
                                                          source_record_uid: str,
-                                                         target_uids: list[str]):
+                                                         target_source_record_uids: list[str]):
         await tx.run(
             load_query("delete_inferred_equivalence_relationships"),
             source_record_uid=source_record_uid,
-            target_uids=target_uids
+            target_source_record_uids=target_source_record_uids
         )
 
     @classmethod
