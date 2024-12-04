@@ -13,8 +13,7 @@ class MergeStrategy(ABC, Generic[T]):
 
     def __init__(self, source_records: List[SourceRecord],
                  parameters: Dict,
-                 document_type: Type[T],
-                 textual_document_uid: str = None):
+                 document_type: Type[T]):
         """
         Constructor
         :param source_records: the source records to merge
@@ -23,7 +22,6 @@ class MergeStrategy(ABC, Generic[T]):
         self.source_records = source_records
         self.parameters = parameters
         self.document_type = document_type
-        self.textual_document_uid = textual_document_uid
         self.textual_document = None
 
     @abstractmethod

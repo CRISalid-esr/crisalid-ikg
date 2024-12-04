@@ -12,4 +12,4 @@ class SourceOrderMergeStrategy(MergeStrategy[T], Generic[T]):
     """
 
     def merge(self) -> TextualDocument:
-        return TextualDocument()
+        return self.document_type()

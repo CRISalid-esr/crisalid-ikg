@@ -31,7 +31,6 @@ class MergeStrategyFactory(Generic[T]):
                         source_records: List[SourceRecord],
                         parameters: Dict,
                         document_class: Type[T],
-                        textual_document_uid: str = None
                         ) -> MergeStrategy:
         """
         Create the appropriate merge strategy based on the strategy type
@@ -52,6 +51,5 @@ class MergeStrategyFactory(Generic[T]):
         if strategy_class is not None:
             return strategy_class(source_records=source_records,
                                   parameters=parameters,
-                                  document_type=document_class,
-                                  textual_document_uid=textual_document_uid)
+                                  document_type=document_class)
         raise ValueError(f"Unknown strategy type: {strategy_type}")

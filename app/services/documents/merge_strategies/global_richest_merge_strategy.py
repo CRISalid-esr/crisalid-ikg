@@ -13,7 +13,7 @@ class GlobalRichestMergeStrategy(MergeStrategy[T], Generic[T]):
 
     def merge(self) -> T:
         self.source_records = sorted(self.source_records, key=self._score, reverse=True)
-        self.textual_document = self.document_type(uid=self.textual_document_uid)
+        self.textual_document = self.document_type()
         self._add_titles()
         self._add_abstracts()
         self._add_subjects()
