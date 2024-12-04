@@ -2,8 +2,10 @@
 App settings base class
 """
 import logging
+import os
 from typing import ClassVar, TextIO
 
+import yaml
 from pydantic_settings import BaseSettings
 
 from app.models.identifier_types import PersonIdentifierType, OrganizationIdentifierType
@@ -14,6 +16,26 @@ class AppSettings(BaseSettings):
     """
     App settings main class with parameters definition
     """
+
+    @staticmethod
+    def settings_file_path(filename: str) -> str:
+        """
+        Get the path of a settings file
+
+        :param filename: The name of the settings file
+        :return: The path of the settings file
+        """
+        return os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), "..", "..", filename
+        )
+
+    @staticmethod
+    def dct_from_yml(yml_file: str) -> dict:
+        """
+        Load settings from yml file
+        """
+        with open(yml_file, encoding="utf8") as file:
+            return yaml.load(file, Loader=yaml.FullLoader)
 
     app_env: AppEnvTypes = AppEnvTypes.PROD
     debug: bool = False
@@ -80,3 +102,7 @@ class AppSettings(BaseSettings):
         [OrganizationIdentifierType.LOCAL,
          OrganizationIdentifierType.IDREF,
          OrganizationIdentifierType.ROR]
+
+    publication_source_policies_file: str = settings_file_path(
+        filename="publication_sources_policies.yaml")
+    publication_source_policies: dict = dct_from_yml(yml_file=publication_source_policies_file)

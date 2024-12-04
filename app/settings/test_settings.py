@@ -2,6 +2,7 @@
 Settings for test environment
 """
 import logging
+import os
 import sys
 from typing import ClassVar
 
@@ -15,6 +16,20 @@ class TestAppSettings(AppSettings):
     """
     Settings for test environment
     """
+
+    @staticmethod
+    def test_settings_file_path(filename: str) -> str:
+        """
+        Get the path of a settings file in the tests directory
+        (override the method in the parent class)
+
+        :param filename: The name of the settings file
+        :return: The path of the settings file in the tests directory
+        """
+        return os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), "..", "..", "tests", filename
+        )
+
     __test__ = False
 
     debug: bool = True
@@ -40,3 +55,9 @@ class TestAppSettings(AppSettings):
     es_enabled: bool = True
     es_host: str = "http://localhost"
     es_port: int = 9201
+
+    publication_source_policies_file: str = test_settings_file_path(
+        filename="publication_sources_policies.yaml")
+
+    publication_source_policies: dict = AppSettings.dct_from_yml(
+        yml_file=publication_source_policies_file)

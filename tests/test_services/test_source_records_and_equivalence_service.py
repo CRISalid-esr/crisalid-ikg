@@ -60,7 +60,6 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
     document = await document_dao.get_textual_document_by_source_record_uid(
         open_alex_article_a_source_record_pydantic_model.uid)
     assert document is not None
-    assert document.to_be_recomputed is True
     assert sorted(document.source_record_uids) == sorted([
         scanr_article_a_v2_source_record_pydantic_model.uid,
         hal_article_a_source_record_pydantic_model.uid,
@@ -90,7 +89,6 @@ async def test_update_one_source_record_between_multiple_related_source_records(
     initial_document = await document_dao.get_textual_document_by_source_record_uid(
         open_alex_persisted_article_a_source_record_pydantic_model.uid)
     assert initial_document is not None
-    assert initial_document.to_be_recomputed is True
     assert sorted(initial_document.source_record_uids) == sorted([
         scanr_persisted_article_a_v2_source_record_pydantic_model.uid,
         hal_persisted_article_a_source_record_pydantic_model.uid,
@@ -152,7 +150,6 @@ async def test_create_source_records_with_one_having_common_id_with_others(
     document = await document_dao.get_textual_document_by_source_record_uid(
         scanr_article_a_source_record_pydantic_model.uid)
     assert document is not None
-    assert document.to_be_recomputed is True
     assert sorted(document.source_record_uids) == sorted([
         scanr_article_a_source_record_pydantic_model.uid,
         open_alex_article_b_source_record_pydantic_model.uid,

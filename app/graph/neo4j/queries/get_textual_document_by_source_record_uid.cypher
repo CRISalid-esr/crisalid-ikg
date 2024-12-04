@@ -1,5 +1,6 @@
-MATCH (document:Document)-[:RECORDED_BY]->(s:SourceRecord {uid: $source_record_uid})
-WITH document
+MATCH (document:Document)-[:RECORDED_BY]->(:SourceRecord {uid: $source_record_uid})
+OPTIONAL MATCH (document)-[:HAS_TITLE]->(t:Literal)
 MATCH (document)-[:RECORDED_BY]->(s:SourceRecord)
-WITH document, collect(s.uid) AS source_record_uids
-RETURN document, source_record_uids
+RETURN document,
+       collect(DISTINCT s.uid) AS source_record_uids,
+       collect(DISTINCT t) AS titles

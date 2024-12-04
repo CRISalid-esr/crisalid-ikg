@@ -1,6 +1,5 @@
 MERGE (s:SourceRecord {uid: $source_record_uid})
-  ON MATCH SET s.harvester = $harvester, s.source_identifier = $source_identifier
-
+  ON MATCH SET s.harvester = $harvester, s.source_identifier = $source_identifier, s.document_types = $document_types
 WITH s
 OPTIONAL MATCH (s)-[r:HAS_TITLE]->(t:Literal)
 DELETE r, t

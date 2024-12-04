@@ -9,6 +9,7 @@ from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.concepts import Concept
+from app.models.document_type import DocumentTypeEnum
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.literal import Literal
 from app.models.people import Person
@@ -108,6 +109,22 @@ class SourceRecordDAO(Neo4jDAO):
                                                                           equivalence_type)
 
     @handle_database_errors
+    async def get_source_records_by_textual_document_uid(
+            self, textual_document_uid: str) -> List[SourceRecord]:
+        """
+        Get source records by textual document UID
+        :param textual_document_uid:
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("get_source_records_by_textual_document_uid"),
+                    textual_document_uid=textual_document_uid
+                )
+                return [SourceRecordDAO._hydrate(record) async for record in result]
+
+    @handle_database_errors
     async def delete_inferred_equivalence_relationships(self, source_record_uid: str,
                                                         target_source_record_uids: list[str]):
         """
@@ -201,7 +218,8 @@ class SourceRecordDAO(Neo4jDAO):
             titles=[title.model_dump() for title in source_record.titles],
             abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
-            subject_uids=[subject.uid for subject in source_record.subjects]
+            subject_uids=[subject.uid for subject in source_record.subjects],
+            document_types=[document_type.value for document_type in source_record.document_type]
         )
 
     @classmethod
@@ -235,7 +253,8 @@ class SourceRecordDAO(Neo4jDAO):
             titles=[title.model_dump() for title in source_record.titles],
             abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
-            subject_uids=[subject.uid for subject in source_record.subjects]
+            subject_uids=[subject.uid for subject in source_record.subjects],
+            document_types=[document_type.value for document_type in source_record.document_type]
         )
         return source_record.uid, SourceRecordDAO.Status.UPDATED, None
 
@@ -295,6 +314,8 @@ class SourceRecordDAO(Neo4jDAO):
             harvester=record["s"]["harvester"],
             titles=[Literal(**title) for title in record["titles"]],
             harvested_for_uids=record['harvested_for_uids'],
+            document_type=[DocumentTypeEnum(document_type) for document_type in
+                           record["s"]["document_types"]]
         )
         for abstract in record["abstracts"]:
             source_record.abstracts.append(Literal(**abstract))

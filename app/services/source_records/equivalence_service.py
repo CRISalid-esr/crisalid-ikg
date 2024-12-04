@@ -8,6 +8,7 @@ from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.document import Document
 from app.models.source_records import SourceRecord
 from app.models.textual_document import TextualDocument
+from app.signals import textual_document_updated
 
 MAX_EQUIVALENCES_RECURSION_LEVEL = 100
 
@@ -118,6 +119,7 @@ class EquivalenceService:
         if len(recorded_textual_documents) == 1:
             textual_document = recorded_textual_documents[0]
             textual_document.source_record_uids = equivalent_source_record_uids
+            textual_document.to_be_recomputed = True
             await document_dao.create_or_update_textual_document(
                 textual_document=textual_document
             )
@@ -151,6 +153,11 @@ class EquivalenceService:
                 await document_dao.create_or_update_textual_document(
                     textual_document=textual_document
                 )
+        # Send signal to update the textual document
+        for textual_document in recorded_textual_documents:
+            await textual_document_updated.send_async(
+                self, textual_document_uid=textual_document.uid
+            )
 
     @staticmethod
     def _elect_main_textual_document(textual_documents: list[TextualDocument]) -> TextualDocument:

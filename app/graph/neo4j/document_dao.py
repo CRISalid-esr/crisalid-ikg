@@ -1,10 +1,11 @@
-from neo4j import AsyncManagedTransaction, Record
+from neo4j import Record, AsyncTransaction, AsyncResult, AsyncManagedTransaction
 
 from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.document import Document
+from app.models.literal import Literal
 from app.models.textual_document import TextualDocument
 
 
@@ -50,7 +51,7 @@ class DocumentDAO(Neo4jDAO):
     @classmethod
     async def _create_or_update_textual_document_transaction(
             cls, tx: AsyncManagedTransaction,
-            textual_document: TextualDocument) -> TextualDocument:
+            textual_document: TextualDocument) -> AsyncResult:
         create_textual_document_query = load_query(
             "create_or_update_textual_document"
         )
@@ -60,7 +61,9 @@ class DocumentDAO(Neo4jDAO):
             source_record_uids=textual_document.source_record_uids,
             to_be_recomputed=textual_document.to_be_recomputed,
             to_be_deleted=textual_document.to_be_deleted,
-            to_be_merged_into_uid=textual_document.to_be_merged_into_uid
+            to_be_merged_into_uid=textual_document.to_be_merged_into_uid,
+            titles=[title.model_dump() for title in textual_document.titles],
+            abstracts=[abstract.model_dump() for abstract in textual_document.abstracts]
         )
 
     @classmethod
@@ -91,7 +94,7 @@ class DocumentDAO(Neo4jDAO):
                                                                                  source_record_uid)
 
     @classmethod
-    async def _get_textual_document_by_source_record_uid(cls, tx: AsyncManagedTransaction,
+    async def _get_textual_document_by_source_record_uid(cls, tx: AsyncTransaction,
                                                          source_record_uid: str) -> Document | None:
         result = await tx.run(
             load_query("get_textual_document_by_source_record_uid"),
@@ -104,11 +107,13 @@ class DocumentDAO(Neo4jDAO):
     def _hydrate(record: Record) -> Document | None:
         """
         Hydrate a document object from a Neo4j record
-        :param document:
+        :param record: Neo4j record
         :return:
         """
-        if record is not None:
-            document = Document(**record['document'])
-            document.source_record_uids = record['source_record_uids']
-            return document
-        return None
+        if record is None:
+            return None
+        document = Document(**record['document'])
+        document.source_record_uids = record['source_record_uids']
+        for title in record['titles']:
+            document.titles.append(Literal(**title))
+        return document

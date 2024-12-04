@@ -8,6 +8,23 @@ OPTIONAL MATCH (doc_to_merge_into:Document:TextualDocument {uid: $to_be_merged_i
 FOREACH (_ IN CASE WHEN doc_to_merge_into IS NOT NULL THEN [1] ELSE [] END |
   MERGE (doc)-[:TO_BE_MERGED_INTO]->(doc_to_merge_into)
 )
+
+WITH doc
+OPTIONAL MATCH (doc)-[r:HAS_TITLE]->(t:Literal)
+DELETE r, t
+WITH DISTINCT doc
+FOREACH (title IN $titles |
+  CREATE (doc)-[:HAS_TITLE]->(t:Literal {value: title.value, language: title.language})
+)
+
+WITH doc
+OPTIONAL MATCH (doc)-[r:HAS_ABSTRACT]->(a:Literal)
+DELETE r, a
+WITH DISTINCT doc
+FOREACH (abstract IN $abstracts |
+  CREATE (doc)-[:HAS_ABSTRACT]->(a:Literal {value: abstract.value, language: abstract.language})
+)
+
 WITH doc
 OPTIONAL MATCH (doc)-[r:RECORDED_BY]->(s:SourceRecord)
   WHERE NOT s.uid IN $source_record_uids
