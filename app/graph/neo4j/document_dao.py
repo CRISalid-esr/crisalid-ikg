@@ -1,4 +1,4 @@
-from neo4j import Record, AsyncTransaction
+from neo4j import Record, AsyncTransaction, AsyncResult, AsyncManagedTransaction
 
 from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
@@ -50,8 +50,8 @@ class DocumentDAO(Neo4jDAO):
 
     @classmethod
     async def _create_or_update_textual_document_transaction(
-            cls, tx: AsyncTransaction,
-            textual_document: TextualDocument) -> TextualDocument:
+            cls, tx: AsyncManagedTransaction,
+            textual_document: TextualDocument) -> AsyncResult:
         create_textual_document_query = load_query(
             "create_or_update_textual_document"
         )
@@ -68,7 +68,7 @@ class DocumentDAO(Neo4jDAO):
 
     @classmethod
     async def _attach_source_records_to_textual_document_transaction(
-            cls, tx: AsyncTransaction, document_uid: str,
+            cls, tx: AsyncManagedTransaction, document_uid: str,
             source_record_uids: list[str]) -> None:
         attach_source_records_to_textual_document_query = load_query(
             "attach_source_records_to_textual_document"
