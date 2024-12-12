@@ -1,6 +1,6 @@
 FROM python:3.10
 
-RUN apt update && apt install netcat-traditional -y
+RUN apt update && apt install netcat-traditional -y  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code
 
@@ -11,7 +11,6 @@ COPY ./requirements.txt /code/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# Copy only /app directory to the container
-COPY ./app /code/app
+COPY ./app ./publication_sources_policies.yaml /code/
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
