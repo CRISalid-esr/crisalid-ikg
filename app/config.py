@@ -2,20 +2,17 @@
 Settings loading module
 """
 from functools import lru_cache
-from typing import Dict, Type
+from typing import Dict
+import importlib
 
 from app.settings.app_env_types import AppEnvTypes
 from app.settings.app_settings import AppSettings
-from app.settings.development_settings import DevAppSettings
-from app.settings.production_settings import ProdAppSettings
-from app.settings.test_settings import TestAppSettings
 
-environments: Dict[AppEnvTypes, Type[AppSettings]] = {
-    AppEnvTypes.DEV: DevAppSettings,
-    AppEnvTypes.PROD: ProdAppSettings,
-    AppEnvTypes.TEST: TestAppSettings,
+environments: Dict[AppEnvTypes, str] = {
+    AppEnvTypes.DEV: "app.settings.development_settings.DevAppSettings",
+    AppEnvTypes.PROD: "app.settings.production_settings.ProdAppSettings",
+    AppEnvTypes.TEST: "app.settings.test_settings.TestAppSettings",
 }
-
 
 @lru_cache()
 def get_app_settings() -> AppSettings:
@@ -24,5 +21,8 @@ def get_app_settings() -> AppSettings:
 
     :return: Settings fitting current environment
     """
-    config = environments[AppSettings().app_env]
-    return config()
+    config_path = environments[AppSettings().app_env]
+    module_name, class_name = config_path.rsplit('.', 1)
+    module = importlib.import_module(module_name)
+    config_class = getattr(module, class_name)
+    return config_class()
