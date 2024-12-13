@@ -47,21 +47,24 @@ class AMQPMessageProcessor(ABC):
                     self.tasks_queue.task_done()
                 except ValueError as error:
                     logger.error(
-                        f"Invalid message received by {worker_id} : {error}"
+                        f"Invalid message received by {worker_id} : {error}",
+                        exc_info=True
                     )
                 except DatabaseError as database_error:
                     logger.error(
                         f"Database error during {worker_id} "
-                        f"message processing : {database_error}"
+                        f"message processing : {database_error}",
+                        exc_info=True
                     )
                     requeue = True
                 except KeyboardInterrupt as keyboard_interrupt:
                     logger.warning(f"Amqp connect worker {worker_id} has been cancelled")
                     await message.nack(requeue=True)
                     raise keyboard_interrupt
-                except Exception as exception: # pylint: disable=broad-exception-caught
+                except Exception as exception:  # pylint: disable=broad-exception-caught
                     logger.error(
-                        f"Unexpected exception during {worker_id} message processing : {exception}"
+                        f"Unexpected exception during {worker_id} message processing: {exception}",
+                        exc_info=True
                     )
                 finally:
                     if not message.processed:
