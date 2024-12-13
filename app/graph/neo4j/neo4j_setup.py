@@ -23,12 +23,10 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_person_uid_constraint(tx)
         await cls._create_agent_identifier_unique_type_value_constraint(tx)
         await cls._create_journal_identifier_uid_constraint(tx)
-        # FIXME temporary disabled as it prevents the application from starting in staging
-        # environment
-        # Waiting for https://github.com/CRISalid-esr/crisalid-ikg/issues/157 to be fixed
-        # await cls._create_source_journal_source_identifier_constraint(tx)
+        # Potential issue : https://github.com/CRISalid-esr/crisalid-ikg/issues/157
+        await cls._create_source_journal_uid_constraint(tx)
         # Idem https://github.com/CRISalid-esr/crisalid-ikg/issues/161
-        # await cls._create_concept_uid_constraint(tx)
+        await cls._create_concept_uid_constraint(tx)
         await cls._create_document_uid_constraint(tx)
 
         if settings.neo4j_edition == "community":
@@ -123,15 +121,15 @@ class Neo4jSetup(Setup[AsyncDriver]):
             raise e
 
     @staticmethod
-    async def _create_source_journal_source_identifier_constraint(tx:AsyncManagedTransaction):
+    async def _create_source_journal_uid_constraint(tx:AsyncManagedTransaction):
         query = """
-        CREATE CONSTRAINT source_journal_source_identifier_unique IF NOT EXISTS
-        FOR (j:SourceJournal) REQUIRE j.source_identifier IS UNIQUE;
+        CREATE CONSTRAINT source_journal_uid_unique IF NOT EXISTS
+        FOR (j:SourceJournal) REQUIRE j.uid IS UNIQUE;
         """
         try:
             await tx.run(query=query)
         except DatabaseError as e:
-            logger.error(f"Error creating source journal source identifier unique constraint: {e}")
+            logger.error(f"Error creating source journal uid unique constraint: {e}")
             raise e
 
     @staticmethod
