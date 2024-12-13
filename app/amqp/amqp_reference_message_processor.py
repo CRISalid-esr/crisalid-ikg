@@ -47,7 +47,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
 
     async def _create_source_record(self, source_record, person, first_attempt=True):
         try:
-            if self.service.source_record_exists(source_record.uid):
+            if await self.service.source_record_exists(source_record.uid):
                 logger.warning(f"Source record {source_record.uid} already exists in the database")
                 if first_attempt:
                     logger.warning("The system will try to update it")
@@ -74,17 +74,17 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
 
     async def _update_source_record(self, source_record, person, first_attempt=True):
         try:
-            if not self.service.source_record_exists(source_record.uid):
+            if await self.service.source_record_exists(source_record.uid):
+                await self.service.update_source_record(source_record=source_record,
+                                                        harvested_for=person)
+            else:
                 logger.warning(f"Source record {source_record.uid} does not exist in the database")
                 if first_attempt:
                     logger.warning("The system will try to create it")
                     await self._create_source_record(source_record, person, first_attempt=False)
-                    return
-                logger.error(f"Aborting create attempt for {source_record.uid}"
+                else:
+                    logger.error(f"Aborting create attempt for {source_record.uid}"
                              f" after failed update attempt", exc_info=True)
-                return
-            await self.service.update_source_record(source_record=source_record,
-                                                    harvested_for=person)
         except ReferenceOwnerNotFoundError as e:
             logger.error(
                 f"Reference owner {person} not found while trying to update source record"
