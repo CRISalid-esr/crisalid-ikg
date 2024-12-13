@@ -167,6 +167,19 @@ class SourceRecordDAO(Neo4jDAO):
                 async with await session.begin_transaction() as tx:
                     return await SourceRecordDAO._get_source_record_by_uid(tx, source_record_uid)
 
+    @handle_database_errors
+    async def source_record_exists(self, source_record_uid: str) -> bool:
+        """
+        Check if a source record exists in the graph database
+
+        :param source_record_uid: source record uid
+        :return: True if the source record exists, False otherwise
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await SourceRecordDAO._source_record_exists(tx, source_record_uid)
+
     @staticmethod
     async def _source_record_exists(tx: AsyncManagedTransaction, source_record_uid: str) -> bool:
         result = await tx.run(
