@@ -21,6 +21,7 @@ async def test_create_source_record(persisted_person_a_pydantic_model: Person,
     service = SourceRecordService()
     await service.create_source_record(source_record=scanr_thesis_source_record_pydantic_model,
                                        harvested_for=persisted_person_a_pydantic_model)
+    assert service.source_record_exists(scanr_thesis_source_record_pydantic_model.uid)
     fetched_source_record = await service.get_source_record(
         scanr_thesis_source_record_pydantic_model.uid)
     assert fetched_source_record.uid == scanr_thesis_source_record_pydantic_model.uid

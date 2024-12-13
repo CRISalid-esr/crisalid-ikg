@@ -115,6 +115,16 @@ class SourceRecordService:
         dao: SourceRecordDAO = factory.get_dao(SourceRecord)
         return await dao.get(source_record_uid)
 
+    async def source_record_exists(self, source_record_uid: str) -> bool:
+        """
+        Check if a source record exists in the graph database
+        :param source_record_uid: source record uid
+        :return: True if the source record exists, False otherwise
+        """
+        factory = self._get_dao_factory()
+        dao: SourceRecordDAO = factory.get_dao(SourceRecord)
+        return await dao.source_record_exists(source_record_uid)
+
     @staticmethod
     def _get_dao_factory() -> DAOFactory:
         settings = get_app_settings()
