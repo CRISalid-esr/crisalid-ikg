@@ -104,6 +104,7 @@ class DocumentTypeEnum(str, Enum):
             f"{RDF_SUFFIXES['BIBO']}Thesis": cls.THESIS,
             f"{RDF_SUFFIXES['SPAR']}TechnicalReport": cls.TECHNICAL_REPORT,
             f"{RDF_SUFFIXES['SPAR']}WorkingPaper": cls.WORKING_PAPER,
+            "http://data.crisalid.org/ref/document_types/unknown": cls.UNKNOWN,
         }
         return mapping.get(uri, None)
 
