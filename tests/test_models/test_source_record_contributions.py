@@ -1,0 +1,45 @@
+from app.models.loc_contribution_role import LocContributionRole
+from app.models.source_records import SourceRecord
+
+def test_hal_chapter_source_record(
+        hal_chapter_a_source_record_json_data: dict
+):
+    """
+    Given a source record model recording a chapter harvested from HAL
+    with detailed contributor information
+    When asked for different field values
+    Then the values should be returned correctly
+    :param scanr_thesis_source_record_json_data:
+    :return:
+    """
+    source_record = SourceRecord(**hal_chapter_a_source_record_json_data)
+    assert source_record
+    contribution_0 = next(
+        (c for c in source_record.contributions if c.rank == 0),
+        None
+    )
+    assert contribution_0
+    assert contribution_0.role == LocContributionRole.AUTHOR
+    assert contribution_0.contributor.name == 'Judith Rochfeld'
+    organisation_0 = contribution_0.affiliations[0]
+    assert organisation_0.source == 'hal'
+    assert organisation_0.source_identifier == '7550'
+    assert organisation_0.name == 'Université Paris 1 Panthéon-Sorbonne'
+    assert organisation_0.type == 'institution'
+    assert len(organisation_0.identifiers) == 4
+    assert any(
+        i.type == 'hal' and i.value == '7550'
+        for i in organisation_0.identifiers
+    )
+    assert any(
+        i.type == 'idref' and i.value == '027361802'
+        for i in organisation_0.identifiers
+    )
+    assert any(
+        i.type == 'isni' and i.value == '000000012173743X'
+        for i in organisation_0.identifiers
+    )
+    assert any(
+        i.type == 'ror' and i.value == 'https://ror.org/002t25c44'
+        for i in organisation_0.identifiers
+    )

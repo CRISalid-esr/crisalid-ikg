@@ -56,7 +56,7 @@ def test_create_thesis_source_record_from_scanr_data(
     assert any(
         contribution for contribution in source_record.contributions if
         contribution.rank == 1 and contribution.contributor.name == "Doe, Jane"
-        and contribution.contributor.affiliation == "University of Example"
+        and contribution.affiliations == []
     )
     assert DocumentTypeEnum.THESIS in source_record.document_type
 
