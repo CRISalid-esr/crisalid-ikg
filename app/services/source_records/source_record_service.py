@@ -10,6 +10,7 @@ from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.concepts.concept_service import ConceptService
+from app.services.source_contributors.source_person_service import SourcePersonService
 from app.services.source_journals.source_journal_service import SourceJournalService
 from app.signals import source_record_created, source_record_updated
 
@@ -30,9 +31,11 @@ class SourceRecordService:
         :return:
         """
         person = await self._handle_source_record_owner(harvested_for)
+        await self._handle_source_record_contributors(source_record)
         await self._handle_source_record_subjects(source_record)
         await self._handle_source_record_journal(source_record)
         await self._create_source_record(source_record, person)
+        await self._update_source_record_contributions(source_record)
         return source_record
 
     async def update_source_record(self, source_record: SourceRecord,
@@ -57,6 +60,18 @@ class SourceRecordService:
                                                                      harvested_for=person)
         if status is SourceRecordDAO.Status.CREATED:
             await source_record_created.send_async(self, source_record_id=source_record_id)
+
+    async def _update_source_record_contributions(self, source_record):
+        source_record_dao: SourceRecordDAO = self._get_dao_factory().get_dao(SourceRecord)
+        source_record_dao.delete_contributions(source_record)
+        for contribution in source_record.contributions:
+            try:
+                await source_record_dao.create_contribution(contribution, source_record.uid)
+            except ValueError as e:
+                logger.error(
+                    f"Invalid data error while creating contribution {contribution} : {e}")
+            except Neo4jError as e:
+                logger.error(f"Database error while creating contribution {contribution} : {e}")
 
     async def _update_source_record(self, source_record, person):
         source_record_dao: SourceRecordDAO = self._get_dao_factory().get_dao(SourceRecord)
@@ -96,6 +111,22 @@ class SourceRecordService:
             except Neo4jError as e:
                 logger.error(f"Database error while creating or updating concept {subject} : {e}")
         source_record.subjects = registered_concepts
+
+    async def _handle_source_record_contributors(self, source_record: SourceRecord) -> None:
+        source_contributors_service = SourcePersonService()
+        for contribution in source_record.contributions:
+            try:
+                contribution.contributor = \
+                    await source_contributors_service.create_or_update_source_person(
+                        contribution.contributor)
+            except ValueError as e:
+                logger.error(
+                    f"Invalid data error while creating or updating source contributor "
+                    f"{contribution.contributor} : {e}")
+            except Neo4jError as e:
+                logger.error(
+                    "Database error while creating or updating source contributor "
+                    f"{contribution.contributor} : {e}")
 
     async def _handle_source_record_owner(self, harvested_for: Person) -> Person:
         factory = self._get_dao_factory()

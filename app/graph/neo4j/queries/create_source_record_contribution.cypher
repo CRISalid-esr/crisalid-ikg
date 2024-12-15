@@ -1,0 +1,5 @@
+MATCH (s:SourceRecord {uid: $source_record_uid})
+MATCH (c:SourcePerson {uid: $contributor_uid})
+CREATE (sc:SourceContribution {role: $role, rank: $rank})
+MERGE (s)-[:HAS_CONTRIBUTION]->(sc)
+MERGE (sc)-[:CONTRIBUTOR]->(c)

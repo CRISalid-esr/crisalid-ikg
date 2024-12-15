@@ -5,8 +5,8 @@ from loguru import logger
 from pydantic import BaseModel, field_validator
 
 from app.models.loc_contribution_role import LocContributionRole
-from app.models.source_contributors import SourceContributor
 from app.models.source_organizations import SourceOrganization
+from app.models.source_people import SourcePerson
 
 
 class SourceContribution(BaseModel):
@@ -15,7 +15,7 @@ class SourceContribution(BaseModel):
     """
     rank: Optional[int] = None
     role: Optional[LocContributionRole] = None
-    contributor: SourceContributor
+    contributor: SourcePerson
     affiliations: List[SourceOrganization] = []
 
     @field_validator("role", mode="before")

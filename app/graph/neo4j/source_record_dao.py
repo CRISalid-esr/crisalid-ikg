@@ -14,6 +14,7 @@ from app.models.journal_identifiers import JournalIdentifier
 from app.models.literal import Literal
 from app.models.people import Person
 from app.models.publication_identifiers import PublicationIdentifier
+from app.models.source_contributions import SourceContribution
 from app.models.source_issue import SourceIssue
 from app.models.source_journal import SourceJournal
 from app.models.source_records import SourceRecord
@@ -179,6 +180,48 @@ class SourceRecordDAO(Neo4jDAO):
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourceRecordDAO._source_record_exists(tx, source_record_uid)
+
+    @handle_database_errors
+    async def delete_contributions(self, source_record_uid: str):
+        """
+        Delete contributions of a source record
+        :param source_record_uid:
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                await session.run(
+                    load_query("delete_source_record_contributions"),
+                    source_record_uid=source_record_uid
+                )
+
+    @handle_database_errors
+    async def create_contribution(self, source_contribution: SourceContribution,
+                                  source_record_uid: str):
+        """
+        Create a contribution of a source record
+        :param source_contribution:
+        :param source_record_uid:
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    await SourceRecordDAO._create_contribution_transaction(tx, source_contribution,
+                                                                           source_record_uid)
+
+    @staticmethod
+    async def _create_contribution_transaction(tx: AsyncManagedTransaction,
+                                               source_contribution: SourceContribution,
+                                               source_record_uid: str):
+        query = load_query("create_source_record_contribution")
+        await tx.run(
+            query,
+            source_record_uid=source_record_uid,
+            contributor_uid=source_contribution.contributor.uid,
+            role=source_contribution.role.name,
+            rank=source_contribution.rank
+        )
 
     @staticmethod
     async def _source_record_exists(tx: AsyncManagedTransaction, source_record_uid: str) -> bool:
