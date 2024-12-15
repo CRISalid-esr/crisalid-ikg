@@ -1,13 +1,12 @@
-import pytest
-
+from app.models.loc_contribution_role import LocContributionRole
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 
 
-@pytest.mark.current
+# @pytest.mark.current
 async def test_create_source_record_with_contributions(
-        test_app,  # pylint: disable=unused-argument
+        # test_app,  # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         hal_chapter_a_source_record_pydantic_model: SourceRecord
 ) -> None:
@@ -27,3 +26,34 @@ async def test_create_source_record_with_contributions(
     fetched_source_record = await service.get_source_record(
         hal_chapter_a_source_record_pydantic_model.uid)
     assert fetched_source_record
+    assert fetched_source_record.contributions
+    assert len(fetched_source_record.contributions) == 4
+    contribution_0 = next(
+        (c for c in fetched_source_record.contributions if c.contributor.uid == 'hal-100001'),
+        None
+    )
+    assert contribution_0
+    assert contribution_0.rank == 0
+    assert contribution_0.role == LocContributionRole.AUTHOR
+    assert contribution_0.contributor.name == 'Alice Dupont'
+    contribution_1 = next(
+        (c for c in fetched_source_record.contributions if c.contributor.uid == 'hal-100002'),
+        None
+    )
+    assert contribution_1
+    assert contribution_1.rank == 1
+    assert contribution_1.role == LocContributionRole.WRITER_OF_INTRODUCTION
+    assert contribution_1.contributor.name == 'Jean Martin'
+    contribution_2 = next(
+        (c for c in fetched_source_record.contributions if c.contributor.uid == 'hal-100003'),
+        None
+    )
+    assert contribution_2
+    assert contribution_2.rank == 2
+    assert contribution_2.role == LocContributionRole.AUTHOR
+    assert contribution_2.contributor.name == 'Charlie Bernard'
+    contribution_3 = next(
+        (c for c in fetched_source_record.contributions if c.contributor.uid == 'hal-100004'),
+        None
+    )
+    assert contribution_3

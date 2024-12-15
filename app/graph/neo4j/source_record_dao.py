@@ -12,11 +12,13 @@ from app.models.concepts import Concept
 from app.models.document_type import DocumentTypeEnum
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.literal import Literal
+from app.models.loc_contribution_role import LocContributionRole
 from app.models.people import Person
 from app.models.publication_identifiers import PublicationIdentifier
 from app.models.source_contributions import SourceContribution
 from app.models.source_issue import SourceIssue
 from app.models.source_journal import SourceJournal
+from app.models.source_people import SourcePerson
 from app.models.source_records import SourceRecord
 
 
@@ -390,4 +392,20 @@ class SourceRecordDAO(Neo4jDAO):
             if record["issue"]:
                 issue = dict(record["issue"]) | {"journal": journal}
                 source_record.issue = SourceIssue(**issue)
+        contributions = record["contributions"] if "contributions" in record else []
+        for contribution in contributions:
+            try:
+                role = LocContributionRole.from_name(contribution["role"])
+            except ValueError:
+                role = None
+            source_record.contributions.append(SourceContribution(
+                contributor=SourcePerson(
+                    uid=contribution["contributor"]["uid"],
+                    name=contribution["contributor"]["name"],
+                    source=contribution["contributor"]["source"],
+                    source_identifier=contribution["contributor"]["source_identifier"]
+                ),
+                role=role,
+                rank=contribution["rank"]
+            ))
         return source_record

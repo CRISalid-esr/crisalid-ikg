@@ -20,26 +20,26 @@ def test_hal_chapter_source_record(
     )
     assert contribution_0
     assert contribution_0.role == LocContributionRole.AUTHOR
-    assert contribution_0.contributor.name == 'Judith Rochfeld'
+    assert contribution_0.contributor.name == 'Alice Dupont'
     organisation_0 = contribution_0.affiliations[0]
     assert organisation_0.source == 'hal'
-    assert organisation_0.source_identifier == '7550'
-    assert organisation_0.name == 'Université Paris 1 Panthéon-Sorbonne'
+    assert organisation_0.source_identifier == '2001'
+    assert organisation_0.name == 'Université Anonyme'
     assert organisation_0.type == 'institution'
     assert len(organisation_0.identifiers) == 4
     assert any(
-        i.type == 'hal' and i.value == '7550'
+        i.type == 'hal' and i.value == '2001'
         for i in organisation_0.identifiers
     )
     assert any(
-        i.type == 'idref' and i.value == '027361802'
+        i.type == 'idref' and i.value == '123456789'
         for i in organisation_0.identifiers
     )
     assert any(
-        i.type == 'isni' and i.value == '000000012173743X'
+        i.type == 'isni' and i.value == '000000012345678X'
         for i in organisation_0.identifiers
     )
     assert any(
-        i.type == 'ror' and i.value == 'https://ror.org/002t25c44'
+        i.type == 'ror' and i.value == 'https://ror.org/000000000'
         for i in organisation_0.identifiers
     )

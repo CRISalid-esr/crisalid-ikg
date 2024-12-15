@@ -308,3 +308,12 @@ class LocContributionRole(Enum):
     COURT_REPORTER = 'http://id.loc.gov/vocabulary/relators/crt'
     PRODUCTION_PERSONNEL = 'http://id.loc.gov/vocabulary/relators/prd'
     FILMMAKER = 'http://id.loc.gov/vocabulary/relators/fmk'
+
+    @staticmethod
+    def from_name(name: str) -> 'LocContributionRole':
+        """
+        Get a LocContributionRole by name
+        """
+        if name in LocContributionRole.__members__:
+            return LocContributionRole[name]
+        raise ValueError(f"Invalid contribution role: {name}")

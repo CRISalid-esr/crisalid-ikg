@@ -58,6 +58,7 @@ class SourceRecordService:
         source_record_dao: SourceRecordDAO = self._get_dao_factory().get_dao(SourceRecord)
         source_record_id, status, _ = await source_record_dao.create(source_record=source_record,
                                                                      harvested_for=person)
+        # FIXME call signal after contributions update
         if status is SourceRecordDAO.Status.CREATED:
             await source_record_created.send_async(self, source_record_id=source_record_id)
 
