@@ -214,12 +214,12 @@ class SourceRecordDAO(Neo4jDAO):
     async def _create_contribution_transaction(tx: AsyncManagedTransaction,
                                                source_contribution: SourceContribution,
                                                source_record_uid: str):
-        query = load_query("create_source_record_contribution")
+        query = load_query("create_source_contribution")
         await tx.run(
             query,
             source_record_uid=source_record_uid,
             contributor_uid=source_contribution.contributor.uid,
-            role=source_contribution.role.name,
+            role=source_contribution.role.name if source_contribution.role else None,
             rank=source_contribution.rank
         )
 

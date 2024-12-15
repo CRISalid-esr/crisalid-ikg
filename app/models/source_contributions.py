@@ -24,6 +24,8 @@ class SourceContribution(BaseModel):
         """
         Convert a role URI to the corresponding LocContributionRole Enum entry.
         """
+        if isinstance(value, LocContributionRole):
+            return value
         if value is None or not isinstance(value, str):
             return None
         value = cls.url_to_uri(value)

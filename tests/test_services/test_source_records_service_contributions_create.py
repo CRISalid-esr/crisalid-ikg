@@ -7,6 +7,7 @@ from app.services.source_records.source_record_service import SourceRecordServic
 
 @pytest.mark.current
 async def test_create_source_record_with_contributions(
+        test_app,  # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         hal_chapter_a_source_record_pydantic_model: SourceRecord
 ) -> None:
@@ -14,6 +15,7 @@ async def test_create_source_record_with_contributions(
     Given a persisted person pydantic model and a non persisted source record pydantic model
     When the source record is added to the graph
     Then the source record can be read from the graph
+
     :param persisted_person_a_pydantic_model:
     :param hal_chapter_a_source_record_pydantic_model:
     :return:
