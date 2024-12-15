@@ -392,10 +392,11 @@ class SourceRecordDAO(Neo4jDAO):
             if record["issue"]:
                 issue = dict(record["issue"]) | {"journal": journal}
                 source_record.issue = SourceIssue(**issue)
-        contributions = record["contributions"] if "contributions" in record else []
+        contributions = record.get("contributions", [])
         for contribution in contributions:
             try:
-                role = LocContributionRole.from_name(contribution["role"])
+                role = LocContributionRole.from_name(
+                    contribution["role"]) if "role" in contribution else None
             except ValueError:
                 role = None
             source_record.contributions.append(SourceContribution(
@@ -406,6 +407,6 @@ class SourceRecordDAO(Neo4jDAO):
                     source_identifier=contribution["contributor"]["source_identifier"]
                 ),
                 role=role,
-                rank=contribution["rank"]
+                rank=contribution["rank"] if "rank" in contribution else None
             ))
         return source_record

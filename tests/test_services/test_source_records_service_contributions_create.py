@@ -1,10 +1,10 @@
+
 from app.models.loc_contribution_role import LocContributionRole
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 
 
-# @pytest.mark.current
 async def test_create_source_record_with_contributions(
         # test_app,  # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
