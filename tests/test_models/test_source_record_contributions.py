@@ -1,4 +1,5 @@
 from app.models.loc_contribution_role import LocContributionRole
+from app.models.source_organizations import SourceOrganization
 from app.models.source_records import SourceRecord
 
 def test_hal_chapter_source_record(
@@ -25,7 +26,7 @@ def test_hal_chapter_source_record(
     assert organisation_0.source == 'hal'
     assert organisation_0.source_identifier == '2001'
     assert organisation_0.name == 'Université Anonyme'
-    assert organisation_0.type == 'institution'
+    assert organisation_0.type == SourceOrganization.SourceOrganisationType.INSTITUTION
     assert len(organisation_0.identifiers) == 4
     assert any(
         i.type == 'hal' and i.value == '2001'

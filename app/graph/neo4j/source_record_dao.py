@@ -18,6 +18,8 @@ from app.models.publication_identifiers import PublicationIdentifier
 from app.models.source_contributions import SourceContribution
 from app.models.source_issue import SourceIssue
 from app.models.source_journal import SourceJournal
+from app.models.source_organization_identifiers import SourceOrganizationIdentifier
+from app.models.source_organizations import SourceOrganization
 from app.models.source_people import SourcePerson
 from app.models.source_records import SourceRecord
 
@@ -222,7 +224,8 @@ class SourceRecordDAO(Neo4jDAO):
             source_record_uid=source_record_uid,
             contributor_uid=source_contribution.contributor.uid,
             role=source_contribution.role.name if source_contribution.role else None,
-            rank=source_contribution.rank
+            rank=source_contribution.rank,
+            affiliation_uids=[affiliation.uid for affiliation in source_contribution.affiliations]
         )
 
     @staticmethod
@@ -237,8 +240,9 @@ class SourceRecordDAO(Neo4jDAO):
     @classmethod
     async def _get_source_record_by_uid(cls, tx: AsyncManagedTransaction,
                                         source_record_uid: str) -> SourceRecord | None:
+        query = load_query("get_source_record_by_uid")
         result = await tx.run(
-            load_query("get_source_record_by_uid"),
+            query,
             source_record_uid=source_record_uid
         )
         record = await result.single()
@@ -393,12 +397,30 @@ class SourceRecordDAO(Neo4jDAO):
                 issue = dict(record["issue"]) | {"journal": journal}
                 source_record.issue = SourceIssue(**issue)
         contributions = record.get("contributions", [])
+        SourceRecordDAO._hydrate_contributions(contributions, source_record)
+        return source_record
+
+    @staticmethod
+    def _hydrate_contributions(contributions: list[dict], source_record: SourceRecord) -> None:
         for contribution in contributions:
             try:
                 role = LocContributionRole.from_name(
                     contribution["role"]) if "role" in contribution else None
             except ValueError:
                 role = None
+            affiliations = []
+            for affiliation in contribution.get("affiliations", []):
+                source_organization = SourceOrganization(
+                    uid=affiliation["uid"],
+                    name=affiliation["name"],
+                    source=affiliation["source"],
+                    source_identifier=affiliation["source_identifier"],
+                    type=affiliation["type"]
+                )
+                for identifier in affiliation.get("identifiers", []):
+                    source_organization.identifiers.append(
+                        SourceOrganizationIdentifier(**identifier))
+                affiliations.append(source_organization)
             source_record.contributions.append(SourceContribution(
                 contributor=SourcePerson(
                     uid=contribution["contributor"]["uid"],
@@ -407,6 +429,6 @@ class SourceRecordDAO(Neo4jDAO):
                     source_identifier=contribution["contributor"]["source_identifier"]
                 ),
                 role=role,
-                rank=contribution["rank"] if "rank" in contribution else None
+                rank=contribution["rank"] if "rank" in contribution else None,
+                affiliations=affiliations
             ))
-        return source_record
