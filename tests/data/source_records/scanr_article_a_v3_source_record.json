@@ -106,9 +106,7 @@
         ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/trl.html",
-      "affiliations": [
-        "test"
-      ]
+      "affiliations": []
     },
     {
       "rank": 3,

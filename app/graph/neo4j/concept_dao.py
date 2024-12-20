@@ -108,13 +108,19 @@ class ConceptDAO(Neo4jDAO):
                                 f"{concept.uri or concept.pref_labels[0]} (uid : {concept.uid}) "
                                 "already exists")
         create_concept_query = load_query("create_concept")
-        await tx.run(
-            create_concept_query,
-            uid=concept.uid,
-            uri=concept.uri,
-            pref_labels=[pref_label.model_dump() for pref_label in concept.pref_labels],
-            alt_labels=[alt_label.model_dump() for alt_label in concept.alt_labels]
-        )
+        try:
+            await tx.run(
+                create_concept_query,
+                uid=concept.uid,
+                uri=concept.uri,
+                pref_labels=[pref_label.model_dump() for pref_label in concept.pref_labels],
+                alt_labels=[alt_label.model_dump() for alt_label in concept.alt_labels]
+            )
+        except ConstraintError as constraint_error:
+            # As we are not in a transaction, the same concept could have been created by another
+            # process in the meantime, although we checked for its existence before
+            raise ConflictError(f"Schema constraint violation while creating concept {concept}") \
+                from constraint_error
 
     @staticmethod
     async def _update_concept_transaction(tx: AsyncManagedTransaction, new_concept: Concept,

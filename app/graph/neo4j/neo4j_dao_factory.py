@@ -12,6 +12,8 @@ from app.models.document import Document
 from app.models.people import Person
 from app.models.research_structures import ResearchStructure
 from app.models.source_journal import SourceJournal
+from app.models.source_organizations import SourceOrganization
+from app.models.source_people import SourcePerson
 from app.models.source_records import SourceRecord
 
 
@@ -29,6 +31,8 @@ class Neo4jDAOFactory(DAOFactory):
             SourceRecord: "app.graph.neo4j.source_record_dao.SourceRecordDAO",
             Concept: "app.graph.neo4j.concept_dao.ConceptDAO",
             SourceJournal: "app.graph.neo4j.source_journal_dao.SourceJournalDAO",
+            SourceOrganization: "app.graph.neo4j.source_organization_dao.SourceOrganizationDAO",
+            SourcePerson: "app.graph.neo4j.source_person_dao.SourcePersonDAO",
             Document: "app.graph.neo4j.document_dao.DocumentDAO",
         }
 

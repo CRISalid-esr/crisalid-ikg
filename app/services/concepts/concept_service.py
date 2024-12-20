@@ -1,4 +1,7 @@
+from loguru import logger
+
 from app.config import get_app_settings
+from app.errors.conflict_error import ConflictError
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao import DAO
 from app.graph.neo4j.concept_dao import ConceptDAO
@@ -30,9 +33,17 @@ class ConceptService:
             if concept.uri:
                 await self._update_concept(existing_concept, concept, dao)
             return existing_concept
-            # case when the concept does not exist in the database
-        await dao.create(concept)
-        return concept
+        # case when the concept does not exist in the database
+        try:
+            await dao.create(concept)
+            return concept
+        except ConflictError as e:
+            # The same concept may have been created by another process in the meantime
+            logger.warning(f"Conflict error when creating concept {concept.uid} : {e}")
+            existing_concept = await dao.find_by_uid(concept.uid)
+            if concept.uri:
+                await self._update_concept(existing_concept, concept, dao)
+            return existing_concept
 
     async def _update_concept(self, existing_concept: Concept, new_concept: Concept,
                               dao: ConceptDAO) -> None:

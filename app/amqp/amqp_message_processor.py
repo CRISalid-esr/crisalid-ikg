@@ -1,5 +1,6 @@
 import asyncio
 import json
+import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
 
@@ -50,6 +51,7 @@ class AMQPMessageProcessor(ABC):
                         f"Invalid message received by {worker_id} : {error}",
                         exc_info=True
                     )
+                    traceback.print_exc()
                 except DatabaseError as database_error:
                     logger.error(
                         f"Database error during {worker_id} "

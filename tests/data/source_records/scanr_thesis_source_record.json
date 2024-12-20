@@ -62,9 +62,10 @@
     {
       "rank": 1,
       "contributor": {
-        "name": "Doe, Jane",
-        "affiliation": "University of Example"
-      }
+        "source": "scanr",
+        "name": "Doe, Jane"
+      },
+      "affiliations": []
     }
   ]
 }
