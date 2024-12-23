@@ -28,7 +28,7 @@ class EquivalenceService:
         :param source_record_id:
         :return:
         """
-        print(f"beginning to update source record with id {source_record_id}")
+        logger.debug(f"beginning to update source record with id {source_record_id}")
         self.source_records_to_update_uids.append(source_record_id)
         await self._update_inferred_equivalence_relationships()
 

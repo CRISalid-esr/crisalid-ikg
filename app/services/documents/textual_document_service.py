@@ -1,4 +1,4 @@
-from typing import List, cast
+from typing import cast
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
@@ -23,7 +23,13 @@ class TextualDocumentService:
         :return:
         """
         # fetch the source records to be merged
-        sources_records = await self.get_textual_document_sources(textual_document_uid)
+        dao = await self._source_record_dao()
+        sources_record_uids = await dao.get_source_record_uids_by_textual_document_uid(
+            textual_document_uid)
+        sources_records = []
+        for source_record_uid in sources_record_uids:
+            source_record = await dao.get(source_record_uid)
+            sources_records.append(source_record)
         # delegate the merge operation to the metadata computation service
         document = MetadataComputationService(sources_records).merge()
         document.uid = textual_document_uid
@@ -34,17 +40,10 @@ class TextualDocumentService:
         dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
         await dao.create_or_update_textual_document(document)
 
-    async def get_textual_document_sources(self,
-                                           textual_document_uid: str) -> List[SourceRecord]:
-        """
-        Fetch the source records from which the textual document is derived
-        :param textual_document_uid:
-        :return:
-        """
+    async def _source_record_dao(self) -> SourceRecordDAO:
         factory = self._get_dao_factory()
         dao: SourceRecordDAO = cast(SourceRecordDAO, factory.get_dao(SourceRecord))
-        return await dao.get_source_records_by_textual_document_uid(
-            textual_document_uid)
+        return dao
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

@@ -68,6 +68,7 @@ class AMQPMessageProcessor(ABC):
                         f"Unexpected exception during {worker_id} message processing: {exception}",
                         exc_info=True
                     )
+                    logger.error(traceback.format_exc())
                 finally:
                     if not message.processed:
                         await message.nack(requeue=requeue)

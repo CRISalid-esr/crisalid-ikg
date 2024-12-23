@@ -81,10 +81,10 @@ async def test_attach_new_source_record_to_existing_document(
         source_record_id_doi_1_persisted_model.uid,
         source_record_id_doi_1_hal_1_pydantic_model.uid
     ])
-    source_records = await source_record_dao.get_source_records_by_textual_document_uid(
+    source_record_uids = await source_record_dao.get_source_record_uids_by_textual_document_uid(
         document.uid)
-    assert source_records is not None
-    assert sorted([source_record.uid for source_record in source_records]) == sorted([
+    assert source_record_uids is not None
+    assert sorted(source_record_uid for source_record_uid in source_record_uids) == sorted([
         source_record_id_doi_1_persisted_model.uid,
         source_record_id_doi_1_hal_1_pydantic_model.uid
     ])
@@ -135,10 +135,10 @@ async def test_merge_two_existing_documents(
     ])
     assert len(document.titles) == 1
     assert document.titles[0].value == "Example Article with DOI and HAL"
-    source_records = await source_record_dao.get_source_records_by_textual_document_uid(
+    source_record_uids = await source_record_dao.get_source_record_uids_by_textual_document_uid(
         document.uid)
-    assert source_records is not None
-    assert sorted([source_record.uid for source_record in source_records]) == sorted([
+    assert source_record_uids is not None
+    assert sorted(source_record_uid for source_record_uid in source_record_uids) == sorted([
         source_record_id_doi_1_persisted_model.uid,
         source_record_id_hal_1_persisted_model.uid,
         source_record_id_doi_1_hal_1_pydantic_model.uid

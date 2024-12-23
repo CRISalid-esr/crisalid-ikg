@@ -21,6 +21,7 @@ from app.models.source_journal import SourceJournal
 from app.models.source_organization_identifiers import SourceOrganizationIdentifier
 from app.models.source_organizations import SourceOrganization
 from app.models.source_people import SourcePerson
+from app.models.source_person_identifiers import SourcePersonIdentifier
 from app.models.source_records import SourceRecord
 
 
@@ -114,20 +115,21 @@ class SourceRecordDAO(Neo4jDAO):
                                                                           equivalence_type)
 
     @handle_database_errors
-    async def get_source_records_by_textual_document_uid(
-            self, textual_document_uid: str) -> List[SourceRecord]:
+    async def get_source_record_uids_by_textual_document_uid(
+            self, textual_document_uid: str) -> List[str]:
         """
-        Get source records by textual document UID
+        Get source records UIDs by textual document UID
         :param textual_document_uid:
         :return:
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 result = await session.run(
-                    load_query("get_source_records_by_textual_document_uid"),
+                    load_query("get_source_record_uids_by_textual_document_uid"),
                     textual_document_uid=textual_document_uid
                 )
-                return [SourceRecordDAO._hydrate(record) async for record in result]
+                record = await result.single()
+                return record['source_record_uids']
 
     @handle_database_errors
     async def delete_inferred_equivalence_relationships(self, source_record_uid: str,
@@ -421,12 +423,16 @@ class SourceRecordDAO(Neo4jDAO):
                     source_organization.identifiers.append(
                         SourceOrganizationIdentifier(**identifier))
                 affiliations.append(source_organization)
+            contributor = contribution["contributor"]
+            source_contributor_identifiers = [SourcePersonIdentifier(**identifier) for identifier in
+                                              contributor["identifiers"]]
             source_record.contributions.append(SourceContribution(
                 contributor=SourcePerson(
-                    uid=contribution["contributor"]["uid"],
-                    name=contribution["contributor"]["name"],
-                    source=contribution["contributor"]["source"],
-                    source_identifier=contribution["contributor"]["source_identifier"]
+                    uid=contributor["uid"],
+                    name=contributor["name"],
+                    source=contributor["source"],
+                    source_identifier=contributor.get("source_identifier", None),
+                    identifiers=source_contributor_identifiers
                 ),
                 role=role,
                 rank=contribution["rank"] if "rank" in contribution else None,
