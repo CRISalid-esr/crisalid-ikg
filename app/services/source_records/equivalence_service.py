@@ -107,6 +107,8 @@ class EquivalenceService:
             if (document := await document_dao.get_textual_document_by_source_record_uid(
                 source_record_uid)) is not None
         ]
+        # Deduplicate recorded_textual_documents by uid
+        recorded_textual_documents = list({x.uid: x for x in recorded_textual_documents}.values())
         # case 1 : recorded_textual_documents is empty
         # create a new textual document
         # and attach all the equivalent source records to it

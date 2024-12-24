@@ -23,7 +23,7 @@ class TextualDocumentService:
         :return:
         """
         # fetch the source records to be merged
-        dao = await self._source_record_dao()
+        dao = self._source_record_dao()
         sources_record_uids = await dao.get_source_record_uids_by_textual_document_uid(
             textual_document_uid)
         sources_records = []
@@ -40,7 +40,7 @@ class TextualDocumentService:
         dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
         await dao.create_or_update_textual_document(document)
 
-    async def _source_record_dao(self) -> SourceRecordDAO:
+    def _source_record_dao(self) -> SourceRecordDAO:
         factory = self._get_dao_factory()
         dao: SourceRecordDAO = cast(SourceRecordDAO, factory.get_dao(SourceRecord))
         return dao

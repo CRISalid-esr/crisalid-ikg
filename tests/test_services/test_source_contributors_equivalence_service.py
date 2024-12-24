@@ -1,9 +1,14 @@
+import pytest
+
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 
 
+@pytest.mark.current
 async def test_create_multiple_source_records_with_common_id_for_multiple_person(
+        # pylint: disable=too-many-arguments
+        test_app,  # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         persisted_person_b_pydantic_model: Person,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
@@ -27,3 +32,5 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
     await source_record_service.create_source_record(
         source_record=open_alex_article_a_source_record_pydantic_model,
         harvested_for=persisted_person_b_pydantic_model)
+
+    print("pause")

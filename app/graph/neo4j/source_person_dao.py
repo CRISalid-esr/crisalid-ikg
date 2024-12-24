@@ -1,5 +1,6 @@
 from neo4j import AsyncManagedTransaction
 
+from app.config import get_app_settings
 from app.errors.conflict_error import ConflictError
 from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
@@ -62,6 +63,49 @@ class SourcePersonDAO(Neo4jDAO):
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourcePersonDAO._source_person_exists(tx, source_person_uid)
+
+    @handle_database_errors
+    async def create_distances(self, source_people_uids: list[str],
+                               distances: dict, textual_document_uid: str) -> None:
+        """
+        Register distances relationships between source people in the graph database.
+
+        :param source_people_uids: global source people list, even if there is no
+                path between them
+        :param distances: precomputed distances between source people
+        :param textual_document_uid: the context document in which the distances are computed
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await self._create_distances(tx, source_people_uids, distances,
+                                                        textual_document_uid)
+
+    @staticmethod
+    @handle_database_errors
+    async def _create_distances(tx: AsyncManagedTransaction, source_people_uids: list[str]
+                                , distances: dict,
+                                textual_document_uid: str) -> None:
+        """
+        Internal method to create distances in the database.
+
+        :param tx: Transaction object.
+        :param source_people_uids: global source people list,
+                even if there is no path between them.
+        :param distances: precomputed distances between source people.
+        :param textual_document_uid: the context document in which the distances are computed.
+        """
+        query = load_query("create_distances_between_source_people")
+        # réticene à rapprocher les auteurs de façon floue
+        origin_distance = get_app_settings().reluctance_to_fuzzy_match_authors
+        await tx.run(
+            query,
+            source_people_uids=source_people_uids,
+            distances=distances,
+            textual_document_uid=textual_document_uid,
+            origin_distance=origin_distance
+        )
+
 
     @handle_database_errors
     async def get_by_uid(self, source_person_uid: str) -> SourcePerson:
