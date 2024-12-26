@@ -32,7 +32,8 @@ class AgentIdentifierService:
 
         if selected_identifier is None:
             raise ValueError(
-                f"Identifier of type {first_identifier_type} not found in data : {entity.dict()}.")
+                f"Identifier of type {first_identifier_type} "
+                f"not found in data : {entity.model_dump()}.")
 
         return f"{selected_identifier.type.value}" \
                f"{cls.IDENTIFIER_SEPARATOR}" \

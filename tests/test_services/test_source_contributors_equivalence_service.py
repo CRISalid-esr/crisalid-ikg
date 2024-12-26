@@ -6,11 +6,11 @@ from app.services.source_records.source_record_service import SourceRecordServic
 
 
 @pytest.mark.current
-async def test_create_multiple_source_records_with_common_id_for_multiple_person(
+async def test_create_source_records_with_shared_contributors(
         # pylint: disable=too-many-arguments
         test_app,  # pylint: disable=unused-argument
-        persisted_person_a_pydantic_model: Person,
-        persisted_person_b_pydantic_model: Person,
+        persisted_person_d_pydantic_model: Person,
+        persisted_person_e_pydantic_model: Person,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
         hal_article_a_source_record_pydantic_model: SourceRecord,
         open_alex_article_a_source_record_pydantic_model: SourceRecord
@@ -23,14 +23,14 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
     source_record_service = SourceRecordService()
     await source_record_service.create_source_record(
         source_record=hal_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_e_pydantic_model)
 
     await source_record_service.create_source_record(
         source_record=scanr_article_a_v2_source_record_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_d_pydantic_model)
 
     await source_record_service.create_source_record(
         source_record=open_alex_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_d_pydantic_model)
 
     print("pause")

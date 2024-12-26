@@ -1,0 +1,33 @@
+{
+  "names": [
+    {
+      "last_names": [
+        {
+          "value": "Mahajan",
+          "language": "fr"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "Noël",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "idref",
+      "value": "078115361"
+    },
+    {
+      "type": "local",
+      "value": "nmahajan@univ-domain.edu"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_uid": "local-U123"
+    }
+  ]
+}

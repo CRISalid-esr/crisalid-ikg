@@ -103,6 +103,52 @@ class DocumentDAO(Neo4jDAO):
         record = await result.single()
         return cls._hydrate(record)
 
+    @handle_database_errors
+    async def create_contribution(
+            self,
+            textual_document_uid: str,
+            person_uid: str,
+            roles: list[str]
+    ) -> None:
+        """
+        Create a Contribution node and establish relationships to the TextualDocument and Person.
+
+        :param textual_document_uid: UID of the TextualDocument.
+        :param person_uid: UID of the Person.
+        :param roles: List of roles to attach to the contribution.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._create_contribution_transaction,
+                    textual_document_uid,
+                    person_uid,
+                    roles
+                )
+
+    @staticmethod
+    async def _create_contribution_transaction(
+            tx: AsyncManagedTransaction,
+            textual_document_uid: str,
+            person_uid: str,
+            roles: list[str]
+    ) -> None:
+        """
+        Transaction to create Contribution and link it to TextualDocument and Person.
+
+        :param tx: Neo4j transaction object.
+        :param textual_document_uid: UID of the TextualDocument.
+        :param person_uid: UID of the Person.
+        :param roles: List of roles to attach to the contribution.
+        """
+        query = load_query("create_contribution_to_textual_document")
+        await tx.run(
+            query,
+            textual_document_uid=textual_document_uid,
+            person_uid=person_uid,
+            roles=roles
+        )
+
     @staticmethod
     def _hydrate(record: Record) -> Document | None:
         """

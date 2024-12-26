@@ -18,6 +18,7 @@ class SourcePerson(BaseModel):
     source: str
     source_identifier: Optional[str] = None
     name: str
+    name_variants: List[str] = []
 
     identifiers: List[SourcePersonIdentifier] = []
 

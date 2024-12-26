@@ -366,7 +366,7 @@ class SourceRecordDAO(Neo4jDAO):
     async def _create_inferred_equivalence_relationships(cls, tx: AsyncManagedTransaction,
                                                          source_record_uids: list[str]):
         await tx.run(
-            load_query("create_inferred_equivalence_relationships"),
+            load_query("create_source_record_inferred_equivalence_relationships"),
             source_record_uids=source_record_uids
         )
 

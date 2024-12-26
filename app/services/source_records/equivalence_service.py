@@ -78,11 +78,11 @@ class EquivalenceService:
         await dao.create_inferred_equivalence_relationships(
             sr_with_shared_identifier_uids)
         # Handle attached publications
-        await self._update_attached_publications(obsolete_source_record_uid)
+        await self._update_textual_documents(obsolete_source_record_uid)
         # Loop until the source_records_to_update list is empty
         await self._update_inferred_equivalence_relationships()
 
-    async def _update_attached_publications(self, origin_source_record_uid) -> None:
+    async def _update_textual_documents(self, origin_source_record_uid) -> None:
         """
         Update the attached publications of a source record
         :param origin_source_record_uid:

@@ -290,6 +290,35 @@ class PersonDAO(Neo4jDAO):
         return sorted(existing_memberships, key=lambda x: str(x.entity_uid)) == sorted(
             incoming_memberships, key=lambda x: str(x.entity_uid))
 
+    @handle_database_errors
+    async def find_by_identifiers(self, identifiers: list[dict]) -> str | None:
+        """
+        Find the UID of the first Person with one of the provided identifiers.
+
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        :return: UID of the first matched Person or None if no match is found.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                return await session.read_transaction(self._find_by_identifiers_transaction,
+                                                      identifiers)
+
+    @staticmethod
+    async def _find_by_identifiers_transaction(
+            tx: AsyncManagedTransaction, identifiers: list[dict]
+    ) -> str | None:
+        """
+        Transaction to find the UID of the first Person matching any identifier.
+
+        :param tx: Neo4j transaction object.
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        :return: UID of the first matched Person or None.
+        """
+        query = load_query("find_person_by_identifiers")
+        result = await tx.run(query, identifiers=identifiers)
+        record = await result.single()
+        return record["uid"] if record else None
+
     @staticmethod
     def _hydrate(record: dict) -> Person:
         person_data = record["person"]
