@@ -177,21 +177,23 @@ class SourceContributorMappingService:
                 external_person_data['display_name'] = source_person.name
         return Person(**external_person_data)
 
-    async def _merge_external_people(self, existing_external_people_uids, source_people_cluster):
+    async def _merge_external_people(self,
+                                     existing_external_people_uids,
+                                     source_people_cluster) -> str:
         """
         Merge multiple external people into a single person
         :param existing_external_people: List of existing external people
         :param source_people_cluster: List of SourcePerson objects
         :return: The UID of the merged person
         """
-        # Merge the external people into a single person
-        merged_person_uid = await self.person_dao.merge_external_people(
-            existing_external_people_uids)
+        person_to_keep_uid = existing_external_people_uids.pop()
+        for person_to_merge_uid in existing_external_people_uids:
+            await self.person_dao.merge_people(person_to_keep_uid, person_to_merge_uid)
         # Link the source people to the merged person
         await self.source_person_dao.link_to_person([source_person.uid for source_person in
                                                      source_people_cluster],
-                                                    merged_person_uid)
-        return merged_person_uid
+                                                    person_to_keep_uid)
+        return person_to_keep_uid
 
     async def _update_contributions(self, linked_people):
         document_dao = self._get_document_dao()

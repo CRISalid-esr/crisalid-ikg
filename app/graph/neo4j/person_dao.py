@@ -381,3 +381,33 @@ class PersonDAO(Neo4jDAO):
             memberships=memberships
         )
         return person
+
+    @handle_database_errors
+    async def merge_people(self, person_to_keep_uid: str, person_to_merge_uid: str) -> None:
+        """
+        Merge one person into another, transferring relationships and deleting the redundant person.
+
+        :param person_to_keep_uid: UID of the person to keep.
+        :param person_to_merge_uid: UID of the person to delete.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._merge_people_transaction,
+                    person_to_keep_uid,
+                    person_to_merge_uid
+                )
+
+    @staticmethod
+    async def _merge_people_transaction(tx: AsyncManagedTransaction, person_to_keep_uid: str,
+                                        person_to_merge_uid: str) -> None:
+        """
+        Transaction to merge one person into another.
+
+        :param tx: Neo4j transaction object.
+        :param person_to_keep_uid: UID of the person to keep.
+        :param person_to_merge_uid: UID of the person to delete.
+        """
+        query = load_query("merge_external_people")
+        await tx.run(query, person_to_keep_uid=person_to_keep_uid,
+                     person_to_merge_uid=person_to_merge_uid)
