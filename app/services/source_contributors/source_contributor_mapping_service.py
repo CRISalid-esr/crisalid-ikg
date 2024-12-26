@@ -85,30 +85,30 @@ class SourceContributorMappingService:
                 continue
             source_people_cluster_uids = await self.source_person_dao.get_equivalents(
                 source_person_uid)
+            # append the source person uid to the cluster if it is not already in the cluster
+            # my_list = list(set(my_list + [my_string]))
+            source_people_cluster_uids = list(set(source_people_cluster_uids + [source_person_uid]))
             source_people_cluster = [person for person in self.source_people if
                                      person.uid in source_people_cluster_uids]
             yet_processed_source_person_uids.update(source_people_cluster_uids)
-            # Before creating a new external person, check if there is an internal person that
-            # matches the identifiers of the external person
-            person_uid = await self._match_by_identifiers(source_people_cluster)
+            person_uid = (
+                    await self._match_by_identifiers(source_people_cluster)
+                    or await self._match_by_name(source_people_cluster)
+                    or await self._match_with_external_person(source_people_cluster)
+            )
             if person_uid is not None:
                 linked_people[person_uid] = source_people_cluster
-                continue
-            person_uid = await self._match_by_name(source_people_cluster)
-            if person_uid is not None:
-                linked_people[person_uid] = source_people_cluster
-                continue
-            # If no internal person matches the identifiers or names of the external person,
-            # create an external person
-            # TODO: create external person
         return linked_people
 
-    async def _match_by_name(self, source_people_cluster):
+    async def _match_by_name(self, source_people_cluster: List[SourcePerson]) -> str | None:
+        """
+        Match source people to real people based on names.
+        :param source_people_cluster: List of SourcePerson objects.
+        :return: The UID of the matched person, or None if no match is found.
+        """
         async for harvested_for_person in self._fetch_harvested_for_people(self.person_dao,
                                                                            self.source_records):
-            # If no internal person matches the identifiers of the external person,
-            # we need to compare the names of the harvested_for person with the names of the
-            # source people
+
             if self._is_similar(harvested_for_person, source_people_cluster):
                 await self.source_person_dao.link_to_person([source_person.uid for
                                                              source_person in
@@ -117,7 +117,13 @@ class SourceContributorMappingService:
                 return harvested_for_person.uid
         return None
 
-    async def _match_by_identifiers(self, source_people_cluster):
+    async def _match_by_identifiers(self, source_people_cluster: List[SourcePerson]) -> str:
+        """
+        Match source people to real people based on identifiers.
+
+        :param source_people_cluster:
+        :return:
+        """
         person_uid = None
         identifiers = [identifier.model_dump() for person in source_people_cluster
                        for identifier in person.identifiers]
@@ -129,6 +135,63 @@ class SourceContributorMappingService:
                                                              source_people_cluster],
                                                             person_uid)
         return person_uid
+
+    async def _match_with_external_person(self, source_people_cluster: List[SourcePerson]) -> str:
+        existing_external_people_uids = set()
+        for source_person in source_people_cluster:
+            external_person_uid = await self.person_dao.get_person_uid_by_source_person_uid(
+                source_person_uid=source_person.uid)
+            if external_person_uid:
+                existing_external_people_uids.add(external_person_uid)
+        if len(existing_external_people_uids) == 0:
+            external_person: Person = self._build_external_person(source_people_cluster)
+            person_uid, _, _ = await self.person_dao.create(external_person)
+            existing_external_people_uids.add(person_uid)
+        if len(existing_external_people_uids) == 1:
+            external_person_uid = existing_external_people_uids.pop()
+            await self.source_person_dao.link_to_person([source_person.uid for
+                                                         source_person in
+                                                         source_people_cluster],
+                                                        external_person_uid)
+            return external_person_uid
+        # the more complex case where there are multiple existing external people
+        # we need to merge them
+        return await self._merge_external_people(existing_external_people_uids,
+                                                 source_people_cluster)
+
+    def _build_external_person(self, source_people_cluster):
+        external_person_data = {
+            'uid': None,
+            'display_name': None,
+            "identifiers": [],
+            "external": True
+        }
+        source_people_cluster = sorted(
+            source_people_cluster,
+            key=lambda person: self._get_harvesters().index(person.source)
+        )
+        for source_person in source_people_cluster:
+            if external_person_data['uid'] is None:
+                external_person_data['uid'] = source_person.uid
+            if external_person_data['display_name'] is None:
+                external_person_data['display_name'] = source_person.name
+        return Person(**external_person_data)
+
+    async def _merge_external_people(self, existing_external_people_uids, source_people_cluster):
+        """
+        Merge multiple external people into a single person
+        :param existing_external_people: List of existing external people
+        :param source_people_cluster: List of SourcePerson objects
+        :return: The UID of the merged person
+        """
+        # Merge the external people into a single person
+        merged_person_uid = await self.person_dao.merge_external_people(
+            existing_external_people_uids)
+        # Link the source people to the merged person
+        await self.source_person_dao.link_to_person([source_person.uid for source_person in
+                                                     source_people_cluster],
+                                                    merged_person_uid)
+        return merged_person_uid
 
     async def _update_contributions(self, linked_people):
         document_dao = self._get_document_dao()

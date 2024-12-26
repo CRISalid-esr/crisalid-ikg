@@ -4,6 +4,7 @@ from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
+from app.models.contributions import Contribution
 from app.models.document import Document
 from app.models.literal import Literal
 from app.models.textual_document import TextualDocument
@@ -159,7 +160,11 @@ class DocumentDAO(Neo4jDAO):
         if record is None:
             return None
         document = Document(**record['document'])
-        document.source_record_uids = record['source_record_uids']
+        document.source_record_uids = [
+            source_record['uid'] for source_record in record['source_records']
+        ]
         for title in record['titles']:
             document.titles.append(Literal(**title))
+        for contribution in record['contributions']:
+            document.contributions.append(Contribution(**contribution))
         return document

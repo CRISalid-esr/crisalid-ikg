@@ -137,6 +137,40 @@ class PersonDAO(Neo4jDAO):
                         return PersonDAO._hydrate(record)
                     return None
 
+    @handle_database_errors
+    async def get_person_uid_by_source_person_uid(self, source_person_uid: str,
+                                                  external: bool = True) -> str | None:
+        """
+        Fetch the UID of a person linked to a given SourcePerson.
+
+        :param source_person_uid: UID of the SourcePerson.
+        :param external: Whether to search for an external person (default: True).
+        :return: UID of the Person or None if no match is found.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                result = await session.read_transaction(
+                    self._get_person_uid_by_source_person_uid_transaction, source_person_uid,
+                    external)
+                return result
+
+    @staticmethod
+    async def _get_person_uid_by_source_person_uid_transaction(tx: AsyncManagedTransaction,
+                                                               source_person_uid: str,
+                                                               external: bool) -> str | None:
+        """
+        Transaction to fetch the UID of a person linked to a given SourcePerson.
+
+        :param tx: Neo4j transaction object.
+        :param source_person_uid: UID of the SourcePerson.
+        :param external: Whether to search for an external person.
+        :return: UID of the Person or None if no match is found.
+        """
+        query = load_query("get_person_uid_by_source_person_uid")
+        result = await tx.run(query, source_person_uid=source_person_uid, external=external)
+        record = await result.single()
+        return record["person_uid"] if record else None
+
     @classmethod
     async def _get_person_by_uid(cls, tx, person_uid: str) -> Person | None:
         result = await tx.run(
@@ -170,8 +204,10 @@ class PersonDAO(Neo4jDAO):
             await tx.run(
                 create_person_query,
                 person_uid=person.uid,
-                names=[name.dict() for name in person.names],
-                identifiers=[identifier.dict() for identifier in person.identifiers]
+                display_name=person.display_name,
+                names=[name.model_dump() for name in person.names],
+                identifiers=[identifier.dict() for identifier in person.identifiers],
+                external=person.external
             )
         except ConstraintError as constraint_error:
             raise ConflictError(

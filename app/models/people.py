@@ -5,7 +5,7 @@ Person model
 from typing import List, Optional, Annotated
 
 from loguru import logger
-from pydantic import BeforeValidator, Field, field_validator
+from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.agents import Agent
@@ -28,19 +28,23 @@ class Person(Agent[PersonIdentifierType]):
     Person API model
     """
 
-    uid: Optional[str] = None  # uid from the database if exists
+    uid: Optional[str] = None
 
-    names: List[PersonName] = []
+    display_name: str
 
-    identifiers: List[PersonIdentifier]
+    names: Optional[List[PersonName]] = []
 
-    memberships: List[ImportMembership] = Field(default_factory=list)
+    identifiers: Optional[List[PersonIdentifier]] = []
+
+    memberships: Optional[List[ImportMembership]] = Field(default_factory=list)
+
+    external: bool = False
 
     @field_validator("identifiers", mode="after")
     @staticmethod
     def _validate_identifiers(identifiers):
         valid_identifiers = []
-        for identifier in identifiers:
+        for identifier in (identifiers or []):
             if not PersonIdentifierType.validate_identifier(identifier.type, identifier.value):
                 logger.warning(
                     f"Invalid identifier with type {identifier.type} and value {identifier.value}"
@@ -66,3 +70,17 @@ class Person(Agent[PersonIdentifierType]):
         :return: identifier
         """
         return next((ident for ident in self.identifiers if ident.type == identifier_type), None)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _build_display_name(cls, values):
+        """
+        If no display_name is provided, build it from the first name : "last_name, first_name"
+        """
+        if "display_name" not in values or not values["display_name"]:
+            name = values.get("names")[0]
+            # If the name is a PersonName object, model_dump
+            name = name.model_dump() if isinstance(name, PersonName) else name
+            values["display_name"] = (f"{name['last_names'][0]['value']}, "
+                                      f"{name['first_names'][0]['value']}")
+        return values

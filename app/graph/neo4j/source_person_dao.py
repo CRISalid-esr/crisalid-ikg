@@ -152,6 +152,9 @@ class SourcePersonDAO(Neo4jDAO):
         :param source_person_uids: List of SourcePerson UIDs.
         :param person_uid: UID of the Person to link with RECORDED_BY relationships.
         """
+        cleaning_query = load_query("unlink_source_people_from_person")
+        await tx.run(cleaning_query, source_person_uids=source_person_uids,
+                     person_to_preserve_uid=person_uid)
         query = load_query("link_source_people_to_person")
         await tx.run(query, source_person_uids=source_person_uids, person_uid=person_uid)
 
