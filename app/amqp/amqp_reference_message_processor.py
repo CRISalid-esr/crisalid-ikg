@@ -30,7 +30,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         event_type = event_data["type"]
         reference_data = event_data["reference"]
         try:
-            person = Person(**person_data)
+            person = Person(**person_data | {'display_name': person_data['name']})
         except (ValueError, AttributeError) as e:
             logger.error(f"Error processing person data associated with incoming reference"
                          f" {person_data} : {e}")
