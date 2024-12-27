@@ -355,8 +355,9 @@ class SourceContributorMappingService:
 
         return distances
 
-    def _compute_distance(self, source_person: SourcePerson, next_source_person: SourcePerson):
-        # compare identifiers
+    def _compute_distance(
+            self, source_person: SourcePerson, next_source_person: SourcePerson
+    ) -> float | None:
         if self._common_identifier(source_person, next_source_person):
             return 0
         proximity = self._compute_fuzz_distance(source_person.name, next_source_person.name)
@@ -400,7 +401,7 @@ class SourceContributorMappingService:
                     return True
         return False
 
-    def _compute_fuzz_distance(self, name1: str, name2: str) -> int:
+    def _compute_fuzz_distance(self, name1: str, name2: str) -> float:
         """
         Compute the Levenshtein distance between two names
         :param name1: First name
