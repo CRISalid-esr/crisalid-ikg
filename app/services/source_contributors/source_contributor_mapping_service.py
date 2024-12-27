@@ -37,12 +37,10 @@ class SourceContributorMappingService:
         self.person_dao = self._get_person_dao()
         self.source_person_dao = self._get_source_person_dao()
 
-    async def update_contributions(self):
+    async def update_contributions(self) -> None:
         """
         Recompute metadata for a textual document
-        :param _: unused (for compatibility with signal handlers)
-        :param textual_document_uid: the textual document uid
-        :return:
+        :return: None
         """
         # create the equivalence relationships between contributors
         await self._create_contextual_equivalences()
@@ -151,6 +149,7 @@ class SourceContributorMappingService:
                 person_uid, _, _ = await self.person_dao.create(external_person)
             except ConflictError:
                 logger.error("External person %s already exists", external_person)
+                person_uid = external_person.uid
             existing_external_people_uids.add(person_uid)
         if len(existing_external_people_uids) == 1:
             external_person_uid = existing_external_people_uids.pop()
@@ -188,7 +187,7 @@ class SourceContributorMappingService:
                                      source_people_cluster) -> str:
         """
         Merge multiple external people into a single person
-        :param existing_external_people: List of existing external people
+        :param existing_external_people_uids: List of UIDs of existing external people
         :param source_people_cluster: List of SourcePerson objects
         :return: The UID of the merged person
         """
@@ -225,7 +224,6 @@ class SourceContributorMappingService:
 
         :param source_people: List of SourcePerson objects.
         :param contributions: List of SourceContribution objects.
-        :param harvesters: Ordered list of harvester sources.
         :return: the first encountered role
         """
         # Sort source_people by harvester order
