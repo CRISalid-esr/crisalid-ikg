@@ -9,19 +9,24 @@ OPTIONAL MATCH (issue)-[:ISSUED_BY]->(journal:SourceJournal)
 OPTIONAL MATCH (journal)-[:HAS_IDENTIFIER]->(journ_identifier:JournalIdentifier)
 OPTIONAL MATCH (s)-[:HAS_CONTRIBUTION]->(contribution:SourceContribution)
 OPTIONAL MATCH (contribution)-[:CONTRIBUTOR]->(contributor:SourcePerson)
+OPTIONAL MATCH (contributor)-[:HAS_IDENTIFIER]->(pers_identifier:SourcePersonIdentifier)
 OPTIONAL MATCH (contribution)-[:HAS_AFFILIATION]->(organization:SourceOrganization)
-OPTIONAL MATCH (organization)-[:HAS_IDENTIFIER]->(identifier:SourceOrganizationIdentifier)
-// First, collect the identifiers for each organization
-WITH DISTINCT s, contribution, contributor, person, title, pub_identifier, abstract, concept, issue, journal, journ_identifier,
-     organization, collect(DISTINCT identifier) AS identifiers
+OPTIONAL MATCH (organization)-[:HAS_IDENTIFIER]->(org_identifier:SourceOrganizationIdentifier)
 
-// Create the affiliation object with collected identifiers
 WITH DISTINCT s, contribution, contributor, person, title, pub_identifier, abstract, concept, issue, journal, journ_identifier,
-     collect(organization {.*, identifiers: identifiers}) AS affiliations
+              organization, org_identifier, pers_identifier
 
-// Group affiliations by contributor and contribution
+WITH DISTINCT s, contribution, contributor, person, title, pub_identifier, abstract, concept, issue, journal, journ_identifier,
+              organization, pers_identifier, collect(DISTINCT org_identifier) AS org_identifiers
+
+WITH DISTINCT s, contribution, contributor, person, title, pub_identifier, abstract, concept, issue, journal, journ_identifier,
+              collect(organization {.*, identifiers: org_identifiers}) AS affiliations, collect(DISTINCT pers_identifier) AS pers_identifiers
+
+WITH DISTINCT s, contribution, contributor, person, title, pub_identifier, abstract, concept, issue, journal, journ_identifier,
+              affiliations, contributor {.*, identifiers: pers_identifiers } AS contributor_with_identifiers
+
 WITH DISTINCT s, person, title, pub_identifier, abstract, concept, issue, journal, journ_identifier,
-     collect(contribution {.*, contributor: contributor, affiliations: affiliations}) AS contributions
+     collect(contribution {.*, contributor: contributor_with_identifiers, affiliations: affiliations}) AS contributions
 
 RETURN DISTINCT s, issue, journal,
        collect(DISTINCT person.uid) AS harvested_for_uids,
@@ -31,4 +36,6 @@ RETURN DISTINCT s, issue, journal,
        collect(DISTINCT concept) AS subjects,
        collect(DISTINCT journ_identifier) AS journal_identifiers,
        contributions
+
+
 

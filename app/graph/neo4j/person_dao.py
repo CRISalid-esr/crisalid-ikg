@@ -137,6 +137,40 @@ class PersonDAO(Neo4jDAO):
                         return PersonDAO._hydrate(record)
                     return None
 
+    @handle_database_errors
+    async def get_person_uid_by_source_person_uid(self, source_person_uid: str,
+                                                  external: bool = True) -> str | None:
+        """
+        Fetch the UID of a person linked to a given SourcePerson.
+
+        :param source_person_uid: UID of the SourcePerson.
+        :param external: Whether to search for an external person (default: True).
+        :return: UID of the Person or None if no match is found.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                result = await session.read_transaction(
+                    self._get_person_uid_by_source_person_uid_transaction, source_person_uid,
+                    external)
+                return result
+
+    @staticmethod
+    async def _get_person_uid_by_source_person_uid_transaction(tx: AsyncManagedTransaction,
+                                                               source_person_uid: str,
+                                                               external: bool) -> str | None:
+        """
+        Transaction to fetch the UID of a person linked to a given SourcePerson.
+
+        :param tx: Neo4j transaction object.
+        :param source_person_uid: UID of the SourcePerson.
+        :param external: Whether to search for an external person.
+        :return: UID of the Person or None if no match is found.
+        """
+        query = load_query("get_person_uid_by_source_person_uid")
+        result = await tx.run(query, source_person_uid=source_person_uid, external=external)
+        record = await result.single()
+        return record["person_uid"] if record else None
+
     @classmethod
     async def _get_person_by_uid(cls, tx, person_uid: str) -> Person | None:
         result = await tx.run(
@@ -170,8 +204,10 @@ class PersonDAO(Neo4jDAO):
             await tx.run(
                 create_person_query,
                 person_uid=person.uid,
-                names=[name.dict() for name in person.names],
-                identifiers=[identifier.dict() for identifier in person.identifiers]
+                display_name=person.display_name,
+                names=[name.model_dump() for name in person.names],
+                identifiers=[identifier.dict() for identifier in person.identifiers],
+                external=person.external
             )
         except ConstraintError as constraint_error:
             raise ConflictError(
@@ -290,6 +326,35 @@ class PersonDAO(Neo4jDAO):
         return sorted(existing_memberships, key=lambda x: str(x.entity_uid)) == sorted(
             incoming_memberships, key=lambda x: str(x.entity_uid))
 
+    @handle_database_errors
+    async def find_by_identifiers(self, identifiers: list[dict]) -> str | None:
+        """
+        Find the UID of the first Person with one of the provided identifiers.
+
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        :return: UID of the first matched Person or None if no match is found.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                return await session.read_transaction(self._find_by_identifiers_transaction,
+                                                      identifiers)
+
+    @staticmethod
+    async def _find_by_identifiers_transaction(
+            tx: AsyncManagedTransaction, identifiers: list[dict]
+    ) -> str | None:
+        """
+        Transaction to find the UID of the first Person matching any identifier.
+
+        :param tx: Neo4j transaction object.
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        :return: UID of the first matched Person or None.
+        """
+        query = load_query("find_person_by_identifiers")
+        result = await tx.run(query, identifiers=identifiers)
+        record = await result.single()
+        return record["uid"] if record else None
+
     @staticmethod
     def _hydrate(record: dict) -> Person:
         person_data = record["person"]
@@ -316,3 +381,33 @@ class PersonDAO(Neo4jDAO):
             memberships=memberships
         )
         return person
+
+    @handle_database_errors
+    async def merge_people(self, person_to_keep_uid: str, person_to_merge_uid: str) -> None:
+        """
+        Merge one person into another, transferring relationships and deleting the redundant person.
+
+        :param person_to_keep_uid: UID of the person to keep.
+        :param person_to_merge_uid: UID of the person to delete.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._merge_people_transaction,
+                    person_to_keep_uid,
+                    person_to_merge_uid
+                )
+
+    @staticmethod
+    async def _merge_people_transaction(tx: AsyncManagedTransaction, person_to_keep_uid: str,
+                                        person_to_merge_uid: str) -> None:
+        """
+        Transaction to merge one person into another.
+
+        :param tx: Neo4j transaction object.
+        :param person_to_keep_uid: UID of the person to keep.
+        :param person_to_merge_uid: UID of the person to delete.
+        """
+        query = load_query("merge_external_people")
+        await tx.run(query, person_to_keep_uid=person_to_keep_uid,
+                     person_to_merge_uid=person_to_merge_uid)

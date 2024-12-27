@@ -80,10 +80,17 @@
     {
       "rank": 0,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": null,
-        "name": "J. L. West",
-        "name_variants": []
+        "source": "hal",
+        "source_identifier": "863912",
+        "name": "Jérôme Février",
+        "name_variants": [],
+        "identifiers": [
+          {
+            "source": "hal",
+            "type": "idhal_i",
+            "value": "863912"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -91,10 +98,20 @@
     {
       "rank": 3,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": null,
+        "source": "hal",
+        "source_identifier": "87564",
         "name": "N. Mahajan",
-        "name_variants": []
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0001-6528-2446"
+          },
+          {
+              "type": "idhal_i",
+              "value": "87564"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -102,8 +119,8 @@
     {
       "rank": 2,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": "idref078115361",
+        "source": "hal",
+        "source_identifier": "578950",
         "name": "M.-A. Miville-Desch\u00eanes",
         "name_variants": []
       },
@@ -113,8 +130,8 @@
     {
       "rank": 1,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": "idref074532944",
+        "source": "hal",
+        "source_identifier": "467432",
         "name": "B. M. Gaensler",
         "name_variants": []
       },
@@ -124,9 +141,9 @@
     {
       "rank": 6,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": null,
-        "name": "P. G. Martin",
+        "source": "hal",
+        "source_identifier": "4876589",
+        "name": "L F J",
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -135,8 +152,8 @@
     {
       "rank": 5,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": null,
+        "source": "hal",
+        "source_identifier": "7543789",
         "name": "F. Boulanger",
         "name_variants": []
       },
@@ -146,9 +163,9 @@
     {
       "rank": 7,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": null,
-        "name": "I. A. Zelko",
+        "source": "hal",
+        "source_identifier": "3478654",
+        "name": "Raymond L. Garcia",
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -157,10 +174,16 @@
     {
       "rank": 4,
       "contributor": {
-        "source": "scanr",
+        "source": "hal",
         "source_identifier": null,
-        "name": "J. Dechant",
-        "name_variants": []
+        "name": "A. Smith",
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0002-1825-0097"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []

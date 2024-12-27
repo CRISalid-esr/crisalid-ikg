@@ -106,3 +106,6 @@ class AppSettings(BaseSettings):
     publication_source_policies_file: str = settings_file_path(
         filename="publication_sources_policies.yaml")
     publication_source_policies: dict = dct_from_yml(yml_file=publication_source_policies_file)
+
+    coauthor_names_maximal_distance: int = 30
+    reluctance_to_fuzzy_match_authors: int = 3  # 1 is low, 10 is high, 30 is very high

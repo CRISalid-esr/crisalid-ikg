@@ -45,10 +45,24 @@
     {
       "rank": 0,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": null,
+        "source": "open_alex",
+        "source_identifier": "https://openalex.org/A5065084602",
         "name": "A. C. Smith",
-        "name_variants": []
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "open_alex",
+            "value": "https://openalex.org/A5065084602"
+          },
+          {
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0002-1825-0097"
+          },
+          {
+            "type": "isni",
+            "value": "0000-0002-1825-12345"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -56,10 +70,20 @@
     {
       "rank": 2,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": null,
+        "source": "open_alex",
+        "source_identifier": "https://openalex.org/A5019602694",
         "name": "L. F. Johnson",
-        "name_variants": []
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0001-8777-7135"
+          },
+          {
+            "type": "open_alex",
+            "value": "https://openalex.org/A5019602694"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -67,10 +91,16 @@
     {
       "rank": 1,
       "contributor": {
-        "source": "scanr",
-        "source_identifier": "idref075678345",
-        "name": "R. A. Garcia",
-        "name_variants": []
+        "source": "open_alex",
+        "source_identifier": "https://openalex.org/A5088876922",
+        "name": "Raymond Garcia",
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "open_alex",
+            "value": "https://openalex.org/A5088876922"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []

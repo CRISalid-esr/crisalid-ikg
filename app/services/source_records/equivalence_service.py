@@ -28,7 +28,7 @@ class EquivalenceService:
         :param source_record_id:
         :return:
         """
-        print(f"beginning to update source record with id {source_record_id}")
+        logger.debug(f"beginning to update source record with id {source_record_id}")
         self.source_records_to_update_uids.append(source_record_id)
         await self._update_inferred_equivalence_relationships()
 
@@ -78,11 +78,11 @@ class EquivalenceService:
         await dao.create_inferred_equivalence_relationships(
             sr_with_shared_identifier_uids)
         # Handle attached publications
-        await self._update_attached_publications(obsolete_source_record_uid)
+        await self._update_textual_documents(obsolete_source_record_uid)
         # Loop until the source_records_to_update list is empty
         await self._update_inferred_equivalence_relationships()
 
-    async def _update_attached_publications(self, origin_source_record_uid) -> None:
+    async def _update_textual_documents(self, origin_source_record_uid) -> None:
         """
         Update the attached publications of a source record
         :param origin_source_record_uid:
@@ -107,6 +107,8 @@ class EquivalenceService:
             if (document := await document_dao.get_textual_document_by_source_record_uid(
                 source_record_uid)) is not None
         ]
+        # Deduplicate recorded_textual_documents by uid
+        recorded_textual_documents = list({x.uid: x for x in recorded_textual_documents}.values())
         # case 1 : recorded_textual_documents is empty
         # create a new textual document
         # and attach all the equivalent source records to it

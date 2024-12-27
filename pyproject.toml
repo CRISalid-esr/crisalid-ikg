@@ -21,6 +21,8 @@ blinker = "^1.8.2"
 elasticsearch = "^8.15.1"
 pyyaml = "^6.0.2"
 inflection = "^0.5.1"
+python-levenshtein = "^0.26.1"
+rapidfuzz = "^3.11.0"
 
 
 [tool.poetry.group.development]

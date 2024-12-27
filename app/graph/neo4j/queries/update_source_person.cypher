@@ -3,11 +3,11 @@ SET s.source = $source,
     s.source_identifier = $source_identifier,
     s.name = $name
 WITH s
-OPTIONAL MATCH (s)-[hi:HAS_IDENTIFIER]->(PersonIdentifier)
+OPTIONAL MATCH (s)-[hi:HAS_IDENTIFIER]->(SourcePersonIdentifier)
 DELETE hi
 WITH s
 FOREACH (identifier IN $identifiers |
-  MERGE (i:PersonIdentifier {
+  MERGE (i:SourcePersonIdentifier {
     type:  identifier.type,
     value: identifier.value
   })

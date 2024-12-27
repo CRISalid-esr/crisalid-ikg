@@ -1,4 +1,4 @@
-from typing import List, cast
+from typing import cast
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
@@ -8,6 +8,8 @@ from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.document import Document
 from app.models.source_records import SourceRecord
 from app.services.documents.metadata_computation_service import MetadataComputationService
+from app.services.source_contributors.source_contributor_mapping_service import \
+    SourceContributorMappingService
 
 
 class TextualDocumentService:
@@ -23,7 +25,11 @@ class TextualDocumentService:
         :return:
         """
         # fetch the source records to be merged
-        sources_records = await self.get_textual_document_sources(textual_document_uid)
+
+        sources_records = await self._get_source_records_of_textual_document(textual_document_uid)
+        source_contributor_mapping_service = SourceContributorMappingService(
+            source_records=sources_records, textual_document_uid=textual_document_uid)
+        await source_contributor_mapping_service.update_contributions()
         # delegate the merge operation to the metadata computation service
         document = MetadataComputationService(sources_records).merge()
         document.uid = textual_document_uid
@@ -34,17 +40,19 @@ class TextualDocumentService:
         dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
         await dao.create_or_update_textual_document(document)
 
-    async def get_textual_document_sources(self,
-                                           textual_document_uid: str) -> List[SourceRecord]:
-        """
-        Fetch the source records from which the textual document is derived
-        :param textual_document_uid:
-        :return:
-        """
+    async def _get_source_records_of_textual_document(self, textual_document_uid) -> list[
+        SourceRecord]:
+        source_record_dao = self._source_record_dao()
+        sources_record_uids = await (
+            source_record_dao.get_source_record_uids_by_textual_document_uid(
+                textual_document_uid))
+        return [await source_record_dao.get(source_record_uid) for source_record_uid in
+                sources_record_uids]
+
+    def _source_record_dao(self) -> SourceRecordDAO:
         factory = self._get_dao_factory()
         dao: SourceRecordDAO = cast(SourceRecordDAO, factory.get_dao(SourceRecord))
-        return await dao.get_source_records_by_textual_document_uid(
-            textual_document_uid)
+        return dao
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

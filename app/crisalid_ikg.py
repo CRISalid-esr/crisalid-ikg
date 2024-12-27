@@ -23,6 +23,7 @@ from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
     person_unchanged, textual_document_updated, source_record_updated
 
+
 class CrisalidIKG(FastAPI):
     """Main application, routing logic, middlewares and startup/shutdown events"""
 

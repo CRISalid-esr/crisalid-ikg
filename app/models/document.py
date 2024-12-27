@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel, model_validator
 
 from app.models.concepts import Concept
+from app.models.contributions import Contribution
 from app.models.literal import Literal
 
 
@@ -20,6 +21,8 @@ class Document(BaseModel):
     to_be_deleted: bool = False
     to_be_merged_into_uid: Optional[str] = None
     source_record_uids: Optional[List[str]] = None
+
+    contributions: Optional[List[Contribution]] = []
 
     @model_validator(mode="before")
     @classmethod
