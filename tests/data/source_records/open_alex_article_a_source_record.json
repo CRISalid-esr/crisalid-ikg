@@ -45,7 +45,7 @@
     {
       "rank": 0,
       "contributor": {
-        "source": "openalex",
+        "source": "open_alex",
         "source_identifier": "https://openalex.org/A5065084602",
         "name": "A. C. Smith",
         "name_variants": [],
@@ -70,7 +70,7 @@
     {
       "rank": 2,
       "contributor": {
-        "source": "openalex",
+        "source": "open_alex",
         "source_identifier": "https://openalex.org/A5019602694",
         "name": "L. F. Johnson",
         "name_variants": [],
@@ -91,7 +91,7 @@
     {
       "rank": 1,
       "contributor": {
-        "source": "openalex",
+        "source": "open_alex",
         "source_identifier": "https://openalex.org/A5088876922",
         "name": "Raymond Garcia",
         "name_variants": [],

@@ -56,7 +56,7 @@ class PublicationIdentifierType(Enum):
     INERIS = "ineris"
     IRD = "ird"
     NNT = "nnt"
-    OPENALEX = "openalex"
+    OPENALEX = "open_alex"
     PII = "pii"
     PMID = "pmid"
     PMC = "pmcid"
