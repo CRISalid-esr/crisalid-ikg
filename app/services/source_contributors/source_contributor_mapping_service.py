@@ -1,10 +1,12 @@
 import re
 import unicodedata
 from typing import cast, AsyncGenerator, List
+from venv import logger
 
 from rapidfuzz import fuzz
 
 from app.config import get_app_settings
+from app.errors.conflict_error import ConflictError
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
@@ -145,7 +147,10 @@ class SourceContributorMappingService:
                 existing_external_people_uids.add(external_person_uid)
         if len(existing_external_people_uids) == 0:
             external_person: Person = self._build_external_person(source_people_cluster)
-            person_uid, _, _ = await self.person_dao.create(external_person)
+            try:
+                person_uid, _, _ = await self.person_dao.create(external_person)
+            except ConflictError:
+                logger.error("External person %s already exists", external_person)
             existing_external_people_uids.add(person_uid)
         if len(existing_external_people_uids) == 1:
             external_person_uid = existing_external_people_uids.pop()
@@ -169,6 +174,7 @@ class SourceContributorMappingService:
         source_people_cluster = sorted(
             source_people_cluster,
             key=lambda person: self._get_harvesters().index(person.source)
+            if person.source in self._get_harvesters() else float('inf')
         )
         for source_person in source_people_cluster:
             if external_person_data['uid'] is None:
