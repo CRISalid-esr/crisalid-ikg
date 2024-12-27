@@ -239,7 +239,9 @@ class SourceContributorMappingService:
         # Search for each person in contributions and extract roles
         for person in sorted_people:
             for contribution in contributions:
-                if contribution.contributor.uid == person.uid and contribution.role not in roles:
+                if (contribution.contributor.uid == person.uid
+                        and contribution.role is not None
+                        and contribution.role not in roles):
                     roles.append(contribution.role)
 
         return roles
