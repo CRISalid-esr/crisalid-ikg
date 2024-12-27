@@ -75,12 +75,40 @@ class Person(Agent[PersonIdentifierType]):
     @classmethod
     def _build_display_name(cls, values):
         """
-        If no display_name is provided, build it from the first name : "last_name, first_name"
+        Validates and ensures a display name is present.
+        If no display_name is provided, build it from the first available person name:
+        "last_name, first_name".
         """
-        if "display_name" not in values or not values["display_name"]:
-            name = values.get("names")[0]
-            # If the name is a PersonName object, model_dump
+        if not values.get("display_name"):
+            names = values.get("names", [])
+
+            if not names or not isinstance(names, list) or not names:
+                raise ValueError(
+                    "Either a display_name or at least one person name "
+                    "with a last name or first name must be provided.")
+
+            # Extract the first person name
+            name = names[0]
             name = name.model_dump() if isinstance(name, PersonName) else name
-            values["display_name"] = (f"{name['last_names'][0]['value']}, "
-                                      f"{name['first_names'][0]['value']}")
+
+            # Ensure we have at least a last name or a first name
+            last_name = name.get("last_names", [{}])
+            last_name = last_name[0].get("value") if (last_name
+                                                      and isinstance(last_name,
+                                                                     list)
+                                                      and last_name) else None
+
+            first_name = name.get("first_names", [{}])
+            first_name = first_name[0].get("value") if (first_name
+                                                        and isinstance(first_name,
+                                                                       list)
+                                                        and first_name) else None
+
+            if not last_name and not first_name:
+                raise ValueError(
+                    "The provided person name must have at least a last name or a first name.")
+
+            # Build the display name from available parts
+            values["display_name"] = ", ".join(filter(None, [last_name, first_name]))
+
         return values
