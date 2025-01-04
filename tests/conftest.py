@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from loguru import logger
 from starlette.testclient import TestClient
 
+from app.crisalid_ikg import CrisalidIKG
 from tests.fixtures.common import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.people_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.organization_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
@@ -21,7 +22,6 @@ environ["APP_ENV"] = "TEST"
 def app() -> FastAPI:
     """Provide app as fixture"""
     # pylint: disable=import-outside-toplevel
-    from app.main import CrisalidIKG  # local import for testing purpose
 
     return CrisalidIKG()
 

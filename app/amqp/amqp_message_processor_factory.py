@@ -1,12 +1,10 @@
 import asyncio
 
-import aio_pika
-
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_people_message_processor import AMQPPeopleMessageProcessor
 from app.amqp.amqp_reference_message_processor import AMQReferenceMessageProcessor
 from app.amqp.amqp_structure_message_processor import AMQPStructureMessageProcessor
-from app.settings.app_settings import AppSettings
+from app.config import get_app_settings
 
 
 class AMQPMessageProcessorFactory:
@@ -17,22 +15,20 @@ class AMQPMessageProcessorFactory:
     @staticmethod
     def get_processor(
             topic: str,
-            exchange: aio_pika.Exchange,
             tasks_queue: asyncio.Queue,
-            settings: AppSettings
     ) -> AMQPMessageProcessor:
         """
         Get the appropriate processor for the given topic
         :param topic:
-        :param exchange:
         :param tasks_queue:
         :param settings:
         :return:
         """
+        settings = get_app_settings()
         if topic == settings.amqp_publications_topic:
-            return AMQReferenceMessageProcessor(exchange, tasks_queue, settings)
+            return AMQReferenceMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_people_topic:
-            return AMQPPeopleMessageProcessor(exchange, tasks_queue, settings)
+            return AMQPPeopleMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_structures_topic:
-            return AMQPStructureMessageProcessor(exchange, tasks_queue, settings)
+            return AMQPStructureMessageProcessor(tasks_queue, settings)
         raise ValueError(f"No processor found for topic: {topic}")

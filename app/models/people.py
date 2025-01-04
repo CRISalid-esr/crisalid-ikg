@@ -112,3 +112,27 @@ class Person(Agent[PersonIdentifierType]):
             values["display_name"] = ", ".join(filter(None, [last_name, first_name]))
 
         return values
+
+    def get_first_name(self):
+        """
+        Get the first name of the person, or a blank string if not found
+        :return: first name
+        """
+        if not self.names:
+            return ""
+        first_name = self.names[0].first_names
+        if not first_name:
+            return ""
+        return first_name[0].value
+
+    def get_last_name(self):
+        """
+        Get the last name of the person, or a blank string if not found
+        :return: last name
+        """
+        if not self.names:
+            return ""
+        last_name = self.names[0].last_names
+        if not last_name:
+            return ""
+        return last_name[0].value

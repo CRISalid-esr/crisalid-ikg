@@ -61,12 +61,15 @@ class AppSettings(BaseSettings):
     amqp_people_topic: str = "people"
     amqp_structures_topic: str = "structures"
     amqp_directory_exchange_name: str = "directory"
+    amqp_graph_exchange_name: str = "graph"
     amqp_prefetch_count: int = 20
     amqp_consumer_ack_timeout: int = 43200000
-    amqp_reference_event_routing_key: str = "event.references.reference.*"
-    amqp_people_event_routing_key: str = "event.people.person.*"
-    amqp_structure_event_routing_key: str = "event.structures.structure.*"
-    amqp_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
+    amqp_harvester_reference_event_routing_key: str = "event.references.reference.*"
+    amqp_directory_people_event_routing_key: str = "event.people.person.*"
+    amqp_graph_people_event_created_routing_key: str = "event.people.person.created"
+    amqp_graph_people_event_updated_routing_key: str = "event.people.person.updated"
+    amqp_directory_structure_event_routing_key: str = "event.structures.structure.*"
+    amqp_harvester_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
 
     institution_name: str = "XYZ University"
 

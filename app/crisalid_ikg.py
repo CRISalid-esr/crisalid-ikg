@@ -139,6 +139,9 @@ class CrisalidIKG(FastAPI):
         person_created.connect(self.amqp_interface.fetch_publications)
         person_unchanged.connect(self.amqp_interface.fetch_publications)
         person_identifiers_updated.connect(self.amqp_interface.fetch_publications)
+        person_created.connect(self.amqp_interface.dispatch_person_created)
+        person_unchanged.connect(self.amqp_interface.dispatch_person_updated)
+        person_identifiers_updated.connect(self.amqp_interface.dispatch_person_updated)
 
     async def close_rabbitmq_connexion(self) -> None:  # pragma: no cover
         """Handle last tasks before shutdown"""

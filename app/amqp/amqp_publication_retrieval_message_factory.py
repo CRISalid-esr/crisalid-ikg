@@ -10,7 +10,7 @@ class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
     """Factory for building AMQP messages related to harvesting states."""
 
     def _build_routing_key(self) -> str:
-        return self.settings.amqp_publication_retrieval_routing_key
+        return self.settings.amqp_harvester_publication_retrieval_routing_key
 
     async def _build_payload(self) -> dict[str, Any]:
         harvesters = os.getenv("HARVESTERS", "idref,scanr,hal,openalex,scopus").split(",")
