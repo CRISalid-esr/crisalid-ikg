@@ -35,6 +35,8 @@ class PeopleService:
         person_uid, status, update_status = await dao.update(person)
         if status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
             await person_identifiers_updated.send_async(self, payload=person_uid)
+        else:
+            await person_unchanged.send_async(self, payload=person_uid)
         return person
 
     async def create_or_update_person(self, person: Person) -> None:

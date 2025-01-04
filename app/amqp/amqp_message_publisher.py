@@ -5,6 +5,8 @@ import aio_pika
 from aio_pika import DeliveryMode
 from loguru import logger
 
+from app.amqp.amqp_person_created_event_message_factory import AMQPPersonCreatedEventMessageFactory
+from app.amqp.amqp_person_updated_event_message_factory import AMQPPersonUpdatedEventMessageFactory
 from app.amqp.amqp_publication_retrieval_message_factory import \
     AMQPPublicationRetrievalMessageFactory
 
@@ -32,11 +34,14 @@ class AMQPMessagePublisher:
         Subtypes of Task messages
         """
         PUBLICATION_RETRIEVAL = "Publication retrieval"
+        PERSON_EVENT = "Person event"
 
     class EventMessageSubtype(MessageSubtype):
         """
         Subtypes of Event messages
         """
+        PERSON_CREATED = "Person created"
+        PERSON_UPDATED = "Person updated"
 
     def __init__(self, exchange: aio_pika.Exchange):
         """Init AMQP Publisher class"""
@@ -69,4 +74,9 @@ class AMQPMessagePublisher:
         if message_type is cls.MessageType.TASK:
             if message_subtype is cls.TaskMessageSubtype.PUBLICATION_RETRIEVAL:
                 return await AMQPPublicationRetrievalMessageFactory(content).build_message()
+        if message_type is cls.MessageType.EVENT:
+            if message_subtype is cls.EventMessageSubtype.PERSON_CREATED:
+                return await AMQPPersonCreatedEventMessageFactory(content).build_message()
+            if message_subtype is cls.EventMessageSubtype.PERSON_UPDATED:
+                return await AMQPPersonUpdatedEventMessageFactory(content).build_message()
         return None, None

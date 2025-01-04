@@ -4,7 +4,6 @@ import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-import aio_pika
 from aio_pika import IncomingMessage
 from loguru import logger
 
@@ -20,11 +19,9 @@ class AMQPMessageProcessor(ABC):
 
     def __init__(
             self,
-            exchange: aio_pika.Exchange,
             tasks_queue: asyncio.Queue,
             settings: AppSettings,
     ):
-        self.exchange = exchange
         self.tasks_queue = tasks_queue
         self.settings = settings
 

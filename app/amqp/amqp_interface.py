@@ -28,28 +28,29 @@ class AMQPInterface:
         self.inner_tasks_queues: dict[str, asyncio.Queue] = {}
         self.message_processing_workers: dict[str, List[asyncio.Task]] = defaultdict(list)
         self.keys = {
-            "people": [self.settings.amqp_people_event_routing_key],
-            "structures": [self.settings.amqp_structure_event_routing_key],
-            "publications": [self.settings.amqp_reference_event_routing_key],
+            "people": [self.settings.amqp_directory_people_event_routing_key],
+            "structures": [self.settings.amqp_directory_structure_event_routing_key],
+            "publications": [self.settings.amqp_harvester_reference_event_routing_key],
         }
 
     async def connect(self):
         """Connect to AMQP queue"""
         await self._connect()
-        await self._declare_exchange(self.settings.amqp_people_topic,
-                                     self.settings.amqp_directory_exchange_name)
-        await self._declare_exchange(self.settings.amqp_structures_topic,
-                                     self.settings.amqp_directory_exchange_name)
-        await self._declare_exchange(self.settings.amqp_publications_topic,
-                                     self.settings.amqp_publications_exchange_name)
+        await self._declare_exchange(
+            self.settings.amqp_directory_exchange_name)
+        await self._declare_exchange(self.settings.amqp_publications_exchange_name)
+        await self._declare_exchange(self.settings.amqp_graph_exchange_name)
         await self._attach_message_processing_workers(self.settings.amqp_people_topic)
         await self._attach_message_processing_workers(self.settings.amqp_publications_topic)
         await self._attach_message_processing_workers(self.settings.amqp_structures_topic)
-        await self._bind_queue(self.settings.amqp_people_topic,
+        await self._bind_queue(self.settings.amqp_directory_exchange_name,
+                               self.settings.amqp_people_topic,
                                self.settings.amqp_people_queue_name)
-        await self._bind_queue(self.settings.amqp_structures_topic,
+        await self._bind_queue(self.settings.amqp_directory_exchange_name,
+                               self.settings.amqp_structures_topic,
                                self.settings.amqp_structures_queue_name)
-        await self._bind_queue(self.settings.amqp_publications_topic,
+        await self._bind_queue(self.settings.amqp_publications_exchange_name,
+                               self.settings.amqp_publications_topic,
                                self.settings.amqp_publications_queue_name)
 
     async def listen(self, topic: str) -> None:
@@ -78,15 +79,51 @@ class AMQPInterface:
         :return: None
         """
         person_uid = extra["payload"]
-        if self.settings.amqp_publications_topic in self.pika_exchanges:
-            publisher = AMQPMessagePublisher(
-                self.pika_exchanges[self.settings.amqp_publications_topic])
-            await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
-                                    AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
-                                    {"person_uid": person_uid})
-        else:
+        exchange = self.pika_exchanges.get(self.settings.amqp_publications_exchange_name, None)
+        if not exchange:
             logger.error("Cannot fetch publications for person %s: "
                          "AMQP exchange not declared", person_uid)
+            return
+        publisher = AMQPMessagePublisher(exchange)
+        await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
+                                AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
+                                {"person_uid": person_uid})
+
+    async def dispatch_person_created(self, _, **extra) -> None:
+        """
+        Dispatch a person created event
+        :param _: sender of message (unused)
+        :param extra: extra parameters (payload of the message)
+        :return: None
+        """
+        person_uid = extra["payload"]
+        exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
+        if not exchange:
+            logger.error("Cannot dispatch person created event for person %s: "
+                         "AMQP exchange not declared", person_uid)
+            return
+        publisher = AMQPMessagePublisher(exchange)
+        await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
+                                AMQPMessagePublisher.EventMessageSubtype.PERSON_CREATED,
+                                {"person_uid": person_uid})
+
+    async def dispatch_person_updated(self, _, **extra) -> None:
+        """
+        Dispatch a person updated event
+        :param _: sender of message (unused)
+        :param extra: extra parameters (payload of the message)
+        :return: None
+        """
+        person_uid = extra["payload"]
+        exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
+        if not exchange:
+            logger.error("Cannot dispatch person updated event for person %s: "
+                         "AMQP exchange not declared", person_uid)
+            return
+        publisher = AMQPMessagePublisher(exchange)
+        await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
+                                AMQPMessagePublisher.EventMessageSubtype.PERSON_UPDATED,
+                                {"person_uid": person_uid})
 
     async def _attach_message_processing_workers(self, topic: str):
         self.inner_tasks_queues[topic] = asyncio.Queue(
@@ -101,28 +138,28 @@ class AMQPInterface:
             )
 
     async def _message_processor(self, topic: str) -> AMQPMessageProcessor:
-        return AMQPMessageProcessorFactory.get_processor(topic, self.pika_exchanges[topic],
-                                                         self.inner_tasks_queues[topic],
-                                                         self.settings)
+        return AMQPMessageProcessorFactory.get_processor(topic,
+                                                         self.inner_tasks_queues[topic])
 
     async def _listen_to_messages(self, topic: str):
         async with self.pika_queues[topic].iterator() as queue_iter:
             async for message in queue_iter:
                 await self.inner_tasks_queues[topic].put(message)
 
-    async def _declare_exchange(self, topic: str, exchange_name: str) -> None:
+    async def _declare_exchange(self, exchange_name: str) -> None:
         """
         Declare the publication exchange
         :param exchange_name: exchange name
         :return: None
         """
-        self.pika_exchanges[topic] = await self.pika_channel.declare_exchange(
+        self.pika_exchanges[exchange_name] = await self.pika_channel.declare_exchange(
             exchange_name,
             ExchangeType.TOPIC,
             durable=True,
         )
 
-    async def _bind_queue(self, topic: str, queue_name: str) -> None:
+    async def _bind_queue(self, exchange_name: str,
+                          topic: str, queue_name: str) -> None:
         # Bind service message queue to publication exchange
         self.pika_queues[topic] = await self.pika_channel.declare_queue(
             queue_name,
@@ -130,7 +167,7 @@ class AMQPInterface:
             arguments={"x-consumer-timeout": self.settings.amqp_consumer_ack_timeout},
         )
         for key in self.keys[topic]:
-            await self.pika_queues[topic].bind(self.pika_exchanges[topic],
+            await self.pika_queues[topic].bind(self.pika_exchanges[exchange_name],
                                                routing_key=key)
 
     async def _connect(self) -> None:

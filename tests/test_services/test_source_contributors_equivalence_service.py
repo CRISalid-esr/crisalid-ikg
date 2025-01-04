@@ -1,7 +1,5 @@
 from typing import cast
 
-import pytest
-
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.models.document import Document
@@ -11,7 +9,6 @@ from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 
 
-@pytest.mark.current
 async def test_create_source_records_with_shared_contributors(
         # pylint: disable=too-many-arguments
         test_app,  # pylint: disable=unused-argument
