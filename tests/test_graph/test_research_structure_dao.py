@@ -7,6 +7,7 @@ from app.models.research_structures import ResearchStructure
 
 
 async def test_create_research_structure(
+        test_app,  # pylint: disable=unused-argument
         research_structure_a_pydantic_model: ResearchStructure):
     """
     Given a basic research structure Pydantic model
@@ -242,3 +243,39 @@ async def test_update_research_structure_name(
     )
     assert structure_names != updated_structure_names
     assert updated_structure_names == updated_pydantic_structure_names
+
+
+async def test_get_research_structure_by_uid(
+        persisted_research_structure_a_pydantic_model: ResearchStructure):
+    """
+    Given a persisted research structure Pydantic model
+    When the get_research_structure_by_uid method is called
+    Then the research structure should be retrieved from the database
+    :param persisted_research_structure_a_pydantic_model:
+    :return:
+    """
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    dao = factory.get_dao(ResearchStructure)
+    research_structure = await dao.get(persisted_research_structure_a_pydantic_model.uid)
+    assert research_structure
+    assert research_structure.uid == persisted_research_structure_a_pydantic_model.uid
+    assert len(research_structure.names) == len(persisted_research_structure_a_pydantic_model.names)
+    structure_names = Counter(
+        (literal.value, literal.language) for literal in research_structure.names
+    )
+    persist_structure_names = Counter(
+        (literal.value, literal.language)
+        for literal in persisted_research_structure_a_pydantic_model.names
+    )
+    assert structure_names == persist_structure_names
+    assert len(research_structure.identifiers) == len(
+        persisted_research_structure_a_pydantic_model.identifiers
+    )
+    structure_identifiers = Counter(
+        (identifier.type.value, identifier.value) for identifier in research_structure.identifiers
+    )
+    persist_structure_identifiers = Counter(
+        (identifier.type.value, identifier.value)
+        for identifier in persisted_research_structure_a_pydantic_model.identifiers
+    )
+    assert structure_identifiers == persist_structure_identifiers

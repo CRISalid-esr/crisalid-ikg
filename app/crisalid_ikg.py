@@ -21,7 +21,8 @@ from app.search.source_record_index import SourceRecordIndex
 from app.services.documents.textual_document_service import TextualDocumentService
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
-    person_unchanged, textual_document_updated, source_record_updated
+    person_unchanged, textual_document_updated, source_record_updated, structure_created, \
+    structure_updated
 
 
 class CrisalidIKG(FastAPI):
@@ -142,6 +143,8 @@ class CrisalidIKG(FastAPI):
         person_created.connect(self.amqp_interface.dispatch_person_created)
         person_unchanged.connect(self.amqp_interface.dispatch_person_updated)
         person_identifiers_updated.connect(self.amqp_interface.dispatch_person_updated)
+        structure_created.connect(self.amqp_interface.dispatch_structure_created)
+        structure_updated.connect(self.amqp_interface.dispatch_structure_updated)
 
     async def close_rabbitmq_connexion(self) -> None:  # pragma: no cover
         """Handle last tasks before shutdown"""
