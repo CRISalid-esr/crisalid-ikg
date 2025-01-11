@@ -1,6 +1,9 @@
+from typing import cast
+
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao import DAO
+from app.graph.neo4j.research_structure_dao import ResearchStructureDAO
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.research_structures import ResearchStructure
 from app.signals import structure_created, structure_updated
@@ -17,9 +20,7 @@ class ResearchStructureService:
         :param structure: Pydantic ResearchStructure object
         :return:
         """
-        factory = self._get_structure_dao()
-        dao: DAO = factory.get_dao(ResearchStructure)
-        structure = await dao.create(structure)
+        structure = await self._get_research_structure_dao().create(structure)
         structure_created.send_async(self, payload=structure.uid)
         return structure
 
@@ -29,9 +30,7 @@ class ResearchStructureService:
         :param structure: Pydantic ResearchStructure object
         :return:
         """
-        factory = self._get_structure_dao()
-        dao: DAO = factory.get_dao(ResearchStructure)
-        structure = await dao.update(structure)
+        structure = await self._get_research_structure_dao().update(structure)
         structure_updated.send_async(self, payload=structure.uid)
         return structure
 
@@ -41,9 +40,7 @@ class ResearchStructureService:
         :param structure: Pydantic ResearchStructure object
         :return:
         """
-        factory = self._get_structure_dao()
-        dao: DAO = factory.get_dao(ResearchStructure)
-        uid, status = await dao.create_or_update(structure)
+        uid, status = await self._get_research_structure_dao().create_or_update(structure)
         if status == DAO.Status.CREATED:
             structure_created.send_async(self, payload=uid)
         elif status == DAO.Status.UPDATED:
@@ -53,7 +50,7 @@ class ResearchStructureService:
     async def get_structure_by_identifier(self,
                                           identifier_value: str,
                                           identifier_type: OrganizationIdentifierType =
-                            OrganizationIdentifierType.LOCAL,
+                                          OrganizationIdentifierType.LOCAL,
                                           ) -> ResearchStructure:
         """
         Get a structure from the graph database
@@ -61,9 +58,8 @@ class ResearchStructureService:
         :param identifier_type: OrgganizationIdentifierType corresponding to the researched value
         :return: Pydantic ResearchStructure object
         """
-        factory = self._get_structure_dao()
-        dao: DAO = factory.get_dao(ResearchStructure)
-        return await dao.find_by_identifier(identifier_type, identifier_value)
+        return await (self._get_research_structure_dao()
+                      .find_by_identifier(identifier_type, identifier_value))
 
     async def get_structure_by_uid(self, uid: str) -> ResearchStructure:
         """
@@ -71,11 +67,12 @@ class ResearchStructureService:
         :param uid: Researched structure uid
         :return: Pydantic ResearchStructure object
         """
-        factory = self._get_structure_dao()
-        dao: DAO = factory.get_dao(ResearchStructure)
-        return await dao.get(uid)
+        return await self._get_research_structure_dao().get(uid)
 
     @staticmethod
-    def _get_structure_dao() -> DAO:
+    def _get_research_structure_dao() -> ResearchStructureDAO:
         settings = get_app_settings()
-        return AbstractDAOFactory().get_dao_factory(settings.graph_db)
+        return cast(
+            ResearchStructureDAO,
+            AbstractDAOFactory().get_dao_factory(settings.graph_db).get_dao(ResearchStructure)
+        )

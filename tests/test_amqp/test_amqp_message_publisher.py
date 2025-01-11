@@ -17,7 +17,7 @@ async def test_publish_fetch_publications_taks(
     Test that a task message to fetch publication is published to the AMQP queue when the publish
     method is called.
     :param mocked_exchange:
-    :param person_a_pydantic_model:
+    :param persisted_person_a_pydantic_model:
     :return:
     """
     # pylint: disable=duplicate-code

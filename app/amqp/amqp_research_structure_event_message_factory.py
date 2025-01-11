@@ -12,7 +12,7 @@ class AMQPResearchStructureEventMessageFactory(AbstractAMQPMessageFactory):
 
     @staticmethod
     async def _build_research_structure_message_payload(research_structure_uid: str) -> dict[
-        str, Any]:
+        str, Any] or None:
         if research_structure_uid is None:
             logger.error("Research structure UID is None while building AMQP message payload")
             return
