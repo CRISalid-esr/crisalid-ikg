@@ -1,6 +1,7 @@
 from collections import Counter
 
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from app.graph.neo4j.research_structure_dao import ResearchStructureDAO
 from app.models.agent_identifiers import AgentIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.research_structures import ResearchStructure
@@ -18,7 +19,7 @@ async def test_create_research_structure(
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
-    dao = factory.get_dao(ResearchStructure)
+    dao:ResearchStructureDAO = factory.get_dao(ResearchStructure)
     await dao.create(research_structure_a_pydantic_model)
     local_identifier = research_structure_a_pydantic_model.get_identifier(
         OrganizationIdentifierType.LOCAL)
@@ -63,7 +64,7 @@ async def test_create_and_update_research_structure_with_same_data(
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
-    dao = factory.get_dao(ResearchStructure)
+    dao:ResearchStructureDAO = factory.get_dao(ResearchStructure)
     await dao.create(research_structure_a_pydantic_model)
     local_identifier = research_structure_a_pydantic_model.get_identifier(
         OrganizationIdentifierType.LOCAL)
@@ -113,7 +114,7 @@ async def test_switch_research_structure_identifier(
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
-    dao = factory.get_dao(ResearchStructure)
+    dao:ResearchStructureDAO = factory.get_dao(ResearchStructure)
     await dao.create(research_structure_a_pydantic_model)
     local_identifier = research_structure_a_pydantic_model.get_identifier(
         OrganizationIdentifierType.LOCAL)
@@ -159,7 +160,7 @@ async def test_update_research_structure_rnsr_identifier(
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
-    dao = factory.get_dao(ResearchStructure)
+    dao:ResearchStructureDAO = factory.get_dao(ResearchStructure)
     await dao.create(research_structure_a_pydantic_model)
     local_identifier = research_structure_a_pydantic_model.get_identifier(
         OrganizationIdentifierType.LOCAL)
@@ -207,7 +208,7 @@ async def test_update_research_structure_name(
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
-    dao = factory.get_dao(ResearchStructure)
+    dao:ResearchStructureDAO = factory.get_dao(ResearchStructure)
     local_identifier = persisted_research_structure_a_pydantic_model.get_identifier(
         OrganizationIdentifierType.LOCAL
     )
@@ -255,7 +256,7 @@ async def test_get_research_structure_by_uid(
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
-    dao = factory.get_dao(ResearchStructure)
+    dao:ResearchStructureDAO = factory.get_dao(ResearchStructure)
     research_structure = await dao.get(persisted_research_structure_a_pydantic_model.uid)
     assert research_structure
     assert research_structure.uid == persisted_research_structure_a_pydantic_model.uid
