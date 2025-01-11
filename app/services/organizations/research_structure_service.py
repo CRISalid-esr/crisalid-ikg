@@ -21,7 +21,7 @@ class ResearchStructureService:
         :return:
         """
         structure = await self._get_research_structure_dao().create(structure)
-        structure_created.send_async(self, payload=structure.uid)
+        await structure_created.send_async(self, payload=structure.uid)
         return structure
 
     async def update_structure(self, structure: ResearchStructure) -> ResearchStructure:
@@ -31,7 +31,7 @@ class ResearchStructureService:
         :return:
         """
         structure = await self._get_research_structure_dao().update(structure)
-        structure_updated.send_async(self, payload=structure.uid)
+        await structure_updated.send_async(self, payload=structure.uid)
         return structure
 
     async def create_or_update_structure(self, structure: ResearchStructure) -> ResearchStructure:
@@ -42,9 +42,9 @@ class ResearchStructureService:
         """
         uid, status = await self._get_research_structure_dao().create_or_update(structure)
         if status == DAO.Status.CREATED:
-            structure_created.send_async(self, payload=uid)
+            await structure_created.send_async(self, payload=uid)
         elif status == DAO.Status.UPDATED:
-            structure_updated.send_async(self, payload=uid)
+            await structure_updated.send_async(self, payload=uid)
         return structure
 
     async def get_structure_by_identifier(self,
