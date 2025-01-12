@@ -9,6 +9,10 @@ from app.amqp.amqp_person_created_event_message_factory import AMQPPersonCreated
 from app.amqp.amqp_person_updated_event_message_factory import AMQPPersonUpdatedEventMessageFactory
 from app.amqp.amqp_publication_retrieval_message_factory import \
     AMQPPublicationRetrievalMessageFactory
+from app.amqp.amqp_research_structure_created_event_message_factory import \
+    AMQPResearchStructureCreatedEventMessageFactory
+from app.amqp.amqp_research_structure_updated_event_message_factory import \
+    AMQPResearchStructureUpdatedEventMessageFactory
 
 
 class AMQPMessagePublisher:
@@ -42,6 +46,8 @@ class AMQPMessagePublisher:
         """
         PERSON_CREATED = "Person created"
         PERSON_UPDATED = "Person updated"
+        STRUCTURE_CREATED = "Structure created"
+        STRUCTURE_UPDATED = "Structure updated"
 
     def __init__(self, exchange: aio_pika.Exchange):
         """Init AMQP Publisher class"""
@@ -79,4 +85,11 @@ class AMQPMessagePublisher:
                 return await AMQPPersonCreatedEventMessageFactory(content).build_message()
             if message_subtype is cls.EventMessageSubtype.PERSON_UPDATED:
                 return await AMQPPersonUpdatedEventMessageFactory(content).build_message()
+            if message_subtype is cls.EventMessageSubtype.STRUCTURE_CREATED:
+                return await AMQPResearchStructureCreatedEventMessageFactory(
+                    content).build_message()
+            if message_subtype is cls.EventMessageSubtype.STRUCTURE_UPDATED:
+                return await AMQPResearchStructureUpdatedEventMessageFactory(
+                    content).build_message()
+        logger.error(f"Message type {message_type} and subtype {message_subtype} not supported")
         return None, None

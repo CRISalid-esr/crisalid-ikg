@@ -125,6 +125,42 @@ class AMQPInterface:
                                 AMQPMessagePublisher.EventMessageSubtype.PERSON_UPDATED,
                                 {"person_uid": person_uid})
 
+    async def dispatch_structure_created(self, _, **extra) -> None:
+        """
+        Dispatch a structure created event
+        :param _: sender of message (unused)
+        :param extra: extra parameters (payload of the message)
+        :return: None
+        """
+        research_structure_uid = extra["payload"]
+        exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
+        if not exchange:
+            logger.error("Cannot dispatch structure created event for structure %s: "
+                         "AMQP exchange not declared", research_structure_uid)
+            return
+        publisher = AMQPMessagePublisher(exchange)
+        await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
+                                AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_CREATED,
+                                {"research_structure_uid": research_structure_uid})
+
+    async def dispatch_structure_updated(self, _, **extra) -> None:
+        """
+        Dispatch a structure updated event
+        :param _: sender of message (unused)
+        :param extra: extra parameters (payload of the message)
+        :return: None
+        """
+        research_structure_uid = extra["payload"]
+        exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
+        if not exchange:
+            logger.error("Cannot dispatch structure updated event for structure %s: "
+                         "AMQP exchange not declared", research_structure_uid)
+            return
+        publisher = AMQPMessagePublisher(exchange)
+        await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
+                                AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_UPDATED,
+                                {"research_structure_uid": research_structure_uid})
+
     async def _attach_message_processing_workers(self, topic: str):
         self.inner_tasks_queues[topic] = asyncio.Queue(
             maxsize=self.INNER_TASKS_QUEUE_LENGTH)
