@@ -102,19 +102,19 @@ async def test_update_one_source_record_between_multiple_related_source_records(
         scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model.uid)
     assert updated_fetched_source_record
 
-    new_document = await document_dao.get_textual_document_by_source_record_uid(
+    first_document = await document_dao.get_textual_document_by_source_record_uid(
         scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model.uid
     )
-    assert new_document
-    assert new_document.uid != initial_document.uid
-    assert new_document.source_record_uids == [
+    assert first_document
+    assert first_document.uid == initial_document.uid
+    assert first_document.source_record_uids == [
         scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model.uid
     ]
 
-    initial_document_updated = await document_dao.get_textual_document_by_source_record_uid(
+    second_document = await document_dao.get_textual_document_by_source_record_uid(
         open_alex_persisted_article_a_source_record_pydantic_model.uid)
-    assert initial_document_updated != initial_document
-    assert sorted(initial_document_updated.source_record_uids) == sorted([
+    assert second_document.uid != initial_document.uid
+    assert sorted(second_document.source_record_uids) == sorted([
         open_alex_persisted_article_a_source_record_pydantic_model.uid,
         hal_persisted_article_a_source_record_pydantic_model.uid
     ])
