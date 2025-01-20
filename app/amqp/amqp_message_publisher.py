@@ -5,6 +5,10 @@ import aio_pika
 from aio_pika import DeliveryMode
 from loguru import logger
 
+from app.amqp.amqp_document_created_event_message_factory import \
+    AMQPDocumentCreatedEventMessageFactory
+from app.amqp.amqp_document_updated_event_message_factory import \
+    AMQPDocumentUpdatedEventMessageFactory
 from app.amqp.amqp_person_created_event_message_factory import AMQPPersonCreatedEventMessageFactory
 from app.amqp.amqp_person_updated_event_message_factory import AMQPPersonUpdatedEventMessageFactory
 from app.amqp.amqp_publication_retrieval_message_factory import \
@@ -48,6 +52,22 @@ class AMQPMessagePublisher:
         PERSON_UPDATED = "Person updated"
         STRUCTURE_CREATED = "Structure created"
         STRUCTURE_UPDATED = "Structure updated"
+        DOCUMENT_UPDATED = "Document updated"
+        DOCUMENT_CREATED = "Document created"
+
+    MESSAGE_FACTORIES = {
+        MessageType.TASK: {
+            TaskMessageSubtype.PUBLICATION_RETRIEVAL: AMQPPublicationRetrievalMessageFactory,
+        },
+        MessageType.EVENT: {
+            EventMessageSubtype.PERSON_CREATED: AMQPPersonCreatedEventMessageFactory,
+            EventMessageSubtype.PERSON_UPDATED: AMQPPersonUpdatedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_CREATED: AMQPResearchStructureCreatedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_UPDATED: AMQPResearchStructureUpdatedEventMessageFactory,
+            EventMessageSubtype.DOCUMENT_CREATED: AMQPDocumentCreatedEventMessageFactory,
+            EventMessageSubtype.DOCUMENT_UPDATED: AMQPDocumentUpdatedEventMessageFactory,
+        },
+    }
 
     def __init__(self, exchange: aio_pika.Exchange):
         """Init AMQP Publisher class"""
@@ -69,7 +89,8 @@ class AMQPMessagePublisher:
                 message=message,
                 routing_key=routing_key,
             )
-            logger.debug(f"Message published to {routing_key} queue : {payload}")
+            logger.debug(f"Message published to graph exchange with {routing_key} topic :"
+                         f" {payload}")
         except aio_pika.exceptions.AMQPError as e:
             logger.error(f"Error publishing message to {routing_key} queue : {e}")
 
@@ -77,19 +98,14 @@ class AMQPMessagePublisher:
     async def _build_message(cls, message_type: MessageType,
                              message_subtype: MessageSubtype,
                              content: dict) -> tuple[str | None, str | None]:
-        if message_type is cls.MessageType.TASK:
-            if message_subtype is cls.TaskMessageSubtype.PUBLICATION_RETRIEVAL:
-                return await AMQPPublicationRetrievalMessageFactory(content).build_message()
-        if message_type is cls.MessageType.EVENT:
-            if message_subtype is cls.EventMessageSubtype.PERSON_CREATED:
-                return await AMQPPersonCreatedEventMessageFactory(content).build_message()
-            if message_subtype is cls.EventMessageSubtype.PERSON_UPDATED:
-                return await AMQPPersonUpdatedEventMessageFactory(content).build_message()
-            if message_subtype is cls.EventMessageSubtype.STRUCTURE_CREATED:
-                return await AMQPResearchStructureCreatedEventMessageFactory(
-                    content).build_message()
-            if message_subtype is cls.EventMessageSubtype.STRUCTURE_UPDATED:
-                return await AMQPResearchStructureUpdatedEventMessageFactory(
-                    content).build_message()
-        logger.error(f"Message type {message_type} and subtype {message_subtype} not supported")
-        return None, None
+        factories = cls.MESSAGE_FACTORIES.get(message_type)
+        if factories is None:
+            logger.error(f"Message type {message_type} not supported")
+            return None, None
+
+        factory_cls = factories.get(message_subtype)
+        if factory_cls is None:
+            logger.error(f"Message subtype {message_subtype} not supported for type {message_type}")
+            return None, None
+
+        return await factory_cls(content).build_message()

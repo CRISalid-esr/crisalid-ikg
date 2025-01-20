@@ -72,6 +72,8 @@ class AppSettings(BaseSettings):
         "event.structures.structure.created"
     amqp_graph_resarch_structure_event_updated_routing_key: str = \
         "event.structures.structure.updated"
+    amqp_graph_document_event_created_routing_key: str = "event.documents.document.created"
+    amqp_graph_document_event_updated_routing_key: str = "event.documents.document.updated"
     amqp_directory_structure_event_routing_key: str = "event.structures.structure.*"
     amqp_harvester_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
 
