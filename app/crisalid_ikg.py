@@ -103,6 +103,7 @@ class CrisalidIKG(FastAPI):
     def _register_textual_document_events(self):
         self.textual_document_service = TextualDocumentService()
         textual_document_updated.connect(self.textual_document_service.update_from_source_records)
+        textual_document_updated.connect(self.amqp_interface.dispatch_textual_document_updated)
 
     @logger.catch(reraise=True)
     async def close_elasticsearch(self) -> None:  # pragma: no cover

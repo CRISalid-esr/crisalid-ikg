@@ -161,6 +161,25 @@ class AMQPInterface:
                                 AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_UPDATED,
                                 {"research_structure_uid": research_structure_uid})
 
+    async def dispatch_textual_document_updated(self, _, **extra) -> None:
+        """
+        Dispatch a textual document updated event
+        :param _: sender of message (unused)
+        :param extra: extra parameters (payload of the message)
+        :return: None
+        """
+        textual_document_uid = extra["textual_document_uid"]
+        exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
+        if not exchange:
+            logger.error("Cannot dispatch textual document updated event for document %s: "
+                         "AMQP exchange not declared", textual_document_uid)
+            return
+        publisher = AMQPMessagePublisher(exchange)
+        await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
+                                AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_UPDATED,
+                                {"document_uid": textual_document_uid
+                                 })
+
     async def _attach_message_processing_workers(self, topic: str):
         self.inner_tasks_queues[topic] = asyncio.Queue(
             maxsize=self.INNER_TASKS_QUEUE_LENGTH)

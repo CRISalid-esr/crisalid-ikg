@@ -49,6 +49,20 @@ class TextualDocumentService:
         return [await source_record_dao.get(source_record_uid) for source_record_uid in
                 sources_record_uids]
 
+    async def get_textual_document(self, textual_document_uid: str) -> Document | None:
+        """
+        Get a textual document by its uid
+        :param textual_document_uid:
+        :return:
+        """
+        dao: DocumentDAO = self._document_dao()
+        return await dao.get_textual_document_by_uid(textual_document_uid)
+
+    def _document_dao(self) -> DocumentDAO:
+        factory = self._get_dao_factory()
+        dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
+        return dao
+
     def _source_record_dao(self) -> SourceRecordDAO:
         factory = self._get_dao_factory()
         dao: SourceRecordDAO = cast(SourceRecordDAO, factory.get_dao(SourceRecord))
