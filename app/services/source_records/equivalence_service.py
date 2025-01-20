@@ -69,12 +69,12 @@ class EquivalenceService:
         # should lose their inferred equivalence relationships
         obsolete_inferred_equiv_sr_uids = [x for x in existing_inferred_equiv_sr_uids if
                                            x not in sr_with_shared_identifier_uids]
-        for obsolete_source_record_uid in obsolete_inferred_equiv_sr_uids:
+        for obsolete_inferred_equiv_sr_uid in obsolete_inferred_equiv_sr_uids:
             await dao.delete_inferred_equivalence_relationships(
-                source_record_uid=obsolete_source_record_uid,
+                source_record_uid=obsolete_inferred_equiv_sr_uid,
                 target_source_record_uids=sr_with_shared_identifier_uids)
             # Add any detached source records to the list of records to update
-            self.source_records_to_update_uids.append(obsolete_source_record_uid)
+            self.source_records_to_update_uids.append(obsolete_inferred_equiv_sr_uid)
         await dao.create_inferred_equivalence_relationships(
             sr_with_shared_identifier_uids)
         # Handle attached publications
