@@ -99,15 +99,8 @@ class AMQPInterface:
         :return: None
         """
         person_uid = extra["payload"]
-        exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
-        if not exchange:
-            logger.error("Cannot dispatch person created event for person %s: "
-                         "AMQP exchange not declared", person_uid)
-            return
-        publisher = AMQPMessagePublisher(exchange)
-        await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
-                                AMQPMessagePublisher.EventMessageSubtype.PERSON_CREATED,
-                                {"person_uid": person_uid})
+        event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.PERSON_CREATED
+        await self._dispatch_person_event(event_message_subtype, person_uid)
 
     async def dispatch_person_updated(self, _, **extra) -> None:
         """
@@ -117,14 +110,41 @@ class AMQPInterface:
         :return: None
         """
         person_uid = extra["payload"]
+        event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.PERSON_UPDATED
+        await self._dispatch_person_event(event_message_subtype, person_uid)
+
+    async def dispatch_person_unchanged(self, _, **extra) -> None:
+        """
+        Dispatch a person unchanged event
+        :param _: sender of message (unused)
+        :param extra: extra parameters (payload of the message)
+        :return: None
+        """
+        person_uid = extra["payload"]
+        event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.PERSON_UNCHANGED
+        await self._dispatch_person_event(event_message_subtype, person_uid)
+
+    async def dispatch_person_deleted(self, _, **extra) -> None:
+        """
+        Dispatch a person deleted event
+        :param _: sender of message (unused)
+        :param extra: extra parameters (payload of the message)
+        :return: None
+        """
+        person_uid = extra["payload"]
+        event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.PERSON_DELETED
+        await self._dispatch_person_event(event_message_subtype, person_uid)
+
+    async def _dispatch_person_event(self, event_message_subtype, person_uid):
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
-            logger.error("Cannot dispatch person updated event for person %s: "
-                         "AMQP exchange not declared", person_uid)
+            logger.error("Cannot dispatch %s event for person %s: "
+                         "AMQP exchange not declared", event_message_subtype,
+                         person_uid)
             return
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
-                                AMQPMessagePublisher.EventMessageSubtype.PERSON_UPDATED,
+                                event_message_subtype,
                                 {"person_uid": person_uid})
 
     async def dispatch_structure_created(self, _, **extra) -> None:
@@ -192,7 +212,7 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_UPDATED
         textual_document_uid = extra["textual_document_uid"]
-        await self._dispatch_textual_document_event(textual_document_uid, event_message_subtype)
+        await self._dispatch_textual_document_event(event_message_subtype, textual_document_uid)
 
     async def dispatch_textual_document_created(self, _, **extra) -> None:
         """
@@ -203,7 +223,7 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_CREATED
         textual_document_uid = extra["textual_document_uid"]
-        await self._dispatch_textual_document_event(textual_document_uid, event_message_subtype)
+        await self._dispatch_textual_document_event(event_message_subtype, textual_document_uid)
 
     async def dispatch_textual_document_deleted(self, _, **extra) -> None:
         """
@@ -214,7 +234,7 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_DELETED
         textual_document_uid = extra["textual_document_uid"]
-        await self._dispatch_textual_document_event(textual_document_uid, event_message_subtype)
+        await self._dispatch_textual_document_event(event_message_subtype, textual_document_uid)
 
     async def dispatch_textual_document_unchanged(self, _, **extra) -> None:
         """
@@ -225,9 +245,9 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_UNCHANGED
         textual_document_uid = extra["textual_document_uid"]
-        await self._dispatch_textual_document_event(textual_document_uid, event_message_subtype)
+        await self._dispatch_textual_document_event(event_message_subtype, textual_document_uid)
 
-    async def _dispatch_textual_document_event(self, textual_document_uid, event_message_subtype):
+    async def _dispatch_textual_document_event(self, event_message_subtype, textual_document_uid):
         print("Dispatching textual %s event for document %s", event_message_subtype,
               textual_document_uid)
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
