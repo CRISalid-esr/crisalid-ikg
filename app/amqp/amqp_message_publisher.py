@@ -19,6 +19,10 @@ from app.amqp.amqp_publication_retrieval_message_factory import \
     AMQPPublicationRetrievalMessageFactory
 from app.amqp.amqp_research_structure_created_event_message_factory import \
     AMQPResearchStructureCreatedEventMessageFactory
+from app.amqp.amqp_research_structure_deleted_event_message_factory import \
+    AMQPResearchStructureDeletedEventMessageFactory
+from app.amqp.amqp_research_structure_unchanged_event_message_factory import \
+    AMQPResearchStructureUnchangedEventMessageFactory
 from app.amqp.amqp_research_structure_updated_event_message_factory import \
     AMQPResearchStructureUpdatedEventMessageFactory
 
@@ -56,6 +60,8 @@ class AMQPMessagePublisher:
         PERSON_UPDATED = "Person updated"
         STRUCTURE_CREATED = "Structure created"
         STRUCTURE_UPDATED = "Structure updated"
+        STRUCTURE_DELETED = "Structure deleted"
+        STRUCTURE_UNCHANGED = "Structure unchanged"
         DOCUMENT_UPDATED = "Document updated"
         DOCUMENT_CREATED = "Document created"
         DOCUMENT_DELETED = "Document deleted"
@@ -70,6 +76,9 @@ class AMQPMessagePublisher:
             EventMessageSubtype.PERSON_UPDATED: AMQPPersonUpdatedEventMessageFactory,
             EventMessageSubtype.STRUCTURE_CREATED: AMQPResearchStructureCreatedEventMessageFactory,
             EventMessageSubtype.STRUCTURE_UPDATED: AMQPResearchStructureUpdatedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_UNCHANGED:
+                AMQPResearchStructureUnchangedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_DELETED: AMQPResearchStructureDeletedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_CREATED: AMQPDocumentCreatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_UPDATED: AMQPDocumentUpdatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_DELETED: AMQPDocumentDeletedEventMessageFactory,

@@ -7,6 +7,7 @@ person_deleted = signal('person-deleted')
 
 structure_created = signal('structure-created')
 structure_updated = signal('structure-updated')
+structure_unchanged = signal('structure-unchanged')
 structure_deleted = signal('structure-deleted')
 
 source_record_created = signal('source-record-created')
