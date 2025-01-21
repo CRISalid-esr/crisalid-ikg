@@ -7,6 +7,10 @@ from loguru import logger
 
 from app.amqp.amqp_document_created_event_message_factory import \
     AMQPDocumentCreatedEventMessageFactory
+from app.amqp.amqp_document_deleted_event_message_factory import \
+    AMQPDocumentDeletedEventMessageFactory
+from app.amqp.amqp_document_unchanged_event_message_factory import \
+    AMQPDocumentUnchangedEventMessageFactory
 from app.amqp.amqp_document_updated_event_message_factory import \
     AMQPDocumentUpdatedEventMessageFactory
 from app.amqp.amqp_person_created_event_message_factory import AMQPPersonCreatedEventMessageFactory
@@ -54,6 +58,8 @@ class AMQPMessagePublisher:
         STRUCTURE_UPDATED = "Structure updated"
         DOCUMENT_UPDATED = "Document updated"
         DOCUMENT_CREATED = "Document created"
+        DOCUMENT_DELETED = "Document deleted"
+        DOCUMENT_UNCHANGED = "Document unchanged"
 
     MESSAGE_FACTORIES = {
         MessageType.TASK: {
@@ -66,6 +72,8 @@ class AMQPMessagePublisher:
             EventMessageSubtype.STRUCTURE_UPDATED: AMQPResearchStructureUpdatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_CREATED: AMQPDocumentCreatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_UPDATED: AMQPDocumentUpdatedEventMessageFactory,
+            EventMessageSubtype.DOCUMENT_DELETED: AMQPDocumentDeletedEventMessageFactory,
+            EventMessageSubtype.DOCUMENT_UNCHANGED: AMQPDocumentUnchangedEventMessageFactory,
         },
     }
 

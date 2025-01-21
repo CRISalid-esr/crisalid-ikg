@@ -28,6 +28,17 @@ class DocumentDAO(Neo4jDAO):
                     return await self._get_textual_document_by_uid(tx, uid)
 
     @handle_database_errors
+    async def get_textual_document_uids(self) -> list[str]:
+        """
+        Get all textual document uids
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await self._get_textual_document_uids(tx)
+
+    @handle_database_errors
     async def create_or_update_textual_document(self, textual_document: TextualDocument) -> (
             TextualDocument):
         """
@@ -106,6 +117,18 @@ class DocumentDAO(Neo4jDAO):
         )
         record = await result.single()
         return cls._hydrate(record)
+
+    @classmethod
+    async def _get_textual_document_uids(cls, tx: AsyncTransaction) -> list[str]:
+        """
+        Get all textual document uids
+        :param tx: Neo4j transaction object
+        :return:
+        """
+        result = await tx.run(
+            load_query("get_textual_document_uids")
+        )
+        return [record['uid'] async for record in result]
 
     @handle_database_errors
     async def get_textual_document_by_source_record_uid(

@@ -12,4 +12,8 @@ structure_deleted = signal('structure-deleted')
 source_record_created = signal('source-record-created')
 source_record_updated = signal('source-record-updated')
 
+textual_document_sources_changed = signal('textual_document_sources_changed')
 textual_document_updated = signal('textual-document-updated')
+textual_document_created = signal('textual-document-created')
+textual_document_deleted = signal('textual-document-deleted')
+textual_document_unchanged = signal('textual-document-unchanged')
