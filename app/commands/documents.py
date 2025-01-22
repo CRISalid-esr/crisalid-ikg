@@ -52,6 +52,26 @@ def recompute_metadata(uid: str = typer.Argument(..., help="The UID of the docum
 
     asyncio.run(_recompute_metadata(uid))
 
+@document_cli.command()
+def recompute_metadata_all():
+    """
+    Recompute metadata for all textual documents and trigger updated event
+    """
+
+    @with_app_lifecycle
+    async def _recompute_metadata_all():
+        service = TextualDocumentService()
+        uids = await service.get_textual_document_uids()
+        for uid in uids:
+            try:
+                await service.update_from_source_records(None, uid)
+                typer.echo(f"Metadata recomputation for document {uid} completed.")
+                # pylint: disable=broad-except
+            except Exception as e:
+                typer.echo(f"Error recomputing metadata for document {uid}: {e}")
+
+    asyncio.run(_recompute_metadata_all())
+
 
 @document_cli.command()
 def dispatch_event(
