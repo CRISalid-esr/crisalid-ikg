@@ -24,7 +24,7 @@ from app.signals import person_created, person_identifiers_updated, source_recor
     person_unchanged, textual_document_updated, source_record_updated, structure_created, \
     structure_updated, textual_document_sources_changed, textual_document_created, \
     textual_document_unchanged, textual_document_deleted, structure_unchanged, structure_deleted, \
-    person_deleted, person_updated
+    person_deleted, person_updated, publications_to_be_updated
 
 
 class CrisalidIKG(FastAPI):
@@ -145,9 +145,7 @@ class CrisalidIKG(FastAPI):
             raise error
 
     def _register_person_events(self):
-        person_created.connect(self.amqp_interface.fetch_publications)
-        person_unchanged.connect(self.amqp_interface.fetch_publications)
-        person_identifiers_updated.connect(self.amqp_interface.fetch_publications)
+        publications_to_be_updated.connect(self.amqp_interface.fetch_publications)
         person_created.connect(self.amqp_interface.dispatch_person_created)
         person_updated.connect(self.amqp_interface.dispatch_person_updated)
         person_unchanged.connect(self.amqp_interface.dispatch_person_unchanged)

@@ -6,6 +6,8 @@ person_updated = signal('person-updated')
 person_identifiers_updated = signal('person-identifiers-updated')
 person_deleted = signal('person-deleted')
 
+publications_to_be_updated = signal('publications-to-update')
+
 structure_created = signal('structure-created')
 structure_updated = signal('structure-updated')
 structure_unchanged = signal('structure-unchanged')
