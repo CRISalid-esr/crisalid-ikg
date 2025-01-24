@@ -35,13 +35,21 @@ class AMQPInterface:
 
     async def connect(self, listen=True) -> None:
         """Connect to AMQP queue"""
+        logger.info("Connecting to AMQP broker...")
         await self._connect()
+        logger.info("Connected to AMQP broker")
+
+        logger.info("Declaring exchanges...")
         await self._declare_exchange(self.settings.amqp_graph_exchange_name)
-        if not listen:
-            return
-        await self._declare_exchange(
-            self.settings.amqp_directory_exchange_name)
         await self._declare_exchange(self.settings.amqp_publications_exchange_name)
+
+        if not listen:
+            logger.info("Connection established in non-listening mode.")
+            return
+
+        await self._declare_exchange(self.settings.amqp_directory_exchange_name)
+
+        logger.info("Binding queues...")
         await self._bind_queue(self.settings.amqp_directory_exchange_name,
                                self.settings.amqp_people_topic,
                                self.settings.amqp_people_queue_name)
@@ -51,27 +59,41 @@ class AMQPInterface:
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
                                self.settings.amqp_publications_topic,
                                self.settings.amqp_publications_queue_name)
+
+        logger.info("Attaching message processing workers...")
         await self._attach_message_processing_workers(self.settings.amqp_people_topic)
         await self._attach_message_processing_workers(self.settings.amqp_publications_topic)
         await self._attach_message_processing_workers(self.settings.amqp_structures_topic)
 
+        logger.info("AMQP interface setup complete")
+
     async def listen(self, topic: str) -> None:
         """Listen to AMQP queue"""
+        logger.info(f"Starting to listen on topic: {topic}")
         await self._listen_to_messages(topic)
 
     async def stop_listening(self) -> None:
         """Stop listening to AMQP queue"""
+        logger.info("Stopping AMQP listeners and workers...")
         try:
-            for _, queue in self.inner_tasks_queues.items():
+            for topic, queue in self.inner_tasks_queues.items():
+                logger.info(f"Waiting for tasks in queue '{topic}' to complete...")
                 await asyncio.wait_for(
                     queue.join(),
                     timeout=self.settings.amqp_wait_before_shutdown,
                 )
         finally:
-            for worker in self.message_processing_workers:
-                worker.cancel()
+            logger.info("Cancelling worker tasks...")
+            for workers in self.message_processing_workers.values():
+                for worker in workers:
+                    logger.info(f"Cancelling worker: {worker.get_name()}")
+                    worker.cancel()
+
+            logger.info("Closing AMQP channel and connection...")
             await self.pika_channel.close()
             await self.pika_connexion.close()
+
+        logger.info("AMQP listeners and workers stopped.")
 
     async def fetch_publications(self, _, **extra) -> None:
         """
@@ -83,8 +105,8 @@ class AMQPInterface:
         person_uid = extra["payload"]
         exchange = self.pika_exchanges.get(self.settings.amqp_publications_exchange_name, None)
         if not exchange:
-            logger.error("Cannot fetch publications for person %s: "
-                         "AMQP exchange not declared", person_uid)
+            logger.error(f"Cannot fetch publications for person {person_uid}"
+                         "AMQP exchange not declared")
             return
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
@@ -138,9 +160,8 @@ class AMQPInterface:
     async def _dispatch_person_event(self, event_message_subtype, person_uid):
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
-            logger.error("Cannot dispatch %s event for person %s: "
-                         "AMQP exchange not declared", event_message_subtype,
-                         person_uid)
+            logger.error(f"Cannot dispatch {event_message_subtype} event for person {person_uid}: "
+                         "AMQP exchange not declared")
             return
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
@@ -248,8 +269,9 @@ class AMQPInterface:
         await self._dispatch_textual_document_event(event_message_subtype, textual_document_uid)
 
     async def _dispatch_textual_document_event(self, event_message_subtype, textual_document_uid):
-        print("Dispatching textual %s event for document %s", event_message_subtype,
-              textual_document_uid)
+        logger.info(
+            f"Dispatching textual document event: {event_message_subtype}"
+            f" for document {textual_document_uid}")
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
             logger.error("Cannot dispatch textual %s event for document %s: "
@@ -262,41 +284,65 @@ class AMQPInterface:
                                  })
 
     async def _attach_message_processing_workers(self, topic: str):
+        logger.info(f"Attaching message processing workers for topic: {topic}")
         self.inner_tasks_queues[topic] = asyncio.Queue(
             maxsize=self.INNER_TASKS_QUEUE_LENGTH)
         for worker_id in range(self.settings.amqp_task_parallelism_limit):
-            processor = await self._message_processor(topic)
-            self.message_processing_workers[topic].append(
-                asyncio.create_task(
-                    processor.wait_for_message(worker_id),
-                    name=f"amqp_message_processor_{worker_id}",
-                )
-            )
+            await self._attach_message_processing_worker(topic, worker_id)
+
+    async def _attach_message_processing_worker(self, topic, worker_id):
+        logger.info(f"Creating message processor for worker {worker_id} on topic: {topic}")
+        processor = await self._message_processor(topic)
+        task = asyncio.create_task(
+            processor.wait_for_message(worker_id),
+            name=f"amqp_message_processor_{topic}_{worker_id}",
+        )
+        self.message_processing_workers[topic].append(task)
 
     async def _message_processor(self, topic: str) -> AMQPMessageProcessor:
         return AMQPMessageProcessorFactory.get_processor(topic,
                                                          self.inner_tasks_queues[topic])
 
     async def _listen_to_messages(self, topic: str):
-        async with self.pika_queues[topic].iterator() as queue_iter:
-            async for message in queue_iter:
-                await self.inner_tasks_queues[topic].put(message)
+        logger.info(f"Listening to messages on topic: {topic}")
+        try:
+            async with self.pika_queues[topic].iterator() as queue_iter:
+                async for message in queue_iter:
+                    queue_size = self.inner_tasks_queues[topic].qsize()
+                    logger.debug(f"Received message: {message.body}")
+                    logger.debug(f"Number of messages in queue before adding :"
+                                 f" {queue_size}")
+                    if queue_size == self.settings.amqp_prefetch_count - 1:
+                        logger.warning(f"Queue for topic '{topic}' is full. "
+                                       f"Attaching a new worker to process messages.")
+                        await self._attach_message_processing_worker(
+                            topic,
+                            len(
+                                self.message_processing_workers[
+                                    topic]) + 1)
+                    await self.inner_tasks_queues[topic].put(message)
+                    logger.debug(f"Number of messages in queue after adding :"
+                                 f" {self.inner_tasks_queues[topic].qsize()}")
+                    logger.debug(f"Message added to inner queue for topic: {topic}")
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error(f"Error while listening to messages on topic '{topic}': {e}",
+                         exc_info=True)
 
     async def _declare_exchange(self, exchange_name: str) -> None:
-        """
-        Declare the publication exchange
-        :param exchange_name: exchange name
-        :return: None
-        """
+        logger.info(f"Declaring exchange: {exchange_name}")
         self.pika_exchanges[exchange_name] = await self.pika_channel.declare_exchange(
             exchange_name,
             ExchangeType.TOPIC,
             durable=True,
         )
+        logger.info(f"Exchange declared: {exchange_name}")
 
     async def _bind_queue(self, exchange_name: str,
                           topic: str, queue_name: str) -> None:
-        # Bind service message queue to publication exchange
+        logger.info(
+            f"Declaring and binding queue '{queue_name}' "
+            f"to exchange '{exchange_name}' with topic '{topic}'")
         self.pika_queues[topic] = await self.pika_channel.declare_queue(
             queue_name,
             durable=True,
@@ -305,14 +351,20 @@ class AMQPInterface:
         for key in self.keys[topic]:
             await self.pika_queues[topic].bind(self.pika_exchanges[exchange_name],
                                                routing_key=key)
+        logger.info(f"Queue '{queue_name}' bound to exchange '{exchange_name}'")
 
     async def _connect(self) -> None:
+        logger.info("Establishing AMQP connection...")
         self.pika_connexion: aio_pika.Connection = await aio_pika.connect_robust(
             f"amqp://{self.settings.amqp_user}:"
             f"{self.settings.amqp_password}"
             f"@{self.settings.amqp_host}/",
         )
+        logger.info("AMQP connection established")
+
+        logger.info("Opening AMQP channel...")
         self.pika_channel = await self.pika_connexion.channel(publisher_confirms=True)
         await self.pika_channel.set_qos(
             prefetch_count=self.settings.amqp_prefetch_count
         )
+        logger.info("AMQP channel opened and QoS set.")
