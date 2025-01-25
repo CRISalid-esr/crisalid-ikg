@@ -166,4 +166,4 @@ app/templates/node_modules
 docker-compose.yml
 etc
 rabbitmq-data
-neo4j
+/neo4j
