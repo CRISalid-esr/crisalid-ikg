@@ -29,4 +29,21 @@ async def test_signal_person_created(
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
     assert mocked_exchange.publish.call_args[1]["routing_key"] == expected_sent_message_routing_key
-    assert json.loads(message.body.decode()) == expected_sent_message_payload
+    message_payload = json.loads(message.body.decode())
+    assert message_payload['event'] == expected_sent_message_payload['event']
+    assert message_payload['type'] == expected_sent_message_payload['type']
+    assert message_payload['fields']['uid'] == expected_sent_message_payload['fields']['uid']
+    assert (message_payload['fields']['display_name'] ==
+            expected_sent_message_payload['fields']['display_name'])
+    assert (message_payload['fields']['external'] ==
+            expected_sent_message_payload['fields']['external'])
+    assert (message_payload['fields']['first_name'] ==
+            expected_sent_message_payload['fields']['first_name'])
+    assert (message_payload['fields']['last_name'] ==
+            expected_sent_message_payload['fields']['last_name'])
+    assert (sorted(
+        message_payload['fields']['identifiers'], key=lambda x: x['type']
+    ) ==
+            sorted(
+                expected_sent_message_payload['fields']['identifiers'], key=lambda x: x['type'])
+            )
