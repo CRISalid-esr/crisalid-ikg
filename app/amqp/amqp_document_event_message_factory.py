@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any
 
 from loguru import logger
@@ -11,8 +12,9 @@ class AMQPDocumentEventMessageFactory(AbstractAMQPMessageFactory):
     """Factory for building AMQP messages related to research structures events."""
 
     @staticmethod
-    async def _build_document_message_payload(document_uid: str) -> dict[
-                                                                        str, Any] or None:
+    async def _build_document_message_payload(document_uid: str, retries=0) -> dict[
+                                                                                   str, Any
+                                                                               ] or None:
         if document_uid is None:
             logger.error("Connot build AMQP message payload without document UID")
             return
@@ -22,6 +24,15 @@ class AMQPDocumentEventMessageFactory(AbstractAMQPMessageFactory):
         except DatabaseError as e:
             logger.error(f"Error fetching document {document_uid} from database: {e}"
                          "while building AMQP message payload")
+            return
+        if document is None:
+            logger.error(
+                f"Document {document_uid} not found in database, new attempt after 1 second")
+            if retries < 3:
+                await asyncio.sleep(1)
+                return await AMQPDocumentEventMessageFactory._build_document_message_payload(
+                    document_uid, retries + 1)
+            logger.error(f"Document {document_uid} not found in database after 3 attempts")
             return
         return {
             "uid": document.uid,

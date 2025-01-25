@@ -1,6 +1,6 @@
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
-from app.graph.generic.dao import DAO
+from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.person_dao import PersonDAO
 from app.models.people import Person
 from app.signals import person_created, person_identifiers_updated, person_unchanged, \
@@ -115,6 +115,6 @@ class PeopleService:
         return await dao.get_all_uids()
 
     @staticmethod
-    def _get_dao_factory() -> DAO:
+    def _get_dao_factory() -> DAOFactory:
         settings = get_app_settings()
         return AbstractDAOFactory().get_dao_factory(settings.graph_db)
