@@ -28,6 +28,17 @@ class DocumentDAO(Neo4jDAO):
                     return await self._get_textual_document_by_uid(tx, uid)
 
     @handle_database_errors
+    async def get_textual_document_uids(self) -> list[str]:
+        """
+        Get all textual document uids
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await self._get_textual_document_uids(tx)
+
+    @handle_database_errors
     async def create_or_update_textual_document(self, textual_document: TextualDocument) -> (
             TextualDocument):
         """
@@ -107,6 +118,18 @@ class DocumentDAO(Neo4jDAO):
         record = await result.single()
         return cls._hydrate(record)
 
+    @classmethod
+    async def _get_textual_document_uids(cls, tx: AsyncTransaction) -> list[str]:
+        """
+        Get all textual document uids
+        :param tx: Neo4j transaction object
+        :return:
+        """
+        result = await tx.run(
+            load_query("get_textual_document_uids")
+        )
+        return [record['uid'] async for record in result]
+
     @handle_database_errors
     async def get_textual_document_by_source_record_uid(
             self, source_record_uid: str) -> Document | None:
@@ -137,17 +160,18 @@ class DocumentDAO(Neo4jDAO):
             textual_document_uid: str,
             person_uid: str,
             roles: list[str]
-    ) -> None:
+    ) -> str | None:
         """
         Create a Contribution node and establish relationships to the TextualDocument and Person.
 
         :param textual_document_uid: UID of the TextualDocument.
         :param person_uid: UID of the Person.
         :param roles: List of roles to attach to the contribution.
+        :return: UID of the created Contribution.
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                await session.write_transaction(
+                return await session.write_transaction(
                     self._create_contribution_transaction,
                     textual_document_uid,
                     person_uid,
@@ -160,7 +184,7 @@ class DocumentDAO(Neo4jDAO):
             textual_document_uid: str,
             person_uid: str,
             roles: list[str]
-    ) -> None:
+    ) -> str | None:
         """
         Transaction to create Contribution and link it to TextualDocument and Person.
 
@@ -168,14 +192,64 @@ class DocumentDAO(Neo4jDAO):
         :param textual_document_uid: UID of the TextualDocument.
         :param person_uid: UID of the Person.
         :param roles: List of roles to attach to the contribution.
+        :return: id of the created Contribution.
         """
         query = load_query("create_contribution_to_textual_document")
-        await tx.run(
+        result = await tx.run(
             query,
             textual_document_uid=textual_document_uid,
             person_uid=person_uid,
             roles=roles
         )
+        single=  await result.single()
+        if single is None:
+            return None
+        return single['contribution_id']
+
+    @handle_database_errors
+    async def delete_contributions_not_in(
+            self,
+            textual_document_uid: str,
+            contribution_ids: list[str]
+    ) -> None:
+        """
+        Delete contributions linked to a TextualDocument
+        that are not in the specified list of contribution IDs.
+
+        :param textual_document_uid: UID of the TextualDocument.
+        :param contribution_ids: List of contribution IDs to retain.
+        :return: None
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._delete_contributions_not_in_transaction,
+                    textual_document_uid,
+                    contribution_ids
+                )
+
+    @staticmethod
+    async def _delete_contributions_not_in_transaction(
+            tx: AsyncManagedTransaction,
+            textual_document_uid: str,
+            contribution_ids: list[str]
+    ) -> None:
+        """
+        Transaction to delete contributions linked to a TextualDocument
+        that are not in the specified list.
+
+        :param tx: Neo4j transaction object.
+        :param textual_document_uid: UID of the TextualDocument.
+        :param contribution_ids: List of contribution IDs to retain.
+        :return: None
+        """
+        query = load_query("delete_contributions_not_in")
+        await tx.run(
+            query,
+            textual_document_uid=textual_document_uid,
+            contribution_ids=contribution_ids
+        )
+
 
     @staticmethod
     def _hydrate(record: Record) -> Document | None:

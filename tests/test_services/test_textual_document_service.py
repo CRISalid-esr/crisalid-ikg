@@ -6,7 +6,8 @@ from app.models.document import Document
 from app.models.source_records import SourceRecord
 from app.services.documents.textual_document_service import TextualDocumentService
 from app.services.source_records.equivalence_service import EquivalenceService
-from app.signals import source_record_created, source_record_updated, textual_document_updated
+from app.signals import source_record_created, source_record_updated, \
+    textual_document_sources_changed
 
 
 async def test_update_textual_document(
@@ -25,7 +26,7 @@ async def test_update_textual_document(
     """
     with source_record_updated.muted():
         with source_record_created.muted():
-            with textual_document_updated.muted():
+            with textual_document_sources_changed.muted():
                 equivalence_service = EquivalenceService()
                 factory = AbstractDAOFactory().get_dao_factory("neo4j")
                 document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))

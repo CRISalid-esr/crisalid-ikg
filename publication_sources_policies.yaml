@@ -27,7 +27,8 @@ strategies:
   - types:
       - Book          # Applied to books.
       - Thesis        # Applied to theses.
-    type: "source_order"
+#    type: "source_order"
+    type: "global_richest"
     harvesters:
       - idref
       - hal

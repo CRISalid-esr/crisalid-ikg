@@ -154,6 +154,22 @@ class PersonDAO(Neo4jDAO):
                     external)
                 return result
 
+    async def get_all_uids(self) -> list[str]:
+        """
+        Fetch all UIDs of people from the database.
+
+        :return: A list of all person UIDs.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await self._get_all_uids_transaction(tx)
+
+    @staticmethod
+    async def _get_all_uids_transaction(tx: AsyncManagedTransaction) -> list[str]:
+        result = await tx.run(load_query("get_all_person_uids"))
+        return [record["uid"] async for record in result]
+
     @staticmethod
     async def _get_person_uid_by_source_person_uid_transaction(tx: AsyncManagedTransaction,
                                                                source_person_uid: str,

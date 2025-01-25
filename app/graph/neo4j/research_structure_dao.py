@@ -118,6 +118,19 @@ class ResearchStructureDAO(Neo4jDAO):
                         return await self._hydrate(record)
                     return None
 
+    @handle_database_errors
+    async def get_all_uids(self) -> list[str]:
+        """
+        Fetch all UIDs of research structures from the database.
+
+        :return: A list of all research structure UIDs.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(load_query("get_all_research_structure_uids"))
+                    return [record["uid"] async for record in result]
+
     @classmethod
     async def _create_research_structure_transaction(cls, tx: AsyncSession,
                                                      research_structure: ResearchStructure):

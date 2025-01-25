@@ -50,8 +50,9 @@ class AMQPMessageProcessor(ABC):
                     )
                     traceback.print_exc()
                 except DatabaseError as database_error:
+                    logger.error(traceback.format_exc())
                     logger.error(
-                        f"Database error during {worker_id} "
+                        f"Database error for worker {worker_id} "
                         f"message processing : {database_error}",
                         exc_info=True
                     )

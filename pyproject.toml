@@ -23,6 +23,7 @@ pyyaml = "^6.0.2"
 inflection = "^0.5.1"
 python-levenshtein = "^0.26.1"
 rapidfuzz = "^3.11.0"
+typer = "^0.15.1"
 
 
 [tool.poetry.group.development]

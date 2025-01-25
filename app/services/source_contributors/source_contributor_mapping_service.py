@@ -86,7 +86,6 @@ class SourceContributorMappingService:
             source_people_cluster_uids = await self.source_person_dao.get_equivalents(
                 source_person_uid)
             # append the source person uid to the cluster if it is not already in the cluster
-            # my_list = list(set(my_list + [my_string]))
             source_people_cluster_uids = list(set(source_people_cluster_uids + [source_person_uid]))
             source_people_cluster = [person for person in self.source_people if
                                      person.uid in source_people_cluster_uids]
@@ -202,28 +201,33 @@ class SourceContributorMappingService:
 
     async def _update_contributions(self, linked_people):
         document_dao = self._get_document_dao()
+        current_contribution_ids = set()
         for person_uid, source_people_cluster in linked_people.items():
             roles = self._get_roles_by_harvester_order(
                 source_people_cluster,
-                self.contributions
             )
             # Create contribution node and relationships
-            await document_dao.create_contribution(
+            contribution_id = await document_dao.create_contribution(
                 textual_document_uid=self.textual_document_uid,
                 person_uid=person_uid,
                 roles=[role.value for role in roles]
             )
+            if contribution_id is not None:
+                current_contribution_ids.add(contribution_id)
+        # Delete contributions that are not in the current set
+        await document_dao.delete_contributions_not_in(
+            textual_document_uid=self.textual_document_uid,
+            contribution_ids=list(current_contribution_ids)
+        )
 
     def _get_roles_by_harvester_order(
             self,
             source_people: List[SourcePerson],
-            contributions: List[SourceContribution]
     ) -> List[LocContributionRole]:
         """
         Sort source people by harvester order and extract roles based on contributions.
 
         :param source_people: List of SourcePerson objects.
-        :param contributions: List of SourceContribution objects.
         :return: the first encountered role
         """
         # Sort source_people by harvester order
@@ -238,7 +242,7 @@ class SourceContributorMappingService:
 
         # Search for each person in contributions and extract roles
         for person in sorted_people:
-            for contribution in contributions:
+            for contribution in self.contributions:
                 if (contribution.contributor.uid == person.uid
                         and contribution.role is not None
                         and contribution.role not in roles):

@@ -7,14 +7,25 @@ from loguru import logger
 
 from app.amqp.amqp_document_created_event_message_factory import \
     AMQPDocumentCreatedEventMessageFactory
+from app.amqp.amqp_document_deleted_event_message_factory import \
+    AMQPDocumentDeletedEventMessageFactory
+from app.amqp.amqp_document_unchanged_event_message_factory import \
+    AMQPDocumentUnchangedEventMessageFactory
 from app.amqp.amqp_document_updated_event_message_factory import \
     AMQPDocumentUpdatedEventMessageFactory
 from app.amqp.amqp_person_created_event_message_factory import AMQPPersonCreatedEventMessageFactory
+from app.amqp.amqp_person_deleted_event_message_factory import AMQPPersonDeletedEventMessageFactory
+from app.amqp.amqp_person_unchanged_event_message_factory import \
+    AMQPPersonUnchangedEventMessageFactory
 from app.amqp.amqp_person_updated_event_message_factory import AMQPPersonUpdatedEventMessageFactory
 from app.amqp.amqp_publication_retrieval_message_factory import \
     AMQPPublicationRetrievalMessageFactory
 from app.amqp.amqp_research_structure_created_event_message_factory import \
     AMQPResearchStructureCreatedEventMessageFactory
+from app.amqp.amqp_research_structure_deleted_event_message_factory import \
+    AMQPResearchStructureDeletedEventMessageFactory
+from app.amqp.amqp_research_structure_unchanged_event_message_factory import \
+    AMQPResearchStructureUnchangedEventMessageFactory
 from app.amqp.amqp_research_structure_updated_event_message_factory import \
     AMQPResearchStructureUpdatedEventMessageFactory
 
@@ -50,10 +61,16 @@ class AMQPMessagePublisher:
         """
         PERSON_CREATED = "Person created"
         PERSON_UPDATED = "Person updated"
+        PERSON_DELETED = "Person deleted"
+        PERSON_UNCHANGED = "Person unchanged"
         STRUCTURE_CREATED = "Structure created"
         STRUCTURE_UPDATED = "Structure updated"
+        STRUCTURE_DELETED = "Structure deleted"
+        STRUCTURE_UNCHANGED = "Structure unchanged"
         DOCUMENT_UPDATED = "Document updated"
         DOCUMENT_CREATED = "Document created"
+        DOCUMENT_DELETED = "Document deleted"
+        DOCUMENT_UNCHANGED = "Document unchanged"
 
     MESSAGE_FACTORIES = {
         MessageType.TASK: {
@@ -62,10 +79,17 @@ class AMQPMessagePublisher:
         MessageType.EVENT: {
             EventMessageSubtype.PERSON_CREATED: AMQPPersonCreatedEventMessageFactory,
             EventMessageSubtype.PERSON_UPDATED: AMQPPersonUpdatedEventMessageFactory,
+            EventMessageSubtype.PERSON_UNCHANGED: AMQPPersonUnchangedEventMessageFactory,
+            EventMessageSubtype.PERSON_DELETED: AMQPPersonDeletedEventMessageFactory,
             EventMessageSubtype.STRUCTURE_CREATED: AMQPResearchStructureCreatedEventMessageFactory,
             EventMessageSubtype.STRUCTURE_UPDATED: AMQPResearchStructureUpdatedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_UNCHANGED:
+                AMQPResearchStructureUnchangedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_DELETED: AMQPResearchStructureDeletedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_CREATED: AMQPDocumentCreatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_UPDATED: AMQPDocumentUpdatedEventMessageFactory,
+            EventMessageSubtype.DOCUMENT_DELETED: AMQPDocumentDeletedEventMessageFactory,
+            EventMessageSubtype.DOCUMENT_UNCHANGED: AMQPDocumentUnchangedEventMessageFactory,
         },
     }
 
