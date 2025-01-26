@@ -104,7 +104,7 @@ class PeopleService:
         dao: PersonDAO = factory.get_dao(Person)
         return await dao.get(person_uid)
 
-    async def get_all_person_uids(self) -> list[str]:
+    async def get_all_person_uids(self, external: bool | None = None) -> list[str]:
         """
         Retrieve all person UIDs from the graph database.
 
@@ -112,7 +112,7 @@ class PeopleService:
         """
         factory = self._get_dao_factory()
         dao: PersonDAO = factory.get_dao(Person)
-        return await dao.get_all_uids()
+        return await dao.get_all_uids(external=external)
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

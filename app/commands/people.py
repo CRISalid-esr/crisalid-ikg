@@ -56,7 +56,7 @@ def dispatch_all(
     async def _dispatch_all(event: str):
         service = PeopleService()
         try:
-            uids = await service.get_all_person_uids()
+            uids = await service.get_all_person_uids(external=False)
             for uid in uids:
                 try:
                     if event == "created":
@@ -104,7 +104,7 @@ def fetch_publications_all():
     async def _fetch_publications_all():
         service = PeopleService()
         try:
-            uids = await service.get_all_person_uids()
+            uids = await service.get_all_person_uids(external=False)
             for uid in uids:
                 try:
                     await service.signal_publications_to_be_updated(uid)
