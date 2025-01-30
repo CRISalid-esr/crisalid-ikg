@@ -109,6 +109,8 @@
         "source": "scanr",
         "source_identifier": "idref999999999",
         "name": "Johnson L. F.",
+        "first_name": null,
+        "last_name": null,
         "name_variants": [],
         "identifiers": [
           {
@@ -130,7 +132,11 @@
         "source": "scanr",
         "source_identifier": "MivilleDeschenes###N",
         "name": "N. Miville Deschenes",
-        "name_variants": []
+        "first_name": "Nathalie",
+        "last_name": "Miville Deschenes",
+        "name_variants": [
+          "Nathalie Miville Deschenes"
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -141,7 +147,11 @@
         "source": "scanr",
         "source_identifier": "idref078115361",
         "name": "Noel Mahajan Dechant",
-        "name_variants": [],
+        "first_name": "Noel",
+        "last_name": "Mahajan Dechant",
+        "name_variants": [
+          "N. Mahajan Dechant"
+        ],
         "identifiers": [
           {
             "type": "orcid",
@@ -162,6 +172,8 @@
         "source": "scanr",
         "source_identifier": "Fevrier###J",
         "name": "Fevrier J.",
+        "first_name": "Jérôme",
+        "last_name": "Fevrier",
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -173,6 +185,8 @@
         "source": "scanr",
         "source_identifier": "Raymond###Garcia",
         "name": "Garcia, Raymond",
+        "first_name": "Raymond",
+        "last_name": "Garcia",
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -184,6 +198,8 @@
         "source": "scanr",
         "source_identifier": "Smith###A",
         "name": "A. Smith",
+        "first_name": null,
+        "last_name": null,
         "name_variants": [],
         "identifiers": [
           {
@@ -201,7 +217,11 @@
         "source": "scanr",
         "source_identifier": "idref123456789",
         "name": "I. A. Zelko",
-        "name_variants": [],
+        "first_name": "Ivan",
+        "last_name": "Zelko",
+        "name_variants": [
+          "Ivan Zelko"
+        ],
         "identifiers": [
           {
             "type": "idref",

@@ -48,6 +48,8 @@
         "source": "open_alex",
         "source_identifier": "https://openalex.org/A5065084602",
         "name": "A. C. Smith",
+        "first_name": null,
+        "last_name": null,
         "name_variants": [],
         "identifiers": [
           {
@@ -73,6 +75,8 @@
         "source": "open_alex",
         "source_identifier": "https://openalex.org/A5019602694",
         "name": "L. F. Johnson",
+        "first_name": null,
+        "last_name": null,
         "name_variants": [],
         "identifiers": [
           {
@@ -94,6 +98,8 @@
         "source": "open_alex",
         "source_identifier": "https://openalex.org/A5088876922",
         "name": "Raymond Garcia",
+        "first_name": null,
+        "last_name": null,
         "name_variants": [],
         "identifiers": [
           {

@@ -27,6 +27,8 @@ async def test_create_source_records_with_shared_contributors(
     When the source records are added to the graph
     Then the source records can be read and should be related to each other with a relationship.
     """
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    person_dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
     source_record_service = SourceRecordService()
     await source_record_service.create_source_record(
         source_record=hal_article_a_source_record_pydantic_model,
@@ -56,6 +58,20 @@ async def test_create_source_records_with_shared_contributors(
     assert contribution.contributor.uid == persisted_person_d_pydantic_model.uid
     assert contribution.contributor.display_name == "Garcia, Raymond"
     assert contribution.contributor.external is False
+    # take the contributor with uid 'hal-578950'
+    contributor = next(
+        (contribution.contributor for contribution in document.contributions if
+         contribution.contributor.uid == 'hal-578950'),
+        None)
+    assert contributor is not None
+    assert contributor.display_name == 'M.-A. Miville-Deschênes'
+    assert contributor.display_name_variants == ['M.-A. Miville-Deschênes']
+    assert contributor.external is True
+    contributor_with_data = await person_dao.get(contributor.uid)
+    assert contributor_with_data is not None
+    assert len(contributor_with_data.names) == 1
+    assert contributor_with_data.names[0].first_names[0].value == 'M.-A.'
+    assert contributor_with_data.names[0].last_names[0].value == 'Miville-Deschênes'
     # we take P.G. Martin, contributor with uid hal-48765589 in
     # and we add im an identifier of type open_alex and value https://openalex.org/A5088876922
     # it will be merged with r.garcia

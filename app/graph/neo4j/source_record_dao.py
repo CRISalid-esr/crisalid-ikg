@@ -430,6 +430,9 @@ class SourceRecordDAO(Neo4jDAO):
                 contributor=SourcePerson(
                     uid=contributor["uid"],
                     name=contributor["name"],
+                    first_name=contributor.get("first_name", None),
+                    last_name=contributor.get("last_name", None),
+                    name_variants=contributor.get("name_variants", []),
                     source=contributor["source"],
                     source_identifier=contributor.get("source_identifier", None),
                     identifiers=source_contributor_identifiers

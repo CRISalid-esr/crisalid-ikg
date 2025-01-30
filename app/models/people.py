@@ -32,6 +32,8 @@ class Person(Agent[PersonIdentifierType]):
 
     display_name: str
 
+    display_name_variants: Optional[List[str]] = []
+
     names: Optional[List[PersonName]] = []
 
     identifiers: Optional[List[PersonIdentifier]] = []
