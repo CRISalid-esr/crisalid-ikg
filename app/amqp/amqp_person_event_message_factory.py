@@ -22,6 +22,9 @@ class AMQPPersonEventMessageFactory(AbstractAMQPMessageFactory):
             logger.error(f"Error fetching person {person_uid}: {e} "
                          "while building AMQP message payload")
             return
+        if person is None:
+            logger.error(f"Person {person_uid} not found while building AMQP message payload")
+            return
         return {
             "display_name": person.display_name,
             "first_name": person.get_first_name(),

@@ -154,7 +154,7 @@ class PersonDAO(Neo4jDAO):
                     external)
                 return result
 
-    async def get_all_uids(self) -> list[str]:
+    async def get_all_uids(self, external: bool | None = None) -> list[str]:
         """
         Fetch all UIDs of people from the database.
 
@@ -163,11 +163,17 @@ class PersonDAO(Neo4jDAO):
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
-                    return await self._get_all_uids_transaction(tx)
+                    return await self._get_all_uids_transaction(tx, external)
 
     @staticmethod
-    async def _get_all_uids_transaction(tx: AsyncManagedTransaction) -> list[str]:
-        result = await tx.run(load_query("get_all_person_uids"))
+    async def _get_all_uids_transaction(tx: AsyncManagedTransaction,
+                                        external: bool | None = None) -> list[
+        str]:
+        if external is None:
+            external_str = "all"
+        else:
+            external_str = "true" if external else "false"
+        result = await tx.run(load_query("get_all_person_uids"), external=external_str)
         return [record["uid"] async for record in result]
 
     @staticmethod

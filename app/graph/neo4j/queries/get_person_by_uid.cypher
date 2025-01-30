@@ -4,7 +4,7 @@ OPTIONAL MATCH (pn)-[:HAS_FIRST_NAME]->(fn:Literal)
 OPTIONAL MATCH (pn)-[:HAS_LAST_NAME]->(ln:Literal)
 OPTIONAL MATCH (person)-[mb:MEMBER_OF]->(rs:ResearchStructure)
 WITH person, pn, fn, ln, mb, rs
-MATCH (person)-[:HAS_IDENTIFIER]->(id:AgentIdentifier)
+OPTIONAL MATCH (person)-[:HAS_IDENTIFIER]->(id:AgentIdentifier)
 WITH
   person,
   pn,

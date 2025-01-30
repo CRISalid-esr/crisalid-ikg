@@ -519,6 +519,22 @@ async def fixture_hal_persisted_article_a_source_record_pydantic_model(
     return await service.get_source_record(
         hal_article_a_source_record_pydantic_model.uid)
 
+@pytest_asyncio.fixture(name="hal_article_a_source_record_persisted_model")
+async def fixture_hal_article_a_source_record_persisted_model(
+        hal_article_a_source_record_pydantic_model: SourceRecord,
+        persisted_person_d_pydantic_model: Person) -> SourceRecord:
+    """
+    Persist a source record pydantic model from hal data
+    :return: persisted source record pydantic model from hal data
+    """
+    service = SourceRecordService()
+    await service.create_source_record(
+        source_record=hal_article_a_source_record_pydantic_model,
+        harvested_for=persisted_person_d_pydantic_model
+    )
+    return await service.get_source_record(
+        hal_article_a_source_record_pydantic_model.uid)
+
 
 @pytest_asyncio.fixture(name="hal_article_a_source_record_pydantic_model")
 async def fixture_hal_article_a_source_record_pydantic_model(
