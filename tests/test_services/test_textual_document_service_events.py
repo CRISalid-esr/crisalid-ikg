@@ -1,13 +1,11 @@
 import json
 
-import pytest
 
 from app.config import get_app_settings
 from app.models.textual_document import TextualDocument
 from app.services.documents.textual_document_service import TextualDocumentService
 
 
-@pytest.mark.current
 async def test_signal_textual_document_created(
         test_app,  # pylint: disable=unused-argument
         mocked_exchange,
