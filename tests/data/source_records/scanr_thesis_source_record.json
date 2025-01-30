@@ -63,7 +63,22 @@
       "rank": 1,
       "contributor": {
         "source": "scanr",
-        "name": "Doe, Jane"
+        "name": "Doe, Jane",
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "name_variants": [
+          "Doe, J."
+        ],
+        "structured_name_variants": [
+          {
+            "first_name": "Jane",
+            "last_name": "Doe"
+          },
+          {
+            "first_name": "J.",
+            "last_name": "Doe"
+          }
+        ]
       },
       "affiliations": []
     }

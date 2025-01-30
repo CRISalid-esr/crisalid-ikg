@@ -227,6 +227,7 @@ class PersonDAO(Neo4jDAO):
                 create_person_query,
                 person_uid=person.uid,
                 display_name=person.display_name,
+                display_name_variants=person.display_name_variants,
                 names=[name.model_dump() for name in person.names],
                 identifiers=[identifier.dict() for identifier in person.identifiers],
                 external=person.external
@@ -243,43 +244,51 @@ class PersonDAO(Neo4jDAO):
 
     @classmethod
     async def _update_person_transaction(cls, tx: AsyncSession,
-                                         incoming_person: Person) -> UpdateStatus:
-        incoming_person.uid = incoming_person.uid or AgentIdentifierService.compute_uid_for(
-            incoming_person)
-        if not incoming_person.uid:
-            raise ValueError(f"Unable to compute primary key for person {incoming_person}")
-        existing_person = await cls._get_person_by_uid(tx, incoming_person.uid)
+                                         person: Person) -> UpdateStatus:
+        person.uid = person.uid or AgentIdentifierService.compute_uid_for(
+            person)
+        if not person.uid:
+            raise ValueError(f"Unable to compute primary key for person {person}")
+        existing_person = await cls._get_person_by_uid(tx, person.uid)
 
         if existing_person is None:
-            raise NotFoundError(f"Person with uid {incoming_person.uid} does not exist")
+            raise NotFoundError(f"Person with uid {person.uid} does not exist")
+        update_person_query = load_query("update_person")
+        await tx.run(
+            update_person_query,
+            person_uid=person.uid,
+            display_name=person.display_name,
+            display_name_variants=person.display_name_variants,
+            external=person.external
+        )
         await tx.run(load_query("delete_person_names"),
-                     person_uid=incoming_person.uid)
+                     person_uid=person.uid)
         await tx.run(
             load_query("create_person_names"),
-            person_uid=incoming_person.uid,
-            names=[name.dict() for name in incoming_person.names]
+            person_uid=person.uid,
+            names=[name.model_dump() for name in person.names]
         )
         existing_identifiers = existing_person.identifiers
-        identifier_types = [identifier.type.value for identifier in incoming_person.identifiers]
-        identifier_values = [identifier.value for identifier in incoming_person.identifiers]
+        identifier_types = [identifier.type.value for identifier in person.identifiers]
+        identifier_values = [identifier.value for identifier in person.identifiers]
         await tx.run(
             load_query("delete_person_identifiers"),
-            person_uid=incoming_person.uid,
+            person_uid=person.uid,
             identifier_types=identifier_types,
             identifier_values=identifier_values
         )
         await tx.run(
             load_query("create_person_identifiers"),
-            person_uid=incoming_person.uid,
-            identifiers=[identifier.dict() for identifier in incoming_person.identifiers]
+            person_uid=person.uid,
+            identifiers=[identifier.dict() for identifier in person.identifiers]
         )
         identifiers_changed = AgentIdentifierService.identifiers_are_identical(
             existing_identifiers,
-            incoming_person.identifiers
+            person.identifiers
         )
         # update person memberships
         existing_memberships = existing_person.memberships
-        incoming_memberships = incoming_person.memberships
+        incoming_memberships = person.memberships
         memberships_changed = not cls._memberships_are_identical(
             existing_memberships,
             incoming_memberships
@@ -287,9 +296,9 @@ class PersonDAO(Neo4jDAO):
         if memberships_changed:
             await tx.run(
                 load_query("delete_person_memberships"),
-                person_uid=incoming_person.uid
+                person_uid=person.uid
             )
-            await cls._create_memberships(incoming_person, tx)
+            await cls._create_memberships(person, tx)
         return PersonDAO.UpdateStatus(
             identifiers_changed=identifiers_changed,
             names_changed=None,

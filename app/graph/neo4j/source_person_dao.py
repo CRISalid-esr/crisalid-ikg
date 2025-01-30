@@ -288,6 +288,9 @@ class SourcePersonDAO(Neo4jDAO):
             source=source_person.source,
             source_identifier=source_person.source_identifier,
             name=source_person.name,
+            first_name=source_person.first_name,
+            last_name=source_person.last_name,
+            name_variants=source_person.name_variants,
             identifiers=[identifier.model_dump() for identifier in source_person.identifiers],
         )
 
@@ -306,6 +309,9 @@ class SourcePersonDAO(Neo4jDAO):
             source=source_person.source,
             source_identifier=source_person.source_identifier,
             name=source_person.name,
+            first_name=source_person.first_name,
+            last_name=source_person.last_name,
+            name_variants=source_person.name_variants,
             identifiers=[identifier.model_dump() for identifier in source_person.identifiers],
         )
 
@@ -316,6 +322,9 @@ class SourcePersonDAO(Neo4jDAO):
             source=record["s"]["source"],
             source_identifier=record["s"]["source_identifier"],
             name=record["s"]["name"],
+            first_name=record["s"]["first_name"],
+            last_name=record["s"]["last_name"],
+            name_variants=record["s"]["name_variants"],
             identifiers=[]
         )
         for identifier in record["identifiers"]:

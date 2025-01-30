@@ -13,8 +13,10 @@ from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.person_dao import PersonDAO
 from app.graph.neo4j.source_person_dao import SourcePersonDAO
 from app.models.document import Document
+from app.models.literal import Literal
 from app.models.loc_contribution_role import LocContributionRole
 from app.models.people import Person
+from app.models.people_names import PersonName
 from app.models.source_contributions import SourceContribution
 from app.models.source_people import SourcePerson
 from app.models.source_records import SourceRecord
@@ -166,6 +168,8 @@ class SourceContributorMappingService:
         external_person_data = {
             'uid': None,
             'display_name': None,
+            'display_name_variants': [],
+            "names": [],
             "identifiers": [],
             "external": True
         }
@@ -179,6 +183,18 @@ class SourceContributorMappingService:
                 external_person_data['uid'] = source_person.uid
             if external_person_data['display_name'] is None:
                 external_person_data['display_name'] = source_person.name
+                if source_person.last_name and source_person.first_name:
+                    external_person_data['names'] = [PersonName(
+                        first_names=[Literal(value=source_person.first_name)],
+                        last_names=[Literal(value=source_person.last_name)]
+                    )]
+            elif source_person.name not in external_person_data['display_name_variants']:
+                external_person_data['display_name_variants'].append(source_person.name)
+            if source_person.name_variants:
+                external_person_data['display_name_variants'] = list(
+                    set(external_person_data[
+                            'display_name_variants'] + source_person.name_variants))
+
         return Person(**external_person_data)
 
     async def _merge_external_people(self,

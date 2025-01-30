@@ -83,7 +83,11 @@
         "source": "hal",
         "source_identifier": "863912",
         "name": "Jérôme Février",
-        "name_variants": [],
+        "first_name": "Jérôme",
+        "last_name": "Février",
+        "name_variants": [
+          "J. Février"
+        ],
         "identifiers": [
           {
             "source": "hal",
@@ -101,6 +105,8 @@
         "source": "hal",
         "source_identifier": "87564",
         "name": "N. Mahajan",
+        "first_name": "N.",
+        "last_name": "Mahajan",
         "name_variants": [],
         "identifiers": [
           {
@@ -108,8 +114,8 @@
             "value": "https://orcid.org/0000-0001-6528-2446"
           },
           {
-              "type": "idhal_i",
-              "value": "87564"
+            "type": "idhal_i",
+            "value": "87564"
           }
         ]
       },
@@ -122,7 +128,11 @@
         "source": "hal",
         "source_identifier": "578950",
         "name": "M.-A. Miville-Desch\u00eanes",
-        "name_variants": []
+        "first_name": "M.-A.",
+        "last_name": "Miville-Deschênes",
+        "name_variants": [
+          "M.-A. Miville-Deschênes"
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -133,6 +143,8 @@
         "source": "hal",
         "source_identifier": "467432",
         "name": "B. M. Gaensler",
+        "first_name": null,
+        "last_name": null,
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -144,6 +156,8 @@
         "source": "hal",
         "source_identifier": "4876589",
         "name": "L F J",
+        "first_name": null,
+        "last_name": null,
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -155,6 +169,8 @@
         "source": "hal",
         "source_identifier": "7543789",
         "name": "F. Boulanger",
+        "first_name": "François",
+        "last_name": "Boulanger",
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -166,6 +182,8 @@
         "source": "hal",
         "source_identifier": "3478654",
         "name": "Raymond L. Garcia",
+        "first_name": "Raymond",
+        "last_name": "Garcia",
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -177,6 +195,8 @@
         "source": "hal",
         "source_identifier": null,
         "name": "A. Smith",
+        "first_name": "A.",
+        "last_name": "Smith",
         "name_variants": [],
         "identifiers": [
           {
