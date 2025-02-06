@@ -61,9 +61,11 @@ def test_create_thesis_source_record_from_scanr_data(
         and contribution.affiliations == []
     )
     assert DocumentTypeEnum.THESIS in source_record.document_type
+    assert source_record.issued.isoformat() == "2023-06-15T00:00:00+00:00"
+    assert source_record.raw_issued == "2023"
 
 
-def test_create_thesis_source_record_from_idref_data(
+async def test_create_thesis_source_record_from_idref_data(
         idref_thesis_source_record_json_data: dict
 ):
     """
@@ -118,6 +120,8 @@ def test_create_thesis_source_record_from_idref_data(
         contribution for contribution in source_record.contributions if
         contribution.contributor.name == "Brown, Alex (1975-....)"
     )
+    assert source_record.issued.isoformat() == "2006-06-14T00:00:00"
+    assert source_record.raw_issued == "2006-06-14"
 
 
 async def test_create_article_source_record_from_open_alex_data(
@@ -180,6 +184,8 @@ async def test_create_article_source_record_from_open_alex_data(
     assert source_record.issue.journal.publisher == "Example Publisher"
     assert source_record.issue.journal.titles == ["Sample Journal Title"]
     assert source_record.issue.journal.uid == "openalex-https://openalex.org/S113942516"
+    assert source_record.issued.isoformat() == "2000-01-01T00:00:00"
+    assert source_record.raw_issued == "2000"
 
 
 async def test_article_identifiers_from_open_alex_data(

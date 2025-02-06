@@ -1,8 +1,8 @@
 from typing import Optional, List, ClassVar, Dict
-
+from datetime import datetime
 from loguru import logger
 from pydantic import BaseModel, field_validator, model_validator
-
+import isodate
 from app.models.agents import Agent
 from app.models.concepts import Concept
 from app.models.document_type import DocumentType, DocumentTypeEnum
@@ -10,6 +10,7 @@ from app.models.literal import Literal
 from app.models.publication_identifiers import PublicationIdentifier
 from app.models.source_contributions import SourceContribution
 from app.models.source_issue import SourceIssue
+from app.utils.date.partial_iso_8601 import parse_partial_iso8601
 
 
 class SourceRecord(BaseModel):
@@ -44,6 +45,9 @@ class SourceRecord(BaseModel):
 
     harvested_for: List[Agent] = []
 
+    issued: Optional[datetime] = None
+
+    raw_issued: Optional[str] = None
 
     @field_validator("document_type", mode="before")
     @classmethod
@@ -59,6 +63,20 @@ class SourceRecord(BaseModel):
         if not value:
             raise ValueError("Source Record titles cannot be empty")
         return value
+
+    @field_validator("issued", mode="before")
+    @classmethod
+    def _validate_issued(cls, value):
+        try:
+            return isodate.parse_datetime(value) if isinstance(value, str) else value
+        except (isodate.ISO8601Error, ValueError):
+            logger.error(f"Invalid ISO 8601 datetime format: {value}")
+            return None
+
+    @field_validator("raw_issued", mode="before")
+    @classmethod
+    def _validate_raw_issued(cls, value):
+        return parse_partial_iso8601(value)
 
     @model_validator(mode="before")
     @classmethod

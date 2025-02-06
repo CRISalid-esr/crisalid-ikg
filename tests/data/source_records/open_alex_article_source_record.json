@@ -104,6 +104,7 @@
   "page": "1-10",
   "book": null,
   "issued": "2000-01-01T00:00:00",
+  "raw_issued": "2000",
   "created": "2020-01-01T00:00:00",
   "version": 2
 }
