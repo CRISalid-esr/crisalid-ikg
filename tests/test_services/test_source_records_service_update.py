@@ -3,6 +3,7 @@ from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 
+
 async def test_update_scanr_article_source_record(
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
@@ -50,6 +51,9 @@ async def test_update_scanr_article_source_record(
         and identifier.type == PublicationIdentifierType.DOI
         for identifier in
         fetched_source_record.identifiers)
+    assert fetched_source_record.issued == scanr_article_a_v2_source_record_pydantic_model.issued
+    assert (fetched_source_record.raw_issued ==
+            scanr_article_a_v2_source_record_pydantic_model.raw_issued)
 
 
 async def test_double_update_scanr_article_source_record(
