@@ -11,6 +11,7 @@ def parse_partial_iso8601(date_str: str) -> Optional[str]:
     - YYYY
     - YYYY-MM
     - YYYY-MM-DD
+    Trailing dashed are removed (YYYY- -> YYYY, YYYY-MM- -> YYYY-MM)
     @param date_str: a string representing a date in one of the above formats
     @return: a string representing a valid date in one of the above formats or
     None if the input string is not a valid date
