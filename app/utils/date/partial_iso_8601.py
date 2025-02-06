@@ -19,7 +19,8 @@ def parse_partial_iso8601(date_str: str) -> Optional[str]:
     if not isinstance(date_str, str) or not date_str.strip():
         return None
 
-    date_str = date_str.strip().rstrip("-")
+    date_str = date_str.strip().split(" ")[0]  # Remove time component if present
+    date_str = date_str.rstrip("-")  # Remove trailing dashes
 
     # YYYY, YYYY-MM, YYYY-MM-DD
     match = re.match(r"^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$", date_str)
