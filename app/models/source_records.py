@@ -1,8 +1,11 @@
-from typing import Optional, List, ClassVar, Dict
+import re
 from datetime import datetime
+from typing import Optional, List, ClassVar, Dict
+
+import isodate
 from loguru import logger
 from pydantic import BaseModel, field_validator, model_validator
-import isodate
+
 from app.models.agents import Agent
 from app.models.concepts import Concept
 from app.models.document_type import DocumentType, DocumentTypeEnum
@@ -54,7 +57,7 @@ class SourceRecord(BaseModel):
     def document_type_to_enum(cls, value: List[Dict[str, str]]):
         """Convert document type URIs to enum values."""
         return [dt if isinstance(dt, DocumentTypeEnum) else DocumentType(**dt).to_enum() for dt in (
-                value) ]
+            value)]
 
     @field_validator("titles", mode="after")
     @classmethod
@@ -68,7 +71,13 @@ class SourceRecord(BaseModel):
     @classmethod
     def _validate_issued(cls, value):
         try:
-            return isodate.parse_datetime(value) if isinstance(value, str) else value
+            if isinstance(value, str):
+                # if format is 2022-07-18 00:00:00, convert to 2022-07-18T00:00:00
+                value = re.sub(r"(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})", r"\1T\2", value)
+                return isodate.parse_datetime(value)
+            if isinstance(value, datetime):
+                return value
+            return None
         except (isodate.ISO8601Error, ValueError):
             logger.error(f"Invalid ISO 8601 datetime format: {value}")
             return None

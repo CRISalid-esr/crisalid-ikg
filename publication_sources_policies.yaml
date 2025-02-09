@@ -21,6 +21,7 @@ strategies:
       abstracts: 1     # Each character in the abstract is worth 1 point.
       contributions: 40     # Each contributor is worth 40 points.
       subjects: 30    # Each keyword is worth 30 points.
+      issued: 20       # Having a publication date is worth 20 points.
   # Example policy 2: Strategy for books and theses.
   # "source_order" retrieves information in the order of specified harvesters.
   # Harvesters not listed here will be ignored for this type of document.

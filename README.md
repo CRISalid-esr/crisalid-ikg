@@ -37,6 +37,11 @@ To run Neo4j in a container, and allow data persistence, you can use the followi
 ```bash
  docker run --publish=7474:7474 --publish=7687:7687 --env=NEO4J_AUTH=none -e NEO4J_apoc_export_file_enabled=true -e NEO4J_apoc_import_file_enabled=true -e NEO4J_apoc_import_file_use__neo4j__config=true -e NEO4JLABS_PLUGINS=\[\"apoc\"\] -v ./neo4j/data:/data -v ./neo4j/logs:/logs -v ./neo4j/import:/import -v ./neo4j/backups:/backups -v ./neo4j/plugins:/plugins   neo4j:5-community
 ```
+If you want to run the container under heavy load, you can increase the memory heap size with the following command :
+
+```bash
+docker run --publish=7474:7474 --publish=7687:7687 --env=NEO4J_AUTH=none -e NEO4J_apoc_export_file_enabled=true -e NEO4J_server_memory_heap_initial__size=4G -e NEO4J_server_memory_heap_max__size=8G -e NEO4J_server_memory_pagecache_size=6G -e NEO4J_apoc_import_file_enabled=true -e NEO4J_apoc_import_file_use__neo4j__config=true -e NEO4JLABS_PLUGINS=\[\"apoc\"\] -v ./neo4j/data:/data -v ./neo4j/logs:/logs -v ./neo4j/import:/import -v ./neo4j/backups:/backups -v ./neo4j/plugins:/plugins   neo4j:5-community
+```
 
 With this approach, a backup can be triggered with the following command :
 

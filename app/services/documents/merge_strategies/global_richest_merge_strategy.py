@@ -17,6 +17,7 @@ class GlobalRichestMergeStrategy(MergeStrategy[T], Generic[T]):
         self._add_titles()
         self._add_abstracts()
         self._add_subjects()
+        self._add_publication_date()
         return self.textual_document
 
     def _score(self, record: SourceRecord) -> int:
@@ -26,7 +27,8 @@ class GlobalRichestMergeStrategy(MergeStrategy[T], Generic[T]):
                 self.parameters.get("abstracts", 0) *
                 len("".join([abstract.value for abstract in record.abstracts])) +
                 self.parameters.get("contributions", 0) * len(record.contributions or []) +
-                self.parameters.get("subjects", 0) * len(record.subjects or [])
+                self.parameters.get("subjects", 0) * len(record.subjects or []) +
+                self.parameters.get("issued", 0) * (1 if record.raw_issued else 0)
         )
 
     def _add_titles(self):
@@ -37,6 +39,12 @@ class GlobalRichestMergeStrategy(MergeStrategy[T], Generic[T]):
 
     def _add_subjects(self):
         self.textual_document.subjects = self._first_non_empty_field("subjects")
+
+    def _add_publication_date(self):
+        self.textual_document.publication_date = next(
+            (record.raw_issued for record in self.source_records if record.raw_issued),
+            None
+        )
 
     def _first_non_empty_field(self, field_name: str):
         return next((getattr(record, field_name) for record in self.source_records if

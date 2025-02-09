@@ -25,9 +25,9 @@ class Document(BaseModel):
     source_record_uids: Optional[List[str]] = None
     contributions: Optional[List[Contribution]] = []
 
-    publicationDate: Optional[str] = None
-    publicationDateStart: Optional[datetime] = None
-    publicationDateEnd: Optional[datetime] = None
+    _publication_date: Optional[str] = None
+    _publication_date_start: Optional[datetime] = None
+    _publication_date_end: Optional[datetime] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -39,15 +39,48 @@ class Document(BaseModel):
             values["uid"] = str(uuid.uuid4())
         return values
 
-    @model_validator(mode="before")
-    @classmethod
-    def _compute_publication_dates(cls, values):
+    @property
+    def publication_date(self) -> Optional[str]:
         """
-        Compute publicationDateStart and publicationDateEnd from publicationDate
+        Get the publication date as a string
+        :return:  publication_date as a string
         """
-        publication_date = values.get("publicationDate")
-        if publication_date:
-            start, end = partial_iso8601_interval(publication_date)
-            values["publicationDateStart"] = start
-            values["publicationDateEnd"] = end
-        return values
+        return self._publication_date
+
+    @publication_date.setter
+    def publication_date(self, value: Optional[str]):
+        """
+        When setting publication_date, store values internally but do not directly
+        set publication_date_start and publication_date_end.
+        """
+        self._publication_date = value
+        self._publication_date_start = None
+        self._publication_date_end = None
+
+    def compute_publication_dates(self):
+        """
+        Compute publication_date_start and publication_date_end from publication_date when needed.
+        """
+        if self._publication_date:
+            self._publication_date_start, self._publication_date_end = partial_iso8601_interval(
+                self._publication_date)
+
+    @property
+    def publication_date_start(self) -> Optional[datetime]:
+        """
+        Get the start of the publication date interval
+        :return:  publication_date_start
+        """
+        if self._publication_date_start is None:
+            self.compute_publication_dates()
+        return self._publication_date_start
+
+    @property
+    def publication_date_end(self) -> Optional[datetime]:
+        """
+        Get the end of the publication date interval
+        :return:  publication_date_end
+        """
+        if self._publication_date_end is None:
+            self.compute_publication_dates()
+        return self._publication_date_end

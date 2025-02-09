@@ -1,8 +1,15 @@
 MERGE (doc:Document:TextualDocument {uid: $document_uid})
   ON CREATE SET doc.to_be_recomputed = $to_be_recomputed,
-                doc.to_be_deleted = $to_be_deleted
+                doc.to_be_deleted = $to_be_deleted,
+                doc.publication_date = $publication_date,
+                doc.publication_date_start = CASE WHEN $publication_date_start IS NOT NULL THEN datetime($publication_date_start) ELSE NULL END,
+                doc.publication_date_end = CASE WHEN $publication_date_end IS NOT NULL THEN datetime($publication_date_end) ELSE NULL END
   ON MATCH SET doc.to_be_recomputed = $to_be_recomputed,
-               doc.to_be_deleted = $to_be_deleted
+               doc.to_be_deleted = $to_be_deleted,
+               doc.publication_date = $publication_date,
+               doc.publication_date_start = CASE WHEN $publication_date_start IS NOT NULL THEN datetime($publication_date_start) ELSE NULL END,
+               doc.publication_date_end = CASE WHEN $publication_date_end IS NOT NULL THEN datetime($publication_date_end) ELSE NULL END
+
 WITH doc
 OPTIONAL MATCH (doc_to_merge_into:Document:TextualDocument {uid: $to_be_merged_into_uid})
 FOREACH (_ IN CASE WHEN doc_to_merge_into IS NOT NULL THEN [1] ELSE [] END |
