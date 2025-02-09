@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import cast
 
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
@@ -48,3 +49,9 @@ async def test_update_textual_document(
                 assert document.to_be_recomputed is False
                 assert len(document.titles) == 1
                 assert document.titles[0].value == "Example Article with DOI and HAL"
+                assert document.publication_date is not None
+                assert document.publication_date == "2019-02"
+                assert isinstance(document.publication_date_start, datetime)
+                assert isinstance(document.publication_date_end, datetime)
+                assert document.publication_date_end.isoformat() == "2019-02-28T23:59:59"
+                assert document.publication_date_start.isoformat() == "2019-02-01T00:00:00"

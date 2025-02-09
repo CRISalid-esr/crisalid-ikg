@@ -50,6 +50,9 @@ async def test_update_scanr_article_source_record(
         and identifier.type == PublicationIdentifierType.DOI
         for identifier in
         fetched_source_record.identifiers)
+    assert fetched_source_record.issued.isoformat() == "2023-01-01T00:00:00+00:00"
+    assert (fetched_source_record.raw_issued ==
+            scanr_article_a_v2_source_record_pydantic_model.raw_issued)
 
 
 async def test_double_update_scanr_article_source_record(

@@ -79,6 +79,10 @@ class DocumentDAO(Neo4jDAO):
         create_textual_document_query = load_query(
             "create_or_update_textual_document"
         )
+        publication_date_start = textual_document.publication_date_start.isoformat() \
+            if textual_document.publication_date_start else None
+        publication_date_end = textual_document.publication_date_end.isoformat() \
+            if textual_document.publication_date_end else None
         return await tx.run(
             create_textual_document_query,
             document_uid=textual_document.uid,
@@ -87,7 +91,10 @@ class DocumentDAO(Neo4jDAO):
             to_be_deleted=textual_document.to_be_deleted,
             to_be_merged_into_uid=textual_document.to_be_merged_into_uid,
             titles=[title.model_dump() for title in textual_document.titles],
-            abstracts=[abstract.model_dump() for abstract in textual_document.abstracts]
+            abstracts=[abstract.model_dump() for abstract in textual_document.abstracts],
+            publication_date=textual_document.publication_date,
+            publication_date_start=publication_date_start,
+            publication_date_end=publication_date_end
         )
 
     @classmethod
@@ -201,7 +208,7 @@ class DocumentDAO(Neo4jDAO):
             person_uid=person_uid,
             roles=roles
         )
-        single=  await result.single()
+        single = await result.single()
         if single is None:
             return None
         return single['contribution_id']
@@ -250,7 +257,6 @@ class DocumentDAO(Neo4jDAO):
             contribution_ids=contribution_ids
         )
 
-
     @staticmethod
     def _hydrate(record: Record) -> Document | None:
         """
@@ -268,4 +274,7 @@ class DocumentDAO(Neo4jDAO):
             document.titles.append(Literal(**title))
         for contribution in record['contributions']:
             document.contributions.append(Contribution(**contribution))
+
+        document.publication_date = record['document'].get('publication_date')
+
         return document

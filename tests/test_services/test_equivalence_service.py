@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import cast
 
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
@@ -42,6 +43,12 @@ async def test_infer_source_record_equivalents(
     assert document.uid is not None
     assert len(document.titles) == 1
     assert document.titles[0].value == "Example Article with DOI and HAL"
+    assert document.publication_date is not None
+    assert document.publication_date == "2019-02"
+    assert isinstance(document.publication_date_start, datetime)
+    assert isinstance(document.publication_date_end, datetime)
+    assert document.publication_date_end.isoformat() == "2019-02-28T23:59:59"
+    assert document.publication_date_start.isoformat() == "2019-02-01T00:00:00"
 
 
 async def test_attach_new_source_record_to_existing_document(

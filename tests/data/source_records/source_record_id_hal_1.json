@@ -1,6 +1,8 @@
 {
   "source_identifier": "source_record_id_hal_1",
   "harvester": "Hal",
+  "issued": "2019-02-02T00:00:00Z",
+  "raw_issued": "2019-02-02",
   "identifiers": [
     {
       "type": "hal",

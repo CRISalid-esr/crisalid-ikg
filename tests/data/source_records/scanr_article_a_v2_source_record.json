@@ -258,7 +258,8 @@
   },
   "page": null,
   "book": null,
-  "issued": "2023-12-01 00:00:00",
+  "raw_issued": "2023",
+  "issued": "2023-01-01 00:00:00",
   "created": null,
   "version": 0
 }

@@ -1,5 +1,11 @@
 MERGE (s:SourceRecord {uid: $source_record_uid})
-  ON MATCH SET s.harvester = $harvester, s.source_identifier = $source_identifier, s.document_types = $document_types
+  ON MATCH SET
+    s.harvester = $harvester,
+    s.source_identifier = $source_identifier,
+    s.document_types = $document_types,
+    s.issued = CASE WHEN $issued IS NOT NULL THEN datetime($issued) ELSE NULL END,
+    s.raw_issued = $raw_issued
+
 WITH s
 OPTIONAL MATCH (s)-[r:HAS_TITLE]->(t:Literal)
 DELETE r, t

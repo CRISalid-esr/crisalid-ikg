@@ -283,7 +283,9 @@ class SourceRecordDAO(Neo4jDAO):
             abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
             subject_uids=[subject.uid for subject in source_record.subjects],
-            document_types=[document_type.value for document_type in source_record.document_type]
+            document_types=[document_type.value for document_type in source_record.document_type],
+            issued=source_record.issued.isoformat() if source_record.issued else None,
+            raw_issued=source_record.raw_issued
         )
 
     @classmethod
@@ -318,7 +320,9 @@ class SourceRecordDAO(Neo4jDAO):
             abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
             subject_uids=[subject.uid for subject in source_record.subjects],
-            document_types=[document_type.value for document_type in source_record.document_type]
+            document_types=[document_type.value for document_type in source_record.document_type],
+            issued=source_record.issued.isoformat() if source_record.issued else None,
+            raw_issued=source_record.raw_issued
         )
         return source_record.uid, SourceRecordDAO.Status.UPDATED, None
 
@@ -379,7 +383,9 @@ class SourceRecordDAO(Neo4jDAO):
             titles=[Literal(**title) for title in record["titles"]],
             harvested_for_uids=record['harvested_for_uids'],
             document_type=[DocumentTypeEnum(document_type) for document_type in
-                           record["s"]["document_types"]]
+                           record["s"]["document_types"]],
+            issued=record["s"]["issued"].to_native() if record["s"].get("issued") else None,
+            raw_issued=record["s"].get("raw_issued")
         )
         for abstract in record["abstracts"]:
             source_record.abstracts.append(Literal(**abstract))
