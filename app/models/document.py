@@ -24,7 +24,7 @@ class Document(BaseModel):
     to_be_merged_into_uid: Optional[str] = None
     source_record_uids: Optional[List[str]] = None
     contributions: Optional[List[Contribution]] = []
-
+    type: str = "Document"
 
     _publication_date: Optional[str] = None
     _publication_date_start: Optional[datetime] = None
