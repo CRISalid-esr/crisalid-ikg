@@ -28,3 +28,4 @@ RETURN document,
        collect(DISTINCT title) AS titles,
        contributions,
        labels(document) AS labels
+       
