@@ -5,3 +5,4 @@ class BookChapter(Article):
     """
     Book Chapter model
     """
+    type: str = "BookChapter"

@@ -5,3 +5,4 @@ class Proceedings(Book):
     """
     Proceedings model
     """
+    type: str = "Proceedings"

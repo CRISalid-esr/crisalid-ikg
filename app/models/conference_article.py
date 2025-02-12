@@ -5,3 +5,4 @@ class ConferenceArticle(Article):
     """
     Conference Article model
     """
+    type: str = "ConferenceArticle"

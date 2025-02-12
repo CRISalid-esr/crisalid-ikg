@@ -7,11 +7,14 @@ from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.book import Book
+from app.models.book_chapter import BookChapter
+from app.models.conference_article import ConferenceArticle
 from app.models.contributions import Contribution
 from app.models.document import Document
 from app.models.journal_article import JournalArticle
 from app.models.literal import Literal
 from app.models.monograph import Monograph
+from app.models.proceedings import Proceedings
 from app.models.scholarly_publication import ScholarlyPublication
 
 
@@ -25,7 +28,10 @@ class DocumentDAO(Neo4jDAO):
         "ScholarlyPublication": ScholarlyPublication,
         "Article": JournalArticle,
         "Book": Book,
-        "Monograph": Monograph
+        "Monograph": Monograph,
+        "BookChapter": BookChapter,
+        "ConferenceArticle": ConferenceArticle,
+        "Proceedings": Proceedings
     }
 
     @handle_database_errors
