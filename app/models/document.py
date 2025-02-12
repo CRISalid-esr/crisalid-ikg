@@ -25,6 +25,7 @@ class Document(BaseModel):
     source_record_uids: Optional[List[str]] = None
     contributions: Optional[List[Contribution]] = []
 
+
     _publication_date: Optional[str] = None
     _publication_date_start: Optional[datetime] = None
     _publication_date_end: Optional[datetime] = None

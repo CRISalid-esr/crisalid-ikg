@@ -26,4 +26,5 @@ WITH document, title, collect(DISTINCT contribution {.*, contributor: single_con
 RETURN document,
        collect(DISTINCT sr) AS source_records,
        collect(DISTINCT title) AS titles,
-       contributions
+       contributions,
+       labels(document) AS labels

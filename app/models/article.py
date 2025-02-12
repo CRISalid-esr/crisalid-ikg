@@ -5,3 +5,4 @@ class Article(ScholarlyPublication):
     """
     Article model
     """
+    type: str = "Article"

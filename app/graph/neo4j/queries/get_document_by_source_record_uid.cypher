@@ -7,4 +7,5 @@ WITH document, title, collect(DISTINCT contribution {. *, contributor:contributo
 RETURN document,
        collect(DISTINCT sr) AS source_records,
        collect(DISTINCT title) AS titles,
-       contributions
+       contributions,
+       labels(document) AS labels
