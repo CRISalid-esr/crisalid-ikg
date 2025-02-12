@@ -5,7 +5,7 @@ from loguru import logger
 
 from app.amqp.abstract_amqp_message_factory import AbstractAMQPMessageFactory
 from app.errors.database_error import DatabaseError
-from app.services.documents.textual_document_service import TextualDocumentService
+from app.services.documents.document_service import DocumentService
 
 
 class AMQPDocumentEventMessageFactory(AbstractAMQPMessageFactory):
@@ -18,9 +18,9 @@ class AMQPDocumentEventMessageFactory(AbstractAMQPMessageFactory):
         if document_uid is None:
             logger.error("Connot build AMQP message payload without document UID")
             return
-        textual_document_service = TextualDocumentService()
+        document_service = DocumentService()
         try:
-            document = await textual_document_service.get_textual_document(document_uid)
+            document = await document_service.get_document(document_uid)
         except DatabaseError as e:
             logger.error(f"Error fetching document {document_uid} from database: {e}"
                          "while building AMQP message payload")

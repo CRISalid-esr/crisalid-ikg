@@ -17,13 +17,13 @@ from app.services.documents.merge_strategies.source_order_merge_strategy import 
 from app.services.documents.metadata_computation_service import MetadataComputationService
 
 
-async def test_recompute_textual_document_from_three_documents(
+async def test_recompute_document_from_three_documents(
         source_record_id_doi_1_pydantic_model: SourceRecord,
         source_record_id_hal_1_pydantic_model: SourceRecord,
         source_record_id_doi_1_hal_1_pydantic_model: SourceRecord
 ) -> None:
     """
-    Test that when 3 source_recorded are registered as equivalent, the textual document is
+    Test that when 3 source_recorded are registered as equivalent, the document is
     recomputed from their metadata
     :param source_record_id_doi_1_pydantic_model: Pydantic SourceRecord object with DOI identifier
     :param source_record_id_hal_1_pydantic_model: Pydantic SourceRecord object with HAL identifier

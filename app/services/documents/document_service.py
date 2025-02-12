@@ -10,96 +10,96 @@ from app.models.source_records import SourceRecord
 from app.services.documents.metadata_computation_service import MetadataComputationService
 from app.services.source_contributors.source_contributor_mapping_service import \
     SourceContributorMappingService
-from app.signals import textual_document_updated, textual_document_created, \
-    textual_document_unchanged, textual_document_deleted
+from app.signals import document_updated, document_created, \
+    document_unchanged, document_deleted
 
 
-class TextualDocumentService:
+class DocumentService:
     """
     Service to handle operations on publication data
     """
 
-    async def update_from_source_records(self, _, textual_document_uid: str):
+    async def update_from_source_records(self, _, document_uid: str):
         """
-        Recompute metadata for a textual document
+        Recompute metadata for a document
         :param _: unused (for compatibility with signal handlers)
-        :param textual_document_uid: the textual document uid
+        :param document_uid: the document uid
         :return:
         """
         # fetch the source records to be merged
 
-        sources_records = await self._get_source_records_of_textual_document(textual_document_uid)
+        sources_records = await self._get_source_records_of_document(document_uid)
         source_contributor_mapping_service = SourceContributorMappingService(
-            source_records=sources_records, textual_document_uid=textual_document_uid)
+            source_records=sources_records, document_uid=document_uid)
         await source_contributor_mapping_service.update_contributions()
         # delegate the merge operation to the metadata computation service
         document = MetadataComputationService(sources_records).merge()
-        document.uid = textual_document_uid
+        document.uid = document_uid
         # set it explicitly to False for code clarity although it is the default value
         document.to_be_recomputed = False
         document.to_be_deleted = False
         # persist the merged document
         dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
-        await dao.create_or_update_textual_document(document)
-        await self.signal_textual_document_updated(textual_document_uid)
+        await dao.create_or_update_document(document)
+        await self.signal_document_updated(document_uid)
 
-    async def signal_textual_document_updated(self, textual_document_uid):
+    async def signal_document_updated(self, document_uid):
         """
-        Signal that a textual document has been updated for all listeners to be notified
-        :param textual_document_uid:
+        Signal that a document has been updated for all listeners to be notified
+        :param document_uid:
         :return:
         """
-        await textual_document_updated.send_async(self, textual_document_uid=textual_document_uid)
+        await document_updated.send_async(self, document_uid=document_uid)
 
-    async def signal_textual_document_created(self, textual_document_uid):
+    async def signal_document_created(self, document_uid):
         """
-        Signal that a textual document has been created for all listeners to be notified
-        :param textual_document_uid:
+        Signal that a document has been created for all listeners to be notified
+        :param document_uid:
         :return:
         """
-        await textual_document_created.send_async(self, textual_document_uid=textual_document_uid)
+        await document_created.send_async(self, document_uid=document_uid)
 
-    async def signal_textual_document_unchanged(self, textual_document_uid):
+    async def signal_document_unchanged(self, document_uid):
         """
-        Signal that a textual document has not been changed for all listeners to be notified
-        :param textual_document_uid:
+        Signal that a document has not been changed for all listeners to be notified
+        :param document_uid:
         :return:
         """
-        await textual_document_unchanged.send_async(self, textual_document_uid=textual_document_uid)
+        await document_unchanged.send_async(self, document_uid=document_uid)
 
-    async def signal_textual_document_deleted(self, textual_document_uid):
+    async def signal_document_deleted(self, document_uid):
         """
-        Signal that a textual document has been deleted for all listeners to be notified
-        :param textual_document_uid:
+        Signal that a document has been deleted for all listeners to be notified
+        :param document_uid:
         :return:
         """
-        await textual_document_deleted.send_async(self, textual_document_uid=textual_document_uid)
+        await document_deleted.send_async(self, document_uid=document_uid)
 
-    async def _get_source_records_of_textual_document(self, textual_document_uid) -> list[
+    async def _get_source_records_of_document(self, document_uid) -> list[
         SourceRecord]:
         source_record_dao = self._source_record_dao()
         sources_record_uids = await (
-            source_record_dao.get_source_record_uids_by_textual_document_uid(
-                textual_document_uid))
+            source_record_dao.get_source_record_uids_by_document_uid(
+                document_uid))
         return [await source_record_dao.get(source_record_uid) for source_record_uid in
                 sources_record_uids]
 
-    async def get_textual_document(self, textual_document_uid: str) -> Document | None:
+    async def get_document(self, document_uid: str) -> Document | None:
         """
-        Get a textual document by its uid
-        :param textual_document_uid:
+        Get a document by its uid
+        :param document_uid:
         :return:
         """
         dao: DocumentDAO = self._document_dao()
-        return await dao.get_textual_document_by_uid(textual_document_uid)
+        return await dao.get_document_by_uid(document_uid)
 
-    async def get_textual_document_uids(self) -> list[str]:
+    async def get_document_uids(self) -> list[str]:
         """
-        Get all textual document uids
+        Get all document uids
         :return:
         """
         dao: DocumentDAO = self._document_dao()
-        return await dao.get_textual_document_uids()
+        return await dao.get_document_uids()
 
     def _document_dao(self) -> DocumentDAO:
         factory = self._get_dao_factory()

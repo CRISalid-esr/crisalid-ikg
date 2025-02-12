@@ -2,23 +2,23 @@ import json
 
 
 from app.config import get_app_settings
-from app.models.textual_document import TextualDocument
-from app.services.documents.textual_document_service import TextualDocumentService
+from app.models.document import Document
+from app.services.documents.document_service import DocumentService
 
 
-async def test_signal_textual_document_created(
+async def test_signal_document_created(
         test_app,  # pylint: disable=unused-argument
         mocked_exchange,
-        textual_document_hal_article_a_persisted_model: TextualDocument
+        document_hal_article_a_persisted_model: Document
 ) -> None:
     """
     Test dispatch_event command for a single person.
     """
     test_app.amqp_interface.pika_exchanges[
         get_app_settings().amqp_graph_exchange_name] = mocked_exchange
-    service = TextualDocumentService()
-    await service.signal_textual_document_created(
-        textual_document_hal_article_a_persisted_model.uid)
+    service = DocumentService()
+    await service.signal_document_created(
+        document_hal_article_a_persisted_model.uid)
     expected_sent_message_routing_key = "event.documents.document.created"
     expected_sent_message_payload_fields = {'abstracts': [], 'contributions': [{'contributor': {
         'display_name': 'Jérôme Février', 'external': True, 'identifiers': [], 'memberships': [],

@@ -4,11 +4,11 @@ from app.config import get_app_settings
 from app.models.book import Book
 from app.models.book_chapter import BookChapter
 from app.models.conference_article import ConferenceArticle
+from app.models.document import Document
 from app.models.document_type import DocumentTypeEnum
 from app.models.journal_article import JournalArticle
 from app.models.proceedings import Proceedings
 from app.models.source_records import SourceRecord
-from app.models.textual_document import TextualDocument
 from app.services.documents.merge_strategies.abstract_merge_strategy import MergeStrategy
 from app.services.documents.merge_strategies.merge_strategy_factory import MergeStrategyFactory
 
@@ -37,10 +37,10 @@ class MetadataComputationService:
         self._elected_document_type = self._elect_document_type()
         self._elected_strategy = self._elect_strategy()
 
-    def merge(self) -> TextualDocument:
+    def merge(self) -> Document:
         """
         Merge the source records into a single document
-        :return: the TextualDocument instance
+        :return: the Document instance
         """
         return self._elected_strategy.merge()
 
@@ -58,11 +58,11 @@ class MetadataComputationService:
             [DocumentTypeEnum.UNKNOWN]
         )
 
-    def _textual_document_class(self):
+    def _document_class(self):
         for document_type in self._elected_document_type:
             if document_type in self.DOCUMENT_CLASS_BY_DOCUMENT_TYPE:
                 return self.DOCUMENT_CLASS_BY_DOCUMENT_TYPE[document_type]
-        return TextualDocument
+        return Document
 
     def _elect_strategy(self) -> MergeStrategy:
         """
@@ -70,7 +70,7 @@ class MetadataComputationService:
 
         :return: MergeStrategy instance
         """
-        expected_document_class = self._textual_document_class()
+        expected_document_class = self._document_class()
         for strategy in self._get_strategies():
             document_type_values = [document_type.value for document_type in
                                     self._elected_document_type]

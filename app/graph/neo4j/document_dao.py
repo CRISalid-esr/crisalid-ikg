@@ -5,9 +5,8 @@ from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.contributions import Contribution
-from app.models.document import Document
 from app.models.literal import Literal
-from app.models.textual_document import TextualDocument
+from app.models.document import Document
 
 
 class DocumentDAO(Neo4jDAO):
@@ -16,7 +15,7 @@ class DocumentDAO(Neo4jDAO):
     """
 
     @handle_database_errors
-    async def get_textual_document_by_uid(self, uid: str) -> Document | None:
+    async def get_document_by_uid(self, uid: str) -> Document | None:
         """
         Get a document by its UID
         :param uid: UID of the document
@@ -25,93 +24,93 @@ class DocumentDAO(Neo4jDAO):
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
-                    return await self._get_textual_document_by_uid(tx, uid)
+                    return await self._get_document_by_uid(tx, uid)
 
     @handle_database_errors
-    async def get_textual_document_uids(self) -> list[str]:
+    async def get_document_uids(self) -> list[str]:
         """
-        Get all textual document uids
+        Get all document uids
         :return:
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
-                    return await self._get_textual_document_uids(tx)
+                    return await self._get_document_uids(tx)
 
     @handle_database_errors
-    async def create_or_update_textual_document(self, textual_document: TextualDocument) -> (
-            TextualDocument):
+    async def create_or_update_document(self, document: Document) -> (
+            Document):
         """
-        Create  a textual document
+        Create  a document
 
-        :type textual_document: a textual document object
-        :return: textual document object
+        :type document: a document object
+        :return: document object
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                textual_document = await session.write_transaction(
-                    self._create_or_update_textual_document_transaction,
-                    textual_document=textual_document
+                document = await session.write_transaction(
+                    self._create_or_update_document_transaction,
+                    document=document
                 )
-        return textual_document
+        return document
 
     @handle_database_errors
-    async def attach_source_records_to_textual_document(self, document_uid: str,
+    async def attach_source_records_to_document(self, document_uid: str,
                                                         source_record_uids: list[str]) -> None:
         """
-        Attach source records to a textual document
-        :param document_uid: UID of the textual document
+        Attach source records to a document
+        :param document_uid: UID of the document
         :param source_record_uids: list of source record UIDs
         :return:
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 await session.write_transaction(
-                    self._attach_source_records_to_textual_document_transaction,
+                    self._attach_source_records_to_document_transaction,
                     document_uid=document_uid,
                     source_record_uids=source_record_uids
                 )
 
     @classmethod
-    async def _create_or_update_textual_document_transaction(
+    async def _create_or_update_document_transaction(
             cls, tx: AsyncManagedTransaction,
-            textual_document: TextualDocument) -> AsyncResult:
-        create_textual_document_query = load_query(
-            "create_or_update_textual_document"
+            document: Document) -> AsyncResult:
+        create_document_query = load_query(
+            "create_or_update_document"
         )
-        publication_date_start = textual_document.publication_date_start.isoformat() \
-            if textual_document.publication_date_start else None
-        publication_date_end = textual_document.publication_date_end.isoformat() \
-            if textual_document.publication_date_end else None
+        publication_date_start = document.publication_date_start.isoformat() \
+            if document.publication_date_start else None
+        publication_date_end = document.publication_date_end.isoformat() \
+            if document.publication_date_end else None
         return await tx.run(
-            create_textual_document_query,
-            document_uid=textual_document.uid,
-            source_record_uids=textual_document.source_record_uids,
-            to_be_recomputed=textual_document.to_be_recomputed,
-            to_be_deleted=textual_document.to_be_deleted,
-            to_be_merged_into_uid=textual_document.to_be_merged_into_uid,
-            titles=[title.model_dump() for title in textual_document.titles],
-            abstracts=[abstract.model_dump() for abstract in textual_document.abstracts],
-            publication_date=textual_document.publication_date,
+            create_document_query,
+            document_uid=document.uid,
+            source_record_uids=document.source_record_uids,
+            to_be_recomputed=document.to_be_recomputed,
+            to_be_deleted=document.to_be_deleted,
+            to_be_merged_into_uid=document.to_be_merged_into_uid,
+            titles=[title.model_dump() for title in document.titles],
+            abstracts=[abstract.model_dump() for abstract in document.abstracts],
+            publication_date=document.publication_date,
             publication_date_start=publication_date_start,
             publication_date_end=publication_date_end
         )
 
     @classmethod
-    async def _attach_source_records_to_textual_document_transaction(
+    async def _attach_source_records_to_document_transaction(
             cls, tx: AsyncManagedTransaction, document_uid: str,
             source_record_uids: list[str]) -> None:
-        attach_source_records_to_textual_document_query = load_query(
-            "attach_source_records_to_textual_document"
+        attach_source_records_to_document_query = load_query(
+            "attach_source_records_to_document"
         )
         await tx.run(
-            attach_source_records_to_textual_document_query,
+            attach_source_records_to_document_query,
             document_uid=document_uid,
             source_record_uids=source_record_uids
         )
 
     @classmethod
-    async def _get_textual_document_by_uid(cls, tx: AsyncTransaction, uid: str) -> Document | None:
+    async def _get_document_by_uid(cls, tx: AsyncTransaction, uid: str) -> Document | None:
         """
         Get a document by its UID
         :param tx: Neo4j transaction object
@@ -119,26 +118,26 @@ class DocumentDAO(Neo4jDAO):
         :return: Document object
         """
         result = await tx.run(
-            load_query("get_textual_document_by_uid"),
-            textual_document_uid=uid
+            load_query("get_document_by_uid"),
+            document_uid=uid
         )
         record = await result.single()
         return cls._hydrate(record)
 
     @classmethod
-    async def _get_textual_document_uids(cls, tx: AsyncTransaction) -> list[str]:
+    async def _get_document_uids(cls, tx: AsyncTransaction) -> list[str]:
         """
-        Get all textual document uids
+        Get all document uids
         :param tx: Neo4j transaction object
         :return:
         """
         result = await tx.run(
-            load_query("get_textual_document_uids")
+            load_query("get_document_uids")
         )
         return [record['uid'] async for record in result]
 
     @handle_database_errors
-    async def get_textual_document_by_source_record_uid(
+    async def get_document_by_source_record_uid(
             self, source_record_uid: str) -> Document | None:
         """
         Get the publications attached to a source record
@@ -148,14 +147,14 @@ class DocumentDAO(Neo4jDAO):
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
-                    return await self._get_textual_document_by_source_record_uid(tx,
+                    return await self._get_document_by_source_record_uid(tx,
                                                                                  source_record_uid)
 
     @classmethod
-    async def _get_textual_document_by_source_record_uid(cls, tx: AsyncTransaction,
+    async def _get_document_by_source_record_uid(cls, tx: AsyncTransaction,
                                                          source_record_uid: str) -> Document | None:
         result = await tx.run(
-            load_query("get_textual_document_by_source_record_uid"),
+            load_query("get_document_by_source_record_uid"),
             source_record_uid=source_record_uid
         )
         record = await result.single()
@@ -164,14 +163,14 @@ class DocumentDAO(Neo4jDAO):
     @handle_database_errors
     async def create_contribution(
             self,
-            textual_document_uid: str,
+            document_uid: str,
             person_uid: str,
             roles: list[str]
     ) -> str | None:
         """
-        Create a Contribution node and establish relationships to the TextualDocument and Person.
+        Create a Contribution node and establish relationships to the Document and Person.
 
-        :param textual_document_uid: UID of the TextualDocument.
+        :param document_uid: UID of the Document.
         :param person_uid: UID of the Person.
         :param roles: List of roles to attach to the contribution.
         :return: UID of the created Contribution.
@@ -180,7 +179,7 @@ class DocumentDAO(Neo4jDAO):
             async with driver.session() as session:
                 return await session.write_transaction(
                     self._create_contribution_transaction,
-                    textual_document_uid,
+                    document_uid,
                     person_uid,
                     roles
                 )
@@ -188,23 +187,23 @@ class DocumentDAO(Neo4jDAO):
     @staticmethod
     async def _create_contribution_transaction(
             tx: AsyncManagedTransaction,
-            textual_document_uid: str,
+            document_uid: str,
             person_uid: str,
             roles: list[str]
     ) -> str | None:
         """
-        Transaction to create Contribution and link it to TextualDocument and Person.
+        Transaction to create Contribution and link it to Document and Person.
 
         :param tx: Neo4j transaction object.
-        :param textual_document_uid: UID of the TextualDocument.
+        :param document_uid: UID of the Document.
         :param person_uid: UID of the Person.
         :param roles: List of roles to attach to the contribution.
         :return: id of the created Contribution.
         """
-        query = load_query("create_contribution_to_textual_document")
+        query = load_query("create_contribution_to_document")
         result = await tx.run(
             query,
-            textual_document_uid=textual_document_uid,
+            document_uid=document_uid,
             person_uid=person_uid,
             roles=roles
         )
@@ -216,14 +215,14 @@ class DocumentDAO(Neo4jDAO):
     @handle_database_errors
     async def delete_contributions_not_in(
             self,
-            textual_document_uid: str,
+            document_uid: str,
             contribution_ids: list[str]
     ) -> None:
         """
-        Delete contributions linked to a TextualDocument
+        Delete contributions linked to a Document
         that are not in the specified list of contribution IDs.
 
-        :param textual_document_uid: UID of the TextualDocument.
+        :param document_uid: UID of the Document.
         :param contribution_ids: List of contribution IDs to retain.
         :return: None
         """
@@ -231,29 +230,29 @@ class DocumentDAO(Neo4jDAO):
             async with driver.session() as session:
                 await session.write_transaction(
                     self._delete_contributions_not_in_transaction,
-                    textual_document_uid,
+                    document_uid,
                     contribution_ids
                 )
 
     @staticmethod
     async def _delete_contributions_not_in_transaction(
             tx: AsyncManagedTransaction,
-            textual_document_uid: str,
+            document_uid: str,
             contribution_ids: list[str]
     ) -> None:
         """
-        Transaction to delete contributions linked to a TextualDocument
+        Transaction to delete contributions linked to a Document
         that are not in the specified list.
 
         :param tx: Neo4j transaction object.
-        :param textual_document_uid: UID of the TextualDocument.
+        :param document_uid: UID of the Document.
         :param contribution_ids: List of contribution IDs to retain.
         :return: None
         """
         query = load_query("delete_contributions_not_in")
         await tx.run(
             query,
-            textual_document_uid=textual_document_uid,
+            document_uid=document_uid,
             contribution_ids=contribution_ids
         )
 

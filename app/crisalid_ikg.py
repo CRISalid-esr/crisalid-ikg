@@ -18,12 +18,12 @@ from app.routes.api import router as api_router
 from app.routes.healthness import router as healthness_router
 from app.search.search_engine import SearchEngine
 from app.search.source_record_index import SourceRecordIndex
-from app.services.documents.textual_document_service import TextualDocumentService
+from app.services.documents.document_service import DocumentService
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
-    person_unchanged, textual_document_updated, source_record_updated, structure_created, \
-    structure_updated, textual_document_sources_changed, textual_document_created, \
-    textual_document_unchanged, textual_document_deleted, structure_unchanged, structure_deleted, \
+    person_unchanged, document_updated, source_record_updated, structure_created, \
+    structure_updated, document_sources_changed, document_created, \
+    document_unchanged, document_deleted, structure_unchanged, structure_deleted, \
     person_deleted, person_updated, publications_to_be_updated
 
 
@@ -69,7 +69,7 @@ class CrisalidIKG(FastAPI):
             self.add_event_handler("shutdown", self.close_elasticsearch)
 
         self._register_source_record_events()
-        self._register_textual_document_events()
+        self._register_document_events()
         self._register_person_events()
 
     @logger.catch(reraise=True)
@@ -102,14 +102,14 @@ class CrisalidIKG(FastAPI):
         source_record_created.connect(self.equivalence_service.update_source_record)
         source_record_updated.connect(self.equivalence_service.update_source_record)
 
-    def _register_textual_document_events(self):
-        self.textual_document_service = TextualDocumentService()
-        textual_document_sources_changed.connect(
-            self.textual_document_service.update_from_source_records)
-        textual_document_updated.connect(self.amqp_interface.dispatch_textual_document_updated)
-        textual_document_created.connect(self.amqp_interface.dispatch_textual_document_created)
-        textual_document_unchanged.connect(self.amqp_interface.dispatch_textual_document_unchanged)
-        textual_document_deleted.connect(self.amqp_interface.dispatch_textual_document_deleted)
+    def _register_document_events(self):
+        self.document_service = DocumentService()
+        document_sources_changed.connect(
+            self.document_service.update_from_source_records)
+        document_updated.connect(self.amqp_interface.dispatch_document_updated)
+        document_created.connect(self.amqp_interface.dispatch_document_created)
+        document_unchanged.connect(self.amqp_interface.dispatch_document_unchanged)
+        document_deleted.connect(self.amqp_interface.dispatch_document_deleted)
 
     @logger.catch(reraise=True)
     async def close_elasticsearch(self) -> None:  # pragma: no cover

@@ -1,12 +1,12 @@
 // Create ComputationSource node
-MERGE (computation:ComputationOrigin {contextUid: $textual_document_uid})
+MERGE (computation:ComputationOrigin {contextUid: $document_uid})
 
 // Create SourcePerson nodes and relationships from ComputationSource
 FOREACH (source_uid IN $source_people_uids |
   MERGE (sourcePerson:SourcePerson {uid: source_uid})
   MERGE
     (computation)
-      -[:SOURCE_PEOPLE_DISTANCE {distance: $origin_distance, contextUid: $textual_document_uid}]->(sourcePerson)
+      -[:SOURCE_PEOPLE_DISTANCE {distance: $origin_distance, contextUid: $document_uid}]->(sourcePerson)
 )
 
 // Create relationships between SourcePerson nodes based on precomputed distances
@@ -18,7 +18,7 @@ FOREACH (source IN keys($distances) |
       MERGE (sourcePerson:SourcePerson {uid: source})
       MERGE (targetPerson:SourcePerson {uid: target})
       MERGE
-        (sourcePerson)-[:SOURCE_PEOPLE_DISTANCE {distance: distance, contextUid: $textual_document_uid}]->(targetPerson)
+        (sourcePerson)-[:SOURCE_PEOPLE_DISTANCE {distance: distance, contextUid: $document_uid}]->(targetPerson)
     )
   )
 )

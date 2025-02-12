@@ -22,7 +22,7 @@ class MergeStrategy(ABC, Generic[T]):
         self.source_records = source_records
         self.parameters = parameters
         self.document_type = document_type
-        self.textual_document = None
+        self.document = None
 
     @abstractmethod
     def merge(self) -> T:

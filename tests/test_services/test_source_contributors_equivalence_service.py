@@ -43,7 +43,7 @@ async def test_create_source_records_with_shared_contributors(
         harvested_for=persisted_person_d_pydantic_model)
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
-    document = await document_dao.get_textual_document_by_source_record_uid(
+    document = await document_dao.get_document_by_source_record_uid(
         hal_article_a_source_record_pydantic_model.uid)
     assert document is not None
     assert len(document.contributions) == 10
@@ -86,7 +86,7 @@ async def test_create_source_records_with_shared_contributors(
     await source_record_service.update_source_record(
         source_record=hal_article_a_source_record_pydantic_model,
         harvested_for=persisted_person_e_pydantic_model)
-    document = await document_dao.get_textual_document_by_source_record_uid(
+    document = await document_dao.get_document_by_source_record_uid(
         hal_article_a_source_record_pydantic_model.uid)
     assert document is not None
     print("pause")
@@ -102,7 +102,7 @@ async def test_two_equivalent_records_with_the_same_contributors(
     """
     Given two source records with the same 3 contributors from 2 different source platforms,
     When the source records are added to the graph
-    Then a new Textual document is created,
+    Then a new document is created,
     the source authors are related two by two with an equivalence relationship,
     two of the pairs are related to 2 newly created external Person nodes with :RECORDED_BY
     relationships
@@ -131,7 +131,7 @@ async def test_two_equivalent_records_with_the_same_contributors(
             await source_record_dao.get_source_records_equivalent_uids(
                 article_exoplanet_from_oa_source_record_pydantic_model.uid,
                 SourceRecordDAO.EquivalenceType.INFERRED))
-    document = await document_dao.get_textual_document_by_source_record_uid(
+    document = await document_dao.get_document_by_source_record_uid(
         article_exoplanet_from_oa_source_record_pydantic_model.uid)
     assert document is not None
     assert len(document.contributions) == 3
