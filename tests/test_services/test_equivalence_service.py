@@ -32,7 +32,7 @@ async def test_infer_source_record_equivalents(
         source_record_id_doi_1_persisted_model.uid, SourceRecordDAO.EquivalenceType.INFERRED)
     assert source_record_id_doi_1_hal_1_persisted_model.uid in equivalent_uids
     assert source_record_id_hal_1_persisted_model.uid in equivalent_uids
-    document = await document_dao.get_textual_document_by_source_record_uid(
+    document = await document_dao.get_document_by_source_record_uid(
         source_record_id_doi_1_persisted_model.uid)
     assert document is not None
     assert sorted(document.source_record_uids) == sorted([
@@ -79,7 +79,7 @@ async def test_attach_new_source_record_to_existing_document(
     equivalent_uids = await source_record_dao.get_source_records_equivalent_uids(
         source_record_id_doi_1_persisted_model.uid, SourceRecordDAO.EquivalenceType.INFERRED)
     assert source_record_id_doi_1_hal_1_pydantic_model.uid in equivalent_uids
-    document = await document_dao.get_textual_document_by_source_record_uid(
+    document = await document_dao.get_document_by_source_record_uid(
         source_record_id_doi_1_persisted_model.uid)
     assert document is not None
     assert len(document.titles) == 1
@@ -88,7 +88,7 @@ async def test_attach_new_source_record_to_existing_document(
         source_record_id_doi_1_persisted_model.uid,
         source_record_id_doi_1_hal_1_pydantic_model.uid
     ])
-    source_record_uids = await source_record_dao.get_source_record_uids_by_textual_document_uid(
+    source_record_uids = await source_record_dao.get_source_record_uids_by_document_uid(
         document.uid)
     assert source_record_uids is not None
     assert sorted(source_record_uid for source_record_uid in source_record_uids) == sorted([
@@ -132,7 +132,7 @@ async def test_merge_two_existing_documents(
     equivalent_uids_1 = await source_record_dao.get_source_records_equivalent_uids(
         source_record_id_doi_1_persisted_model.uid, SourceRecordDAO.EquivalenceType.INFERRED)
     assert source_record_id_doi_1_hal_1_pydantic_model.uid in equivalent_uids_1
-    document = await document_dao.get_textual_document_by_source_record_uid(
+    document = await document_dao.get_document_by_source_record_uid(
         source_record_id_doi_1_persisted_model.uid)
     assert document is not None
     assert sorted(document.source_record_uids) == sorted([
@@ -142,7 +142,7 @@ async def test_merge_two_existing_documents(
     ])
     assert len(document.titles) == 1
     assert document.titles[0].value == "Example Article with DOI and HAL"
-    source_record_uids = await source_record_dao.get_source_record_uids_by_textual_document_uid(
+    source_record_uids = await source_record_dao.get_source_record_uids_by_document_uid(
         document.uid)
     assert source_record_uids is not None
     assert sorted(source_record_uid for source_record_uid in source_record_uids) == sorted([

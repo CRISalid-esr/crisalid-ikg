@@ -115,18 +115,18 @@ class SourceRecordDAO(Neo4jDAO):
                                                                           equivalence_type)
 
     @handle_database_errors
-    async def get_source_record_uids_by_textual_document_uid(
-            self, textual_document_uid: str) -> List[str]:
+    async def get_source_record_uids_by_document_uid(
+            self, document_uid: str) -> List[str]:
         """
-        Get source records UIDs by textual document UID
-        :param textual_document_uid:
+        Get source records UIDs by document UID
+        :param document_uid:
         :return:
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 result = await session.run(
-                    load_query("get_source_record_uids_by_textual_document_uid"),
-                    textual_document_uid=textual_document_uid
+                    load_query("get_source_record_uids_by_document_uid"),
+                    document_uid=document_uid
                 )
                 record = await result.single()
                 return record['source_record_uids']

@@ -27,10 +27,10 @@ class SourceContributorMappingService:
     Service to handle operations on source journals data
     """
 
-    def __init__(self, source_records: List[SourceRecord], textual_document_uid: str):
+    def __init__(self, source_records: List[SourceRecord], document_uid: str):
         self.settings = get_app_settings()
         self.source_records = source_records
-        self.textual_document_uid = textual_document_uid
+        self.document_uid = document_uid
         self.contributions: List[SourceContribution] = [contribution for source_record in
                                                         self.source_records for contribution
                                                         in
@@ -41,14 +41,14 @@ class SourceContributorMappingService:
 
     async def update_contributions(self) -> None:
         """
-        Recompute metadata for a textual document
+        Recompute metadata for a document
         :return: None
         """
         # create the equivalence relationships between contributors
         await self._create_contextual_equivalences()
         # link the source people to the real people
         linked_people = await self._link_source_people_to_people()
-        # update the contributions of the textual document
+        # update the contributions of the document
         await self._update_contributions(linked_people)
 
     async def _create_contextual_equivalences(self):
@@ -65,13 +65,13 @@ class SourceContributorMappingService:
         paths = await self.source_person_dao.create_source_people_clusters(
             source_people_uids=source_person_uids,
             distances=distances,
-            textual_document_uid=self.textual_document_uid,
+            document_uid=self.document_uid,
             number_of_layers=number_of_layers)
         filtered_paths = self.filter_unique_paths(paths)
         couples = self.convert_paths_to_couples(filtered_paths)
         await self.source_person_dao.create_contextual_equivalents(
             source_people_couples=couples,
-            textual_document_uid=self.textual_document_uid)
+            document_uid=self.document_uid)
 
     async def _link_source_people_to_people(self) -> dict[
         str, [list[SourcePerson]]]:
@@ -224,7 +224,7 @@ class SourceContributorMappingService:
             )
             # Create contribution node and relationships
             contribution_id = await document_dao.create_contribution(
-                textual_document_uid=self.textual_document_uid,
+                document_uid=self.document_uid,
                 person_uid=person_uid,
                 roles=[role.value for role in roles]
             )
@@ -232,7 +232,7 @@ class SourceContributorMappingService:
                 current_contribution_ids.add(contribution_id)
         # Delete contributions that are not in the current set
         await document_dao.delete_contributions_not_in(
-            textual_document_uid=self.textual_document_uid,
+            document_uid=self.document_uid,
             contribution_ids=list(current_contribution_ids)
         )
 

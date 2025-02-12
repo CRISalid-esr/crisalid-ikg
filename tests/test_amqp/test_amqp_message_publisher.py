@@ -138,27 +138,27 @@ async def test_publish_structure_event(
 async def test_publish_document_event(
         test_app,  # pylint: disable=unused-argument
         mocked_exchange: Exchange,
-        textual_document_persisted_model: Document,
+        document_persisted_model: Document,
 ):
     """
     Test that an event message for a created document is published to the AMQP queue
     :param test_app: only used to attach blinker signal listeners
     :param mocked_exchange:
-    :param textual_document_persisted_model:
+    :param document_persisted_model:
     :return:
     """
     publisher = AMQPMessagePublisher(mocked_exchange)
     expected_sent_message_routing_key = "event.documents.document.created"
     await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
                             AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_CREATED,
-                            {"document_uid": textual_document_persisted_model.uid})
+                            {"document_uid": document_persisted_model.uid})
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
     assert mocked_exchange.publish.call_args[1]["routing_key"] == expected_sent_message_routing_key
     message_body = json.loads(message.body)
     assert message_body['event'] == 'created'
     assert message_body['type'] == 'document'
-    assert message_body['fields']['uid'] == textual_document_persisted_model.uid
+    assert message_body['fields']['uid'] == document_persisted_model.uid
     expected_titles = [{'language': 'en', 'value': 'Example Article with DOI'}]
     assert all(
         any(title == expected for title in message_body['fields']['titles']) for expected in

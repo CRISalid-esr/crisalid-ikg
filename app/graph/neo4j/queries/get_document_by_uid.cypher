@@ -1,4 +1,4 @@
-MATCH (document:Document {uid: $textual_document_uid})
+MATCH (document:Document {uid: $document_uid})
 OPTIONAL MATCH (document)-[:HAS_TITLE]->(title:Literal)
 OPTIONAL MATCH (document)-[:HAS_CONTRIBUTION]->(contribution:Contribution)<-[:HAS_CONTRIBUTION]-(contributor:Person)
 OPTIONAL MATCH (contributor)-[:HAS_NAME]->(pn:PersonName)

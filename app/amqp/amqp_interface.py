@@ -224,63 +224,63 @@ class AMQPInterface:
                                 event_message_subtype,
                                 {"research_structure_uid": research_structure_uid})
 
-    async def dispatch_textual_document_updated(self, _, **extra) -> None:
+    async def dispatch_document_updated(self, _, **extra) -> None:
         """
-        Dispatch a textual document updated event
+        Dispatch a document updated event
         :param _: sender of message (unused)
         :param extra: extra parameters (payload of the message)
         :return: None
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_UPDATED
-        textual_document_uid = extra["textual_document_uid"]
-        await self._dispatch_textual_document_event(event_message_subtype, textual_document_uid)
+        document_uid = extra["document_uid"]
+        await self._dispatch_document_event(event_message_subtype, document_uid)
 
-    async def dispatch_textual_document_created(self, _, **extra) -> None:
+    async def dispatch_document_created(self, _, **extra) -> None:
         """
-        Dispatch a textual document created event
+        Dispatch a document created event
         :param _: sender of message (unused)
         :param extra: extra parameters (payload of the message)
         :return: None
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_CREATED
-        textual_document_uid = extra["textual_document_uid"]
-        await self._dispatch_textual_document_event(event_message_subtype, textual_document_uid)
+        document_uid = extra["document_uid"]
+        await self._dispatch_document_event(event_message_subtype, document_uid)
 
-    async def dispatch_textual_document_deleted(self, _, **extra) -> None:
+    async def dispatch_document_deleted(self, _, **extra) -> None:
         """
-        Dispatch a textual document deleted event
+        Dispatch a document deleted event
         :param _: sender of message (unused)
         :param extra: extra parameters (payload of the message)
         :return: None
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_DELETED
-        textual_document_uid = extra["textual_document_uid"]
-        await self._dispatch_textual_document_event(event_message_subtype, textual_document_uid)
+        document_uid = extra["document_uid"]
+        await self._dispatch_document_event(event_message_subtype, document_uid)
 
-    async def dispatch_textual_document_unchanged(self, _, **extra) -> None:
+    async def dispatch_document_unchanged(self, _, **extra) -> None:
         """
-        Dispatch a textual document unchanged event
+        Dispatch a document unchanged event
         :param _: sender of message (unused)
         :param extra: extra parameters (payload of the message)
         :return: None
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_UNCHANGED
-        textual_document_uid = extra["textual_document_uid"]
-        await self._dispatch_textual_document_event(event_message_subtype, textual_document_uid)
+        document_uid = extra["document_uid"]
+        await self._dispatch_document_event(event_message_subtype, document_uid)
 
-    async def _dispatch_textual_document_event(self, event_message_subtype, textual_document_uid):
+    async def _dispatch_document_event(self, event_message_subtype, document_uid):
         logger.info(
-            f"Dispatching textual document event: {event_message_subtype}"
-            f" for document {textual_document_uid}")
+            f"Dispatching document event: {event_message_subtype}"
+            f" for document {document_uid}")
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
-            logger.error("Cannot dispatch textual %s event for document %s: "
-                         "AMQP exchange not declared", textual_document_uid)
+            logger.error("Cannot dispatch %s event for document %s: "
+                         "AMQP exchange not declared", document_uid)
             return
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
                                 event_message_subtype,
-                                {"document_uid": textual_document_uid
+                                {"document_uid": document_uid
                                  })
 
     async def _attach_message_processing_workers(self, topic: str):

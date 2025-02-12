@@ -1,7 +1,7 @@
-from app.models.textual_document import TextualDocument
+from app.models.scholarly_publication import ScholarlyPublication
 
 
-class Article(TextualDocument):
+class Article(ScholarlyPublication):
     """
     Article model
     """

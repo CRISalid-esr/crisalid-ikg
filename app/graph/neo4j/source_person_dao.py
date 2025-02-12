@@ -68,7 +68,7 @@ class SourcePersonDAO(Neo4jDAO):
 
     @handle_database_errors
     async def create_source_people_clusters(self, source_people_uids: list[str],
-                                            distances: dict, textual_document_uid: str,
+                                            distances: dict, document_uid: str,
                                             number_of_layers: int) -> List[List[str]]:
         """
         Register distances relationships between source people in the graph database.
@@ -76,7 +76,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param source_people_uids: global source people list, even if there is no
                 path between them
         :param distances: precomputed distances between source people
-        :param textual_document_uid: the context document in which the distances are computed
+        :param document_uid: the context document in which the distances are computed
         :param number_of_layers: the depth of the equivalence paths to compute
         """
         async for driver in Neo4jConnexion().get_driver():
@@ -84,24 +84,24 @@ class SourcePersonDAO(Neo4jDAO):
                 async with await session.begin_transaction() as tx:
                     return await self._create_source_people_clusters(tx, source_people_uids,
                                                                      distances,
-                                                                     textual_document_uid,
+                                                                     document_uid,
                                                                      number_of_layers)
 
     @handle_database_errors
     async def create_contextual_equivalents(self, source_people_couples: list[tuple[str, str]],
-                                            textual_document_uid: str) -> None:
+                                            document_uid: str) -> None:
         """
         Create contextual equivalents relationships between source people in the graph database.
 
         :param source_people_couples: list of couples of source people UIDs
-        :param textual_document_uid: the context document in which the relationships are computed
+        :param document_uid: the context document in which the relationships are computed
         :return:
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     await self._create_contextual_equivalents(tx, source_people_couples,
-                                                              textual_document_uid)
+                                                              document_uid)
 
     @handle_database_errors
     async def get_equivalents(self, source_person_uid: str) -> list[str]:
@@ -163,7 +163,7 @@ class SourcePersonDAO(Neo4jDAO):
     async def _create_source_people_clusters(tx: AsyncManagedTransaction,
                                              source_people_uids: list[str]
                                              , distances: dict,
-                                             textual_document_uid: str,
+                                             document_uid: str,
                                              number_of_layers: int) -> List[List[str]]:
         """
         Internal method to create distances in the database.
@@ -172,7 +172,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param source_people_uids: global source people list,
                 even if there is no path between them.
         :param distances: precomputed distances between source people.
-        :param textual_document_uid: the context document in which the distances are computed.
+        :param document_uid: the context document in which the distances are computed.
         :param number_of_layers: the depth of the equivalence paths to compute.
         """
         query = load_query("create_source_people_clusters")
@@ -182,31 +182,31 @@ class SourcePersonDAO(Neo4jDAO):
             query,
             source_people_uids=source_people_uids,
             distances=distances,
-            textual_document_uid=textual_document_uid,
+            document_uid=document_uid,
             origin_distance=origin_distance,
             depth=number_of_layers
         )
         cleaning_query = load_query("clean_source_people_clusters")
-        await tx.run(cleaning_query, textual_document_uid=textual_document_uid)
+        await tx.run(cleaning_query, document_uid=document_uid)
         records = [record['pathNodes'] async for record in result]
         return records
 
     @staticmethod
     async def _create_contextual_equivalents(tx: AsyncManagedTransaction,
                                              source_people_couples: list[tuple[str, str]],
-                                             textual_document_uid: str) -> None:
+                                             document_uid: str) -> None:
         """
         Internal method to create contextual equivalents relationships in the database.
 
         :param tx: Transaction object.
         :param source_people_couples: list of couples of source people UIDs.
-        :param textual_document_uid: the context document in which the relationships are computed.
+        :param document_uid: the context document in which the relationships are computed.
         """
         query = load_query("create_source_people_contextual_equivalence_relationships")
         await tx.run(
             query,
             source_people_couples=source_people_couples,
-            textual_document_uid=textual_document_uid
+            document_uid=document_uid
         )
 
     @staticmethod
