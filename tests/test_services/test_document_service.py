@@ -4,6 +4,7 @@ from typing import cast
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.models.document import Document
+from app.models.journal_article import JournalArticle
 from app.models.source_records import SourceRecord
 from app.services.documents.document_service import DocumentService
 from app.services.source_records.equivalence_service import EquivalenceService
@@ -55,3 +56,5 @@ async def test_update_document(
                 assert isinstance(document.publication_date_end, datetime)
                 assert document.publication_date_end.isoformat() == "2019-02-28T23:59:59"
                 assert document.publication_date_start.isoformat() == "2019-02-01T00:00:00"
+                assert isinstance(document, JournalArticle)
+                assert document.type == "JournalArticle"

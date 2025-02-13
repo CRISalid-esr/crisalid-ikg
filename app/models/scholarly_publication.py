@@ -5,3 +5,4 @@ class ScholarlyPublication(Document):
     """
     Scholarly publication model
     """
+    type: str = "ScholarlyPublication"

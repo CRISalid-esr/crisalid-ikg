@@ -5,10 +5,12 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.document import Document
+from app.models.journal_article import JournalArticle
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.services.source_records.source_record_service import SourceRecordService
+
 
 async def test_infer_source_record_equivalents(
         test_app,  # pylint: disable=unused-argument
@@ -49,6 +51,7 @@ async def test_infer_source_record_equivalents(
     assert isinstance(document.publication_date_end, datetime)
     assert document.publication_date_end.isoformat() == "2019-02-28T23:59:59"
     assert document.publication_date_start.isoformat() == "2019-02-01T00:00:00"
+    assert document.type == "JournalArticle"
 
 
 async def test_attach_new_source_record_to_existing_document(
@@ -95,6 +98,8 @@ async def test_attach_new_source_record_to_existing_document(
         source_record_id_doi_1_persisted_model.uid,
         source_record_id_doi_1_hal_1_pydantic_model.uid
     ])
+    assert isinstance(document, JournalArticle)
+    assert document.type == "JournalArticle"
 
 
 async def test_merge_two_existing_documents(
@@ -150,3 +155,5 @@ async def test_merge_two_existing_documents(
         source_record_id_hal_1_persisted_model.uid,
         source_record_id_doi_1_hal_1_pydantic_model.uid
     ])
+    assert isinstance(document, JournalArticle)
+    assert document.type == "JournalArticle"

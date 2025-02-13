@@ -1,18 +1,38 @@
+from loguru import logger
+from pydantic import BaseModel
 from neo4j import Record, AsyncTransaction, AsyncResult, AsyncManagedTransaction
 
 from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
+from app.models.book import Book
+from app.models.book_chapter import BookChapter
+from app.models.conference_article import ConferenceArticle
 from app.models.contributions import Contribution
-from app.models.literal import Literal
 from app.models.document import Document
+from app.models.journal_article import JournalArticle
+from app.models.literal import Literal
+from app.models.monograph import Monograph
+from app.models.proceedings import Proceedings
+from app.models.scholarly_publication import ScholarlyPublication
 
 
 class DocumentDAO(Neo4jDAO):
     """
     Data access object for publications in the Neo4j graph database
     """
+
+    DOCUMENT_CLASS_MAP = {
+        "Document": Document,
+        "ScholarlyPublication": ScholarlyPublication,
+        "Article": JournalArticle,
+        "Book": Book,
+        "Monograph": Monograph,
+        "BookChapter": BookChapter,
+        "ConferenceArticle": ConferenceArticle,
+        "Proceedings": Proceedings
+    }
 
     @handle_database_errors
     async def get_document_by_uid(self, uid: str) -> Document | None:
@@ -56,7 +76,7 @@ class DocumentDAO(Neo4jDAO):
 
     @handle_database_errors
     async def attach_source_records_to_document(self, document_uid: str,
-                                                        source_record_uids: list[str]) -> None:
+                                                source_record_uids: list[str]) -> None:
         """
         Attach source records to a document
         :param document_uid: UID of the document
@@ -78,6 +98,7 @@ class DocumentDAO(Neo4jDAO):
         create_document_query = load_query(
             "create_or_update_document"
         )
+        labels = cls._get_labels_from_hierarchy(document)
         publication_date_start = document.publication_date_start.isoformat() \
             if document.publication_date_start else None
         publication_date_end = document.publication_date_end.isoformat() \
@@ -85,6 +106,7 @@ class DocumentDAO(Neo4jDAO):
         return await tx.run(
             create_document_query,
             document_uid=document.uid,
+            document_type=document.type,
             source_record_uids=document.source_record_uids,
             to_be_recomputed=document.to_be_recomputed,
             to_be_deleted=document.to_be_deleted,
@@ -93,7 +115,8 @@ class DocumentDAO(Neo4jDAO):
             abstracts=[abstract.model_dump() for abstract in document.abstracts],
             publication_date=document.publication_date,
             publication_date_start=publication_date_start,
-            publication_date_end=publication_date_end
+            publication_date_end=publication_date_end,
+            document_labels=labels.split(":")
         )
 
     @classmethod
@@ -148,11 +171,11 @@ class DocumentDAO(Neo4jDAO):
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._get_document_by_source_record_uid(tx,
-                                                                                 source_record_uid)
+                                                                         source_record_uid)
 
     @classmethod
     async def _get_document_by_source_record_uid(cls, tx: AsyncTransaction,
-                                                         source_record_uid: str) -> Document | None:
+                                                 source_record_uid: str) -> Document | None:
         result = await tx.run(
             load_query("get_document_by_source_record_uid"),
             source_record_uid=source_record_uid
@@ -257,7 +280,20 @@ class DocumentDAO(Neo4jDAO):
         )
 
     @staticmethod
-    def _hydrate(record: Record) -> Document | None:
+    def _get_labels_from_hierarchy(document: Document) -> str:
+        """
+        Get the labels for a document based on its class hierarchy
+        e.g. "Document:Publication:Article"
+        :return:
+        """
+        return ":".join(reversed([
+            cls.__name__
+            for cls in document.__class__.mro()[:-1]  # Exclude object
+            if cls not in (BaseModel,)  # Exclude BaseModel
+        ]))
+
+    @classmethod
+    def _hydrate(cls, record: Record) -> Document | None:
         """
         Hydrate a document object from a Neo4j record
         :param record: Neo4j record
@@ -265,7 +301,11 @@ class DocumentDAO(Neo4jDAO):
         """
         if record is None:
             return None
-        document = Document(**record['document'])
+        labels = record["labels"]
+
+        # Determine the correct class
+        document_class = cls._get_concrete_document_class(labels)
+        document = document_class(**record['document'])
         document.source_record_uids = [
             source_record['uid'] for source_record in record['source_records']
         ]
@@ -277,3 +317,19 @@ class DocumentDAO(Neo4jDAO):
         document.publication_date = record['document'].get('publication_date')
 
         return document
+
+    @classmethod
+    def _get_concrete_document_class(cls, labels: list[str]) -> type[Document]:
+        """
+        Determines the most specific document class based on Neo4j labels.
+        """
+
+        matched_classes = [class_ for class_ in labels if class_ in cls.DOCUMENT_CLASS_MAP]
+
+        if not matched_classes:
+            logger.error(f"Unknown document type from labels: {labels}")
+            return Document
+
+        most_specific_class = matched_classes[-1]
+
+        return cls.DOCUMENT_CLASS_MAP[most_specific_class]

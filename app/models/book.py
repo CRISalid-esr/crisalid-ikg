@@ -5,3 +5,4 @@ class Book(ScholarlyPublication):
     """
     Book model
     """
+    type: str = "Book"

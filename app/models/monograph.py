@@ -5,3 +5,4 @@ class Monograph(Book):
     """
     Monograph model
     """
+    type: str = "Monograph"
