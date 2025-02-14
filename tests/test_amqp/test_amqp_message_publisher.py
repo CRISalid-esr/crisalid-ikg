@@ -31,7 +31,7 @@ async def test_publish_fetch_publications_taks(
                                      'identifiers_safe_mode': False,
                                      'events': ['created', 'updated', 'deleted', 'unchanged'],
                                      'harvesters': ['idref', 'scanr', 'hal', 'openalex', 'scopus'],
-                                     'fields': {'name': 'temporary name',
+                                     'fields': {'name': 'John Doe',
                                                 'identifiers': [
                                                     {'type': 'orcid',
                                                      'value': '0000-0001-2345-6789'}]
