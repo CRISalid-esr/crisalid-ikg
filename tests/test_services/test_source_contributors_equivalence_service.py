@@ -56,7 +56,7 @@ async def test_create_source_records_with_shared_contributors(
     assert len(contribution.roles) == 1
     assert contribution.roles[0].value == "http://id.loc.gov/vocabulary/relators/aut"
     assert contribution.contributor.uid == persisted_person_d_pydantic_model.uid
-    assert contribution.contributor.display_name == "Garcia, Raymond"
+    assert contribution.contributor.display_name == "Raymond Garcia"
     assert contribution.contributor.external is False
     # take the contributor with uid 'hal-578950'
     contributor = next(
@@ -145,7 +145,7 @@ async def test_two_equivalent_records_with_the_same_contributors(
     assert len(internal_contribution.roles) == 1
     assert internal_contribution.roles[0].value == "http://id.loc.gov/vocabulary/relators/aut"
     assert internal_contribution.contributor.uid == persisted_person_a_pydantic_model.uid
-    assert internal_contribution.contributor.display_name == "Doe, John"
+    assert internal_contribution.contributor.display_name == 'John Doe'
     assert internal_contribution.contributor.external is False
     assert ((await person_dao.get_person_uid_by_source_person_uid(
         'open_alex-https://openalex.org/A5065084602', external=False)) ==

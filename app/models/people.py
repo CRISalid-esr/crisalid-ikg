@@ -111,7 +111,7 @@ class Person(Agent[PersonIdentifierType]):
                     "The provided person name must have at least a last name or a first name.")
 
             # Build the display name from available parts
-            values["display_name"] = ", ".join(filter(None, [last_name, first_name]))
+            values["display_name"] = " ".join(filter(None, [first_name, last_name]))
 
         return values
 

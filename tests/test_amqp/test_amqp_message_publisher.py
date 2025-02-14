@@ -31,7 +31,7 @@ async def test_publish_fetch_publications_taks(
                                      'identifiers_safe_mode': False,
                                      'events': ['created', 'updated', 'deleted', 'unchanged'],
                                      'harvesters': ['idref', 'scanr', 'hal', 'openalex', 'scopus'],
-                                     'fields': {'name': 'temporary name',
+                                     'fields': {'name': 'John Doe',
                                                 'identifiers': [
                                                     {'type': 'orcid',
                                                      'value': '0000-0001-2345-6789'}]
@@ -70,7 +70,7 @@ async def test_publish_person_event(
     message_body = json.loads(message.body)
     assert message_body['event'] == 'created'
     assert message_body['type'] == 'person'
-    assert message_body['fields']['display_name'] == 'Doe, John'
+    assert message_body['fields']['display_name'] == 'John Doe'
     assert message_body['fields']['external'] is False
     assert message_body['fields']['first_name'] == 'John'
     assert message_body['fields']['last_name'] == 'Doe'

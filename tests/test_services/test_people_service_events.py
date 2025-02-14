@@ -18,7 +18,7 @@ async def test_signal_person_created(
     await service.signal_person_created(persisted_person_a_pydantic_model.uid)
     expected_sent_message_routing_key = "event.people.person.created"
     expected_sent_message_payload = {'event': 'created',
-                                     'fields': {'display_name': 'Doe, John', 'external': False,
+                                     'fields': {'display_name': 'John Doe', 'external': False,
                                                 'first_name': 'John', 'identifiers': [
                                              {'type': 'local', 'value': 'jdoe@univ-domain.edu'},
                                              {'type': 'orcid', 'value': '0000-0001-2345-6789'}],
