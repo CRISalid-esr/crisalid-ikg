@@ -171,8 +171,18 @@ class SourceRecordDAO(Neo4jDAO):
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                async with await session.begin_transaction() as tx:
-                    return await SourceRecordDAO._get_source_record_by_uid(tx, source_record_uid)
+                return await session.read_transaction(self._get_source_record_by_uid,
+                                                      source_record_uid)
+
+    @handle_database_errors
+    async def get_all_uids(self) -> List[str]:
+        """
+        Get all source record UIDs
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                return await session.read_transaction(self._get_all_uids_transaction)
 
     @handle_database_errors
     async def source_record_exists(self, source_record_uid: str) -> bool:
@@ -253,6 +263,12 @@ class SourceRecordDAO(Neo4jDAO):
         return None
 
     @classmethod
+    async def _get_all_uids_transaction(cls, tx: AsyncManagedTransaction) -> List[str]:
+        query = load_query("get_all_source_record_uids")
+        result = await tx.run(query)
+        return [record['uid'] async for record in result]
+
+    @classmethod
     async def _create_source_record_transaction(cls, tx: AsyncManagedTransaction,
                                                 source_record: SourceRecord,
                                                 harvested_for: Person
@@ -273,6 +289,7 @@ class SourceRecordDAO(Neo4jDAO):
         await tx.run(
             create_source_record_query,
             source_record_uid=source_record.uid,
+            source_record_url=str(source_record.url) if source_record.url else None,
             source_identifier=source_record.source_identifier,
             harvester=source_record.harvester,
             person_uid=harvested_for.uid,
@@ -310,6 +327,7 @@ class SourceRecordDAO(Neo4jDAO):
         await tx.run(
             update_source_record_query,
             source_record_uid=source_record.uid,
+            source_record_url=str(source_record.url) if source_record.url else None,
             source_identifier=source_record.source_identifier,
             harvester=source_record.harvester,
             person_uid=harvested_for.uid,
@@ -378,6 +396,7 @@ class SourceRecordDAO(Neo4jDAO):
     def _hydrate(record) -> SourceRecord:
         source_record = SourceRecord(
             uid=record["s"]["uid"],
+            # No need to assign url as it is computed on the fly by a pydantic validator
             source_identifier=record["s"]["source_identifier"],
             harvester=record["s"]["harvester"],
             titles=[Literal(**title) for title in record["titles"]],

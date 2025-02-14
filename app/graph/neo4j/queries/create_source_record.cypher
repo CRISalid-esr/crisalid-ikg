@@ -1,5 +1,6 @@
 CREATE (s:SourceRecord {
     uid: $source_record_uid,
+    url: $source_record_url,
     harvester: $harvester,
     source_identifier: $source_identifier,
     document_types: $document_types,

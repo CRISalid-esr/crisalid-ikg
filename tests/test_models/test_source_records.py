@@ -63,6 +63,9 @@ def test_create_thesis_source_record_from_scanr_data(
     assert DocumentTypeEnum.THESIS in source_record.document_type
     assert source_record.issued.isoformat() == "2023-06-15T00:00:00+00:00"
     assert source_record.raw_issued == "2023"
+    assert str(source_record.url).startswith(
+        "https://scanr.enseignementsup-recherche.gouv.fr/publications/")
+
 
 
 async def test_create_thesis_source_record_from_idref_data(
@@ -122,6 +125,7 @@ async def test_create_thesis_source_record_from_idref_data(
     )
     assert source_record.issued.isoformat() == "2006-06-14T00:00:00"
     assert source_record.raw_issued == "2006-06-14"
+    assert str(source_record.url) == "http://www.example.fr/123456789/id"
 
 
 async def test_create_article_source_record_from_open_alex_data(
@@ -186,6 +190,7 @@ async def test_create_article_source_record_from_open_alex_data(
     assert source_record.issue.journal.uid == "openalex-https://openalex.org/S113942516"
     assert source_record.issued.isoformat() == "2000-01-01T00:00:00"
     assert source_record.raw_issued == "2000"
+    assert str(source_record.url) == "https://openalex.org/W123456789"
 
 
 async def test_article_identifiers_from_open_alex_data(
