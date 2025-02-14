@@ -1,5 +1,6 @@
 MERGE (s:SourceRecord {uid: $source_record_uid})
   ON MATCH SET
+    s.url = $source_record_url,
     s.harvester = $harvester,
     s.source_identifier = $source_identifier,
     s.document_types = $document_types,
