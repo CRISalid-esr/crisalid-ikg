@@ -117,3 +117,41 @@ def fetch_publications_all():
             typer.echo(f"Failed to fetch publications for all people: {e}")
 
     asyncio.run(_fetch_publications_all())
+
+
+@people_cli.command()
+def resave_people_all():
+    """
+    Reads all people from the database and saves them again.
+
+    """
+
+    @with_app_lifecycle
+    async def _resave_people_all():
+        service = PeopleService()
+        uids = await service.get_all_person_uids(external=False)
+        for uid in uids:
+            person = await service.get_person(uid)
+            await service.update_person(person)
+            typer.echo(f"Person {uid} resaved.")
+
+    asyncio.run(_resave_people_all())
+
+
+@people_cli.command()
+def resave_person(
+        uid: str = typer.Argument(..., help="The UID of the person")
+):
+    """
+    Reads a person from the database and saves it again.
+
+    """
+
+    @with_app_lifecycle
+    async def _resave_person(uid: str):
+        service = PeopleService()
+        person = await service.get_person(uid)
+        await service.update_person(person)
+        typer.echo(f"Person {uid} resaved.")
+
+    asyncio.run(_resave_person(uid))
