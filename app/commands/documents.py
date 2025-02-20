@@ -1,4 +1,5 @@
 import asyncio
+import random
 
 import typer
 
@@ -29,6 +30,7 @@ async def handle_all_events(event: str, service: DocumentService):
     Handle dispatching a specific event for all document UIDs.
     """
     uids = await service.get_document_uids()
+    random.shuffle(uids)
     for uid in uids:
         try:
             await handle_event(uid, event, service)
@@ -51,6 +53,7 @@ def recompute_metadata(uid: str = typer.Argument(..., help="The UID of the docum
         typer.echo(f"Metadata recomputation for document {uid} completed.")
 
     asyncio.run(_recompute_metadata(uid))
+
 
 @document_cli.command()
 def recompute_metadata_all():
