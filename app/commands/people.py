@@ -1,4 +1,5 @@
 import asyncio
+import random
 
 import typer
 
@@ -57,6 +58,7 @@ def dispatch_all(
         service = PeopleService()
         try:
             uids = await service.get_all_person_uids(external=False)
+            random.shuffle(uids)
             for uid in uids:
                 try:
                     if event == "created":
@@ -105,6 +107,7 @@ def fetch_publications_all():
         service = PeopleService()
         try:
             uids = await service.get_all_person_uids(external=False)
+            random.shuffle(uids)
             for uid in uids:
                 try:
                     await service.signal_publications_to_be_updated(uid)
@@ -130,6 +133,7 @@ def resave_people_all():
     async def _resave_people_all():
         service = PeopleService()
         uids = await service.get_all_person_uids(external=False)
+        random.shuffle(uids)
         for uid in uids:
             person = await service.get_person(uid)
             await service.update_person(person)
