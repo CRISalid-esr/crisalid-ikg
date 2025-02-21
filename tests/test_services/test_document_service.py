@@ -11,7 +11,6 @@ from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import source_record_created, source_record_updated, \
     document_sources_changed
 
-
 async def test_update_document(
         source_record_id_doi_1_persisted_model: SourceRecord,
         source_record_id_hal_1_persisted_model: SourceRecord,  # pylint: disable=unused-argument
@@ -58,3 +57,10 @@ async def test_update_document(
                 assert document.publication_date_start.isoformat() == "2019-02-01T00:00:00"
                 assert isinstance(document, JournalArticle)
                 assert document.type == "JournalArticle"
+                assert len(document.subjects) == 4
+                assert all(subject.uid in [
+                    "http://www.idref.fr/concept-a/id",
+                    "http://www.idref.fr/concept-b/id",
+                    "http://www.idref.fr/concept-d/id",
+                    "http://www.idref.fr/concept-e/id"
+                ] for subject in document.subjects)

@@ -9,6 +9,19 @@
       "value": "hal-00000001"
     }
   ],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/concept-e/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Concept E",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": []
+    }
+  ],
   "titles": [
     {
       "value": "Example Article with HAL",

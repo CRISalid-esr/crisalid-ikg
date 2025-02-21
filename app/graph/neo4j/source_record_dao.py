@@ -402,7 +402,7 @@ class SourceRecordDAO(Neo4jDAO):
             titles=[Literal(**title) for title in record["titles"]],
             harvested_for_uids=record['harvested_for_uids'],
             document_type=[DocumentTypeEnum(document_type) for document_type in
-                           record["s"]["document_types"]],
+                           record["s"].get("document_types",[])],
             issued=record["s"]["issued"].to_native() if record["s"].get("issued") else None,
             raw_issued=record["s"].get("raw_issued")
         )

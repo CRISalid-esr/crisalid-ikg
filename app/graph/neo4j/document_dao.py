@@ -8,6 +8,7 @@ from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.book import Book
 from app.models.book_chapter import BookChapter
+from app.models.concepts import Concept
 from app.models.conference_article import ConferenceArticle
 from app.models.contributions import Contribution
 from app.models.document import Document
@@ -74,6 +75,7 @@ class DocumentDAO(Neo4jDAO):
                 )
         return document
 
+
     @handle_database_errors
     async def attach_source_records_to_document(self, document_uid: str,
                                                 source_record_uids: list[str]) -> None:
@@ -103,7 +105,7 @@ class DocumentDAO(Neo4jDAO):
             if document.publication_date_start else None
         publication_date_end = document.publication_date_end.isoformat() \
             if document.publication_date_end else None
-        return await tx.run(
+        result = await tx.run(
             create_document_query,
             document_uid=document.uid,
             document_type=document.type,
@@ -118,6 +120,15 @@ class DocumentDAO(Neo4jDAO):
             publication_date_end=publication_date_end,
             document_labels=labels.split(":")
         )
+        update_document_subjects_query = load_query(
+            "update_document_subjects"
+        )
+        await tx.run(
+            update_document_subjects_query,
+            document_uid=document.uid,
+            subject_uids=[subject.uid for subject in document.subjects],
+        )
+        return result
 
     @classmethod
     async def _attach_source_records_to_document_transaction(
@@ -311,6 +322,8 @@ class DocumentDAO(Neo4jDAO):
         ]
         for title in record['titles']:
             document.titles.append(Literal(**title))
+        for subject in record['subjects']:
+            document.subjects.append(Concept(**subject))
         for contribution in record['contributions']:
             document.contributions.append(Contribution(**contribution))
 

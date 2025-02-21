@@ -15,6 +15,30 @@
       "language": "en"
     }
   ],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/concept-a/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Concept A",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.idref.fr/concept-b/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Concept B",
+          "language": "en"
+        }
+      ],
+      "alt_labels": []
+    }
+  ],
   "document_type": [
     {
       "uri": "http://purl.org/ontology/bibo/Article",
