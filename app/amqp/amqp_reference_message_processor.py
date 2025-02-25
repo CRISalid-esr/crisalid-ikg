@@ -30,7 +30,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         event_type = event_data["type"]
         reference_data = event_data["reference"]
         try:
-            person = Person(**person_data)
+            person = Person(**person_data | {'display_name': person_data['name']})
         except (ValueError, AttributeError) as e:
             logger.error(f"Error processing person data associated with incoming reference"
                          f" {person_data} : {e}")
@@ -45,8 +45,17 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         elif event_type in ["updated", "unchanged"]:
             await self._update_source_record(source_record, person)
 
-    async def _create_source_record(self, source_record, person):
+    async def _create_source_record(self, source_record, person, first_attempt=True):
         try:
+            if await self.service.source_record_exists(source_record.uid):
+                logger.warning(f"Source record {source_record.uid} already exists in the database")
+                if first_attempt:
+                    logger.warning("The system will try to update it")
+                    await self._update_source_record(source_record, person, first_attempt=False)
+                    return
+                logger.error(f"Aborting update attempt for {source_record.uid}"
+                             f" after failed create attempt", exc_info=True)
+                return
             await self.service.create_source_record(source_record=source_record,
                                                     harvested_for=person)
         except ReferenceOwnerNotFoundError as e:
@@ -55,20 +64,27 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
                 f"{source_record} : {e}")
             raise e
         except ConflictError as e:
-            logger.error(
+            logger.warning(
                 f"Identifier conflict while trying to create source record {source_record} : {e}")
-            logger.info(f"{source_record.uid} already exists in the database, the system will try "
-                        f"to update it")
-            await self._update_source_record(source_record, person)
+            logger.error(f"{source_record.uid} already exists in the database", exc_info=True)
         except DatabaseError as e:
             logger.error(
                 f"Database error while trying to create source record {source_record} : {e}")
             raise e
 
-    async def _update_source_record(self, source_record, person):
+    async def _update_source_record(self, source_record, person, first_attempt=True):
         try:
-            await self.service.update_source_record(source_record=source_record,
-                                                    harvested_for=person)
+            if await self.service.source_record_exists(source_record.uid):
+                await self.service.update_source_record(source_record=source_record,
+                                                        harvested_for=person)
+            else:
+                logger.warning(f"Source record {source_record.uid} does not exist in the database")
+                if first_attempt:
+                    logger.warning("The system will try to create it")
+                    await self._create_source_record(source_record, person, first_attempt=False)
+                else:
+                    logger.error(f"Aborting create attempt for {source_record.uid}"
+                             f" after failed update attempt", exc_info=True)
         except ReferenceOwnerNotFoundError as e:
             logger.error(
                 f"Reference owner {person} not found while trying to update source record"

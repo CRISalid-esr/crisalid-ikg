@@ -1,6 +1,8 @@
 {
   "source_identifier": "source_record_id_doi_1",
-  "harvester": "Scanr",
+  "harvester": "ScanR",
+  "issued": "2019-01-01T00:00:00Z",
+  "raw_issued": "2019",
   "identifiers": [
     {
       "type": "doi",
@@ -11,6 +13,36 @@
     {
       "value": "Example Article with DOI",
       "language": "en"
+    }
+  ],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/concept-a/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Concept A",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.idref.fr/concept-b/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Concept B",
+          "language": "en"
+        }
+      ],
+      "alt_labels": []
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
     }
   ]
 }

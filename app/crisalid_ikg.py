@@ -18,9 +18,13 @@ from app.routes.api import router as api_router
 from app.routes.healthness import router as healthness_router
 from app.search.search_engine import SearchEngine
 from app.search.source_record_index import SourceRecordIndex
+from app.services.documents.document_service import DocumentService
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
-    person_unchanged, source_record_updated
+    person_unchanged, document_updated, source_record_updated, structure_created, \
+    structure_updated, document_sources_changed, document_created, \
+    document_unchanged, document_deleted, structure_unchanged, structure_deleted, \
+    person_deleted, person_updated, publications_to_be_updated
 
 
 class CrisalidIKG(FastAPI):
@@ -65,6 +69,7 @@ class CrisalidIKG(FastAPI):
             self.add_event_handler("shutdown", self.close_elasticsearch)
 
         self._register_source_record_events()
+        self._register_document_events()
         self._register_person_events()
 
     @logger.catch(reraise=True)
@@ -97,6 +102,15 @@ class CrisalidIKG(FastAPI):
         source_record_created.connect(self.equivalence_service.update_source_record)
         source_record_updated.connect(self.equivalence_service.update_source_record)
 
+    def _register_document_events(self):
+        self.document_service = DocumentService()
+        document_sources_changed.connect(
+            self.document_service.update_from_source_records)
+        document_updated.connect(self.amqp_interface.dispatch_document_updated)
+        document_created.connect(self.amqp_interface.dispatch_document_created)
+        document_unchanged.connect(self.amqp_interface.dispatch_document_unchanged)
+        document_deleted.connect(self.amqp_interface.dispatch_document_deleted)
+
     @logger.catch(reraise=True)
     async def close_elasticsearch(self) -> None:  # pragma: no cover
         """Close elasticsearch connexion at shutdown"""
@@ -105,18 +119,19 @@ class CrisalidIKG(FastAPI):
         logger.info("Elasticsearch connexion has been closed")
 
     @logger.catch(reraise=True)
-    async def open_rabbitmq_connexion(self) -> None:  # pragma: no cover
+    async def open_rabbitmq_connexion(self, listen: bool = True) -> None:  # pragma: no cover
         """Init AMQP connexion at boot time"""
         try:
             logger.info("Enabling RabbitMQ connexion")
             settings = get_app_settings()
-            await self.amqp_interface.connect()
-            asyncio.create_task(self.amqp_interface.listen(settings.amqp_people_topic),
-                                name="amqp_people_listener")
-            asyncio.create_task(self.amqp_interface.listen(settings.amqp_publications_topic),
-                                name="amqp_publications_listener")
-            asyncio.create_task(self.amqp_interface.listen(settings.amqp_structures_topic),
-                                name="amqp_structures_listener")
+            await self.amqp_interface.connect(listen)
+            if listen:
+                asyncio.create_task(self.amqp_interface.listen(settings.amqp_people_topic),
+                                    name="amqp_people_listener")
+                asyncio.create_task(self.amqp_interface.listen(settings.amqp_publications_topic),
+                                    name="amqp_publications_listener")
+                asyncio.create_task(self.amqp_interface.listen(settings.amqp_structures_topic),
+                                    name="amqp_structures_listener")
             logger.info("RabbitMQ connexion has been enabled")
         except AMQPConnectionError as error:
             logger.error(
@@ -124,18 +139,46 @@ class CrisalidIKG(FastAPI):
                 f"{error}"
             )
             await asyncio.sleep(1)
-            await self.open_rabbitmq_connexion()
+            await self.open_rabbitmq_connexion(listen)
         except Exception as error:
             logger.error("Cannot connect to RabbitMQ : Unknown error, will not retry")
             raise error
 
     def _register_person_events(self):
-        person_created.connect(self.amqp_interface.fetch_publications)
-        person_unchanged.connect(self.amqp_interface.fetch_publications)
-        person_identifiers_updated.connect(self.amqp_interface.fetch_publications)
+        publications_to_be_updated.connect(self.amqp_interface.fetch_publications)
+        person_created.connect(self.amqp_interface.dispatch_person_created)
+        person_updated.connect(self.amqp_interface.dispatch_person_updated)
+        person_unchanged.connect(self.amqp_interface.dispatch_person_unchanged)
+        person_deleted.connect(self.amqp_interface.dispatch_person_deleted)
+        person_identifiers_updated.connect(self.amqp_interface.dispatch_person_updated)
+        structure_created.connect(self.amqp_interface.dispatch_structure_created)
+        structure_updated.connect(self.amqp_interface.dispatch_structure_updated)
+        structure_unchanged.connect(self.amqp_interface.dispatch_structure_unchanged)
+        structure_deleted.connect(self.amqp_interface.dispatch_structure_deleted)
 
     async def close_rabbitmq_connexion(self) -> None:  # pragma: no cover
         """Handle last tasks before shutdown"""
         logger.info("Closing RabbitMQ connexion")
         await self.amqp_interface.stop_listening()
         logger.info("RabbitMQ connexion has been closed")
+
+    async def cli_startup(self):
+        """
+        Trigger all registered startup events programmatically.
+        """
+        settings = get_app_settings()
+        await self.setup_graph()
+        if settings.amqp_enabled:
+            await self.open_rabbitmq_connexion(listen=False)
+        if settings.es_enabled:
+            await self.setup_elasticsearch
+
+    async def cli_shutdown(self):
+        """
+        Trigger all registered shutdown events programmatically.
+        """
+        settings = get_app_settings()
+        if settings.es_enabled:
+            await self.close_elasticsearch()
+        if settings.amqp_enabled:
+            await self.close_rabbitmq_connexion()

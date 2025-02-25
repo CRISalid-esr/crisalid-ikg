@@ -1,5 +1,6 @@
 import pytest
 
+from app.models.document_type import DocumentTypeEnum
 from app.models.identifier_types import PublicationIdentifierType, JournalIdentifierType
 from app.models.source_records import SourceRecord
 
@@ -50,20 +51,24 @@ def test_create_thesis_source_record_from_scanr_data(
         subject.uri == "http://example.org/subject/galactic_physics"
     )
     assert len(source_record.document_type) == 1
-    assert any(
-        document_type for document_type in source_record.document_type
-        if
-        document_type.uri == "http://purl.org/ontology/bibo/Thesis"
-    )
+    assert DocumentTypeEnum.THESIS in source_record.document_type
     assert len(source_record.contributions) == 1
     assert any(
         contribution for contribution in source_record.contributions if
         contribution.rank == 1 and contribution.contributor.name == "Doe, Jane"
-        and contribution.contributor.affiliation == "University of Example"
+        and contribution.contributor.first_name == "Jane"
+        and contribution.contributor.last_name == "Doe"
+        and contribution.affiliations == []
     )
+    assert DocumentTypeEnum.THESIS in source_record.document_type
+    assert source_record.issued.isoformat() == "2023-06-15T00:00:00+00:00"
+    assert source_record.raw_issued == "2023"
+    assert str(source_record.url).startswith(
+        "https://scanr.enseignementsup-recherche.gouv.fr/publications/")
 
 
-def test_create_thesis_source_record_from_idref_data(
+
+async def test_create_thesis_source_record_from_idref_data(
         idref_thesis_source_record_json_data: dict
 ):
     """
@@ -101,16 +106,10 @@ def test_create_thesis_source_record_from_idref_data(
         subject.uri == "http://www.example.fr/subject/123456"
     )
     assert len(source_record.document_type) == 2
-    assert any(
-        document_type for document_type in source_record.document_type
-        if
-        document_type.uri == "http://purl.org/ontology/bibo/Book"
-    )
-    assert any(
-        document_type for document_type in source_record.document_type
-        if
-        document_type.uri == "http://purl.org/ontology/bibo/Thesis"
-    )
+
+    assert DocumentTypeEnum.THESIS in source_record.document_type
+
+    assert DocumentTypeEnum.THESIS in source_record.document_type
     assert len(source_record.contributions) == 3
     assert any(
         contribution for contribution in source_record.contributions if
@@ -124,6 +123,9 @@ def test_create_thesis_source_record_from_idref_data(
         contribution for contribution in source_record.contributions if
         contribution.contributor.name == "Brown, Alex (1975-....)"
     )
+    assert source_record.issued.isoformat() == "2006-06-14T00:00:00"
+    assert source_record.raw_issued == "2006-06-14"
+    assert str(source_record.url) == "http://www.example.fr/123456789/id"
 
 
 async def test_create_article_source_record_from_open_alex_data(
@@ -167,11 +169,7 @@ async def test_create_article_source_record_from_open_alex_data(
         subject.uri == "http://www.example.org/entity/123"
     )
     assert len(source_record.document_type) == 1
-    assert any(
-        document_type for document_type in source_record.document_type
-        if
-        document_type.uri == "http://purl.org/ontology/bibo/Article"
-    )
+    assert DocumentTypeEnum.ARTICLE in source_record.document_type
     assert len(source_record.contributions) == 1
     assert any(
         contribution for contribution in source_record.contributions if
@@ -190,6 +188,9 @@ async def test_create_article_source_record_from_open_alex_data(
     assert source_record.issue.journal.publisher == "Example Publisher"
     assert source_record.issue.journal.titles == ["Sample Journal Title"]
     assert source_record.issue.journal.uid == "openalex-https://openalex.org/S113942516"
+    assert source_record.issued.isoformat() == "2000-01-01T00:00:00"
+    assert source_record.raw_issued == "2000"
+    assert str(source_record.url) == "https://openalex.org/W123456789"
 
 
 async def test_article_identifiers_from_open_alex_data(

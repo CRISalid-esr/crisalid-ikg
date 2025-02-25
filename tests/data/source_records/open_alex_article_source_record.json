@@ -8,7 +8,7 @@
       "value": "https://doi.org/10.12345/bch.0000.00000"
     },
     {
-      "type": "openalex",
+      "type": "open_alex",
       "value": "https://openalex.org/W123456789"
     }
   ],
@@ -104,6 +104,7 @@
   "page": "1-10",
   "book": null,
   "issued": "2000-01-01T00:00:00",
+  "raw_issued": "2000",
   "created": "2020-01-01T00:00:00",
   "version": 2
 }

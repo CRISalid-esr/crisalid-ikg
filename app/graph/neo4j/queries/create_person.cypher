@@ -1,4 +1,5 @@
-CREATE (p:Person {uid: $person_uid})
+CREATE (p:Person {uid: $person_uid, display_name: $display_name, external: $external})
+SET p.display_name_variants = $display_name_variants
 WITH p
 FOREACH (name IN $names |
   CREATE (pn:PersonName)

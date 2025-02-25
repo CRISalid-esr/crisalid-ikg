@@ -279,3 +279,63 @@ async def fixture_person_a_with_different_name_new_hal_identifier_and_membership
     """
     return _person_from_json_data(
         person_a_with_different_name_new_hal_identifier_and_membership_json_data)
+
+
+@pytest_asyncio.fixture(name="persisted_person_d_pydantic_model")
+async def fixture_persisted_person_d_pydantic_model(person_d_pydantic_model) -> Person:
+    """
+    Create a basic persisted person pydantic model
+    :return: basic persisted person pydantic model
+    """
+    factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
+    people_dao: PersonDAO = factory.get_dao(Person)
+    await people_dao.create(person_d_pydantic_model)
+    return person_d_pydantic_model
+
+
+@pytest_asyncio.fixture(name="person_d_pydantic_model")
+async def fixture_person_d_pydantic_model(person_d_json_data) -> Person:
+    """
+    Create a basic person pydantic model
+    :return: basic person pydantic model
+    """
+    return _person_from_json_data(person_d_json_data)
+
+
+@pytest_asyncio.fixture(name="person_d_json_data")
+async def fixture_person_d_json_data(_base_path) -> dict:
+    """
+    Create a basic person json data
+    :return: basic person json data
+    """
+    return _person_json_data_from_file(_base_path, "person_d")
+
+
+@pytest_asyncio.fixture(name="persisted_person_e_pydantic_model")
+async def fixture_persisted_person_e_pydantic_model(person_e_pydantic_model) -> Person:
+    """
+    Create a basic persisted person pydantic model
+    :return: basic persisted person pydantic model
+    """
+    factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
+    people_dao: PersonDAO = factory.get_dao(Person)
+    await people_dao.create(person_e_pydantic_model)
+    return person_e_pydantic_model
+
+
+@pytest_asyncio.fixture(name="person_e_pydantic_model")
+async def fixture_person_e_pydantic_model(person_e_json_data) -> Person:
+    """
+    Create a basic person pydantic model
+    :return: basic person pydantic model
+    """
+    return _person_from_json_data(person_e_json_data)
+
+
+@pytest_asyncio.fixture(name="person_e_json_data")
+async def fixture_person_e_json_data(_base_path) -> dict:
+    """
+    Create a basic person json data
+    :return: basic person json data
+    """
+    return _person_json_data_from_file(_base_path, "person_e")

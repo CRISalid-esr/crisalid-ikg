@@ -9,12 +9,19 @@ from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.concepts import Concept
+from app.models.document_type import DocumentTypeEnum
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.literal import Literal
+from app.models.loc_contribution_role import LocContributionRole
 from app.models.people import Person
 from app.models.publication_identifiers import PublicationIdentifier
+from app.models.source_contributions import SourceContribution
 from app.models.source_issue import SourceIssue
 from app.models.source_journal import SourceJournal
+from app.models.source_organization_identifiers import SourceOrganizationIdentifier
+from app.models.source_organizations import SourceOrganization
+from app.models.source_people import SourcePerson
+from app.models.source_person_identifiers import SourcePersonIdentifier
 from app.models.source_records import SourceRecord
 
 
@@ -108,6 +115,23 @@ class SourceRecordDAO(Neo4jDAO):
                                                                           equivalence_type)
 
     @handle_database_errors
+    async def get_source_record_uids_by_document_uid(
+            self, document_uid: str) -> List[str]:
+        """
+        Get source records UIDs by document UID
+        :param document_uid:
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("get_source_record_uids_by_document_uid"),
+                    document_uid=document_uid
+                )
+                record = await result.single()
+                return record['source_record_uids']
+
+    @handle_database_errors
     async def delete_inferred_equivalence_relationships(self, source_record_uid: str,
                                                         target_source_record_uids: list[str]):
         """
@@ -147,8 +171,74 @@ class SourceRecordDAO(Neo4jDAO):
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
+                return await session.read_transaction(self._get_source_record_by_uid,
+                                                      source_record_uid)
+
+    @handle_database_errors
+    async def get_all_uids(self) -> List[str]:
+        """
+        Get all source record UIDs
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                return await session.read_transaction(self._get_all_uids_transaction)
+
+    @handle_database_errors
+    async def source_record_exists(self, source_record_uid: str) -> bool:
+        """
+        Check if a source record exists in the graph database
+
+        :param source_record_uid: source record uid
+        :return: True if the source record exists, False otherwise
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
-                    return await SourceRecordDAO._get_source_record_by_uid(tx, source_record_uid)
+                    return await SourceRecordDAO._source_record_exists(tx, source_record_uid)
+
+    @handle_database_errors
+    async def delete_contributions(self, source_record_uid: str):
+        """
+        Delete contributions of a source record
+        :param source_record_uid:
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                await session.run(
+                    load_query("delete_source_record_contributions"),
+                    source_record_uid=source_record_uid
+                )
+
+    @handle_database_errors
+    async def create_contribution(self, source_contribution: SourceContribution,
+                                  source_record_uid: str):
+        """
+        Create a contribution of a source record
+        :param source_contribution:
+        :param source_record_uid:
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    await SourceRecordDAO._create_contribution_transaction(tx, source_contribution,
+                                                                           source_record_uid)
+
+    @staticmethod
+    async def _create_contribution_transaction(tx: AsyncManagedTransaction,
+                                               source_contribution: SourceContribution,
+                                               source_record_uid: str):
+        query = load_query("create_source_contribution")
+        await tx.run(
+            query,
+            source_record_uid=source_record_uid,
+            contributor_uid=source_contribution.contributor.uid,
+            role=source_contribution.role.name if source_contribution.role else None,
+            rank=source_contribution.rank,
+            affiliation_uids=[affiliation.uid for affiliation in source_contribution.affiliations]
+        )
 
     @staticmethod
     async def _source_record_exists(tx: AsyncManagedTransaction, source_record_uid: str) -> bool:
@@ -162,14 +252,21 @@ class SourceRecordDAO(Neo4jDAO):
     @classmethod
     async def _get_source_record_by_uid(cls, tx: AsyncManagedTransaction,
                                         source_record_uid: str) -> SourceRecord | None:
+        query = load_query("get_source_record_by_uid")
         result = await tx.run(
-            load_query("get_source_record_by_uid"),
+            query,
             source_record_uid=source_record_uid
         )
         record = await result.single()
         if record:
             return cls._hydrate(record)
         return None
+
+    @classmethod
+    async def _get_all_uids_transaction(cls, tx: AsyncManagedTransaction) -> List[str]:
+        query = load_query("get_all_source_record_uids")
+        result = await tx.run(query)
+        return [record['uid'] async for record in result]
 
     @classmethod
     async def _create_source_record_transaction(cls, tx: AsyncManagedTransaction,
@@ -192,6 +289,7 @@ class SourceRecordDAO(Neo4jDAO):
         await tx.run(
             create_source_record_query,
             source_record_uid=source_record.uid,
+            source_record_url=str(source_record.url) if source_record.url else None,
             source_identifier=source_record.source_identifier,
             harvester=source_record.harvester,
             person_uid=harvested_for.uid,
@@ -201,7 +299,10 @@ class SourceRecordDAO(Neo4jDAO):
             titles=[title.model_dump() for title in source_record.titles],
             abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
-            subject_uids=[subject.uid for subject in source_record.subjects]
+            subject_uids=[subject.uid for subject in source_record.subjects],
+            document_types=[document_type.value for document_type in source_record.document_type],
+            issued=source_record.issued.isoformat() if source_record.issued else None,
+            raw_issued=source_record.raw_issued
         )
 
     @classmethod
@@ -226,6 +327,7 @@ class SourceRecordDAO(Neo4jDAO):
         await tx.run(
             update_source_record_query,
             source_record_uid=source_record.uid,
+            source_record_url=str(source_record.url) if source_record.url else None,
             source_identifier=source_record.source_identifier,
             harvester=source_record.harvester,
             person_uid=harvested_for.uid,
@@ -235,7 +337,10 @@ class SourceRecordDAO(Neo4jDAO):
             titles=[title.model_dump() for title in source_record.titles],
             abstracts=[abstract.model_dump() for abstract in source_record.abstracts],
             identifiers=[identifier.dict() for identifier in source_record.identifiers],
-            subject_uids=[subject.uid for subject in source_record.subjects]
+            subject_uids=[subject.uid for subject in source_record.subjects],
+            document_types=[document_type.value for document_type in source_record.document_type],
+            issued=source_record.issued.isoformat() if source_record.issued else None,
+            raw_issued=source_record.raw_issued
         )
         return source_record.uid, SourceRecordDAO.Status.UPDATED, None
 
@@ -283,7 +388,7 @@ class SourceRecordDAO(Neo4jDAO):
     async def _create_inferred_equivalence_relationships(cls, tx: AsyncManagedTransaction,
                                                          source_record_uids: list[str]):
         await tx.run(
-            load_query("create_inferred_equivalence_relationships"),
+            load_query("create_source_record_inferred_equivalence_relationships"),
             source_record_uids=source_record_uids
         )
 
@@ -291,10 +396,15 @@ class SourceRecordDAO(Neo4jDAO):
     def _hydrate(record) -> SourceRecord:
         source_record = SourceRecord(
             uid=record["s"]["uid"],
+            # No need to assign url as it is computed on the fly by a pydantic validator
             source_identifier=record["s"]["source_identifier"],
             harvester=record["s"]["harvester"],
             titles=[Literal(**title) for title in record["titles"]],
             harvested_for_uids=record['harvested_for_uids'],
+            document_type=[DocumentTypeEnum(document_type) for document_type in
+                           record["s"].get("document_types",[])],
+            issued=record["s"]["issued"].to_native() if record["s"].get("issued") else None,
+            raw_issued=record["s"].get("raw_issued")
         )
         for abstract in record["abstracts"]:
             source_record.abstracts.append(Literal(**abstract))
@@ -313,4 +423,46 @@ class SourceRecordDAO(Neo4jDAO):
             if record["issue"]:
                 issue = dict(record["issue"]) | {"journal": journal}
                 source_record.issue = SourceIssue(**issue)
+        contributions = record.get("contributions", [])
+        SourceRecordDAO._hydrate_contributions(contributions, source_record)
         return source_record
+
+    @staticmethod
+    def _hydrate_contributions(contributions: list[dict], source_record: SourceRecord) -> None:
+        for contribution in contributions:
+            try:
+                role = LocContributionRole.from_name(
+                    contribution["role"]) if "role" in contribution else None
+            except ValueError:
+                role = None
+            affiliations = []
+            for affiliation in contribution.get("affiliations", []):
+                source_organization = SourceOrganization(
+                    uid=affiliation["uid"],
+                    name=affiliation["name"],
+                    source=affiliation["source"],
+                    source_identifier=affiliation["source_identifier"],
+                    type=affiliation["type"]
+                )
+                for identifier in affiliation.get("identifiers", []):
+                    source_organization.identifiers.append(
+                        SourceOrganizationIdentifier(**identifier))
+                affiliations.append(source_organization)
+            contributor = contribution["contributor"]
+            source_contributor_identifiers = [SourcePersonIdentifier(**identifier) for identifier in
+                                              contributor["identifiers"]]
+            source_record.contributions.append(SourceContribution(
+                contributor=SourcePerson(
+                    uid=contributor["uid"],
+                    name=contributor["name"],
+                    first_name=contributor.get("first_name", None),
+                    last_name=contributor.get("last_name", None),
+                    name_variants=contributor.get("name_variants", []),
+                    source=contributor["source"],
+                    source_identifier=contributor.get("source_identifier", None),
+                    identifiers=source_contributor_identifiers
+                ),
+                role=role,
+                rank=contribution["rank"] if "rank" in contribution else None,
+                affiliations=affiliations
+            ))

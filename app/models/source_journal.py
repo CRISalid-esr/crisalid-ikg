@@ -1,5 +1,6 @@
 from typing import Optional, List, ClassVar
 
+from loguru import logger
 from pydantic import BaseModel, model_validator, Field
 
 from app.models.identifier_types import JournalIdentifierType
@@ -58,6 +59,7 @@ class SourceJournal(BaseModel):
         source = values.get("source")
         source_identifier = values.get("source_identifier")
         if not source or not source_identifier:
+            logger.warning(f"SourceJournal {values} missing source or source_identifier")
             return values
         values["uid"] = f"{source.lower()}{SourceJournal.IDENTIFIER_SEPARATOR}{source_identifier}"
         return values

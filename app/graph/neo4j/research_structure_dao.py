@@ -47,13 +47,15 @@ class ResearchStructureDAO(Neo4jDAO):
         return research_structure
 
     @handle_database_errors
-    async def create_or_update(self, research_structure: ResearchStructure) -> ResearchStructure:
+    async def create_or_update(self, research_structure: ResearchStructure) -> tuple[
+        str, Neo4jDAO.Status]:
         """
         Create or update a research_structure in the graph database
 
         :param research_structure: research_structure object
-        :return: None
+        :return: the uid of the research_structure and the status of the operation
         """
+        status: Neo4jDAO.Status = None
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 local_identifier_value = research_structure.get_identifier(
@@ -65,10 +67,12 @@ class ResearchStructureDAO(Neo4jDAO):
                 if existing_research_structure:
                     await session.write_transaction(self._update_research_structure_transaction,
                                                     research_structure)
+                    status = self.Status.CREATED
                 else:
                     await session.write_transaction(self._create_research_structure_transaction,
                                                     research_structure)
-        return research_structure
+                    status = self.Status.UPDATED
+        return research_structure.uid, status
 
     @handle_database_errors
     async def find_by_identifier(self, identifier_type: OrganizationIdentifierType,
@@ -84,32 +88,48 @@ class ResearchStructureDAO(Neo4jDAO):
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(
-                        load_query("find_structure_by_identifier"),
+                        load_query("find_research_structure_by_identifier"),
                         identifier_type=identifier_type.value,
                         identifier_value=identifier_value
                     )
                     record = await result.single()
                     if record:
-                        research_structure_data = record["s"]
-                        names_data = record["names"]
-                        identifiers_data = record["identifiers"]
-                        descriptions_data = record["descriptions"]
-
-                        names = [Literal(**name) for name in names_data]
-                        identifiers = [OrganizationIdentifier(**identifier)
-                                       for identifier in identifiers_data]
-
-                        research_structure = ResearchStructure(
-                            uid=research_structure_data["uid"],
-                            identifiers=identifiers,
-                            names=names,
-                            acronym=research_structure_data["acronym"],
-                            descriptions=[Literal(**description)
-                                          for description in descriptions_data]
-                        )
-
-                        return research_structure
+                        return await self._hydrate(record)
                     return None
+
+    # get by uid
+    @handle_database_errors
+    async def get(self, uid: str) -> ResearchStructure | None:
+        """
+        Get a research_structure by its uid
+
+        :param uid: research_structure uid
+        :return: research_structure object
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        load_query("find_research_structure_by_uid"),
+                        research_structure_uid=uid
+                    )
+                    record = await result.single()
+                    if record:
+                        return await self._hydrate(record)
+                    return None
+
+    @handle_database_errors
+    async def get_all_uids(self) -> list[str]:
+        """
+        Fetch all UIDs of research structures from the database.
+
+        :return: A list of all research structure UIDs.
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(load_query("get_all_research_structure_uids"))
+                    return [record["uid"] async for record in result]
 
     @classmethod
     async def _create_research_structure_transaction(cls, tx: AsyncSession,
@@ -119,10 +139,10 @@ class ResearchStructureDAO(Neo4jDAO):
         if not research_structure.uid:
             raise ValueError(
                 "The submitted research_structure data is missing a required identifier")
-        existing_research_structure = await cls._find_research_structure_by_id(
+        research_structure_exists = await cls._research_structure_exists(
             research_structure, tx)
 
-        if existing_research_structure is not None:
+        if research_structure_exists is not None:
             raise ConflictError(
                 f"Research structure with uid {research_structure.uid} already exists")
         create_research_structure_query = load_query("create_research_structure")
@@ -130,15 +150,16 @@ class ResearchStructureDAO(Neo4jDAO):
             create_research_structure_query,
             research_structure_uid=research_structure.uid,
             acronym=research_structure.acronym,
-            names=[name.dict() for name in research_structure.names],
+            names=[name.model_dump() for name in research_structure.names],
             identifiers=[identifier.dict() for identifier in research_structure.identifiers],
-            descriptions=[description.dict() for description in research_structure.descriptions],
+            descriptions=[description.model_dump() for description in
+                          research_structure.descriptions],
         )
         return research_structure
 
     @staticmethod
-    async def _find_research_structure_by_id(research_structure, tx):
-        find_research_structure_query = load_query("find_research_structure")
+    async def _research_structure_exists(research_structure, tx):
+        find_research_structure_query = load_query("research_structure_exists")
         result = await tx.run(find_research_structure_query,
                               research_structure_uid=research_structure.uid)
         record = await result.single()
@@ -154,12 +175,12 @@ class ResearchStructureDAO(Neo4jDAO):
         if not research_structure.uid:
             raise ValueError("The submitted research_structure data "
                              "is missing a required identifier")
-        existing_research_structure = await cls._find_research_structure_by_id(
+        research_structure_exists = await cls._research_structure_exists(
             research_structure,
             tx
         )
 
-        if existing_research_structure is None:
+        if research_structure_exists is None:
             raise NotFoundError("Research structure with uid "
                                 f"{research_structure.uid} does not exist")
 
@@ -190,3 +211,21 @@ class ResearchStructureDAO(Neo4jDAO):
             research_structure_uid=research_structure.uid,
             identifiers=[identifier.dict() for identifier in research_structure.identifiers]
         )
+
+    async def _hydrate(self, record) -> ResearchStructure:
+        research_structure_data = record["s"]
+        names_data = record["names"]
+        identifiers_data = record["identifiers"]
+        descriptions_data = record["descriptions"]
+        names = [Literal(**name) for name in names_data]
+        identifiers = [OrganizationIdentifier(**identifier)
+                       for identifier in identifiers_data]
+        research_structure = ResearchStructure(
+            uid=research_structure_data["uid"],
+            identifiers=identifiers,
+            names=names,
+            acronym=research_structure_data["acronym"],
+            descriptions=[Literal(**description)
+                          for description in descriptions_data]
+        )
+        return research_structure

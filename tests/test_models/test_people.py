@@ -213,9 +213,11 @@ def test_create_person_a_without_name(person_a_without_name_json_data):
     :param person_a_without_name_json_data: json data with name field empty
     :return:
     """
-    person = Person(**person_a_without_name_json_data)
-    assert len(person.names) == 0
-    assert len(person.identifiers) == 2
+    with pytest.raises(ValueError) as exc_info:
+        Person(**person_a_without_name_json_data)
+    assert ("Either a display_name or at least one person name "
+            "with a last name or first name must be provided.") in str(exc_info.value)
+
 
 
 def test_create_person_with_implicit_local_membership_identifier(

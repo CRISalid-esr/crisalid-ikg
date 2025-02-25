@@ -26,6 +26,62 @@ async def fixture_scanr_thesis_source_record_json_data(_base_path) -> dict:
     return _source_record_json_data_from_file(_base_path, "scanr_thesis_source_record")
 
 
+@pytest_asyncio.fixture(name="hal_chapter_a_v2_source_record_pydantic_model")
+async def fixture_hal_chapter_a_v2_source_record_pydantic_model(
+        hal_chapter_a_v2_source_record_json_data) -> SourceRecord:
+    """
+    Create the v2 of a chapter source record pydantic model from hal data
+    :return: basic source record pydantic model from hal data
+    """
+    return _source_record_from_json_data(hal_chapter_a_v2_source_record_json_data)
+
+
+@pytest_asyncio.fixture(name="hal_chapter_a_v2_source_record_json_data")
+async def fixture_hal_chapter_a_v2_source_record_json_data(_base_path) -> dict:
+    """
+    Create the v2 of a chapter source record dict from hal data
+    :return: basic source record dict from hal data
+    """
+    return _source_record_json_data_from_file(_base_path, "hal_chapter_a_v2_source_record")
+
+
+@pytest_asyncio.fixture(name="hal_persisted_chapter_a_source_record_pydantic_model")
+async def fixture_hal_persisted_chapter_a_source_record_pydantic_model(
+        hal_chapter_a_source_record_pydantic_model: SourceRecord,
+        persisted_person_a_pydantic_model: Person
+) -> SourceRecord:
+    """
+    Persist a source record pydantic model from hal data
+    :return: persisted source record pydantic model from hal data
+    """
+    service = SourceRecordService()
+    await service.create_source_record(
+        source_record=hal_chapter_a_source_record_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model
+    )
+    return await service.get_source_record(
+        hal_chapter_a_source_record_pydantic_model.uid)
+
+
+@pytest_asyncio.fixture(name="hal_chapter_a_source_record_pydantic_model")
+async def fixture_hal_chapter_a_source_record_pydantic_model(
+        hal_chapter_a_source_record_json_data) -> SourceRecord:
+    """
+    Create a chapter source record pydantic model from hal data
+    :return: basic source record pydantic model from hal data
+    """
+    return _source_record_from_json_data(hal_chapter_a_source_record_json_data)
+
+
+@pytest_asyncio.fixture(name="hal_chapter_a_source_record_json_data")
+async def fixture_hal_chapter_a_source_record_json_data(_base_path) -> dict:
+    """
+    Create a chapter source record dict from hal data
+    :return: basic source record dict from hal data
+    """
+    return _source_record_json_data_from_file(_base_path, "hal_chapter_a_source_record")
+
+
 @pytest_asyncio.fixture(name="scanr_persisted_article_a_source_record_pydantic_model")
 async def fixture_scanr_persisted_article_a_source_record_pydantic_model(
         scanr_article_a_source_record_pydantic_model: SourceRecord,
@@ -117,6 +173,46 @@ async def fixture_scanr_article_a_v2_source_record_json_data(_base_path) -> dict
     :return: basic source record dict from ScanR data
     """
     return _source_record_json_data_from_file(_base_path, "scanr_article_a_v2_source_record")
+
+
+@pytest_asyncio.fixture(name="article_exoplanet_from_oa_source_record_pydantic_model")
+async def fixture_article_exoplanet_from_oa_source_record_pydantic_model(
+        article_exoplanet_from_oa_source_record_json_data) -> SourceRecord:
+    """
+    Create an article source record pydantic model from OpenAire data
+    :return: basic source record pydantic model from OpenAire data
+    """
+    return _source_record_from_json_data(article_exoplanet_from_oa_source_record_json_data)
+
+
+@pytest_asyncio.fixture(name="article_exoplanet_from_oa_source_record_json_data")
+async def fixture_article_exoplanet_from_oa_source_record_json_data(_base_path) -> dict:
+    """
+    Create an article source record dict from OpenAire data
+    :return: basic source record dict from OpenAire data
+    """
+    return _source_record_json_data_from_file(_base_path,
+                                              "contributors/article_exoplanet_from_oa")
+
+
+@pytest_asyncio.fixture(name="article_exoplanet_from_scanr_source_record_pydantic_model")
+async def fixture_article_exoplanet_from_scanr_source_record_pydantic_model(
+        article_exoplanet_from_scanr_source_record_json_data) -> SourceRecord:
+    """
+    Create an article source record pydantic model from ScanR data
+    :return: basic source record pydantic model from ScanR data
+    """
+    return _source_record_from_json_data(article_exoplanet_from_scanr_source_record_json_data)
+
+
+@pytest_asyncio.fixture(name="article_exoplanet_from_scanr_source_record_json_data")
+async def fixture_article_exoplanet_from_scanr_source_record_json_data(_base_path) -> dict:
+    """
+    Create an article source record dict from ScanR data
+    :return: basic source record dict from ScanR data
+    """
+    return _source_record_json_data_from_file(_base_path,
+                                              "contributors/article_exoplanet_from_scanr")
 
 
 @pytest_asyncio.fixture(
@@ -235,6 +331,7 @@ async def fixture_scanr_article_c_v2_source_record_json_data(_base_path) -> dict
     :return: basic source record dict from ScanR data
     """
     return _source_record_json_data_from_file(_base_path, "scanr_article_c_v2_source_record")
+
 
 @pytest_asyncio.fixture(name="idref_thesis_source_record_pydantic_model")
 async def fixture_idref_thesis_source_record_pydantic_model(
@@ -419,6 +516,22 @@ async def fixture_hal_persisted_article_a_source_record_pydantic_model(
     service = SourceRecordService()
     await service.create_source_record(source_record=hal_article_a_source_record_pydantic_model,
                                        harvested_for=persisted_person_a_pydantic_model)
+    return await service.get_source_record(
+        hal_article_a_source_record_pydantic_model.uid)
+
+@pytest_asyncio.fixture(name="hal_article_a_source_record_persisted_model")
+async def fixture_hal_article_a_source_record_persisted_model(
+        hal_article_a_source_record_pydantic_model: SourceRecord,
+        persisted_person_d_pydantic_model: Person) -> SourceRecord:
+    """
+    Persist a source record pydantic model from hal data
+    :return: persisted source record pydantic model from hal data
+    """
+    service = SourceRecordService()
+    await service.create_source_record(
+        source_record=hal_article_a_source_record_pydantic_model,
+        harvested_for=persisted_person_d_pydantic_model
+    )
     return await service.get_source_record(
         hal_article_a_source_record_pydantic_model.uid)
 

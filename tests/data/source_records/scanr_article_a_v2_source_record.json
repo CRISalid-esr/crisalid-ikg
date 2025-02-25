@@ -107,9 +107,21 @@
       "rank": 0,
       "contributor": {
         "source": "scanr",
-        "source_identifier": null,
-        "name": "J. L. West",
-        "name_variants": []
+        "source_identifier": "idref999999999",
+        "name": "Johnson L. F.",
+        "first_name": null,
+        "last_name": null,
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "idhal",
+            "value": "0123456789"
+          },
+          {
+            "type": "idref",
+            "value": "999999999"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -118,9 +130,13 @@
       "rank": 3,
       "contributor": {
         "source": "scanr",
-        "source_identifier": null,
-        "name": "N. Mahajan",
-        "name_variants": []
+        "source_identifier": "MivilleDeschenes###N",
+        "name": "N. Miville Deschenes",
+        "first_name": "Nathalie",
+        "last_name": "Miville Deschenes",
+        "name_variants": [
+          "Nathalie Miville Deschenes"
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -130,8 +146,22 @@
       "contributor": {
         "source": "scanr",
         "source_identifier": "idref078115361",
-        "name": "M.-A. Miville-Desch\u00eanes",
-        "name_variants": []
+        "name": "Noel Mahajan Dechant",
+        "first_name": "Noel",
+        "last_name": "Mahajan Dechant",
+        "name_variants": [
+          "N. Mahajan Dechant"
+        ],
+        "identifiers": [
+          {
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0001-6528-2446"
+          },
+          {
+            "type": "idref",
+            "value": "078115361"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -140,8 +170,10 @@
       "rank": 1,
       "contributor": {
         "source": "scanr",
-        "source_identifier": "idref074532944",
-        "name": "B. M. Gaensler",
+        "source_identifier": "Fevrier###J",
+        "name": "Fevrier J.",
+        "first_name": "Jérôme",
+        "last_name": "Fevrier",
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -151,8 +183,10 @@
       "rank": 6,
       "contributor": {
         "source": "scanr",
-        "source_identifier": null,
-        "name": "P. G. Martin",
+        "source_identifier": "Raymond###Garcia",
+        "name": "Garcia, Raymond",
+        "first_name": "Raymond",
+        "last_name": "Garcia",
         "name_variants": []
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
@@ -162,20 +196,17 @@
       "rank": 5,
       "contributor": {
         "source": "scanr",
-        "source_identifier": null,
-        "name": "F. Boulanger",
-        "name_variants": []
-      },
-      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
-      "affiliations": []
-    },
-    {
-      "rank": 7,
-      "contributor": {
-        "source": "scanr",
-        "source_identifier": null,
-        "name": "I. A. Zelko",
-        "name_variants": []
+        "source_identifier": "Smith###A",
+        "name": "A. Smith",
+        "first_name": null,
+        "last_name": null,
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "isni",
+            "value": "0000-0002-1825-12345"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -184,9 +215,19 @@
       "rank": 4,
       "contributor": {
         "source": "scanr",
-        "source_identifier": null,
-        "name": "J. Dechant",
-        "name_variants": []
+        "source_identifier": "idref123456789",
+        "name": "I. A. Zelko",
+        "first_name": "Ivan",
+        "last_name": "Zelko",
+        "name_variants": [
+          "Ivan Zelko"
+        ],
+        "identifiers": [
+          {
+            "type": "idref",
+            "value": "123456789"
+          }
+        ]
       },
       "role": "https://id.loc.gov/vocabulary/relators/aut.html",
       "affiliations": []
@@ -217,7 +258,8 @@
   },
   "page": null,
   "book": null,
-  "issued": "2023-12-01 00:00:00",
+  "raw_issued": "2023",
+  "issued": "2023-01-01 00:00:00",
   "created": null,
   "version": 0
 }

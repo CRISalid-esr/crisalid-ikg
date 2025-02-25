@@ -3,7 +3,6 @@ from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 
-
 async def test_update_scanr_article_source_record(
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
@@ -25,7 +24,6 @@ async def test_update_scanr_article_source_record(
     assert fetched_source_record.source_identifier == "doi10.3847/1538-4357/ad0cc0"
     assert fetched_source_record.source_identifier == "doi10.3847/1538-4357/ad0cc0"
     assert fetched_source_record.harvester == "ScanR"
-    # test title, abstracts, without order
     assert any(
         title.value == "All We Are Is Dust in the WIM: "
                        "Constraints on Dust Properties "
@@ -52,6 +50,9 @@ async def test_update_scanr_article_source_record(
         and identifier.type == PublicationIdentifierType.DOI
         for identifier in
         fetched_source_record.identifiers)
+    assert fetched_source_record.issued.isoformat() == "2023-01-01T00:00:00+00:00"
+    assert (fetched_source_record.raw_issued ==
+            scanr_article_a_v2_source_record_pydantic_model.raw_issued)
 
 
 async def test_double_update_scanr_article_source_record(

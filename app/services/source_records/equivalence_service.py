@@ -5,9 +5,9 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
-from app.models.document import Document
 from app.models.source_records import SourceRecord
-from app.models.textual_document import TextualDocument
+from app.models.document import Document
+from app.signals import document_sources_changed
 
 MAX_EQUIVALENCES_RECURSION_LEVEL = 100
 
@@ -27,7 +27,7 @@ class EquivalenceService:
         :param source_record_id:
         :return:
         """
-        print(f"beginning to update source record with id {source_record_id}")
+        logger.debug(f"beginning to update source record with id {source_record_id}")
         self.source_records_to_update_uids.append(source_record_id)
         await self._update_inferred_equivalence_relationships()
 
@@ -68,20 +68,20 @@ class EquivalenceService:
         # should lose their inferred equivalence relationships
         obsolete_inferred_equiv_sr_uids = [x for x in existing_inferred_equiv_sr_uids if
                                            x not in sr_with_shared_identifier_uids]
-        for obsolete_source_record_uid in obsolete_inferred_equiv_sr_uids:
+        for obsolete_inferred_equiv_sr_uid in obsolete_inferred_equiv_sr_uids:
             await dao.delete_inferred_equivalence_relationships(
-                source_record_uid=obsolete_source_record_uid,
+                source_record_uid=obsolete_inferred_equiv_sr_uid,
                 target_source_record_uids=sr_with_shared_identifier_uids)
             # Add any detached source records to the list of records to update
-            self.source_records_to_update_uids.append(obsolete_source_record_uid)
+            self.source_records_to_update_uids.append(obsolete_inferred_equiv_sr_uid)
         await dao.create_inferred_equivalence_relationships(
             sr_with_shared_identifier_uids)
         # Handle attached publications
-        await self._update_attached_publications(obsolete_source_record_uid)
+        await self._update_documents(obsolete_source_record_uid)
         # Loop until the source_records_to_update list is empty
         await self._update_inferred_equivalence_relationships()
 
-    async def _update_attached_publications(self, origin_source_record_uid) -> None:
+    async def _update_documents(self, origin_source_record_uid) -> None:
         """
         Update the attached publications of a source record
         :param origin_source_record_uid:
@@ -100,68 +100,76 @@ class EquivalenceService:
         equivalent_source_record_uids = list(set(equivalent_source_record_uids))
         # for each equivalent source record, fetch the recorded publications and append it to the
         # publications list
-        recorded_textual_documents = [
+        recorded_documents = [
             document
             for source_record_uid in equivalent_source_record_uids
-            if (document := await document_dao.get_textual_document_by_source_record_uid(
+            if (document := await document_dao.get_document_by_source_record_uid(
                 source_record_uid)) is not None
         ]
-        # case 1 : recorded_textual_documents is empty
-        # create a new textual document
+        # Deduplicate recorded_documents by uid
+        recorded_documents = list({x.uid: x for x in recorded_documents}.values())
+        # case 1 : recorded_documents is empty
+        # create a new document
         # and attach all the equivalent source records to it
         # then go to case 2
-        if not recorded_textual_documents:
-            recorded_textual_documents.append(TextualDocument(
+        if not recorded_documents:
+            recorded_documents.append(Document(
                 source_record_uids=equivalent_source_record_uids))
-        # case 2 : recorded_textual_documents contains 1 element
-        # attach all the equivalent source records to the existing textual document
-        if len(recorded_textual_documents) == 1:
-            textual_document = recorded_textual_documents[0]
-            textual_document.source_record_uids = equivalent_source_record_uids
-            await document_dao.create_or_update_textual_document(
-                textual_document=textual_document
+        # case 2 : recorded_documents contains 1 element
+        # attach all the equivalent source records to the existing document
+        if len(recorded_documents) == 1:
+            document = recorded_documents[0]
+            document.source_record_uids = equivalent_source_record_uids
+            document.to_be_recomputed = True
+            await document_dao.create_or_update_document(
+                document=document
             )
-        # Case 3: recorded_textual_documents contains multiple elements
+        # Case 3: recorded_documents contains multiple elements
         #
-        # Elect one textual_document as the main [-> main node election algorithm]
+        # Elect one document as the main [-> main node election algorithm]
         # For each SourceRecord SRx in equivalent_source_records:
         #    Create (if not already present) an outgoing :RECORDED_BY relationship from
-        # main_textual_document to SRX.
+        # main_document to SRX.
         #    Delete outgoing :REPRESENTS relationships to other publications Px where Px ∈ P ≠ P1.
-        #    Flag main_textual_document as to_be_recomputed.
+        #    Flag main_document as to_be_recomputed.
         #    Flag other publications Px as to_be_deleted and to be merged into P1.
-        elif len(recorded_textual_documents) > 1:
-            main_textual_document = self._elect_main_textual_document(recorded_textual_documents)
-            for textual_document in recorded_textual_documents:
-                if textual_document.uid == main_textual_document.uid:
-                    textual_document.source_record_uids = equivalent_source_record_uids
-                    textual_document.to_be_recomputed = True
-                    textual_document.to_be_deleted = False
+        elif len(recorded_documents) > 1:
+            main_document = self._elect_main_document(recorded_documents)
+            for document in recorded_documents:
+                if document.uid == main_document.uid:
+                    document.source_record_uids = equivalent_source_record_uids
+                    document.to_be_recomputed = True
+                    document.to_be_deleted = False
                 else:
                     # remove all elements of equivalent_source_record_uids
-                    # from textual_document.source_record_uids
-                    remaining_source_record_uids = [x for x in textual_document.source_record_uids
+                    # from document.source_record_uids
+                    remaining_source_record_uids = [x for x in document.source_record_uids
                                                     if
                                                     x not in equivalent_source_record_uids]
-                    textual_document.source_record_uids = remaining_source_record_uids
+                    document.source_record_uids = remaining_source_record_uids
                     if len(remaining_source_record_uids) == 0:
-                        textual_document.to_be_merged_into_uid = main_textual_document.uid
+                        document.to_be_merged_into_uid = main_document.uid
                     else:
-                        textual_document.to_be_recomputed = True
-                await document_dao.create_or_update_textual_document(
-                    textual_document=textual_document
+                        document.to_be_recomputed = True
+                await document_dao.create_or_update_document(
+                    document=document
                 )
+        # Send signal to update the document
+        for document in recorded_documents:
+            await document_sources_changed.send_async(
+                self, document_uid=document.uid
+            )
 
     @staticmethod
-    def _elect_main_textual_document(textual_documents: list[TextualDocument]) -> TextualDocument:
+    def _elect_main_document(documents: list[Document]) -> Document:
         """
-        Elect the main textual document among a list of textual documents
-        :param textual_documents: list of textual documents
-        :return: the main textual document
+        Elect the main document among a list of documents
+        :param documents: list of documents
+        :return: the main document
         """
-        # temporary implementation, the textual document with the most source records is elected
+        # temporary implementation, the document with the most source records is elected
         # if exaequo, the first one is elected
-        return max(textual_documents, key=lambda x: len(x.source_record_uids))
+        return max(documents, key=lambda x: len(x.source_record_uids))
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

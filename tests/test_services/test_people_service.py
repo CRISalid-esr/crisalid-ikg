@@ -1,3 +1,5 @@
+import pytest
+
 from app.models.people import Person
 from app.models.research_structures import ResearchStructure
 from app.services.people.people_service import PeopleService
@@ -43,7 +45,7 @@ async def test_create_person(
 
 
 async def test_create_person_a_without_name(
-        person_a_without_name_pydantic_model: Person,
+        person_a_without_name_json_data: dict
 ) -> None:
     """
     Given a person without name pydantic model
@@ -53,11 +55,12 @@ async def test_create_person_a_without_name(
     :return:
     """
     service = PeopleService()
-    await service.create_person(person_a_without_name_pydantic_model)
-    fetched_person = await service.get_person(person_a_without_name_pydantic_model.uid)
-    assert fetched_person.uid == person_a_without_name_pydantic_model.uid
-    assert len(person_a_without_name_pydantic_model.names) == 0
-    assert len(fetched_person.names) == 0
+    with pytest.raises(ValueError) as exc_info:
+        person_a_without_name_pydantic_model = Person(**person_a_without_name_json_data)
+        await service.create_person(person_a_without_name_pydantic_model)
+    assert ("Either a display_name or at least one person name "
+            "with a last name or first name must be provided.") in str(
+        exc_info.value)
 
 
 async def test_update_person_membership(

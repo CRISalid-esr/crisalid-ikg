@@ -1,4 +1,12 @@
-CREATE (s:SourceRecord {uid: $source_record_uid, harvester: $harvester, source_identifier: $source_identifier})
+CREATE (s:SourceRecord {
+    uid: $source_record_uid,
+    url: $source_record_url,
+    harvester: $harvester,
+    source_identifier: $source_identifier,
+    document_types: $document_types,
+    issued: CASE WHEN $issued IS NOT NULL THEN datetime($issued) ELSE NULL END,
+    raw_issued: $raw_issued
+})
 WITH s
 FOREACH (title IN $titles |
   CREATE (t:Literal {value: title.value, language: title.language})

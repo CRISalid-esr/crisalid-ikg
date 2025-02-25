@@ -1,9 +1,9 @@
 import asyncio
 import json
+import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-import aio_pika
 from aio_pika import IncomingMessage
 from loguru import logger
 
@@ -19,11 +19,9 @@ class AMQPMessageProcessor(ABC):
 
     def __init__(
             self,
-            exchange: aio_pika.Exchange,
             tasks_queue: asyncio.Queue,
             settings: AppSettings,
     ):
-        self.exchange = exchange
         self.tasks_queue = tasks_queue
         self.settings = settings
 
@@ -47,22 +45,28 @@ class AMQPMessageProcessor(ABC):
                     self.tasks_queue.task_done()
                 except ValueError as error:
                     logger.error(
-                        f"Invalid message received by {worker_id} : {error}"
+                        f"Invalid message received by {worker_id} : {error}",
+                        exc_info=True
                     )
+                    traceback.print_exc()
                 except DatabaseError as database_error:
+                    logger.error(traceback.format_exc())
                     logger.error(
-                        f"Database error during {worker_id} "
-                        f"message processing : {database_error}"
+                        f"Database error for worker {worker_id} "
+                        f"message processing : {database_error}",
+                        exc_info=True
                     )
                     requeue = True
                 except KeyboardInterrupt as keyboard_interrupt:
                     logger.warning(f"Amqp connect worker {worker_id} has been cancelled")
                     await message.nack(requeue=True)
                     raise keyboard_interrupt
-                except Exception as exception: # pylint: disable=broad-exception-caught
+                except Exception as exception:  # pylint: disable=broad-exception-caught
                     logger.error(
-                        f"Unexpected exception during {worker_id} message processing : {exception}"
+                        f"Unexpected exception during {worker_id} message processing: {exception}",
+                        exc_info=True
                     )
+                    logger.error(traceback.format_exc())
                 finally:
                     if not message.processed:
                         await message.nack(requeue=requeue)

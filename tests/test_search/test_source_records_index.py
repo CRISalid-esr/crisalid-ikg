@@ -15,7 +15,6 @@ def fixture_mock_source_record_index_add_source_record():
                            new=mock.AsyncMock()) as mock_add_source_record:
         yield mock_add_source_record
 
-
 async def test_signal_source_record_created(
         test_app,  # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
