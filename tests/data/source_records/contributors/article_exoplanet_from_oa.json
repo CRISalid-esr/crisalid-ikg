@@ -1,5 +1,5 @@
 {
-  "source_identifier": "OpenAlex_doi10.1234/5678xyz",
+  "source_identifier": "https://openalex.org/OpenAlex_doi10.1234/5678xyz",
   "harvester": "OpenAlex",
   "harvester_version": "1.2.0",
   "identifiers": [

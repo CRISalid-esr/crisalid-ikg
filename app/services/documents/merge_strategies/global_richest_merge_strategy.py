@@ -38,7 +38,18 @@ class GlobalRichestMergeStrategy(MergeStrategy[T], Generic[T]):
         self.document.abstracts = self._first_non_empty_field("abstracts")
 
     def _add_subjects(self):
-        self.document.subjects = self._first_non_empty_field("subjects")
+        # set cant be used because Concept is not hashable
+        seen = set()
+        unique_subjects = []
+        for record in self.source_records:
+            for subject in record.subjects:
+                identifier = getattr(subject, "uid",
+                                     subject)
+                if identifier not in seen:
+                    seen.add(identifier)
+                    unique_subjects.append(subject)
+
+        self.document.subjects = unique_subjects
 
     def _add_publication_date(self):
         self.document.publication_date = next(
