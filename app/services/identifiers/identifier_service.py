@@ -55,6 +55,9 @@ class AgentIdentifierService:
         if entity_cls.__name__ == "ResearchStructure":
             return OrganizationIdentifier(type=OrganizationIdentifierType(identifier_type),
                                           value=identifier_value)
+        if entity_cls.__name__ == "Institution":
+            return OrganizationIdentifier(type=OrganizationIdentifierType(identifier_type),
+                                          value=identifier_value)
         raise ValueError(f"No identifier type defined for {entity_cls.__name__}.")
 
     @staticmethod

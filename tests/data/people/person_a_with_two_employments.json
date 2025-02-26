@@ -33,10 +33,17 @@
   "employments": [
     {
       "position": {
-        "title": "Technicien de recherche",
-        "code": "TECH"
+        "title": "Enseignant-chercheur associé (MC, PR à temps partiel ou temps plein)",
+        "code": "PAST"
       },
       "entity_uid": "uai-0751717J"
+    },
+    {
+      "position": {
+        "title": "Attaché temporaire d'enseignement et de recherche",
+        "code": "ATER"
+      },
+      "entity_uid": "uai-1234567A"
     }
   ]
 }

@@ -33,6 +33,12 @@ def test_create_valid_person(person_a_json_data):
         if identifier.type == PersonIdentifierType.LOCAL
         and identifier.value == "jdoe@univ-domain.edu"
     )
+    assert person.employments is not None
+    assert len(person.employments) == 1
+    # pylint: disable=unsubscriptable-object
+    assert person.employments[0].entity_uid == "uai-0751717J"
+    assert person.employments[0].position.code == "TECH"
+    assert person.employments[0].position.title == "Technicien de recherche ou assimilé"
 
 
 def test_create_invalid_person(person_a_with_invalid_identifier_type_json_data):
@@ -217,7 +223,6 @@ def test_create_person_a_without_name(person_a_without_name_json_data):
         Person(**person_a_without_name_json_data)
     assert ("Either a display_name or at least one person name "
             "with a last name or first name must be provided.") in str(exc_info.value)
-
 
 
 def test_create_person_with_implicit_local_membership_identifier(

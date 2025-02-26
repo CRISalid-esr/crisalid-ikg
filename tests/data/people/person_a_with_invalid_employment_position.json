@@ -33,8 +33,8 @@
   "employments": [
     {
       "position": {
-        "title": "Technicien de recherche",
-        "code": "TECH"
+        "title": "Invalid position !",
+        "code": "INVALID"
       },
       "entity_uid": "uai-0751717J"
     }

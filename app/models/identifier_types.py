@@ -46,6 +46,7 @@ class OrganizationIdentifierType(AgentIdentifierType):
     ROR = "ROR"
     RNSR = "RNSR"
     LOCAL = "local"
+    UAI = "uai"
 
 
 class PublicationIdentifierType(Enum):

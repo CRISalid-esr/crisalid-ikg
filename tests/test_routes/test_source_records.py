@@ -8,7 +8,7 @@ def test_create_source_records_success(
         test_client: TestClient,
         persisted_person_a_pydantic_model,  # pylint: disable=unused-argument
         idref_record_with_person_a_as_contributor_json_data,
-        person_a_json_data
+        raw_person_a_json_data
 ):
     """
     Given a valid source record json data and json data from an existing person_a_pydantic_model
@@ -17,12 +17,12 @@ def test_create_source_records_success(
 
     :param test_client:
     :param idref_record_with_person_a_as_contributor_json_data:
-    :param person_a_json_data:
+    :param raw_person_a_json_data:
     :return:
     """
     model = {
         "source_record": idref_record_with_person_a_as_contributor_json_data,
-        "person": person_a_json_data
+        "person": raw_person_a_json_data
     }
     response = test_client.post(API_SOURCE_RECORDS_PATH, json=model)
     assert response.status_code == status.HTTP_201_CREATED
@@ -34,7 +34,7 @@ def test_create_source_records_success(
 def test_create_source_records_for_unknown_person(
         test_client: TestClient,
         idref_record_with_person_a_as_contributor_json_data,
-        person_a_json_data
+        raw_person_a_json_data
 ):
     """
     Given a valid source record data, with an unknown person a json_data,
@@ -43,12 +43,12 @@ def test_create_source_records_for_unknown_person(
 
     :param test_client:
     :param idref_record_with_person_a_as_contributor_json_data:
-    :param person_a_json_data:
+    :param raw_person_a_json_data:
     :return:
     """
     model = {
         "source_record": idref_record_with_person_a_as_contributor_json_data,
-        "person": person_a_json_data
+        "person": raw_person_a_json_data
     }
     response = test_client.post(API_SOURCE_RECORDS_PATH,
                                 json=model)
@@ -60,7 +60,7 @@ def test_create_source_record_with_invalid_record_data(
         test_client: TestClient,
         persisted_person_a_pydantic_model,  # pylint: disable=unused-argument
         idref_record_with_person_a_as_contributor_json_data,
-        person_a_json_data
+        raw_person_a_json_data
 ):
     """
     Given json source record data with an empty mandatory field
@@ -69,13 +69,13 @@ def test_create_source_record_with_invalid_record_data(
 
     :param test_client:
     :param idref_record_with_person_a_as_contributor_json_data:
-    :param person_a_json_data:
+    :param raw_person_a_json_data:
     :return:
     """
     idref_record_with_person_a_as_contributor_json_data["titles"] = []
     model = {
         "source_record": idref_record_with_person_a_as_contributor_json_data,
-        "person": person_a_json_data
+        "person": raw_person_a_json_data
     }
 
     response = test_client.post(API_SOURCE_RECORDS_PATH,
@@ -86,7 +86,7 @@ def test_create_source_record_with_invalid_record_data(
 def test_create_source_record_with_missing_record_data(
         test_client: TestClient,
         persisted_person_a_pydantic_model,  # pylint: disable=unused-argument
-        person_a_json_data
+        raw_person_a_json_data
 ):
     """
     Given a post to the source record route, for a known person, but with no record data
@@ -94,12 +94,12 @@ def test_create_source_record_with_missing_record_data(
     Then a 422 error should be raised
 
     :param test_client:
-    :param person_a_json_data:
+    :param raw_person_a_json_data:
     :return:
     """
     model = {
         "source_record": {},
-        "person": person_a_json_data
+        "person": raw_person_a_json_data
     }
 
     response = test_client.post(API_SOURCE_RECORDS_PATH,
@@ -111,7 +111,7 @@ def test_create_source_record_twice(
         test_client: TestClient,
         persisted_person_a_pydantic_model,  # pylint: disable=unused-argument
         idref_record_with_person_a_as_contributor_json_data,
-        person_a_json_data):
+        raw_person_a_json_data):
     """
     Given a valid source record json data and json data from an existing person_a_pydantic_model
     When creating a source record twice through REST API
@@ -119,12 +119,12 @@ def test_create_source_record_twice(
 
     :param test_client:
     :param idref_record_with_person_a_as_contributor_json_data:
-    :param person_a_json_data:
+    :param raw_person_a_json_data:
     :return:
     """
     model = {
         "source_record": idref_record_with_person_a_as_contributor_json_data,
-        "person": person_a_json_data
+        "person": raw_person_a_json_data
     }
 
     response = test_client.post(API_SOURCE_RECORDS_PATH, json=model)

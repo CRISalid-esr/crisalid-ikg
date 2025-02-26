@@ -37,6 +37,16 @@ async def fixture_person_a_json_data(_base_path) -> dict:
     return _person_json_data_from_file(_base_path, "person_a")
 
 
+# keep raw json as person_a_json_data is modifier by "before" pydantic validators
+@pytest_asyncio.fixture(name="raw_person_a_json_data")
+async def fixture_raw_person_a_json_data(_base_path) -> dict:
+    """
+    Create a basic person json data
+    :return: basic person json data
+    """
+    return _person_json_data_from_file(_base_path, "person_a")
+
+
 @pytest_asyncio.fixture(name="person_a_with_different_membership_pydantic_model")
 async def fixture_person_a_with_different_membership_pydantic_model(
         person_a_with_different_membership_json_data,
@@ -188,6 +198,64 @@ async def fixture_person_d_with_two_memberships_pydantic_model(
     :return: person with name in multiple languages pydantic model
     """
     return _person_from_json_data(person_d_with_two_memberships_json_data)
+
+
+@pytest_asyncio.fixture(name="person_a_with_two_employments_pydantic_model")
+async def fixture_person_a_with_two_employments_pydantic_model(
+        person_a_with_two_employments_json_data) -> Person:
+    """
+    Create a person with two employments pydantic model
+    :return: person with two employments pydantic model
+    """
+    return _person_from_json_data(person_a_with_two_employments_json_data)
+
+
+@pytest_asyncio.fixture(name="person_a_with_two_employments_json_data")
+async def fixture_person_a_with_two_employments_json_data(_base_path) -> dict:
+    """
+    Create a person with two employments json data
+    :return: person with two employments json data
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_two_employments")
+
+
+@pytest_asyncio.fixture(name="person_a_with_invalid_employment_position_pydantic_model")
+async def fixture_person_a_with_invalid_employment_position_pydantic_model(
+        person_a_with_invalid_employment_position_json_data) -> Person:
+    """
+    Create a person with invalid employment position pydantic model
+    :return: person with invalid employment position pydantic model
+    """
+    return _person_from_json_data(person_a_with_invalid_employment_position_json_data)
+
+
+@pytest_asyncio.fixture(name="person_a_with_invalid_employment_position_json_data")
+async def fixture_person_a_with_invalid_employment_position_json_data(_base_path) -> dict:
+    """
+    Create a person with invalid employment position json data
+    :param _base_path:
+    :return:
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_invalid_employment_position")
+
+
+@pytest_asyncio.fixture(name="person_a_with_employment_without_position_pydantic_model")
+async def fixture_person_a_with_employment_without_position_pydantic_model(
+        person_a_with_employment_without_position_json_data) -> Person:
+    """
+    Create a person with employment without position pydantic model
+    :return: person with employment without position pydantic model
+    """
+    return _person_from_json_data(person_a_with_employment_without_position_json_data)
+
+
+@pytest_asyncio.fixture(name="person_a_with_employment_without_position_json_data")
+async def fixture_person_a_with_employment_without_position_json_data(_base_path) -> dict:
+    """
+    Create a person with employment without position json data
+    :return: person with employment without position json data
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_employment_without_position")
 
 
 @pytest_asyncio.fixture(name="person_a_with_invalid_orcid_json_data")
