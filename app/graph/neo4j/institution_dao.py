@@ -54,7 +54,7 @@ class InstitutionDAO(Neo4jDAO):
         :param institution: institution object
         :return: the uid of the institution and the status of the operation
         """
-        status: Neo4jDAO.Status = None
+        status: Neo4jDAO.Status | None = None
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
                 existing_uid = await session.read_transaction(self._institution_uid, institution)
@@ -69,7 +69,9 @@ class InstitutionDAO(Neo4jDAO):
         return institution.uid, status
 
     @handle_database_errors
-    async def find_by_identifiers(self, identifiers: list[OrganizationIdentifier]) -> Institution:
+    async def find_by_identifiers(
+            self, identifiers: list[OrganizationIdentifier]
+    ) -> Institution | None:
         """
         Find an institution by any of its identifiers
 

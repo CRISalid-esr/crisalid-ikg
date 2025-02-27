@@ -1,3 +1,5 @@
+from typing import cast
+
 from loguru import logger
 
 from app.config import get_app_settings
@@ -60,7 +62,7 @@ class PeopleService:
         """
         person.employments = await self._update_employers(person.employments)
         factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         person_uid, status, _ = await dao.create(person)
         if status is PersonDAO.Status.CREATED:
             await self.signal_publications_to_be_updated(person_uid)
@@ -75,7 +77,7 @@ class PeopleService:
         """
         person.employments = await self._update_employers(person.employments)
         factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         person_uid, status, update_status = await dao.update(person)
         if status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
             await self.signal_publications_to_be_updated(person_uid)
@@ -83,6 +85,23 @@ class PeopleService:
         else:
             await self.signal_person_unchanged(person_uid)
         return person
+
+    async def create_or_update_person(self, person: Person) -> None:
+        """
+        Create a person if not exists, update otherwise
+        :param person: Pydantic Person object
+        :return:
+        """
+        person.employments = await self._update_employers(person.employments)
+        factory = self._get_dao_factory()
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
+        person_uid, status, update_status = await dao.create_or_update(person)
+        if status is PersonDAO.Status.CREATED:
+            await person_created.send_async(payload=person_uid)
+        elif status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
+            await person_identifiers_updated.send_async(payload=person_uid)
+        else:
+            await self.signal_person_unchanged(person_uid)
 
     async def _update_employers(self, employments: list[Employment]) -> list[Employment]:
         institution_service = InstitutionService()
@@ -105,23 +124,6 @@ class PeopleService:
             valid_employments.append(employment)
         return valid_employments
 
-    async def create_or_update_person(self, person: Person) -> None:
-        """
-        Create a person if not exists, update otherwise
-        :param person: Pydantic Person object
-        :return:
-        """
-        person.employments = await self._update_employers(person.employments)
-        factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
-        person_uid, status, update_status = await dao.create_or_update(person)
-        if status is PersonDAO.Status.CREATED:
-            await person_created.send_async(payload=person_uid)
-        elif status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
-            await person_identifiers_updated.send_async(payload=person_uid)
-        else:
-            await self.signal_person_unchanged(person_uid)
-
     async def get_person(self, person_uid: str) -> Person:
         """
         Get a person from the graph database
@@ -129,7 +131,7 @@ class PeopleService:
         :return: Pydantic Person object
         """
         factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.get(person_uid)
 
     async def get_all_person_uids(self, external: bool | None = None) -> list[str]:
@@ -139,7 +141,7 @@ class PeopleService:
         :return: A list of all person UIDs.
         """
         factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.get_all_uids(external=external)
 
     @staticmethod
