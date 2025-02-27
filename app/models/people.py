@@ -53,8 +53,8 @@ class Person(Agent[PersonIdentifierType]):
     external: bool = False
 
     @field_validator("identifiers", mode="after")
-    @staticmethod
-    def _validate_identifiers(identifiers):
+    @classmethod
+    def _validate_identifiers(cls, identifiers):
         valid_identifiers = []
         for identifier in (identifiers or []):
             if not PersonIdentifierType.validate_identifier(identifier.type, identifier.value):
@@ -71,9 +71,7 @@ class Person(Agent[PersonIdentifierType]):
 
             valid_identifiers.append(identifier)
 
-        Person._prevent_duplicate_identifiers(valid_identifiers)
-
-        return valid_identifiers
+        return cls._deduplicate_identifiers(valid_identifiers)
 
     def get_identifier(self, identifier_type: PersonIdentifierType) -> PersonIdentifier:
         """

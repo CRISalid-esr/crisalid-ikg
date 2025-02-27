@@ -39,7 +39,7 @@ class Employment(BaseModel):
         return values
 
     @model_validator(mode='after')
-    def _set_research_structure(self) -> 'Employment':
+    def _set_institution(self) -> 'Employment':
         if self.institution is None:
             self.institution = Institution(
                 names=[],

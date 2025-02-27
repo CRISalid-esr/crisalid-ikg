@@ -29,10 +29,9 @@ class Organization(Agent[OrganizationIdentifierType]):
     identifiers: List[OrganizationIdentifier] = []
 
     @field_validator('identifiers', mode="after")
-    @staticmethod
-    def _validate_identifiers(identifiers):
-        Organization._prevent_duplicate_identifiers(identifiers)
-        return identifiers
+    @classmethod
+    def _validate_identifiers(cls, identifiers):
+        return cls._deduplicate_identifiers(identifiers)
 
     def get_name(self, language: str) -> Optional[Literal]:
         """

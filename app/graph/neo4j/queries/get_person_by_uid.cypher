@@ -3,7 +3,8 @@ OPTIONAL MATCH (person)-[:HAS_NAME]->(pn:PersonName)
 OPTIONAL MATCH (pn)-[:HAS_FIRST_NAME]->(fn:Literal)
 OPTIONAL MATCH (pn)-[:HAS_LAST_NAME]->(ln:Literal)
 OPTIONAL MATCH (person)-[mb:MEMBER_OF]->(rs:ResearchStructure)
-WITH person, pn, fn, ln, mb, rs
+OPTIONAL MATCH (person)-[emp:EMPLOYED_AT]->(inst:Institution)
+WITH person, pn, fn, ln, mb, rs, emp, inst
 OPTIONAL MATCH (person)-[:HAS_IDENTIFIER]->(id:AgentIdentifier)
 WITH
   person,
@@ -12,12 +13,16 @@ WITH
   ln,
   mb,
   rs,
+  emp,
+  inst,
   collect(DISTINCT id) AS identifiers
 WITH
   person,
   pn,
   mb,
   rs,
+  emp,
+  inst,
   identifiers,
   collect(DISTINCT CASE
     WHEN fn IS NOT NULL
@@ -32,6 +37,8 @@ WITH
   pn,
   mb,
   rs,
+  emp,
+  inst,
   identifiers,
   collect(DISTINCT  CASE
     WHEN pn IS NOT NULL
@@ -48,9 +55,16 @@ WITH
   person,
   identifiers,
   names,
-  memberships
+  memberships,
+  emp,
+  inst,
+  collect(DISTINCT CASE
+    WHEN emp IS NOT NULL AND inst IS NOT NULL
+  THEN {institution: inst, position: emp}
+    END) AS employments
 RETURN
   person,
   identifiers,
   names,
-  memberships
+  memberships,
+  employments
