@@ -40,6 +40,26 @@ class AgentIdentifierService:
                f"{selected_identifier.value}"
 
     @classmethod
+    def compute_possible_uids_for(cls, entity: BaseModel) -> List[str]:
+        """
+        Compute a list of possible UIDs for the given entity.
+        Order is defined by the identifier order in the settings.
+        :param entity:
+        :return:
+        """
+        identifier_order = cls._get_identifier_order(entity.__class__)
+        uids = []
+        for identifier_type in identifier_order:
+            selected_identifier = next(
+                (identifier for identifier in entity.identifiers
+                 if identifier.type == identifier_type), None)
+            if selected_identifier is not None:
+                uids.append(f"{selected_identifier.type.value}"
+                            f"{cls.IDENTIFIER_SEPARATOR}"
+                            f"{selected_identifier.value}")
+        return uids
+
+    @classmethod
     def compute_identifier_from_uid(cls, entity_cls, unique_id: str) -> AgentIdentifier:
         """
         Compute an identifier from a unique ID.
@@ -85,4 +105,6 @@ class AgentIdentifierService:
             return settings.person_identifier_order
         if entity_cls.__name__ == "ResearchStructure":
             return settings.research_structure_identifier_order
+        if entity_cls.__name__ == "Institution":
+            return settings.institution_identifier_order
         raise ValueError(f"No identifier order defined for {entity_cls.__name__}.")

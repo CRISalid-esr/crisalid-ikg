@@ -17,6 +17,7 @@ from app.models.memberships import Membership
 from app.models.people import Person
 from app.models.people_names import PersonName
 from app.services.identifiers.identifier_service import AgentIdentifierService
+from app.services.organizations.institution_service import InstitutionService
 
 
 class PersonDAO(Neo4jDAO):
@@ -240,6 +241,7 @@ class PersonDAO(Neo4jDAO):
                 f"Bad request error while creating person {person}") from client_error
         except Neo4jError as neo4j_error:
             raise DatabaseError(f"Database error while creating person {person}") from neo4j_error
+        await cls._create_employments(person, tx)
         await cls._create_memberships(person, tx)
 
     @classmethod
@@ -306,7 +308,29 @@ class PersonDAO(Neo4jDAO):
         )
 
     @classmethod
-    async def _create_memberships(cls, incoming_person, tx):
+    async def _create_employments(cls, incoming_person: Person, tx):
+        try:
+            for employment in incoming_person.employments:
+                find_institution_query = load_query("find_institution_by_identifiers")
+                result = await tx.run(
+                    find_institution_query,
+                    identifiers=[{"type": identifier.type.value, "value": identifier.value} for
+                                 identifier
+                                 in employment.institution.identifiers]
+                )
+                institution = await result.single()
+                if not institution:
+                    logger.warning(
+                        "Institution with identifiers "
+                        f"{employment.institution.identifiers} not found")
+                    await InstitutionService().create_institution(
+                        employment.institution)
+        except Exception as e:
+            logger.error(f"Error while creating employment for person {incoming_person}: {e}")
+            raise e
+
+    @classmethod
+    async def _create_memberships(cls, incoming_person: Person, tx):
         for membership in incoming_person.memberships:
             try:
                 research_structure_uid = AgentIdentifierService.compute_uid_for(

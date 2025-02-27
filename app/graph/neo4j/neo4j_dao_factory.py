@@ -9,6 +9,7 @@ from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.neo4j_setup import Neo4jSetup
 from app.models.concepts import Concept
 from app.models.document import Document
+from app.models.institution import Institution
 from app.models.people import Person
 from app.models.research_structures import ResearchStructure
 from app.models.source_journal import SourceJournal
@@ -28,6 +29,7 @@ class Neo4jDAOFactory(DAOFactory):
         self.dao_mapping = {
             Person: "app.graph.neo4j.person_dao.PersonDAO",
             ResearchStructure: "app.graph.neo4j.research_structure_dao.ResearchStructureDAO",
+            Institution: "app.graph.neo4j.institution_dao.InstitutionDAO",
             SourceRecord: "app.graph.neo4j.source_record_dao.SourceRecordDAO",
             Concept: "app.graph.neo4j.concept_dao.ConceptDAO",
             SourceJournal: "app.graph.neo4j.source_journal_dao.SourceJournalDAO",

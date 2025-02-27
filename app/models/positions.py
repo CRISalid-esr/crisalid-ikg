@@ -1,5 +1,5 @@
 # file: app/models/positions.py
-from typing import Dict, ClassVar
+from typing import Dict, ClassVar, Optional
 
 from pydantic import BaseModel
 
@@ -8,8 +8,8 @@ class Position(BaseModel):
     """
     Position model with predefined HCERES position codes and labels.
     """
-    code: str
-    title: str
+    code: Optional[str] = None
+    title: Optional[str] = None
 
     # Hardcoded list of positions
     POSITION_CODES: ClassVar[Dict[str, str]] = {
