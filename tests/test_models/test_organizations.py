@@ -1,5 +1,3 @@
-import pytest
-
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.organizations import Organization
 
@@ -45,7 +43,7 @@ def test_create_valid_organization(research_structure_a_json_data):
 
 
 def test_create_organization_with_duplicate_identifier(
-        research_structure_with_duplicate_identifiers_json_data
+        research_structure_with_duplicate_identifiers_json_data, caplog
 ):
     """
     Given json organization data with invalid identifier type
@@ -56,8 +54,27 @@ def test_create_organization_with_duplicate_identifier(
      json data with invalid identifier type
     :return:
     """
-    with pytest.raises(ValueError):
-        Organization(**research_structure_with_duplicate_identifiers_json_data)
+    org = Organization(**research_structure_with_duplicate_identifiers_json_data)
+    assert "Duplicate identifier type found" in caplog.text
+    assert len(org.identifiers) == 3
+    assert any(
+        identifier
+        for identifier in org.identifiers
+        if identifier.type == OrganizationIdentifierType.LOCAL
+        and identifier.value == "U153"
+    )
+    assert any(
+        identifier
+        for identifier in org.identifiers
+        if identifier.type == OrganizationIdentifierType.RNSR
+        and identifier.value == "200012133S"
+    )
+    assert any(
+        identifier
+        for identifier in org.identifiers
+        if identifier.type == OrganizationIdentifierType.ROR
+        and identifier.value == "153456"
+    )
 
 
 def test_create_organization_without_name(research_structure_b_without_name_json_data):

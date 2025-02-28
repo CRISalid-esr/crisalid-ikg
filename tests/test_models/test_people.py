@@ -180,7 +180,7 @@ def test_create_person_with_invalid_identifier(invalid_identifier_data_fixture, 
     assert "Invalid identifier with type" in caplog.text
 
 
-def test_create_person_a_with_two_orcid(person_a_with_two_orcid_json_data):
+def test_create_person_a_with_two_orcid(person_a_with_two_orcid_json_data, caplog):
     """
     Given json person data with two orcid
     When creating a person object
@@ -188,8 +188,21 @@ def test_create_person_a_with_two_orcid(person_a_with_two_orcid_json_data):
     :param person_a_with_two_orcid_json_data: json data with two orcid
     :return:
     """
-    with pytest.raises(ValueError):
-        Person(**person_a_with_two_orcid_json_data)
+    person = Person(**person_a_with_two_orcid_json_data)
+    assert "Duplicate identifier type found" in caplog.text
+    assert len(person.identifiers) == 2
+    assert any(
+        identifier
+        for identifier in person.identifiers
+        if identifier.type == PersonIdentifierType.ORCID
+        and identifier.value == "0000-0000-2040-6080"
+    )
+    assert any(
+        identifier
+        for identifier in person.identifiers
+        if identifier.type == PersonIdentifierType.LOCAL
+        and identifier.value == "jdoe@univ-domain.edu"
+    )
 
 
 def test_create_person_d_with_two_memberships(
