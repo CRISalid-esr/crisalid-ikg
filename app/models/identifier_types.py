@@ -55,10 +55,10 @@ class OrganizationIdentifierType(AgentIdentifierType):
     ROR = "ROR"
     RNSR = "RNSR"
     LOCAL = "local"
-    UAI = "uai"
+    UAI = "UAI"
     SIREN = "SIREN"
     SIRET = "SIRET"
-    WIKIDATA = "wikidata"
+    WIKIDATA = "Wikidata"
 
 
 class PublicationIdentifierType(Enum):

@@ -36,7 +36,7 @@ def test_create_valid_person(person_a_json_data):
     assert person.employments is not None
     assert len(person.employments) == 1
     # pylint: disable=unsubscriptable-object
-    assert person.employments[0].entity_uid == "uai-0751818J"
+    assert person.employments[0].entity_uid == "UAI-0751818J"
     assert person.employments[0].position.code == "TECH"
     assert person.employments[0].position.title == "Technicien de recherche ou assimilé"
 
