@@ -4,7 +4,7 @@ from app.models.people import Person
 from app.models.research_structures import ResearchStructure
 from app.services.people.people_service import PeopleService
 
-
+@pytest.mark.current
 async def test_create_person(
         person_a_pydantic_model: Person,
         persisted_research_structure_a_pydantic_model  # pylint: disable=unused-argument
@@ -41,6 +41,20 @@ async def test_create_person(
                 and identifier.value == fetched_identifier.value
                 for membership in person_a_pydantic_model.memberships
                 for identifier in membership.research_structure.identifiers
+            )
+    assert len(person_a_pydantic_model.employments) == 1
+    assert len(fetched_person.employments) == len(person_a_pydantic_model.employments)
+    assert len(person_a_pydantic_model.employments[0].institution.identifiers) == 1
+    assert len(fetched_person.employments[0].institution.identifiers) == len(
+        person_a_pydantic_model.employments[0].institution.identifiers
+    )
+    for fetched_employment in fetched_person.employments:
+        for fetched_identifier in fetched_employment.institution.identifiers:
+            assert any(
+                identifier.type == fetched_identifier.type
+                and identifier.value == fetched_identifier.value
+                for employment in person_a_pydantic_model.employments
+                for identifier in employment.institution.identifiers
             )
 
 

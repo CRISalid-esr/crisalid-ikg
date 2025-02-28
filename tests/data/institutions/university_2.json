@@ -1,0 +1,28 @@
+[
+  {
+    "id": 222034,
+    "name": "Université de Nouvelles Sciences et Technologies",
+    "address": "5 rue des Innovateurs",
+    "city": "Lyon",
+    "postal_code": "69007",
+    "latitude": 45.7485,
+    "longitude": 4.8467,
+    "country": "France",
+    "identifiers": {
+      "idref": [
+        "048762134"
+      ],
+      "siren": [
+        "209845672"
+      ],
+      "siret": [
+        "20984567200017"
+      ],
+      "wikidata": [
+        "Q1112345"
+      ]
+    },
+    "uo_lib_en": "New Science and Technology University",
+    "uo_lib_officiel": "Université de Nouvelles Sciences et Technologies"
+  }
+]
