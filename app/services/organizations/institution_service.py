@@ -106,15 +106,6 @@ class InstitutionService:
         """
         return await self._get_institution_dao().get(uid)
 
-    async def get_all_institution_uids(self) -> list[str]:
-        """
-        Retrieve all institution UIDs from the database.
-
-        :return: A list of all institution UIDs.
-        """
-        dao = self._get_institution_dao()
-        return await dao.get_all_uids()
-
     @staticmethod
     def _get_institution_dao() -> InstitutionDAO:
         settings = get_app_settings()
