@@ -9,7 +9,7 @@ def test_create_valid_person(person_a_json_data):
     Given a valid person model
     When asked for different field values
     Then the values should be returned correctly
-    :param person_a_pydantic_model:
+    :param person_a_json_data:
     :return:
     """
     person = Person(**person_a_json_data)
@@ -59,7 +59,7 @@ def test_create_person_c_with_two_last_names(person_c_with_two_last_names_json_d
     Given json person data with two last names
     When asked for different field values
     Then the values should be returned correctly
-    :param person_a_pydantic_model:
+    :param person_c_with_two_last_names_json_data:
     :return:
     """
     person = Person(**person_c_with_two_last_names_json_data)
