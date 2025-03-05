@@ -86,7 +86,7 @@ class ConceptDAO(Neo4jDAO):
         return concept.uri
 
     @staticmethod
-    def _hydrate(record: dict) -> Concept:
+    def _hydrate(record) -> Concept:
         concept_data = record["concept"]
         pref_labels_data = record["pref_labels"]
         alt_labels_data = record["alt_labels"]

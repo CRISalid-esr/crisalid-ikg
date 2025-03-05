@@ -448,7 +448,7 @@ class PersonDAO(Neo4jDAO):
         return record["uid"] if record else None
 
     @staticmethod
-    def _hydrate(record: dict) -> Person:
+    def _hydrate(record) -> Person:
         person_data = record["person"]
         names_data = record["names"]
         identifiers_data = record["identifiers"]
