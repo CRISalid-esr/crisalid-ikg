@@ -60,7 +60,7 @@ class PeopleService:
         :param person: Pydantic Person object
         :return:
         """
-        person.employments = await self._update_employers(person.employments)
+        person.employments = await self._update_employers_institutions(person.employments)
         factory = self._get_dao_factory()
         dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         person_uid, status, _ = await dao.create(person)
@@ -75,7 +75,7 @@ class PeopleService:
         :param person: Pydantic Person object
         :return:
         """
-        person.employments = await self._update_employers(person.employments)
+        person.employments = await self._update_employers_institutions(person.employments)
         factory = self._get_dao_factory()
         dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         person_uid, status, update_status = await dao.update(person)
@@ -92,7 +92,7 @@ class PeopleService:
         :param person: Pydantic Person object
         :return:
         """
-        person.employments = await self._update_employers(person.employments)
+        person.employments = await self._update_employers_institutions(person.employments)
         factory = self._get_dao_factory()
         dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         person_uid, status, update_status = await dao.create_or_update(person)
@@ -103,7 +103,8 @@ class PeopleService:
         else:
             await self.signal_person_unchanged(person_uid)
 
-    async def _update_employers(self, employments: list[Employment]) -> list[Employment]:
+    async def _update_employers_institutions(
+            self, employments: list[Employment]) -> list[Employment]:
         institution_service = InstitutionService()
         valid_employments = []
         for employment in employments:

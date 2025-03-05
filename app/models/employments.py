@@ -42,6 +42,7 @@ class Employment(BaseModel):
     def _set_institution(self) -> 'Employment':
         if self.institution is None:
             self.institution = Institution(
+                uid=self.entity_uid,
                 names=[],
                 identifiers=[AgentIdentifierService.compute_identifier_from_uid(
                     Institution, self.entity_uid)]

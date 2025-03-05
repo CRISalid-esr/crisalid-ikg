@@ -109,9 +109,7 @@ class InstitutionDAO(Neo4jDAO):
     @classmethod
     async def _create_institution_transaction(cls, tx: AsyncSession,
                                               institution: Institution):
-        institution_uid = await cls._institution_uid(
-            institution,
-            tx)
+        institution_uid = await cls._institution_uid(tx, institution)
 
         if institution_uid is not None:
             raise ConflictError(
@@ -198,7 +196,7 @@ class InstitutionDAO(Neo4jDAO):
                 return await session.read_transaction(self._institution_uid, institution)
 
     @staticmethod
-    async def _institution_uid(institution: Institution, tx: AsyncSession) -> str | None:
+    async def _institution_uid(tx: AsyncSession, institution: Institution) -> str | None:
         """
         Check if an institution exists in the database by computing its possible UIDs
         :param institution:
@@ -219,9 +217,7 @@ class InstitutionDAO(Neo4jDAO):
     @classmethod
     async def _update_institution_transaction(cls, tx: AsyncSession,
                                               institution: Institution):
-        institution_uid = await cls._institution_uid(
-            institution,
-            tx)
+        institution_uid = await cls._institution_uid(tx, institution)
         if institution_uid is None:
             raise NotFoundError(
                 f"Institution with identifiers {institution.identifiers} not found")
