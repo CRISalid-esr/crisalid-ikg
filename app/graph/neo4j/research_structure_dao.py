@@ -110,17 +110,6 @@ class ResearchStructureDAO(Neo4jDAO):
                 return await session.read_transaction(self._get_research_structure_by_uid,
                                                       research_structure_uid)
 
-    @classmethod
-    async def _get_research_structure_by_uid(cls, tx: AsyncSession, research_structure_uid: str):
-        result = await tx.run(
-            load_query("find_research_structure_by_uid"),
-            research_structure_uid=research_structure_uid
-        )
-        record = await result.single()
-        if record:
-            return await cls._hydrate(record)
-        return None
-
     @handle_database_errors
     async def get_all_uids(self) -> list[str]:
         """
@@ -133,6 +122,17 @@ class ResearchStructureDAO(Neo4jDAO):
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(load_query("get_all_research_structure_uids"))
                     return [record["uid"] async for record in result]
+
+    @classmethod
+    async def _get_research_structure_by_uid(cls, tx: AsyncSession, research_structure_uid: str):
+        result = await tx.run(
+            load_query("find_research_structure_by_uid"),
+            research_structure_uid=research_structure_uid
+        )
+        record = await result.single()
+        if record:
+            return await cls._hydrate(record)
+        return None
 
     @classmethod
     async def _create_research_structure_transaction(cls, tx: AsyncSession,
