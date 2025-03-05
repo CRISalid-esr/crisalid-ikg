@@ -93,26 +93,18 @@ class InstitutionDAO(Neo4jDAO):
                         return await self._hydrate(institution)
                     return None
 
-    # get by uid
     @handle_database_errors
-    async def get(self, uid: str) -> Institution | None:
+    async def get(self, institution_uid: str) -> Institution | None:
         """
         Get an institution by its uid
 
-        :param uid: institution uid
+        :param institution_uid: institution uid
         :return: institution object
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                async with await session.begin_transaction() as tx:
-                    result = await tx.run(
-                        load_query("find_institution_by_uid"),
-                        institution_uid=uid
-                    )
-                    record = await result.single()
-                    if record:
-                        return await self._hydrate(record)
-                    return None
+                return await session.read_transaction(self._get_institution_by_uid,
+                                                      institution_uid)
 
     @classmethod
     async def _create_institution_transaction(cls, tx: AsyncSession,
@@ -184,6 +176,17 @@ class InstitutionDAO(Neo4jDAO):
 
         return institution
 
+    @classmethod
+    async def _get_institution_by_uid(cls, tx: AsyncSession, uid: str) -> Institution | None:
+        result = await tx.run(
+            load_query("find_institution_by_uid"),
+            institution_uid=uid
+        )
+        record = await result.single()
+        if record:
+            return await cls._hydrate(record)
+        return None
+
     async def institution_uid(self, institution: Institution) -> str | None:
         """
         Check if an institution exists in the database by computing its possible UIDs
@@ -192,8 +195,7 @@ class InstitutionDAO(Neo4jDAO):
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                async with await session.begin_transaction() as tx:
-                    return await self._institution_uid(institution, tx)
+                return await session.read_transaction(self._institution_uid, institution)
 
     @staticmethod
     async def _institution_uid(institution: Institution, tx: AsyncSession) -> str | None:
@@ -225,7 +227,8 @@ class InstitutionDAO(Neo4jDAO):
                 f"Institution with identifiers {institution.identifiers} not found")
         raise NotImplementedError("Update institution transaction not implemented")
 
-    async def _hydrate(self, record) -> Institution:
+    @classmethod
+    async def _hydrate(cls, record) -> Institution:
         institution_data = record["s"]
         names_data = record["names"]
         identifiers_data = record["identifiers"]

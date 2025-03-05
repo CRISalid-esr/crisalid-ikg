@@ -44,8 +44,7 @@ class PersonDAO(Neo4jDAO):
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                async with await session.begin_transaction() as tx:
-                    return await PersonDAO._get_person_by_uid(tx, person_uid)
+                return await session.read_transaction(self._get_person_by_uid, person_uid)
 
     @handle_database_errors
     async def create(self, person: Person) -> Tuple[str, Neo4jDAO.Status, UpdateStatus | None]:
@@ -417,7 +416,7 @@ class PersonDAO(Neo4jDAO):
                 sorted(
                     incoming_employments,
                     key=lambda x: (
-                    str(x.institution.uid), x.position.code if x.position else None)))
+                        str(x.institution.uid), x.position.code if x.position else None)))
 
     @handle_database_errors
     async def find_by_identifiers(self, identifiers: list[dict]) -> str | None:
