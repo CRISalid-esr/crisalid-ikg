@@ -9,7 +9,7 @@ def test_create_valid_person(person_a_json_data):
     Given a valid person model
     When asked for different field values
     Then the values should be returned correctly
-    :param person_a_pydantic_model:
+    :param person_a_json_data:
     :return:
     """
     person = Person(**person_a_json_data)
@@ -33,6 +33,12 @@ def test_create_valid_person(person_a_json_data):
         if identifier.type == PersonIdentifierType.LOCAL
         and identifier.value == "jdoe@univ-domain.edu"
     )
+    assert person.employments is not None
+    assert len(person.employments) == 1
+    # pylint: disable=unsubscriptable-object
+    assert person.employments[0].entity_uid == "UAI-0751818J"
+    assert person.employments[0].position.code == "TECH"
+    assert person.employments[0].position.title == "Technicien de recherche ou assimilé"
 
 
 def test_create_invalid_person(person_a_with_invalid_identifier_type_json_data):
@@ -53,7 +59,7 @@ def test_create_person_c_with_two_last_names(person_c_with_two_last_names_json_d
     Given json person data with two last names
     When asked for different field values
     Then the values should be returned correctly
-    :param person_a_pydantic_model:
+    :param person_c_with_two_last_names_json_data:
     :return:
     """
     person = Person(**person_c_with_two_last_names_json_data)
@@ -174,7 +180,7 @@ def test_create_person_with_invalid_identifier(invalid_identifier_data_fixture, 
     assert "Invalid identifier with type" in caplog.text
 
 
-def test_create_person_a_with_two_orcid(person_a_with_two_orcid_json_data):
+def test_create_person_a_with_two_orcid(person_a_with_two_orcid_json_data, caplog):
     """
     Given json person data with two orcid
     When creating a person object
@@ -182,8 +188,21 @@ def test_create_person_a_with_two_orcid(person_a_with_two_orcid_json_data):
     :param person_a_with_two_orcid_json_data: json data with two orcid
     :return:
     """
-    with pytest.raises(ValueError):
-        Person(**person_a_with_two_orcid_json_data)
+    person = Person(**person_a_with_two_orcid_json_data)
+    assert "Duplicate identifier type found" in caplog.text
+    assert len(person.identifiers) == 2
+    assert any(
+        identifier
+        for identifier in person.identifiers
+        if identifier.type == PersonIdentifierType.ORCID
+        and identifier.value == "0000-0000-2040-6080"
+    )
+    assert any(
+        identifier
+        for identifier in person.identifiers
+        if identifier.type == PersonIdentifierType.LOCAL
+        and identifier.value == "jdoe@univ-domain.edu"
+    )
 
 
 def test_create_person_d_with_two_memberships(
@@ -217,7 +236,6 @@ def test_create_person_a_without_name(person_a_without_name_json_data):
         Person(**person_a_without_name_json_data)
     assert ("Either a display_name or at least one person name "
             "with a last name or first name must be provided.") in str(exc_info.value)
-
 
 
 def test_create_person_with_implicit_local_membership_identifier(

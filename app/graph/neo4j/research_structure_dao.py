@@ -97,26 +97,18 @@ class ResearchStructureDAO(Neo4jDAO):
                         return await self._hydrate(record)
                     return None
 
-    # get by uid
     @handle_database_errors
-    async def get(self, uid: str) -> ResearchStructure | None:
+    async def get(self, research_structure_uid: str) -> ResearchStructure | None:
         """
         Get a research_structure by its uid
 
-        :param uid: research_structure uid
+        :param research_structure_uid: research_structure uid
         :return: research_structure object
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                async with await session.begin_transaction() as tx:
-                    result = await tx.run(
-                        load_query("find_research_structure_by_uid"),
-                        research_structure_uid=uid
-                    )
-                    record = await result.single()
-                    if record:
-                        return await self._hydrate(record)
-                    return None
+                return await session.read_transaction(self._get_research_structure_by_uid,
+                                                      research_structure_uid)
 
     @handle_database_errors
     async def get_all_uids(self) -> list[str]:
@@ -130,6 +122,17 @@ class ResearchStructureDAO(Neo4jDAO):
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(load_query("get_all_research_structure_uids"))
                     return [record["uid"] async for record in result]
+
+    @classmethod
+    async def _get_research_structure_by_uid(cls, tx: AsyncSession, research_structure_uid: str):
+        result = await tx.run(
+            load_query("find_research_structure_by_uid"),
+            research_structure_uid=research_structure_uid
+        )
+        record = await result.single()
+        if record:
+            return await cls._hydrate(record)
+        return None
 
     @classmethod
     async def _create_research_structure_transaction(cls, tx: AsyncSession,
@@ -212,7 +215,8 @@ class ResearchStructureDAO(Neo4jDAO):
             identifiers=[identifier.dict() for identifier in research_structure.identifiers]
         )
 
-    async def _hydrate(self, record) -> ResearchStructure:
+    @staticmethod
+    async def _hydrate(record) -> ResearchStructure:
         research_structure_data = record["s"]
         names_data = record["names"]
         identifiers_data = record["identifiers"]

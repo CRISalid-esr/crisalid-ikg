@@ -31,6 +31,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         # Idem https://github.com/CRISalid-esr/crisalid-ikg/issues/161
         await cls._create_concept_uid_constraint(tx)
         await cls._create_document_uid_constraint(tx)
+        await cls._create_institution_uid_constraint(tx)
 
         if settings.neo4j_edition == "community":
             return
@@ -183,6 +184,18 @@ class Neo4jSetup(Setup[AsyncDriver]):
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating document uid unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_institution_uid_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT institution_uid_unique IF NOT EXISTS
+        FOR (i:Institution) REQUIRE i.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating institution uid unique constraint: {e}")
             raise e
 
     @staticmethod

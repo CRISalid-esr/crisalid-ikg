@@ -12,10 +12,12 @@ from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.agent_identifiers import PersonIdentifier
+from app.models.employments import Employment
 from app.models.identifier_types import PersonIdentifierType
 from app.models.memberships import Membership
 from app.models.people import Person
 from app.models.people_names import PersonName
+from app.models.positions import Position
 from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
@@ -42,8 +44,7 @@ class PersonDAO(Neo4jDAO):
         """
         async for driver in Neo4jConnexion().get_driver():
             async with driver.session() as session:
-                async with await session.begin_transaction() as tx:
-                    return await PersonDAO._get_person_by_uid(tx, person_uid)
+                return await session.read_transaction(self._get_person_by_uid, person_uid)
 
     @handle_database_errors
     async def create(self, person: Person) -> Tuple[str, Neo4jDAO.Status, UpdateStatus | None]:
@@ -240,6 +241,7 @@ class PersonDAO(Neo4jDAO):
                 f"Bad request error while creating person {person}") from client_error
         except Neo4jError as neo4j_error:
             raise DatabaseError(f"Database error while creating person {person}") from neo4j_error
+        await cls._create_employments(person, tx)
         await cls._create_memberships(person, tx)
 
     @classmethod
@@ -299,6 +301,19 @@ class PersonDAO(Neo4jDAO):
                 person_uid=person.uid
             )
             await cls._create_memberships(person, tx)
+        # update employments
+        existing_employments = existing_person.employments
+        incoming_employments = person.employments
+        employments_changed = not cls._employments_are_identical(
+            existing_employments,
+            incoming_employments
+        )
+        if employments_changed:
+            await tx.run(
+                load_query("delete_person_employments"),
+                person_uid=person.uid
+            )
+            await cls._create_employments(person, tx)
         return PersonDAO.UpdateStatus(
             identifiers_changed=identifiers_changed,
             names_changed=None,
@@ -306,7 +321,34 @@ class PersonDAO(Neo4jDAO):
         )
 
     @classmethod
-    async def _create_memberships(cls, incoming_person, tx):
+    async def _create_employments(cls, incoming_person: Person, tx):
+        try:
+            for employment in incoming_person.employments:
+                # employments have been filtered at service level
+                # to only include existing institutions
+                create_employment_query = load_query("create_employment")
+                try:
+                    await tx.run(create_employment_query,
+                                 person_uid=incoming_person.uid,
+                                 institution_uid=employment.institution.uid,
+                                 position=employment.position.code if employment.position else None)
+                except ConstraintError as constraint_error:
+                    raise ConflictError(
+                        f"Schema constraint violation while creating employment "
+                        f"for person {incoming_person} and institution {employment.institution_uid}"
+                    ) from constraint_error
+                except ClientError as client_error:
+                    raise ValueError(
+                        f"Bad request error while creating employment "
+                        f"for person {incoming_person} and institution {employment.institution_uid}"
+                    ) from client_error
+
+        except Exception as e:
+            logger.error(f"Error while creating employment for person {incoming_person}: {e}")
+            raise e
+
+    @classmethod
+    async def _create_memberships(cls, incoming_person: Person, tx):
         for membership in incoming_person.memberships:
             try:
                 research_structure_uid = AgentIdentifierService.compute_uid_for(
@@ -358,6 +400,24 @@ class PersonDAO(Neo4jDAO):
         return sorted(existing_memberships, key=lambda x: str(x.entity_uid)) == sorted(
             incoming_memberships, key=lambda x: str(x.entity_uid))
 
+    @staticmethod
+    def _employments_are_identical(existing_employments: list[Employment],
+                                   incoming_employments: list[Employment]) -> bool:
+        """
+        Compare two lists of employments to check identity
+        :param existing_employments:
+        :param incoming_employments:
+        :return:
+        """
+        return (sorted(
+            existing_employments,
+            key=lambda x: (
+                str(x.institution.uid), x.position.code if x.position else None)) ==
+                sorted(
+                    incoming_employments,
+                    key=lambda x: (
+                        str(x.institution.uid), x.position.code if x.position else None)))
+
     @handle_database_errors
     async def find_by_identifiers(self, identifiers: list[dict]) -> str | None:
         """
@@ -388,11 +448,12 @@ class PersonDAO(Neo4jDAO):
         return record["uid"] if record else None
 
     @staticmethod
-    def _hydrate(record: dict) -> Person:
+    def _hydrate(record) -> Person:
         person_data = record["person"]
         names_data = record["names"]
         identifiers_data = record["identifiers"]
         memberships_data = record["memberships"]
+        employments_data = record["employments"]
         names = [PersonName(**name) for name in names_data]
         identifiers = [PersonIdentifier(**identifier)
                        for identifier in identifiers_data]
@@ -406,11 +467,22 @@ class PersonDAO(Neo4jDAO):
                     entity_uid=membership_data["research_structure"]['uid']
                 )
             )
+        employments = []
+        for employment_data in employments_data:
+            employments.append(
+                Employment(
+                    entity_uid=employment_data["institution"]['uid'],
+                    position=Position(
+                        code=employment_data['position']['position_code'],
+                    ) if employment_data['position'] else None
+                )
+            )
         person = Person(
             uid=person_data["uid"],
             identifiers=identifiers,
             names=names,
-            memberships=memberships
+            memberships=memberships,
+            employments=employments
         )
         return person
 

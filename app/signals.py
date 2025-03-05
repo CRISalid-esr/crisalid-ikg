@@ -13,6 +13,11 @@ structure_updated = signal('structure-updated')
 structure_unchanged = signal('structure-unchanged')
 structure_deleted = signal('structure-deleted')
 
+institution_created = signal('institution-created')
+institution_updated = signal('institution-updated')
+institution_unchanged = signal('institution-unchanged')
+institution_deleted = signal('institution-deleted')
+
 source_record_created = signal('source-record-created')
 source_record_updated = signal('source-record-updated')
 

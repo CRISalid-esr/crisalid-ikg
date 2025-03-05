@@ -1,5 +1,5 @@
 """
-Person model
+Research structure model
 """
 from typing import List, Optional
 
@@ -12,5 +12,5 @@ class ResearchStructure(Organization):
     Research structure API model
     """
 
-    acronym : Optional[str] = None
-    descriptions : List[Literal] = []
+    acronym: Optional[str] = None
+    descriptions: List[Literal] = []

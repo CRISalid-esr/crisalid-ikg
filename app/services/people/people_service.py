@@ -1,8 +1,14 @@
+from typing import cast
+
+from loguru import logger
+
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.person_dao import PersonDAO
+from app.models.employments import Employment
 from app.models.people import Person
+from app.services.organizations.institution_service import InstitutionService
 from app.signals import person_created, person_identifiers_updated, person_unchanged, \
     person_deleted, person_updated, publications_to_be_updated
 
@@ -54,8 +60,9 @@ class PeopleService:
         :param person: Pydantic Person object
         :return:
         """
+        person.employments = await self._update_employers_institutions(person.employments)
         factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         person_uid, status, _ = await dao.create(person)
         if status is PersonDAO.Status.CREATED:
             await self.signal_publications_to_be_updated(person_uid)
@@ -68,8 +75,9 @@ class PeopleService:
         :param person: Pydantic Person object
         :return:
         """
+        person.employments = await self._update_employers_institutions(person.employments)
         factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         person_uid, status, update_status = await dao.update(person)
         if status is PersonDAO.Status.UPDATED and update_status.identifiers_changed:
             await self.signal_publications_to_be_updated(person_uid)
@@ -84,8 +92,9 @@ class PeopleService:
         :param person: Pydantic Person object
         :return:
         """
+        person.employments = await self._update_employers_institutions(person.employments)
         factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         person_uid, status, update_status = await dao.create_or_update(person)
         if status is PersonDAO.Status.CREATED:
             await person_created.send_async(payload=person_uid)
@@ -94,6 +103,28 @@ class PeopleService:
         else:
             await self.signal_person_unchanged(person_uid)
 
+    async def _update_employers_institutions(
+            self, employments: list[Employment]) -> list[Employment]:
+        institution_service = InstitutionService()
+        valid_employments = []
+        for employment in employments:
+            existing_institution_uid = await institution_service.institution_uid(
+                employment.institution)
+            if existing_institution_uid is None:
+                logger.warning(
+                    f"Institution with identifiers {employment.institution.identifiers} not found")
+                try:
+                    institution = await institution_service.create_institution(
+                        employment.institution)
+                    employment.institution.uid = institution.uid
+                except ValueError as e:
+                    logger.error(f"Error creating institution: {e}")
+                    continue
+            else:
+                employment.institution.uid = existing_institution_uid
+            valid_employments.append(employment)
+        return valid_employments
+
     async def get_person(self, person_uid: str) -> Person:
         """
         Get a person from the graph database
@@ -101,7 +132,7 @@ class PeopleService:
         :return: Pydantic Person object
         """
         factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.get(person_uid)
 
     async def get_all_person_uids(self, external: bool | None = None) -> list[str]:
@@ -111,7 +142,7 @@ class PeopleService:
         :return: A list of all person UIDs.
         """
         factory = self._get_dao_factory()
-        dao: PersonDAO = factory.get_dao(Person)
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.get_all_uids(external=external)
 
     @staticmethod

@@ -60,5 +60,34 @@ class AMQPPersonEventMessageFactory(AbstractAMQPMessageFactory):
                     "end_date": membership.end_date,
                 }
                 for membership in person.memberships
+            ],
+            "employments": [
+                {
+                    "entity_uid": employment.entity_uid,
+                    "institution": {
+                        "names": [
+                            {
+                                "value": name.value
+                            }
+                            for name in employment.institution.names
+                        ],
+                        "identifiers": [
+                            {
+                                "type": identifier.type.value,
+                                "value": identifier.value
+                            }
+                            for identifier in employment.institution.identifiers
+                        ]
+                    },
+                    "position": {
+                        "title": employment.position.title if employment.position else None,
+                        "code": employment.position.code if employment.position else None
+                    },
+                    "start_date": employment.start_date,
+                    "end_date": employment.end_date,
+                    "past": employment.past,
+                    "future": employment.future
+                }
+                for employment in person.employments
             ]
         }

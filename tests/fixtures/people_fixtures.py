@@ -1,9 +1,7 @@
 import pytest_asyncio
 
-from app.config import get_app_settings
-from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
-from app.graph.neo4j.person_dao import PersonDAO
 from app.models.people import Person
+from app.services.people.people_service import PeopleService
 from tests.fixtures.common import _person_from_json_data, _person_json_data_from_file
 
 
@@ -13,9 +11,8 @@ async def fixture_persisted_person_a_pydantic_model(person_a_pydantic_model) -> 
     Create a basic persisted person pydantic model
     :return: basic persisted person pydantic model
     """
-    factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
-    people_dao: PersonDAO = factory.get_dao(Person)
-    await people_dao.create(person_a_pydantic_model)
+    people_service: PeopleService = PeopleService()
+    await people_service.create_person(person_a_pydantic_model)
     return person_a_pydantic_model
 
 
@@ -30,6 +27,16 @@ async def fixture_person_a_pydantic_model(person_a_json_data) -> Person:
 
 @pytest_asyncio.fixture(name="person_a_json_data")
 async def fixture_person_a_json_data(_base_path) -> dict:
+    """
+    Create a basic person json data
+    :return: basic person json data
+    """
+    return _person_json_data_from_file(_base_path, "person_a")
+
+
+# keep raw json as person_a_json_data is modifier by "before" pydantic validators
+@pytest_asyncio.fixture(name="raw_person_a_json_data")
+async def fixture_raw_person_a_json_data(_base_path) -> dict:
     """
     Create a basic person json data
     :return: basic person json data
@@ -114,9 +121,8 @@ async def fixture_persisted_person_b_pydantic_model(
     Create a basic persisted person pydantic model
     :return: basic persisted person pydantic model
     """
-    factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
-    people_dao: PersonDAO = factory.get_dao(Person)
-    await people_dao.create(person_b_with_two_names_pydantic_model)
+    people_service: PeopleService = PeopleService()
+    await people_service.create_person(person_b_with_two_names_pydantic_model)
     return person_b_with_two_names_pydantic_model
 
 
@@ -188,6 +194,93 @@ async def fixture_person_d_with_two_memberships_pydantic_model(
     :return: person with name in multiple languages pydantic model
     """
     return _person_from_json_data(person_d_with_two_memberships_json_data)
+
+
+@pytest_asyncio.fixture(name="person_a_with_two_employments_pydantic_model")
+async def fixture_person_a_with_two_employments_pydantic_model(
+        person_a_with_two_employments_json_data) -> Person:
+    """
+    Create a person with two employments pydantic model
+    :return: person with two employments pydantic model
+    """
+    return _person_from_json_data(person_a_with_two_employments_json_data)
+
+
+@pytest_asyncio.fixture(name="person_a_with_two_employments_json_data")
+async def fixture_person_a_with_two_employments_json_data(_base_path) -> dict:
+    """
+    Create a person with two employments json data
+    :return: person with two employments json data
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_two_employments")
+
+
+@pytest_asyncio.fixture(name="person_a_with_invalid_employment_position_pydantic_model")
+async def fixture_person_a_with_invalid_employment_position_pydantic_model(
+        person_a_with_invalid_employment_position_json_data) -> Person:
+    """
+    Create a person with invalid employment position pydantic model
+    :return: person with invalid employment position pydantic model
+    """
+    return _person_from_json_data(person_a_with_invalid_employment_position_json_data)
+
+
+@pytest_asyncio.fixture(name="person_a_with_invalid_employment_position_json_data")
+async def fixture_person_a_with_invalid_employment_position_json_data(_base_path) -> dict:
+    """
+    Create a person with invalid employment position json data
+    :param _base_path:
+    :return:
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_invalid_employment_position")
+
+
+@pytest_asyncio.fixture(name="person_a_with_employment_without_position_pydantic_model")
+async def fixture_person_a_with_employment_without_position_pydantic_model(
+        person_a_with_employment_without_position_json_data) -> Person:
+    """
+    Create a person with employment without position pydantic model
+    :return: person with employment without position pydantic model
+    """
+    return _person_from_json_data(person_a_with_employment_without_position_json_data)
+
+
+@pytest_asyncio.fixture(name="person_a_with_employment_without_position_json_data")
+async def fixture_person_a_with_employment_without_position_json_data(_base_path) -> dict:
+    """
+    Create a person with employment without position json data
+    :return: person with employment without position json data
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_employment_without_position")
+
+
+@pytest_asyncio.fixture(name="person_a_with_different_employment_pydantic_model")
+async def fixture_person_a_with_different_employment_pydantic_model(
+        person_a_with_different_employment_json_data) -> Person:
+    """
+    Create a person with different employment pydantic model
+    :return: person with different employment pydantic model
+    """
+    return _person_from_json_data(person_a_with_different_employment_json_data)
+
+
+@pytest_asyncio.fixture(name="person_a_with_different_employment_json_data")
+async def fixture_person_a_with_different_employment_json_data(_base_path) -> dict:
+    """
+    Create a person with different employment json data
+    :return: person with different employment json data
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_different_employment")
+
+
+@pytest_asyncio.fixture(name="person_a_with_different_employment_position_pydantic_model")
+async def fixture_person_a_with_different_employment_position_pydantic_model(
+        person_a_with_different_employment_position_json_data) -> Person:
+    """
+    Create a person with different employment position pydantic model
+    :return: person with different employment position pydantic model
+    """
+    return _person_from_json_data(person_a_with_different_employment_position_json_data)
 
 
 @pytest_asyncio.fixture(name="person_a_with_invalid_orcid_json_data")
@@ -287,9 +380,8 @@ async def fixture_persisted_person_d_pydantic_model(person_d_pydantic_model) -> 
     Create a basic persisted person pydantic model
     :return: basic persisted person pydantic model
     """
-    factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
-    people_dao: PersonDAO = factory.get_dao(Person)
-    await people_dao.create(person_d_pydantic_model)
+    people_service: PeopleService = PeopleService()
+    await people_service.create_person(person_d_pydantic_model)
     return person_d_pydantic_model
 
 
@@ -317,9 +409,8 @@ async def fixture_persisted_person_e_pydantic_model(person_e_pydantic_model) -> 
     Create a basic persisted person pydantic model
     :return: basic persisted person pydantic model
     """
-    factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
-    people_dao: PersonDAO = factory.get_dao(Person)
-    await people_dao.create(person_e_pydantic_model)
+    people_service: PeopleService = PeopleService()
+    await people_service.create_person(person_e_pydantic_model)
     return person_e_pydantic_model
 
 

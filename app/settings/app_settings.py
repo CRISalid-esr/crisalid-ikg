@@ -85,6 +85,8 @@ class AppSettings(BaseSettings):
     amqp_directory_structure_event_routing_key: str = "event.structures.structure.*"
     amqp_harvester_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
 
+    org_registry_url: str = "http://localhost:3000"
+
     institution_name: str = "XYZ University"
 
     git_commit: str = "-"
@@ -119,6 +121,11 @@ class AppSettings(BaseSettings):
         [OrganizationIdentifierType.LOCAL,
          OrganizationIdentifierType.IDREF,
          OrganizationIdentifierType.ROR]
+
+    institution_identifier_order: list[OrganizationIdentifierType] = \
+        [OrganizationIdentifierType.UAI,
+         OrganizationIdentifierType.ROR,
+         OrganizationIdentifierType.IDREF]
 
     publication_source_policies_file: str = settings_file_path(
         filename="publication_sources_policies.yaml")

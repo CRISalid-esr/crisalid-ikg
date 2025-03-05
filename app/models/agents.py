@@ -3,6 +3,7 @@ Agent model
 """
 from typing import List, Generic
 
+from loguru import logger
 from pydantic import BaseModel
 
 from app.models.agent_identifiers import AgentIdentifier
@@ -26,8 +27,9 @@ class Agent(BaseModel, Generic[IdType]):
         return next((ident for ident in self.identifiers if ident.type == identifier_type), None)
 
     @staticmethod
-    def _prevent_duplicate_identifiers(identifiers):
+    def _deduplicate_identifiers(identifiers)-> List[AgentIdentifier[IdType]]:
         types = [ident.type for ident in identifiers]
         if len(list(set(types))) == len(types):
-            return
-        raise ValueError(f"Duplicate identifier type found in {identifiers}")
+            return identifiers
+        logger.error(f"Duplicate identifier type found in {identifiers}")
+        return list({ident.type: ident for ident in identifiers}.values())

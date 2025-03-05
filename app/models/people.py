@@ -9,6 +9,7 @@ from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.agents import Agent
+from app.models.employments import Employment
 from app.models.identifier_types import PersonIdentifierType
 from app.models.memberships import Membership
 from app.models.people_names import PersonName
@@ -20,7 +21,14 @@ def _hydrate_memberships(v):
     return v
 
 
+def _hydrate_employments(v):
+    if isinstance(v, dict) and 'entity' in v:
+        return Employment(**v)
+    return v
+
+
 ImportMembership = Annotated[Membership, BeforeValidator(_hydrate_memberships)]
+ImportEmployment = Annotated[Employment, BeforeValidator(_hydrate_employments)]
 
 
 class Person(Agent[PersonIdentifierType]):
@@ -40,11 +48,13 @@ class Person(Agent[PersonIdentifierType]):
 
     memberships: Optional[List[ImportMembership]] = Field(default_factory=list)
 
+    employments: Optional[List[ImportEmployment]] = Field(default_factory=list)
+
     external: bool = False
 
     @field_validator("identifiers", mode="after")
-    @staticmethod
-    def _validate_identifiers(identifiers):
+    @classmethod
+    def _validate_identifiers(cls, identifiers):
         valid_identifiers = []
         for identifier in (identifiers or []):
             if not PersonIdentifierType.validate_identifier(identifier.type, identifier.value):
@@ -61,9 +71,7 @@ class Person(Agent[PersonIdentifierType]):
 
             valid_identifiers.append(identifier)
 
-        Person._prevent_duplicate_identifiers(valid_identifiers)
-
-        return valid_identifiers
+        return cls._deduplicate_identifiers(valid_identifiers)
 
     def get_identifier(self, identifier_type: PersonIdentifierType) -> PersonIdentifier:
         """

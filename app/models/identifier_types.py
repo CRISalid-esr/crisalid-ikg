@@ -5,6 +5,15 @@ from enum import Enum
 class AgentIdentifierType(Enum):
     """Base class for agent identifier types"""
 
+    @classmethod
+    def get_identifier_type_from_str(cls, identifier_type_str) -> 'AgentIdentifierType':
+        """Get the identifier type from a string, ignoring case"""
+        return next(
+            (identifier_type for identifier_type in cls if
+             identifier_type.value.lower() == identifier_type_str.lower()),
+            None
+        )
+
 
 # Access pattern through a class method in PersonIdentifierType
 class PersonIdentifierType(AgentIdentifierType):
@@ -46,6 +55,10 @@ class OrganizationIdentifierType(AgentIdentifierType):
     ROR = "ROR"
     RNSR = "RNSR"
     LOCAL = "local"
+    UAI = "UAI"
+    SIREN = "SIREN"
+    SIRET = "SIRET"
+    WIKIDATA = "Wikidata"
 
 
 class PublicationIdentifierType(Enum):
