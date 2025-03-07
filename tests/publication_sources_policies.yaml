@@ -1,9 +1,15 @@
 harvesters:
   # The list of enabled harvesters at institution level.
+  # Note that for harvesters fetching data from several platforms, like Idref,
+  # each platform is listed separately for authors disambiguation step.
   # The order of harvesters matters: it will be used to determine the document type and hence
   # the policy to apply in case of unclear document types (conflicts between sources).
   - Hal
   - Idref
+  - Sudoc
+  - OpenEdition
+  - Persee
+  - Science_Plus
   - ScanR
   - Scopus
   - OpenAlex
