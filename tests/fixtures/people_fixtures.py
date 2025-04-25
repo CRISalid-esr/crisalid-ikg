@@ -186,6 +186,15 @@ async def fixture_person_d_with_two_memberships_json_data(_base_path) -> dict:
     return _person_json_data_from_file(_base_path, "person_d_with_two_memberships")
 
 
+@pytest_asyncio.fixture(name="person_d_with_empty_membership_entity_uid_json_data")
+async def fixture_pperson_d_with_empty_membership_entity_uid_json_data(_base_path) -> dict:
+    """
+    Create a person with empty membership entity uid json data
+    :return: person with empty membership entity uid json data
+    """
+    return _person_json_data_from_file(_base_path, "person_d_with_empty_membership_entity_uid")
+
+
 @pytest_asyncio.fixture(name="person_d_with_two_memberships_pydantic_model")
 async def fixture_person_d_with_two_memberships_pydantic_model(
         person_d_with_two_memberships_json_data) -> Person:

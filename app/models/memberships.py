@@ -22,7 +22,7 @@ class Membership(BaseModel):
     @model_validator(mode='before')
     @classmethod
     def _set_entity_uid(cls, values) -> dict:
-        if AgentIdentifierService.IDENTIFIER_SEPARATOR not in values['entity_uid']:
+        if AgentIdentifierService.IDENTIFIER_SEPARATOR not in values.get('entity_uid', ''):
             values['entity_uid'] = f"local{AgentIdentifierService.IDENTIFIER_SEPARATOR}" \
                                    f"{values['entity_uid']}"
         return values
