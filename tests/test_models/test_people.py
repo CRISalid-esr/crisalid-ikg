@@ -223,6 +223,20 @@ def test_create_person_d_with_two_memberships(
     assert sorted(uids) == sorted(expected_uids)
 
 
+def test_create_person_d_with_empty_membership_entity_uid(
+        person_d_with_empty_membership_entity_uid_json_data
+):
+    """
+    Given json person data with empty membership entity uid
+    When asked for different field values
+    Then the values should be returned correctly
+    :param person_d_with_empty_membership_entity_uid_json_data:
+    :return:
+    """
+    person = Person(**person_d_with_empty_membership_entity_uid_json_data)
+    assert len(person.memberships) == 0
+
+
 def test_create_person_a_without_name(person_a_without_name_json_data):
     """
     Given json person data with invalid identifier type

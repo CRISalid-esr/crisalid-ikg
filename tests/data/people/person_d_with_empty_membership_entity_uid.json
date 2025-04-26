@@ -1,0 +1,29 @@
+{
+  "names": [
+    {
+      "last_names": [
+        {
+          "value": "Garcia",
+          "language": "fr"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "Raymond",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "local",
+      "value": "rgarcia@univ-domain.edu"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_uid": ""
+    }
+  ]
+}

@@ -16,7 +16,7 @@ from app.models.people_names import PersonName
 
 
 def _hydrate_memberships(v):
-    if isinstance(v, dict) and 'entity' in v:
+    if isinstance(v, dict) and 'entity' in v and 'entity_uid' in v:
         return Membership(**v)
     return v
 
@@ -80,6 +80,32 @@ class Person(Agent[PersonIdentifierType]):
         :return: identifier
         """
         return next((ident for ident in self.identifiers if ident.type == identifier_type), None)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _filter_invalid_memberships(cls, values):
+        """
+        Remove memberships with empty entity_uid before validation.
+        Handles both dicts and Membership instances.
+        """
+        memberships = values.get("memberships", [])
+        if memberships and isinstance(memberships, list):
+            def is_valid(m):
+                if isinstance(m, dict):
+                    return bool(m.get("entity_uid"))
+                if isinstance(m, Membership):
+                    return bool(m.entity_uid)
+                return False
+
+            filtered = [m for m in memberships if is_valid(m)]
+
+            if len(filtered) < len(memberships):
+                logger.warning(
+                    f"Filtered out {len(memberships) - len(filtered)} invalid memberships")
+
+            values["memberships"] = filtered
+
+        return values
 
     @model_validator(mode="before")
     @classmethod
