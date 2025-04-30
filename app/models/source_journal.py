@@ -9,7 +9,7 @@ from app.models.journal_identifiers import JournalIdentifier
 
 class SourceJournal(BaseModel):
     """
-    Source Review Issue API model
+    Source Journal API model
     """
     IDENTIFIER_SEPARATOR: ClassVar[str] = "-"
 

@@ -26,3 +26,8 @@ document_updated = signal('document-updated')
 document_created = signal('document-created')
 document_deleted = signal('document-deleted')
 document_unchanged = signal('document-unchanged')
+
+source_journal_created = signal('source-journal-created')
+source_journal_updated = signal('source-journal-updated')
+source_journal_unchanged = signal('source-journal-unchanged')
+source_journal_deleted = signal('source-journal-deleted')

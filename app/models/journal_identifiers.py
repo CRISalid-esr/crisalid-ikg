@@ -18,6 +18,8 @@ class JournalIdentifier(BaseModel):
     type: JournalIdentifierType
     value: str
 
+    last_checked: Optional[int] = None
+
     def dict(self, **kwargs):
         return super().model_dump(**kwargs) | {"type": self.type.value}
 

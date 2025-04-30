@@ -7,7 +7,7 @@ from app.models.source_journal import SourceJournal
 
 class SourceIssue(BaseModel):
     """
-    Source Review Issue API model
+    Source Journal Issue API model
     """
     uid: Optional[str] = None
 
