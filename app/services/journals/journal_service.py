@@ -57,19 +57,47 @@ class JournalService:
         if issn_info.errors:
             # if there are errors, set last_checked to None
             identifier.last_checked = None
-            # TODO update the identifier in the graph
             return None
         identifier.last_checked = int(time.time())
-        # TODO update the identifier in the graph
         # ISSN portal RDF pages do not provide publisher information for now
         issn_info.publisher = journal.publisher
         journal = Journal.from_issn_info(issn_info)
         existing_journal = await self.journal_dao.get_by_uid(journal.uid)
+
+        # update the identifiers list with the last_checked timestamp
+        journal.identifiers = self._update_identifier_timestamps(
+            identifier,
+            journal.identifiers,
+            existing_identifiers=existing_journal.identifiers
+            if existing_journal else [])
         if existing_journal:
             await self.journal_dao.update(journal)
         else:
             await self.journal_dao.create(journal)
+
         return journal
+
+    @staticmethod
+    def _update_identifier_timestamps(
+            checked_identifier: JournalIdentifier,
+            identifiers: list[JournalIdentifier],
+            existing_identifiers: list[JournalIdentifier]) -> list[JournalIdentifier]:
+        updated_identifiers = []
+        for journal_identifier in identifiers:
+            # If an existing journal has a matching identifier, take its timestamp
+            for existing_id in existing_identifiers:
+                if (journal_identifier.type == existing_id.type
+                        and journal_identifier.value == existing_id.value):
+                    journal_identifier.last_checked = existing_id.last_checked
+                    break
+
+            # If this is the identifier we just checked, override timestamp
+            if (journal_identifier.type == checked_identifier.type
+                    and journal_identifier.value == checked_identifier.value):
+                journal_identifier.last_checked = checked_identifier.last_checked
+
+            updated_identifiers.append(journal_identifier)
+        return updated_identifiers
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

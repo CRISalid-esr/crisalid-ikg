@@ -12,4 +12,5 @@ FOREACH (identifier IN $identifiers |
     value: identifier.value
   })
   MERGE (s)-[:HAS_IDENTIFIER]->(j)
+  SET j.last_checked = identifier.last_checked
 )
