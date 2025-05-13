@@ -2,6 +2,7 @@ import pytest_asyncio
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from app.graph.neo4j.source_journal_dao import SourceJournalDAO
 from app.models.source_journal import SourceJournal
 
 
@@ -63,7 +64,7 @@ async def fixture_persisted_open_alex_source_journal(
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
-    dao = factory.get_dao(SourceJournal)
+    dao: SourceJournalDAO = factory.get_dao(SourceJournal)
     await dao.create(open_alex_source_journal_pydantic_model)
     return open_alex_source_journal_pydantic_model
 
@@ -76,7 +77,7 @@ async def fixture_persisted_hal_source_journal(hal_source_journal_pydantic_model
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
-    dao = factory.get_dao(SourceJournal)
+    dao: SourceJournalDAO = factory.get_dao(SourceJournal)
     await dao.create(hal_source_journal_pydantic_model)
     return hal_source_journal_pydantic_model
 
@@ -90,6 +91,6 @@ async def fixture_persisted_scanr_source_journal(
     :return:
     """
     factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
-    dao = factory.get_dao(SourceJournal)
+    dao: SourceJournalDAO = factory.get_dao(SourceJournal)
     await dao.create(scanr_source_journal_pydantic_model)
     return scanr_source_journal_pydantic_model

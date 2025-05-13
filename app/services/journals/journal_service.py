@@ -28,7 +28,7 @@ class JournalService:
         """
         Create a source scientific journal in the graph database
         from a Pydantic SourceJournal object
-        :param source_journal: Pydantic SourceJournal object
+        :param source_journal_uid: the uid of the source journal
         :return: the list of journal uids created or updated
         """
         factory = self._get_dao_factory()
