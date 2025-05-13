@@ -1,13 +1,56 @@
-from unittest.mock import AsyncMock, patch
+import os
+from unittest.mock import patch, AsyncMock, MagicMock
 
 import pytest
 
 from app.services.journals.issn_info import IssnInfo
 from app.services.journals.issn_service import ISSNService
 
+TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/issn")
+
 
 @pytest.fixture(autouse=True)
 def mock_issn_portal():
+    """
+    Patch aiohttp.ClientSession to mock session.get(url) as an async context manager.
+    """
+    requested_urls = []
+
+    def _mock_get(url, *args, **kwargs):  # pylint: disable=unused-argument
+        requested_urls.append(url)
+        if "0967-070X" in url:
+            body = _load_issn_json_ld_file("0967-070X.json")
+            status = 200
+        elif "1879-310X" in url:
+            body = _load_issn_json_ld_file("1879-310X.json")
+            status = 200
+        else:
+            body = "Not Found"
+            status = 404
+
+        # Build mock response
+        mock_resp = AsyncMock()
+        mock_resp.status = status
+        mock_resp.text = AsyncMock(return_value=body)
+
+        # Wrap in async context manager
+        mock_ctx_manager = AsyncMock()
+        mock_ctx_manager.__aenter__.return_value = mock_resp
+        mock_ctx_manager.__aexit__.return_value = None
+        return mock_ctx_manager
+
+    # Patch aiohttp.ClientSession globally
+    patcher = patch("aiohttp.ClientSession")
+
+    with patcher as mock_session_class:
+        mock_session = MagicMock()
+        mock_session.get.side_effect = _mock_get
+        mock_session_class.return_value.__aenter__.return_value = mock_session
+        yield requested_urls
+
+
+@pytest.fixture(name="mock_issn_service", autouse=True)
+def fixture_mock_issn_service():
     """
     Mock the ISSN service response for testing.
     :return:
@@ -28,3 +71,8 @@ def mock_issn_portal():
 
     with patch.object(ISSNService, "check_identifier", async_mock):
         yield
+
+
+def _load_issn_json_ld_file(filename: str) -> str:
+    with open(os.path.join(TEST_DATA_PATH, filename), encoding="utf-8") as f:
+        return f.read()

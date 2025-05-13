@@ -118,11 +118,11 @@ class ISSNService:
 
     @staticmethod
     def _get_title(g: Graph, main_node: URIRef) -> Optional[str]:
-        name_val = g.value(subject=main_node, predicate=SCHEMA.name)
-        if name_val:
-            return str(name_val)
         title_val = g.value(subject=main_node, predicate=BF.mainTitle)
-        return str(title_val) if title_val else None
+        if title_val:
+            return str(title_val)
+        name_val = g.value(subject=main_node, predicate=SCHEMA.name)
+        return str(name_val) if name_val else None
 
     @staticmethod
     def _get_related_data(g: Graph, visited: set) -> tuple[set[str], dict[str, str]]:
@@ -132,7 +132,8 @@ class ISSNService:
             node = URIRef(f"http://issn.org/resource/ISSN/{v}")
             fmt = next(
                 (fmt_uri.split("#")[-1]
-                 for fmt_uri in g.objects(subject=node, predicate=DC.format)
+                 # DC.format does not work
+                 for fmt_uri in g.objects(subject=node, predicate=DC.term('format'))
                  if isinstance(fmt_uri, URIRef) and "#" in fmt_uri),
                 "Unknown"
             )

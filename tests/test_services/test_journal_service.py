@@ -10,14 +10,12 @@ from app.services.journals.journal_service import JournalService
 
 @pytest.mark.asyncio
 async def test_link_journal_identifiers_creates_journal(
-        mock_issn_portal,  # pylint: disable=unused-argument
         persisted_open_alex_source_journal,
         persisted_hal_source_journal,  # pylint: disable=unused-argument
         persisted_scanr_source_journal  # pylint: disable=unused-argument
 ):
     """
     Test the creation of a journal from a source journal by linking identifiers.
-    :param mock_issn_portal:
     :param persisted_open_alex_source_journal:
     :param persisted_hal_source_journal:
     :param persisted_scanr_source_journal:
