@@ -133,3 +133,5 @@ class AppSettings(BaseSettings):
 
     coauthor_names_maximal_distance: int = 30
     reluctance_to_fuzzy_match_authors: int = 3  # 1 is low, 10 is high, 30 is very high
+
+    issn_check_delay: int = 3 * 30 * 24 * 60 * 60 # 3 months in seconds

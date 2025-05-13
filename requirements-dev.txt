@@ -1100,6 +1100,9 @@ rapidfuzz==3.11.0 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:fe7aaf5a54821d340d21412f7f6e6272a9b17a0cbafc1d68f77f2fc11009dcd5 \
     --hash=sha256:ff38378346b7018f42cbc1f6d1d3778e36e16d8595f79a312b31e7c25c50bd08 \
     --hash=sha256:ffa1bb0e26297b0f22881b219ffc82a33a3c84ce6174a9d69406239b14575bd5
+rdflib==7.1.4 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:72f4adb1990fa5241abd22ddaf36d7cafa5d91d9ff2ba13f3086d339b213d997 \
+    --hash=sha256:fed46e24f26a788e2ab8e445f7077f00edcf95abb73bcef4b86cefa8b62dd174
 rich==13.9.3 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:9836f5096eb2172c9e77df411c1b009bace4193d6a481d534fea75ebba758283 \
     --hash=sha256:bc1e01b899537598cf02579d2b9f4a415104d3fc439313a7a2c165d76557a08e

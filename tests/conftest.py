@@ -1,5 +1,4 @@
 from os import environ
-from unittest.mock import AsyncMock
 
 from _pytest.logging import LogCaptureFixture
 from aio_pika import Exchange, Connection, Channel
@@ -9,6 +8,7 @@ from starlette.testclient import TestClient
 from yarl import URL
 
 from app.crisalid_ikg import CrisalidIKG
+from app.graph.neo4j.global_dao import GlobalDAO
 from tests.fixtures.common import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.people_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.organization_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
@@ -19,6 +19,7 @@ from tests.fixtures.concepts_fixtures import *  # pylint: disable=unused-import,
 from tests.fixtures.source_journal_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.source_organizations_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.institution_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
+from tests.fixtures.issn_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 
 environ["APP_ENV"] = "TEST"
 
@@ -42,7 +43,7 @@ async def reset_graph():
     """Reset the graph database before and after each test"""
     settings = get_app_settings()
     factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
-    global_dao = factory.get_dao()
+    global_dao: GlobalDAO = factory.get_dao()
     await global_dao.reset_all()
     yield
     await global_dao.reset_all()

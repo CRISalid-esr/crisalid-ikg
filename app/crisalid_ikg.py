@@ -19,12 +19,14 @@ from app.routes.healthness import router as healthness_router
 from app.search.search_engine import SearchEngine
 from app.search.source_record_index import SourceRecordIndex
 from app.services.documents.document_service import DocumentService
+from app.services.journals.journal_service import JournalService
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
     person_unchanged, document_updated, source_record_updated, structure_created, \
     structure_updated, document_sources_changed, document_created, \
     document_unchanged, document_deleted, structure_unchanged, structure_deleted, \
-    person_deleted, person_updated, publications_to_be_updated
+    person_deleted, person_updated, publications_to_be_updated, source_journal_created, \
+    source_journal_updated
 
 
 class CrisalidIKG(FastAPI):
@@ -69,6 +71,7 @@ class CrisalidIKG(FastAPI):
             self.add_event_handler("shutdown", self.close_elasticsearch)
 
         self._register_source_record_events()
+        self._register_journal_events()
         self._register_document_events()
         self._register_person_events()
 
@@ -101,6 +104,11 @@ class CrisalidIKG(FastAPI):
         self.equivalence_service = EquivalenceService()
         source_record_created.connect(self.equivalence_service.update_source_record)
         source_record_updated.connect(self.equivalence_service.update_source_record)
+
+    def _register_journal_events(self):
+        self.journal_service = JournalService()
+        source_journal_created.connect(self.journal_service.link_journal_identifiers)
+        source_journal_updated.connect(self.journal_service.link_journal_identifiers)
 
     def _register_document_events(self):
         self.document_service = DocumentService()

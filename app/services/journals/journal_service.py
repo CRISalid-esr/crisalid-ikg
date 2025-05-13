@@ -1,0 +1,109 @@
+import time
+
+from app.config import get_app_settings
+from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from app.graph.generic.dao_factory import DAOFactory
+from app.graph.neo4j.journal_dao import JournalDAO
+from app.graph.neo4j.source_journal_dao import SourceJournalDAO
+from app.models.identifier_types import JournalIdentifierType
+from app.models.journal import Journal
+from app.models.journal_identifiers import JournalIdentifier
+from app.models.source_journal import SourceJournal
+from app.services.journals.issn_service import ISSNService
+
+
+class JournalService:
+    """
+    Service to handle operations on journals data
+    """
+
+    # constructor. get app settings and take issn_check_delay parameter
+    def __init__(self):
+        settings = get_app_settings()
+        self.issn_check_delay = settings.issn_check_delay
+        self.issn_service = ISSNService()
+        self.journal_dao: JournalDAO = self._get_dao_factory().get_dao(Journal)
+
+    async def link_journal_identifiers(self, _, source_journal_uid) -> list[str]:
+        """
+        Create a source scientific journal in the graph database
+        from a Pydantic SourceJournal object
+        :param source_journal_uid: the uid of the source journal
+        :return: the list of journal uids created or updated
+        """
+        factory = self._get_dao_factory()
+        source_journal_dao: SourceJournalDAO = factory.get_dao(SourceJournal)
+        source_journal = await source_journal_dao.get_by_uid(source_journal_uid)
+        identifiers = source_journal.identifiers
+        # creat a set of identifiers
+        journal_uids = set()
+        for identifier in identifiers:
+            if identifier.type == JournalIdentifierType.ISSN:
+                # last_checked is a timestamp (int)
+                last_checked = identifier.last_checked
+                # if last_checked is None
+                # or time since last_checked is greater than issn_check_delay
+                if last_checked is None or (time.time() - last_checked) > self.issn_check_delay:
+                    # check the related journal exists or create it
+                    journal = await self._create_or_update_journal_from(source_journal, identifier)
+                    if journal:
+                        journal_uids.add(journal.uid)
+        return list(journal_uids)
+
+    async def _create_or_update_journal_from(self, source_journal: SourceJournal,
+                                             identifier: JournalIdentifier) -> Journal | None:
+        """
+        Check the identifier and update the last_checked timestamp
+        :param identifier: JournalIdentifier object
+        :return:
+        """
+        issn_info = await self.issn_service.check_identifier(identifier)
+        if issn_info.errors:
+            # if there are errors, set last_checked to None
+            identifier.last_checked = None
+            return None
+        identifier.last_checked = int(time.time())
+        # ISSN portal RDF pages do not provide publisher information for now
+        issn_info.publisher = source_journal.publisher
+        journal = Journal.from_issn_info(issn_info)
+        existing_journal = await self.journal_dao.get_by_uid(journal.uid)
+
+        # update the identifiers list with the last_checked timestamp
+        journal.identifiers = self._update_identifier_timestamps(
+            identifier,
+            journal.identifiers,
+            existing_identifiers=existing_journal.identifiers
+            if existing_journal else [])
+        if existing_journal:
+            await self.journal_dao.update(journal)
+        else:
+            await self.journal_dao.create(journal)
+
+        return journal
+
+    @staticmethod
+    def _update_identifier_timestamps(
+            checked_identifier: JournalIdentifier,
+            identifiers: list[JournalIdentifier],
+            existing_identifiers: list[JournalIdentifier]) -> list[JournalIdentifier]:
+        updated_identifiers = []
+        for journal_identifier in identifiers:
+            # If an existing journal has a matching identifier, take its timestamp
+            for existing_id in existing_identifiers:
+                if (journal_identifier.type == existing_id.type
+                        and journal_identifier.value == existing_id.value):
+                    journal_identifier.last_checked = existing_id.last_checked
+                    break
+
+            # If this is the identifier we just checked, override timestamp
+            if (journal_identifier.type == checked_identifier.type
+                    and journal_identifier.value == checked_identifier.value):
+                journal_identifier.last_checked = checked_identifier.last_checked
+
+            updated_identifiers.append(journal_identifier)
+        return updated_identifiers
+
+    @staticmethod
+    def _get_dao_factory() -> DAOFactory:
+        settings = get_app_settings()
+        return AbstractDAOFactory().get_dao_factory(settings.graph_db)
