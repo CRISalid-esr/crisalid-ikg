@@ -1,4 +1,5 @@
 # file: app/services/journals/issn_service.py
+from typing import Optional
 
 import aiohttp
 from aiohttp import ClientError
@@ -9,8 +10,11 @@ from app.models.journal_identifiers import JournalIdentifier
 from app.services.journals.issn_info import IssnInfo
 
 BF = Namespace("http://id.loc.gov/ontologies/bibframe/")
+DC = Namespace("http://purl.org/dc/elements/1.1/")
 RDF_NS = Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
 SCHEMA = Namespace("http://schema.org/")
+
+MAX_RECURSION_DEPTH = 10
 
 
 class ISSNService:
@@ -31,7 +35,7 @@ class ISSNService:
         visited = set()
         full_graph = Graph(base="http://issn.org/resource/ISSN/")
 
-        await self._recursive_fetch_and_merge(issn, visited, full_graph)
+        await self._recursive_fetch_and_merge(issn, visited, full_graph, 0)
 
         if not full_graph:
             logger.warning(f"Graph empty after crawling {issn}")
@@ -39,8 +43,8 @@ class ISSNService:
 
         return self._analyze_graph(full_graph, issn, visited)
 
-    async def _recursive_fetch_and_merge(self, issn: str, visited: set, graph: Graph):
-        if issn in visited:
+    async def _recursive_fetch_and_merge(self, issn: str, visited: set, graph: Graph, depth: int):
+        if issn in visited or depth > MAX_RECURSION_DEPTH:
             return
         visited.add(issn)
 
@@ -61,7 +65,7 @@ class ISSNService:
         for alt in local_graph.objects(subject=main_node, predicate=BF.otherPhysicalFormat):
             if isinstance(alt, URIRef) and "/ISSN/" in alt:
                 linked_issn = alt.split("/ISSN/")[-1]
-                await self._recursive_fetch_and_merge(linked_issn, visited, graph)
+                await self._recursive_fetch_and_merge(linked_issn, visited, graph, depth + 1)
 
     async def _fetch_issn_rdf(self, issn: str) -> str | None:
         url = f"{self.BASE_URL}/{issn}?format=json"
@@ -90,35 +94,48 @@ class ISSNService:
 
     def _analyze_graph(self, g: Graph, issn: str, visited: set) -> IssnInfo:
         main_node = URIRef(f"http://issn.org/resource/ISSN/{issn}")
-        issn_l = None
-        title = None
-        urls = set()
-
-        for identifier_uri in g.objects(main_node, BF.identifiedBy):
-            if (identifier_uri, RDF.type, BF.IssnL) in g:
-                value = g.value(subject=identifier_uri, predicate=RDF_NS.value)
-                if value:
-                    issn_l = str(value)
-                    break
-
-        name_val = g.value(subject=main_node, predicate=SCHEMA.name)
-        if name_val:
-            title = str(name_val)
-        else:
-            title_val = g.value(subject=main_node, predicate=BF.mainTitle)
-            if title_val:
-                title = str(title_val)
-
-        for v in visited:
-            node = URIRef(f"http://issn.org/resource/ISSN/{v}")
-            for url in g.objects(subject=node, predicate=SCHEMA.url):
-                urls.add(str(url))
+        issn_l = self._get_issn_l(g, main_node)
+        title = self._get_title(g, main_node)
+        urls, related_issns_with_format = self._get_related_data(g, visited)
 
         return IssnInfo(
             checked_issn=issn,
             issn_l=issn_l,
-            related_issns=list(visited),
             title=title,
             urls=list(urls),
+            related_issns_with_format=related_issns_with_format,
             errors=[]
         )
+
+    @staticmethod
+    def _get_issn_l(g: Graph, main_node: URIRef) -> Optional[str]:
+        for identifier_uri in g.objects(main_node, BF.identifiedBy):
+            if (identifier_uri, RDF.type, BF.IssnL) in g:
+                value = g.value(subject=identifier_uri, predicate=RDF_NS.value)
+                if value:
+                    return str(value)
+        return None
+
+    @staticmethod
+    def _get_title(g: Graph, main_node: URIRef) -> Optional[str]:
+        name_val = g.value(subject=main_node, predicate=SCHEMA.name)
+        if name_val:
+            return str(name_val)
+        title_val = g.value(subject=main_node, predicate=BF.mainTitle)
+        return str(title_val) if title_val else None
+
+    @staticmethod
+    def _get_related_data(g: Graph, visited: set) -> tuple[set[str], dict[str, str]]:
+        urls = set()
+        related_issns_with_format = {}
+        for v in visited:
+            node = URIRef(f"http://issn.org/resource/ISSN/{v}")
+            fmt = next(
+                (fmt_uri.split("#")[-1]
+                 for fmt_uri in g.objects(subject=node, predicate=DC.format)
+                 if isinstance(fmt_uri, URIRef) and "#" in fmt_uri),
+                "Unknown"
+            )
+            related_issns_with_format[v] = fmt
+            urls.update(str(url) for url in g.objects(subject=node, predicate=SCHEMA.url))
+        return urls, related_issns_with_format

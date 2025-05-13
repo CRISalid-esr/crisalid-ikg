@@ -16,4 +16,5 @@ FOREACH (identifier IN $identifiers |
   })
   MERGE (s)-[:HAS_IDENTIFIER]->(j)
   SET j.last_checked = identifier.last_checked
+  SET j.format = identifier.format
 )

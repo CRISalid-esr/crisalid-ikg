@@ -24,17 +24,19 @@ class JournalService:
         self.issn_service = ISSNService()
         self.journal_dao: JournalDAO = self._get_dao_factory().get_dao(Journal)
 
-    async def link_journal_identifiers(self, _, source_journal_uid):
+    async def link_journal_identifiers(self, _, source_journal_uid) -> list[str]:
         """
         Create a source scientific journal in the graph database
         from a Pydantic SourceJournal object
         :param source_journal: Pydantic SourceJournal object
-        :return:
+        :return: the list of journal uids created or updated
         """
         factory = self._get_dao_factory()
         source_journal_dao: SourceJournalDAO = factory.get_dao(SourceJournal)
         source_journal = await source_journal_dao.get_by_uid(source_journal_uid)
         identifiers = source_journal.identifiers
+        # creat a set of identifiers
+        journal_uids = set()
         for identifier in identifiers:
             if identifier.type == JournalIdentifierType.ISSN:
                 # last_checked is a timestamp (int)
@@ -43,10 +45,12 @@ class JournalService:
                 # or time since last_checked is greater than issn_check_delay
                 if last_checked is None or (time.time() - last_checked) > self.issn_check_delay:
                     # check the related journal exists or create it
-                    await self._create_or_update_journal_from(source_journal, identifier)
-        return identifiers
+                    journal = await self._create_or_update_journal_from(source_journal, identifier)
+                    if journal:
+                        journal_uids.add(journal.uid)
+        return list(journal_uids)
 
-    async def _create_or_update_journal_from(self, journal: SourceJournal,
+    async def _create_or_update_journal_from(self, source_journal: SourceJournal,
                                              identifier: JournalIdentifier) -> Journal | None:
         """
         Check the identifier and update the last_checked timestamp
@@ -60,7 +64,7 @@ class JournalService:
             return None
         identifier.last_checked = int(time.time())
         # ISSN portal RDF pages do not provide publisher information for now
-        issn_info.publisher = journal.publisher
+        issn_info.publisher = source_journal.publisher
         journal = Journal.from_issn_info(issn_info)
         existing_journal = await self.journal_dao.get_by_uid(journal.uid)
 

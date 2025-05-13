@@ -2,6 +2,7 @@ import pytest
 
 from app.models.document_type import DocumentTypeEnum
 from app.models.identifier_types import PublicationIdentifierType, JournalIdentifierType
+from app.models.journal_identifiers import JournalIdentifierFormat
 from app.models.source_records import SourceRecord
 
 
@@ -65,7 +66,6 @@ def test_create_thesis_source_record_from_scanr_data(
     assert source_record.raw_issued == "2023"
     assert str(source_record.url).startswith(
         "https://scanr.enseignementsup-recherche.gouv.fr/publications/")
-
 
 
 async def test_create_thesis_source_record_from_idref_data(
@@ -216,7 +216,8 @@ async def test_article_identifiers_from_open_alex_data(
     )
     assert any(
         identifier for identifier in source_record.issue.journal.identifiers if
-        identifier.type == JournalIdentifierType.EISSN and identifier.value == "1234-5678"
+        identifier.type == JournalIdentifierType.ISSN and identifier.value == "1234-5678" and
+        identifier.format == JournalIdentifierFormat.ONLINE
     )
 
 

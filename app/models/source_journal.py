@@ -4,7 +4,7 @@ from loguru import logger
 from pydantic import BaseModel, model_validator, Field
 
 from app.models.identifier_types import JournalIdentifierType
-from app.models.journal_identifiers import JournalIdentifier
+from app.models.journal_identifiers import JournalIdentifier, JournalIdentifierFormat
 
 
 class SourceJournal(BaseModel):
@@ -32,25 +32,22 @@ class SourceJournal(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _build_identifiers(cls, values):
-        identifiers = {
-            "issn": {},
-            "eissn": {},
-        }
+        identifiers = {}
 
         for issn_value in values.get("issn", []):
-            identifiers["issn"][issn_value] = JournalIdentifier(type=JournalIdentifierType.ISSN,
-                                                                value=issn_value)
+            identifiers[issn_value] = JournalIdentifier(type=JournalIdentifierType.ISSN,
+                                                        value=issn_value)
 
         for eissn_value in values.get("eissn", []):
-            identifiers["eissn"][eissn_value] = JournalIdentifier(type=JournalIdentifierType.EISSN,
-                                                                  value=eissn_value)
+            identifiers[eissn_value] = JournalIdentifier(type=JournalIdentifierType.ISSN,
+                                                         value=eissn_value,
+                                                         format=JournalIdentifierFormat.ONLINE)
 
         if issn_l := values.get("issn_l"):
-            identifiers["issn"][issn_l] = JournalIdentifier(type=JournalIdentifierType.ISSN,
-                                                            value=issn_l)
+            identifiers[issn_l] = JournalIdentifier(type=JournalIdentifierType.ISSN,
+                                                    value=issn_l)
 
-        values["identifiers"] = list(identifiers["issn"].values()) + list(
-            identifiers["eissn"].values())
+        values["identifiers"] = list(identifiers.values())
         return values
 
     @model_validator(mode="before")

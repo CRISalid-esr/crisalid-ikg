@@ -87,4 +87,3 @@ class JournalIdentifierType(Enum):
     """Journal identifier types"""
     DOI = "doi"
     ISSN = "issn"
-    EISSN = "eissn"

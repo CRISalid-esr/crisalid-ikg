@@ -1,11 +1,18 @@
 """
 Agent identifiers model
 """
+from enum import Enum
 from typing import ClassVar, Optional
 
 from pydantic import BaseModel, model_validator
 
 from app.models.identifier_types import JournalIdentifierType
+
+
+class JournalIdentifierFormat(Enum):
+    """Journal identifier format enum"""
+    PRINT = "Print"
+    ONLINE = "Online"
 
 
 class JournalIdentifier(BaseModel):
@@ -16,12 +23,14 @@ class JournalIdentifier(BaseModel):
     uid: Optional[str] = None
 
     type: JournalIdentifierType
+    format: Optional[JournalIdentifierFormat] = None
     value: str
 
     last_checked: Optional[int] = None
 
     def dict(self, **kwargs):
-        return super().model_dump(**kwargs) | {"type": self.type.value}
+        return super().model_dump(**kwargs) | {"type": self.type.value} | {
+            "format": self.format.value if self.format else None}
 
     @model_validator(mode="before")
     @classmethod
