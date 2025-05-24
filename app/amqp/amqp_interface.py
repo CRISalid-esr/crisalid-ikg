@@ -1,6 +1,7 @@
 import asyncio
 from collections import defaultdict
 from typing import List
+from urllib.parse import quote
 
 import aio_pika
 from aio_pika import ExchangeType
@@ -355,11 +356,11 @@ class AMQPInterface:
 
     async def _connect(self) -> None:
         logger.info("Establishing AMQP connection...")
-        self.pika_connexion: aio_pika.Connection = await aio_pika.connect_robust(
-            f"amqp://{self.settings.amqp_user}:"
-            f"{self.settings.amqp_password}"
-            f"@{self.settings.amqp_host}/",
-        )
+        user = quote(self.settings.amqp_user)
+        password = quote(self.settings.amqp_password)
+        host = self.settings.amqp_host
+        url = f"amqp://{user}:{password}@{host}/"
+        self.pika_connexion: aio_pika.Connection = await aio_pika.connect_robust(url)
         logger.info("AMQP connection established")
 
         logger.info("Opening AMQP channel...")
