@@ -52,13 +52,15 @@ PERSON_IDENTIFIER_PATTERNS = {
 class OrganizationIdentifierType(AgentIdentifierType):
     """Organization identifier types"""
     IDREF = "IdRef"
-    ROR = "ROR"
-    RNSR = "RNSR"
+    ROR = "ror"
+    RNSR = "nns"
     LOCAL = "local"
     UAI = "UAI"
     SIREN = "SIREN"
     SIRET = "SIRET"
     WIKIDATA = "Wikidata"
+    SCOPUS_ID = "scopus_id"
+    HAL= "hal"
 
 
 class PublicationIdentifierType(Enum):
