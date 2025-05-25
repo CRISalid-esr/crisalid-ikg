@@ -183,7 +183,7 @@ Here is an exemple of the payload of an incoming AMQP message for a structure ev
           "value": "UR0456"
         },
         {
-          "type": "RNSR",
+          "type": "nns",
           "value": "201220011X"
         }
       ]

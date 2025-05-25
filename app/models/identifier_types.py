@@ -24,6 +24,7 @@ class PersonIdentifierType(AgentIdentifierType):
     ID_HAL_I = "id_hal_i"
     SCOPUS_EID = "scopus_eid"
     LOCAL = "local"
+    EPPN= "eppn"
 
     @classmethod
     def get_pattern(cls, identifier_type):
@@ -52,13 +53,15 @@ PERSON_IDENTIFIER_PATTERNS = {
 class OrganizationIdentifierType(AgentIdentifierType):
     """Organization identifier types"""
     IDREF = "IdRef"
-    ROR = "ROR"
-    RNSR = "RNSR"
+    ROR = "ror"
+    RNSR = "nns"
     LOCAL = "local"
     UAI = "UAI"
     SIREN = "SIREN"
     SIRET = "SIRET"
     WIKIDATA = "Wikidata"
+    SCOPUS_ID = "scopus_id"
+    HAL= "hal"
 
 
 class PublicationIdentifierType(Enum):
