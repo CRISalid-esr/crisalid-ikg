@@ -41,11 +41,11 @@
           "value": "U123"
         },
         {
-          "type": "RNSR",
+          "type": "nns",
           "value": "200012123S"
         },
         {
-          "type": "ROR",
+          "type": "ror",
           "value": "123456"
         }
       ]

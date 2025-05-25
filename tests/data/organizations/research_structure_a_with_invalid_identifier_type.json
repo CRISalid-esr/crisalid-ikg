@@ -42,7 +42,7 @@
           "value": "foobar"
         },
         {
-          "type": "ROR",
+          "type": "ror",
           "value": "123456"
         }
       ]

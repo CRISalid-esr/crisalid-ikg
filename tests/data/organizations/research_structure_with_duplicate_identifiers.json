@@ -42,19 +42,19 @@
       "value": "U153"
     },
     {
-      "type": "RNSR",
+      "type": "nns",
       "value": "200012123S"
     },
     {
-      "type": "RNSR",
+      "type": "nns",
       "value": "200012133S"
     },
     {
-      "type": "ROR",
+      "type": "ror",
       "value": "123456"
     },
     {
-      "type": "ROR",
+      "type": "ror",
       "value": "153456"
     }
   ]

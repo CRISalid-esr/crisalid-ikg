@@ -38,11 +38,11 @@
       "value": "U153"
     },
     {
-      "type": "RNSR",
+      "type": "nns",
       "value": "852456928S"
     },
     {
-      "type": "ROR",
+      "type": "ror",
       "value": "987654"
     }
   ]
