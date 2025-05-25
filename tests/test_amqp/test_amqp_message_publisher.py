@@ -112,9 +112,9 @@ async def test_publish_structure_event(
     assert message_body['fields']['uid'] == 'local-U123'
     assert message_body['fields']['acronym'] == 'FL'
     expected_identifiers = [
-        {'type': 'ROR', 'value': '123456'},
+        {'type': 'ror', 'value': '123456'},
         {'type': 'local', 'value': 'U123'},
-        {'type': 'RNSR', 'value': '200012123S'}
+        {'type': 'nns', 'value': '200012123S'}
     ]
     assert all(
         any(identifier == expected for identifier in message_body['fields']['identifiers']) for

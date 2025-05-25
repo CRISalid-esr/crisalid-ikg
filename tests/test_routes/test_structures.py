@@ -29,9 +29,9 @@ def test_create_research_structure_success(test_client: TestClient,
     assert any(identifier["type"] == "local" and identifier["value"] == "U123" for identifier in
                response.json()["structure"]["identifiers"])
     assert any(
-        identifier["type"] == "RNSR" and identifier["value"] == "200012123S" for identifier in
+        identifier["type"] == "nns" and identifier["value"] == "200012123S" for identifier in
         response.json()["structure"]["identifiers"])
-    assert any(identifier["type"] == "ROR" and identifier["value"] == "123456" for identifier in
+    assert any(identifier["type"] == "ror" and identifier["value"] == "123456" for identifier in
                response.json()["structure"]["identifiers"])
 
 
