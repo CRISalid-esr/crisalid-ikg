@@ -24,6 +24,7 @@ class PersonIdentifierType(AgentIdentifierType):
     ID_HAL_I = "id_hal_i"
     SCOPUS_EID = "scopus_eid"
     LOCAL = "local"
+    EPPN= "eppn"
 
     @classmethod
     def get_pattern(cls, identifier_type):
