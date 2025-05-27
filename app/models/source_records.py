@@ -55,6 +55,8 @@ class SourceRecord(BaseModel):
 
     url: Optional[HttpUrl] = None
 
+    custom_metadata: Optional[dict] = None
+
     @field_validator("document_type", mode="before")
     @classmethod
     def document_type_to_enum(cls, value: List[Dict[str, str]]):

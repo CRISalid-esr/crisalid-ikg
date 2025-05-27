@@ -646,3 +646,21 @@ async def fixture_idref_article_a_source_record_json_data(_base_path) -> dict:
     :return: basic source record dict from open_alex data
     """
     return _source_record_json_data_from_file(_base_path, "idref_article_a_source_record")
+
+@pytest_asyncio.fixture(name="hal_article_source_record_with_custom_metadata_pydantic_model")
+async def fixture_hal_article_source_record_with_custom_metadata_pydantic_model(
+        idref_article_a_source_record_json_data) -> SourceRecord:
+    """
+    Create an article source record pydantic model from open_alex data
+    :return: basic source record pydantic model from open_alex data
+    """
+    return _source_record_from_json_data(idref_article_a_source_record_json_data)
+
+
+@pytest_asyncio.fixture(name="hal_article_source_record_with_custom_metadata_json_data")
+async def fixture_hal_article_source_record_with_custom_metadata_json_data(_base_path) -> dict:
+    """
+    Create an article source record dict from open_alex data
+    :return: basic source record dict from open_alex data
+    """
+    return _source_record_json_data_from_file(_base_path, "hal_article_source_record_with_custom_metadata")

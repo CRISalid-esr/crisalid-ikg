@@ -128,7 +128,7 @@ async def test_create_thesis_source_record_from_idref_data(
     assert str(source_record.url) == "http://www.example.fr/123456789/id"
 
 def test_create_article_source_record_from_hal_data(
-        hal_article_source_record_with_custom_metadata: dict
+        hal_article_source_record_with_custom_metadata_json_data: dict
 ):
     """
     Given a source record model recording an article harvested from Hal
@@ -137,7 +137,7 @@ def test_create_article_source_record_from_hal_data(
     :param hal_article_source_record_with_custom_metadata:
     :return:
     """
-    source_record = SourceRecord(**hal_article_source_record_with_custom_metadata)
+    source_record = SourceRecord(**hal_article_source_record_with_custom_metadata_json_data)
     assert source_record
     assert source_record.harvester == "HAL"
     assert source_record.source_identifier == "hal-02732648"
@@ -184,7 +184,7 @@ def test_create_article_source_record_from_hal_data(
     assert source_record.issue.journal.titles == ["Sample Journal Title"]
     assert source_record.issued.isoformat() == "2017-01-01T00:00:00"
     assert source_record.raw_issued == "2017"
-    assert len(source_record.hal_collection_codes) == 17
+    assert len(source_record.custom_metadata["hal_collection_codes"]) == 17
 
 async def test_create_article_source_record_from_open_alex_data(
         open_alex_article_source_record_json_data: dict
