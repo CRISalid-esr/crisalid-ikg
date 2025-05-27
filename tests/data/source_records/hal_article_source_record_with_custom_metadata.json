@@ -1,15 +1,15 @@
 {
-   "source_identifier": "hal-01732648",
+   "source_identifier": "hal-02732648",
    "harvester": "HAL",
    "harvester_version": "1.9.2",
    "identifiers": [
       {
          "type": "hal",
-         "value": "hal-01732648"
+         "value": "hal-02732648"
       },
       {
          "type": "doi",
-         "value": "10.1002/ajpa.23307"
+         "value": "https://doi.org/10.12345/bch.0000.00000"
       }
    ],
    "manifestations": [
@@ -21,14 +21,14 @@
    ],
    "titles": [
       {
-         "value": "Transition to agriculture in South-Eastern Arabia: Insights from oral conditions",
+         "value": "Sample Title: Insights from oral conditions",
          "language": "en"
       }
    ],
    "subtitles": [],
    "abstracts": [
       {
-         "value": "Objectives: In Southeast (SE) Arabia, agriculture is supposed to expand around 3000 BC, but its tempo and its actual role in populations' subsistence is still debated by archaeologists. Here, we compare dental health conditions of 11 skeletal samples from coastal and inland sites, dated from the Late Neolithic (ca. 4500–3100 BC) to the Early Bronze Age (EBA), conventionally divided into Hafit (ca. 3100–2700 BC) and Umm an-Nar period (ca. 2700–2000 BC). The goal is to assess long-term trends in subsistence patterns and regional variability during the local transition to agriculture. Methods: Seven indicators of oral health and childhood stress were analyzed, including dental wear, calculus, caries, alveolar resorption, periapical lesions, ante-mortem tooth loss (AMTL), and linear enamel hypoplasia (LEH). Results: Neolithic coastal populations are globally characterized by high dental wear, high calculus frequency, high LEH frequency, and frequent periodontal disease, whereas they exhibit low abscesses and AMTL frequencies and a total absence of carious lesions. Samples from the Hafit period present high dental wear, low rates of calculus and LEH, frequent periodontal disease, combined with low abscess and AMTL frequencies and absence of caries. By contrast, samples from the Umm an-Nar period exhibit much lower dental wear, calculus and LEH rates, whereas caries, periapical lesions and AMTL frequencies increase significantly. Marked differences were observed between coastal and inland Umm an-Nar groups, the latter presenting significantly higher frequencies of caries, periapical lesions, alveolar resorption and AMTL. Discussion/Conclusion: Oral conditions from the Neolithic coastal populations denote a diet mainly composed of unprocessed and abrasive food, with high protein and low carbohydrate intakes, and frequent stress episodes. Although Hafit populations display some changes in oral pathologies, which indicate modifications in their lifestyle and a diversification of the diet, no markers of high carbohydrate intakes were observed in our samples. The impact of agriculture on oral health appears clearly only from the Umm an-Nar period, and is more intense inland than on the coast, where marine resources are still a main component of the diet.",
+         "value": "This is an abstract of the article.",
          "language": "en"
       }
    ],
@@ -45,9 +45,9 @@
          "contributor": {
             "source": "hal",
             "source_identifier": "18274",
-            "name": "Olivia Munoz",
-            "first_name": "Olivia",
-            "last_name": "Munoz",
+            "name": "Jane Doe",
+            "first_name": "Jane",
+            "last_name": "Doe",
             "name_variants": [],
             "structured_name_variants": [],
             "identifiers": [
@@ -64,7 +64,7 @@
                {
                   "source": "hal",
                   "type": "idhal_s",
-                  "value": "olivia-munoz"
+                  "value": "jane-doe"
                },
                {
                   "source": "hal",
@@ -244,7 +244,7 @@
    ],
    "issue": {
       "source": "HAL",
-      "source_identifier": "american_journal_of_physical_anthropology-164-4-HAL",
+      "source_identifier": "journal-issue-identifier",
       "titles": [],
       "volume": "164",
       "number": [
@@ -262,9 +262,9 @@
             "1096-8644"
          ],
          "issn_l": null,
-         "publisher": "Wiley",
+         "publisher": "Example Publisher",
          "titles": [
-            "American Journal of Physical Anthropology"
+            "Sample Journal Title"
          ]
       }
    },
