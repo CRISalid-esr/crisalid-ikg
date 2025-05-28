@@ -57,9 +57,11 @@ async def test_create_source_record(persisted_person_a_pydantic_model: Person,
     assert persisted_person_a_pydantic_model.uid in fetched_source_record.harvested_for_uids
 
 
-async def test_create_hal_source_record_with_custom_metadata(persisted_person_a_pydantic_model: Person,
-                                    hal_article_source_record_with_custom_metadata_pydantic_model: SourceRecord
-                                    ) -> None:
+@pytest.mark.current
+async def test_create_hal_source_record_with_custom_metadata(
+        persisted_person_a_pydantic_model: Person,
+        hal_article_source_record_with_custom_metadata_pydantic_model: SourceRecord
+        ) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
     When the source record is added to the graph
@@ -69,13 +71,17 @@ async def test_create_hal_source_record_with_custom_metadata(persisted_person_a_
     :return:
     """
     service = SourceRecordService()
-    await service.create_source_record(source_record=hal_article_source_record_with_custom_metadata_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
-    assert await service.source_record_exists(hal_article_source_record_with_custom_metadata_pydantic_model.uid)
+    await service.create_source_record(
+        source_record=hal_article_source_record_with_custom_metadata_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+    assert await service.source_record_exists(
+        hal_article_source_record_with_custom_metadata_pydantic_model.uid)
     fetched_source_record = await service.get_source_record(
         hal_article_source_record_with_custom_metadata_pydantic_model.uid)
-    assert fetched_source_record.uid == hal_article_source_record_with_custom_metadata_pydantic_model.uid
-    assert fetched_source_record.issued == hal_article_source_record_with_custom_metadata_pydantic_model.issued
+    assert fetched_source_record.uid == \
+           hal_article_source_record_with_custom_metadata_pydantic_model.uid
+    assert fetched_source_record.issued == \
+           hal_article_source_record_with_custom_metadata_pydantic_model.issued
     assert fetched_source_record.raw_issued == \
            hal_article_source_record_with_custom_metadata_pydantic_model.raw_issued
     assert fetched_source_record.source_identifier == \
@@ -83,7 +89,11 @@ async def test_create_hal_source_record_with_custom_metadata(persisted_person_a_
     assert fetched_source_record.harvester == \
            hal_article_source_record_with_custom_metadata_pydantic_model.harvester
     assert fetched_source_record.hal_collection_codes == \
-           hal_article_source_record_with_custom_metadata_pydantic_model.custom_metadata['hal_collection_codes']
+           hal_article_source_record_with_custom_metadata_pydantic_model.\
+               custom_metadata['hal_collection_codes']
+    assert fetched_source_record.hal_submit_type == \
+           hal_article_source_record_with_custom_metadata_pydantic_model.\
+               custom_metadata['hal_submit_type']
     for title in hal_article_source_record_with_custom_metadata_pydantic_model.titles:
         assert any(
             fetched_title.language == title.language and fetched_title.value == title.value for

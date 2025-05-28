@@ -84,8 +84,8 @@ async def test_update_hal_article_source_record_with_custom_metadata(
         title.value == "NEW Sample Title: Insights from oral conditions"
         and title.language == "en" for title in fetched_source_record.titles)
     assert any(
-        abstract.value == "This is an NEW abstract of the article." and abstract.language == "en" for abstract in
-        fetched_source_record.abstracts)
+        abstract.value == "This is an NEW abstract of the article." \
+        and abstract.language == "en" for abstract in fetched_source_record.abstracts)
     # test identifiers
     assert any(
         identifier.value == "hal-02732648" and identifier.type == PublicationIdentifierType.HAL for
@@ -99,7 +99,11 @@ async def test_update_hal_article_source_record_with_custom_metadata(
     assert fetched_source_record.issued.isoformat() == "2017-01-01T00:00:00+00:00"
     assert (fetched_source_record.raw_issued ==
             hal_article_source_record_with_custom_metadata_v2_pydantic_model.raw_issued)
-    assert len(fetched_source_record.hal_collection_codes) != hal_persisted_article_source_record_pydantic_model.hal_collection_codes
+    assert len(fetched_source_record.hal_collection_codes) != \
+           hal_persisted_article_source_record_pydantic_model.hal_collection_codes
+    assert fetched_source_record.hal_submit_type == "file"
+    assert fetched_source_record.hal_submit_type != \
+           hal_persisted_article_source_record_pydantic_model.hal_submit_type
 
 async def test_double_update_scanr_article_source_record(
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,

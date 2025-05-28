@@ -59,6 +59,8 @@ class SourceRecord(BaseModel):
 
     hal_collection_codes: Optional[List[str]] = []
 
+    hal_submit_type: Optional[str] = None
+
     @field_validator("document_type", mode="before")
     @classmethod
     def document_type_to_enum(cls, value: List[Dict[str, str]]):
