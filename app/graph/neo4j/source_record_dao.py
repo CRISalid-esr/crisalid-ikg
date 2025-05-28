@@ -304,7 +304,8 @@ class SourceRecordDAO(Neo4jDAO):
             document_types=[document_type.value for document_type in source_record.document_type],
             issued=source_record.issued.isoformat() if source_record.issued else None,
             raw_issued=source_record.raw_issued,
-            hal_collection_codes=source_record.custom_metadata["hal_collection_codes"] if source_record.custom_metadata.get("hal_collection_codes") else None
+            hal_collection_codes=source_record.custom_metadata["hal_collection_codes"] \
+                if source_record.custom_metadata.get("hal_collection_codes") else None
         )
 
     @classmethod
@@ -343,7 +344,8 @@ class SourceRecordDAO(Neo4jDAO):
             document_types=[document_type.value for document_type in source_record.document_type],
             issued=source_record.issued.isoformat() if source_record.issued else None,
             raw_issued=source_record.raw_issued,
-            hal_collection_codes=source_record.custom_metadata["hal_collection_codes"] if source_record.custom_metadata.get("hal_collection_codes") else None
+            hal_collection_codes=source_record.custom_metadata["hal_collection_codes"] \
+                if source_record.custom_metadata.get("hal_collection_codes") else None
         )
         return source_record.uid, SourceRecordDAO.Status.UPDATED, None
 
