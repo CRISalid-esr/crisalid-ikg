@@ -21,14 +21,14 @@
    ],
    "titles": [
       {
-         "value": "Sample Title: Insights from oral conditions",
+         "value": "NEW Sample Title: Insights from oral conditions",
          "language": "en"
       }
    ],
    "subtitles": [],
    "abstracts": [
       {
-         "value": "This is an abstract of the article.",
+         "value": "This is an NEW abstract of the article.",
          "language": "en"
       }
    ],
@@ -277,19 +277,6 @@
       "hal_collection_codes": [
          "SHS",
          "UNIV-PARIS1",
-         "UNIV-PARIS8",
-         "CNRS",
-         "UNIV-PARIS10",
-         "FRANTIQ",
-         "CAMPUS-AAR",
-         "AAI",
-         "UPN",
-         "MAE",
-         "ARSCAN",
-         "UNIV-PARIS-LUMIERES",
-         "UMR8215",
-         "ANR",
-         "UNIV-PARIS-NANTERRE",
          "UNIV-PARIS8-OA",
          "PASP"
       ],

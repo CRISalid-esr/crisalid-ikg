@@ -127,6 +127,7 @@ async def test_create_thesis_source_record_from_idref_data(
     assert source_record.raw_issued == "2006-06-14"
     assert str(source_record.url) == "http://www.example.fr/123456789/id"
 
+
 def test_create_article_source_record_from_hal_data(
         hal_article_source_record_with_custom_metadata_json_data: dict
 ):
@@ -182,7 +183,7 @@ def test_create_article_source_record_from_hal_data(
     assert source_record.issue.journal.source_identifier == "2871"
     assert source_record.issue.journal.publisher == "Example Publisher"
     assert source_record.issue.journal.titles == ["Sample Journal Title"]
-    assert source_record.issued.isoformat() == "2017-01-01T00:00:00"
+    assert source_record.issued.isoformat() == "2017-01-01T00:00:00+00:00"
     assert source_record.raw_issued == "2017"
     assert len(source_record.custom_metadata["hal_collection_codes"]) == 17
 

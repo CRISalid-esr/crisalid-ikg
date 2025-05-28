@@ -1,7 +1,11 @@
+import pytest
+
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
+
+
 
 async def test_update_scanr_article_source_record(
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
@@ -54,6 +58,48 @@ async def test_update_scanr_article_source_record(
     assert (fetched_source_record.raw_issued ==
             scanr_article_a_v2_source_record_pydantic_model.raw_issued)
 
+
+@pytest.mark.current
+async def test_update_hal_article_source_record_with_custom_metadata(
+        hal_persisted_article_source_record_pydantic_model: SourceRecord,
+        hal_article_source_record_with_custom_metadata_v2_pydantic_model: SourceRecord,
+        persisted_person_a_pydantic_model: Person
+):
+    """
+        Given a valid source record model recording an article harvested from ScanR
+        When asked for different field values
+        Then the values should be returned correctly
+        """
+    service = SourceRecordService()
+    common_uid = hal_persisted_article_source_record_pydantic_model.uid
+    assert hal_article_source_record_with_custom_metadata_v2_pydantic_model.uid == common_uid
+    await service.update_source_record(
+        source_record=hal_article_source_record_with_custom_metadata_v2_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+    fetched_source_record = await service.get_source_record(
+        hal_article_source_record_with_custom_metadata_v2_pydantic_model.uid)
+    assert fetched_source_record.source_identifier == "hal-02732648"
+    assert fetched_source_record.harvester == "HAL"
+    assert any(
+        title.value == "NEW Sample Title: Insights from oral conditions"
+        and title.language == "en" for title in fetched_source_record.titles)
+    assert any(
+        abstract.value == "This is an NEW abstract of the article." and abstract.language == "en" for abstract in
+        fetched_source_record.abstracts)
+    # test identifiers
+    assert any(
+        identifier.value == "hal-02732648" and identifier.type == PublicationIdentifierType.HAL for
+        identifier in
+        fetched_source_record.identifiers)
+    assert any(
+        identifier.value == "https://doi.org/10.12345/bch.0000.00000"
+        and identifier.type == PublicationIdentifierType.DOI
+        for identifier in
+        fetched_source_record.identifiers)
+    assert fetched_source_record.issued.isoformat() == "2017-01-01T00:00:00+00:00"
+    assert (fetched_source_record.raw_issued ==
+            hal_article_source_record_with_custom_metadata_v2_pydantic_model.raw_issued)
+    assert len(fetched_source_record.hal_collection_codes) != hal_persisted_article_source_record_pydantic_model.hal_collection_codes
 
 async def test_double_update_scanr_article_source_record(
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,

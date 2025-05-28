@@ -5,7 +5,8 @@ MERGE (s:SourceRecord {uid: $source_record_uid})
     s.source_identifier = $source_identifier,
     s.document_types = $document_types,
     s.issued = CASE WHEN $issued IS NOT NULL THEN datetime($issued) ELSE NULL END,
-    s.raw_issued = $raw_issued
+    s.raw_issued = $raw_issued,
+    s.hal_collection_codes = $hal_collection_codes
 
 WITH s
 OPTIONAL MATCH (s)-[r:HAS_TITLE]->(t:Literal)

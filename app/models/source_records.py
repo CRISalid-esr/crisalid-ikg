@@ -55,7 +55,9 @@ class SourceRecord(BaseModel):
 
     url: Optional[HttpUrl] = None
 
-    custom_metadata: Optional[dict] = None
+    custom_metadata: Optional[dict] = {}
+
+    hal_collection_codes: Optional[List[str]] = []
 
     @field_validator("document_type", mode="before")
     @classmethod
