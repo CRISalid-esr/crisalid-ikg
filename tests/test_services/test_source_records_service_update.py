@@ -99,11 +99,11 @@ async def test_update_hal_article_source_record_with_custom_metadata(
     assert fetched_source_record.issued.isoformat() == "2017-01-01T00:00:00+00:00"
     assert (fetched_source_record.raw_issued ==
             hal_article_source_record_with_custom_metadata_v2_pydantic_model.raw_issued)
-    assert len(fetched_source_record.hal_collection_codes) != \
-           hal_persisted_article_source_record_pydantic_model.hal_collection_codes
-    assert fetched_source_record.hal_submit_type == "file"
-    assert fetched_source_record.hal_submit_type != \
-           hal_persisted_article_source_record_pydantic_model.hal_submit_type
+    assert len(fetched_source_record.custom_metadata.hal_collection_codes) != \
+           hal_persisted_article_source_record_pydantic_model.custom_metadata.hal_collection_codes
+    assert fetched_source_record.custom_metadata.hal_submit_type == "file"
+    assert fetched_source_record.custom_metadata.hal_submit_type != \
+           hal_persisted_article_source_record_pydantic_model.custom_metadata.hal_submit_type
 
 async def test_double_update_scanr_article_source_record(
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,

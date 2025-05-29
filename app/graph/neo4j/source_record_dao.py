@@ -10,6 +10,7 @@ from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
 from app.models.concepts import Concept
 from app.models.document_type import DocumentTypeEnum
+from app.models.hal_custom_metadata import HalCustomMetadata
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.literal import Literal
 from app.models.loc_contribution_role import LocContributionRole
@@ -304,10 +305,16 @@ class SourceRecordDAO(Neo4jDAO):
             document_types=[document_type.value for document_type in source_record.document_type],
             issued=source_record.issued.isoformat() if source_record.issued else None,
             raw_issued=source_record.raw_issued,
-            hal_collection_codes=source_record.custom_metadata["hal_collection_codes"] \
-                if source_record.custom_metadata.get("hal_collection_codes") else None,
-            hal_submit_type=source_record.custom_metadata["hal_submit_type"] \
-                if source_record.custom_metadata.get("hal_submit_type") else None
+            hal_collection_codes=(
+                source_record.custom_metadata.hal_collection_codes
+                if isinstance(source_record.custom_metadata, HalCustomMetadata)
+                else None
+            ),
+            hal_submit_type=(
+                source_record.custom_metadata.hal_submit_type
+                if isinstance(source_record.custom_metadata, HalCustomMetadata)
+                else None
+            )
         )
 
     @classmethod
@@ -346,10 +353,16 @@ class SourceRecordDAO(Neo4jDAO):
             document_types=[document_type.value for document_type in source_record.document_type],
             issued=source_record.issued.isoformat() if source_record.issued else None,
             raw_issued=source_record.raw_issued,
-            hal_collection_codes=source_record.custom_metadata["hal_collection_codes"] \
-                if source_record.custom_metadata.get("hal_collection_codes") else None,
-            hal_submit_type = source_record.custom_metadata["hal_submit_type"] \
-                if source_record.custom_metadata.get("hal_submit_type") else None
+            hal_collection_codes=(
+                source_record.custom_metadata.hal_collection_codes
+                if isinstance(source_record.custom_metadata, HalCustomMetadata)
+                else None
+            ),
+            hal_submit_type=(
+                source_record.custom_metadata.hal_submit_type
+                if isinstance(source_record.custom_metadata, HalCustomMetadata)
+                else None
+            )
         )
         return source_record.uid, SourceRecordDAO.Status.UPDATED, None
 
@@ -411,7 +424,7 @@ class SourceRecordDAO(Neo4jDAO):
             titles=[Literal(**title) for title in record["titles"]],
             harvested_for_uids=record['harvested_for_uids'],
             document_type=[DocumentTypeEnum(document_type) for document_type in
-                           record["s"].get("document_types",[])],
+                           record["s"].get("document_types", [])],
             issued=record["s"]["issued"].to_native() if record["s"].get("issued") else None,
             raw_issued=record["s"].get("raw_issued")
         )
@@ -432,10 +445,11 @@ class SourceRecordDAO(Neo4jDAO):
             if record["issue"]:
                 issue = dict(record["issue"]) | {"journal": journal}
                 source_record.issue = SourceIssue(**issue)
-        if record["s"]["hal_collection_codes"]:
-            source_record.hal_collection_codes = record["s"]["hal_collection_codes"]
-        if record["s"]["hal_submit_type"]:
-            source_record.hal_submit_type = record["s"]["hal_submit_type"]
+        if record["s"]["harvester"] == "HAL":
+            source_record.custom_metadata = HalCustomMetadata(
+                hal_collection_codes=record["s"].get("hal_collection_codes", []),
+                hal_submit_type=record["s"].get("hal_submit_type", "")
+            )
         contributions = record.get("contributions", [])
         SourceRecordDAO._hydrate_contributions(contributions, source_record)
         return source_record

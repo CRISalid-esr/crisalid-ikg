@@ -88,12 +88,12 @@ async def test_create_hal_source_record_with_custom_metadata(
            hal_article_source_record_with_custom_metadata_pydantic_model.source_identifier
     assert fetched_source_record.harvester == \
            hal_article_source_record_with_custom_metadata_pydantic_model.harvester
-    assert fetched_source_record.hal_collection_codes == \
+    assert fetched_source_record.custom_metadata.hal_collection_codes == \
            hal_article_source_record_with_custom_metadata_pydantic_model.\
-               custom_metadata['hal_collection_codes']
-    assert fetched_source_record.hal_submit_type == \
+               custom_metadata.hal_collection_codes
+    assert fetched_source_record.custom_metadata.hal_submit_type == \
            hal_article_source_record_with_custom_metadata_pydantic_model.\
-               custom_metadata['hal_submit_type']
+               custom_metadata.hal_submit_type
     for title in hal_article_source_record_with_custom_metadata_pydantic_model.titles:
         assert any(
             fetched_title.language == title.language and fetched_title.value == title.value for
