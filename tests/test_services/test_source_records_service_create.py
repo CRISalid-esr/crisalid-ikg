@@ -1,7 +1,5 @@
 from typing import List
 
-import pytest
-
 from app.models.identifier_types import JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.people import Person
@@ -57,11 +55,10 @@ async def test_create_source_record(persisted_person_a_pydantic_model: Person,
     assert persisted_person_a_pydantic_model.uid in fetched_source_record.harvested_for_uids
 
 
-@pytest.mark.current
 async def test_create_hal_source_record_with_custom_metadata(
         persisted_person_a_pydantic_model: Person,
         hal_article_source_record_with_custom_metadata_pydantic_model: SourceRecord
-        ) -> None:
+) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
     When the source record is added to the graph
@@ -89,10 +86,10 @@ async def test_create_hal_source_record_with_custom_metadata(
     assert fetched_source_record.harvester == \
            hal_article_source_record_with_custom_metadata_pydantic_model.harvester
     assert fetched_source_record.custom_metadata.hal_collection_codes == \
-           hal_article_source_record_with_custom_metadata_pydantic_model.\
+           hal_article_source_record_with_custom_metadata_pydantic_model. \
                custom_metadata.hal_collection_codes
     assert fetched_source_record.custom_metadata.hal_submit_type == \
-           hal_article_source_record_with_custom_metadata_pydantic_model.\
+           hal_article_source_record_with_custom_metadata_pydantic_model. \
                custom_metadata.hal_submit_type
     for title in hal_article_source_record_with_custom_metadata_pydantic_model.titles:
         assert any(
@@ -110,6 +107,7 @@ async def test_create_hal_source_record_with_custom_metadata(
             for fetched_abstract in fetched_source_record.abstracts)
 
     assert persisted_person_a_pydantic_model.uid in fetched_source_record.harvested_for_uids
+
 
 async def test_journal_from_scanr_article(
         scanr_article_a_source_record_pydantic_model: SourceRecord,

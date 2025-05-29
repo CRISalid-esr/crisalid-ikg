@@ -1,10 +1,7 @@
-import pytest
-
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
-
 
 
 async def test_update_scanr_article_source_record(
@@ -59,7 +56,6 @@ async def test_update_scanr_article_source_record(
             scanr_article_a_v2_source_record_pydantic_model.raw_issued)
 
 
-@pytest.mark.current
 async def test_update_hal_article_source_record_with_custom_metadata(
         hal_persisted_article_source_record_pydantic_model: SourceRecord,
         hal_article_source_record_with_custom_metadata_v2_pydantic_model: SourceRecord,
@@ -104,6 +100,7 @@ async def test_update_hal_article_source_record_with_custom_metadata(
     assert fetched_source_record.custom_metadata.hal_submit_type == "file"
     assert fetched_source_record.custom_metadata.hal_submit_type != \
            hal_persisted_article_source_record_pydantic_model.custom_metadata.hal_submit_type
+
 
 async def test_double_update_scanr_article_source_record(
         scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,

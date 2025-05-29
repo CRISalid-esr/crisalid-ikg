@@ -128,7 +128,6 @@ async def test_create_thesis_source_record_from_idref_data(
     assert str(source_record.url) == "http://www.example.fr/123456789/id"
 
 
-@pytest.mark.current
 def test_create_article_source_record_from_hal_data(
         hal_article_source_record_with_custom_metadata_json_data: dict
 ):
@@ -136,7 +135,7 @@ def test_create_article_source_record_from_hal_data(
     Given a source record model recording an article harvested from Hal
     When asked for different field values
     Then the values should be returned correctly
-    :param hal_article_source_record_with_custom_metadata:
+    :param hal_article_source_record_with_custom_metadata_json_data: 
     :return:
     """
     source_record = SourceRecord(**hal_article_source_record_with_custom_metadata_json_data)
