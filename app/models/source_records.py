@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Optional, List, ClassVar, Dict
+from typing import Optional, List, ClassVar, Dict, Union
 
 import isodate
 from loguru import logger
@@ -9,10 +9,12 @@ from pydantic import BaseModel, field_validator, model_validator, HttpUrl
 from app.models.agents import Agent
 from app.models.concepts import Concept
 from app.models.document_type import DocumentType, DocumentTypeEnum
+from app.models.hal_custom_metadata import HalCustomMetadata
 from app.models.literal import Literal
 from app.models.publication_identifiers import PublicationIdentifier
 from app.models.source_contributions import SourceContribution
 from app.models.source_issue import SourceIssue
+from app.models.void_custom_metadata import VoidCustomMetadata
 from app.services.source_records.source_record_url_service import SourceRecordUrlService
 from app.utils.date.partial_iso_8601 import parse_partial_iso8601
 
@@ -54,6 +56,19 @@ class SourceRecord(BaseModel):
     raw_issued: Optional[str] = None
 
     url: Optional[HttpUrl] = None
+
+    custom_metadata: Optional[Union[HalCustomMetadata, VoidCustomMetadata]] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _convert_custom_metadata(cls, values):
+        harvester = values.get("harvester")
+        metadata = values.get("custom_metadata", {})
+        if harvester == "HAL":
+            values["custom_metadata"] = HalCustomMetadata(**metadata)
+        else:
+            values["custom_metadata"] = VoidCustomMetadata(**metadata)
+        return values
 
     @field_validator("document_type", mode="before")
     @classmethod

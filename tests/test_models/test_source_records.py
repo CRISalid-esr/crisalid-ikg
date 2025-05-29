@@ -128,6 +128,67 @@ async def test_create_thesis_source_record_from_idref_data(
     assert str(source_record.url) == "http://www.example.fr/123456789/id"
 
 
+def test_create_article_source_record_from_hal_data(
+        hal_article_source_record_with_custom_metadata_json_data: dict
+):
+    """
+    Given a source record model recording an article harvested from Hal
+    When asked for different field values
+    Then the values should be returned correctly
+    :param hal_article_source_record_with_custom_metadata_json_data: 
+    :return:
+    """
+    source_record = SourceRecord(**hal_article_source_record_with_custom_metadata_json_data)
+    assert source_record
+    assert source_record.harvester == "HAL"
+    assert source_record.source_identifier == "hal-02732648"
+    assert len(source_record.titles) == 1
+    assert len(source_record.identifiers) == 2
+    assert any(
+        title for title in source_record.titles if
+        title.value == "Sample Title: Insights from oral conditions"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.DOI
+        and identifier.value == "https://doi.org/10.12345/bch.0000.00000"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.HAL
+        and identifier.value == "hal-02732648"
+    )
+    assert len(source_record.abstracts) == 1
+    assert any(
+        abstract for abstract in source_record.abstracts if
+        abstract.value == "This is an abstract of the article."
+    )
+    assert len(source_record.subjects) == 0
+    assert len(source_record.document_type) == 1
+    assert DocumentTypeEnum.ARTICLE in source_record.document_type
+    assert len(source_record.contributions) == 1
+    assert any(
+        contribution for contribution in source_record.contributions if
+        contribution.rank == 0 and contribution.contributor.name == "Jane Doe"
+    )
+    assert source_record.issue
+    assert source_record.issue.source == "HAL"
+    assert source_record.issue.source_identifier == "journal-issue-identifier"
+    assert len(source_record.issue.titles) == 0
+    assert source_record.issue.volume == "164"
+    assert source_record.issue.number == ["4"]
+    assert source_record.issue.rights is None
+    assert source_record.issue.date is None
+    assert source_record.issue.journal.source == "HAL"
+    assert source_record.issue.journal.source_identifier == "2871"
+    assert source_record.issue.journal.publisher == "Example Publisher"
+    assert source_record.issue.journal.titles == ["Sample Journal Title"]
+    assert source_record.issued.isoformat() == "2017-01-01T00:00:00+00:00"
+    assert source_record.raw_issued == "2017"
+    assert len(source_record.custom_metadata.hal_collection_codes) == 17
+    assert source_record.custom_metadata.hal_submit_type == "notice"
+
+
 async def test_create_article_source_record_from_open_alex_data(
         open_alex_article_source_record_json_data: dict
 ):

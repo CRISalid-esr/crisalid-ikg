@@ -5,7 +5,9 @@ CREATE (s:SourceRecord {
     source_identifier: $source_identifier,
     document_types: $document_types,
     issued: CASE WHEN $issued IS NOT NULL THEN datetime($issued) ELSE NULL END,
-    raw_issued: $raw_issued
+    raw_issued: $raw_issued,
+    hal_collection_codes: $hal_collection_codes,
+    hal_submit_type: $hal_submit_type
 })
 WITH s
 FOREACH (title IN $titles |

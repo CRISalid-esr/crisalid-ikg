@@ -1,0 +1,286 @@
+{
+   "source_identifier": "hal-02732648",
+   "harvester": "HAL",
+   "harvester_version": "1.9.2",
+   "identifiers": [
+      {
+         "type": "hal",
+         "value": "hal-02732648"
+      },
+      {
+         "type": "doi",
+         "value": "https://doi.org/10.12345/bch.0000.00000"
+      }
+   ],
+   "manifestations": [
+      {
+         "page": "https://hal.science/hal-01732648v1",
+         "download_url": "https://hal.science/hal-01732648/document",
+         "additional_files": []
+      }
+   ],
+   "titles": [
+      {
+         "value": "NEW Sample Title: Insights from oral conditions",
+         "language": "en"
+      }
+   ],
+   "subtitles": [],
+   "abstracts": [
+      {
+         "value": "This is an NEW abstract of the article.",
+         "language": "en"
+      }
+   ],
+   "subjects": [],
+   "document_type": [
+      {
+         "uri": "http://purl.org/ontology/bibo/Article",
+         "label": "Article"
+      }
+   ],
+   "contributions": [
+      {
+         "rank": 0,
+         "contributor": {
+            "source": "hal",
+            "source_identifier": "18274",
+            "name": "Jane Doe",
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "name_variants": [],
+            "structured_name_variants": [],
+            "identifiers": [
+               {
+                  "source": "hal",
+                  "type": "idref",
+                  "value": "https://www.idref.fr/179785966"
+               },
+               {
+                  "source": "hal",
+                  "type": "orcid",
+                  "value": "https://orcid.org/0000-0002-6180-194X"
+               },
+               {
+                  "source": "hal",
+                  "type": "idhal_s",
+                  "value": "jane-doe"
+               },
+               {
+                  "source": "hal",
+                  "type": "idhal_i",
+                  "value": "18274"
+               }
+            ]
+         },
+         "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+         "affiliations": [
+            {
+               "source": "hal",
+               "source_identifier": "441569",
+               "name": "Centre National de la Recherche Scientifique",
+               "type": "institution_group",
+               "identifiers": [
+                  {
+                     "type": "hal",
+                     "value": "441569"
+                  },
+                  {
+                     "type": "isni",
+                     "value": "0000000122597504"
+                  },
+                  {
+                     "type": "idref",
+                     "value": "02636817X"
+                  },
+                  {
+                     "type": "ror",
+                     "value": "https://ror.org/02feahw73"
+                  }
+               ]
+            },
+            {
+               "source": "hal",
+               "source_identifier": "11141",
+               "name": "Université Paris 8 Vincennes-Saint-Denis",
+               "type": "institution",
+               "identifiers": [
+                  {
+                     "type": "hal",
+                     "value": "11141"
+                  },
+                  {
+                     "type": "isni",
+                     "value": "0000000121083026"
+                  },
+                  {
+                     "type": "idref",
+                     "value": "026403552"
+                  },
+                  {
+                     "type": "ror",
+                     "value": "https://ror.org/04wez5e68"
+                  }
+               ]
+            },
+            {
+               "source": "hal",
+               "source_identifier": "7550",
+               "name": "Université Paris 1 Panthéon-Sorbonne",
+               "type": "institution",
+               "identifiers": [
+                  {
+                     "type": "hal",
+                     "value": "7550"
+                  },
+                  {
+                     "type": "isni",
+                     "value": "000000012173743X"
+                  },
+                  {
+                     "type": "idref",
+                     "value": "027361802"
+                  },
+                  {
+                     "type": "ror",
+                     "value": "https://ror.org/002t25c44"
+                  }
+               ]
+            },
+            {
+               "source": "hal",
+               "source_identifier": "300125",
+               "name": "Ministère de la Culture et de la Communication",
+               "type": "institution_group",
+               "identifiers": [
+                  {
+                     "type": "hal",
+                     "value": "300125"
+                  },
+                  {
+                     "type": "idref",
+                     "value": "026437414"
+                  },
+                  {
+                     "type": "ror",
+                     "value": "https://ror.org/017rnyz40"
+                  }
+               ]
+            },
+            {
+               "source": "hal",
+               "source_identifier": "1003",
+               "name": "Archéologies et Sciences de l'Antiquité",
+               "type": "laboratory",
+               "identifiers": [
+                  {
+                     "type": "hal",
+                     "value": "1003"
+                  },
+                  {
+                     "type": "isni",
+                     "value": "0000 0001 2326 1930"
+                  },
+                  {
+                     "type": "rnsr",
+                     "value": "199912442H"
+                  },
+                  {
+                     "type": "idref",
+                     "value": "069431787"
+                  },
+                  {
+                     "type": "ror",
+                     "value": "https://ror.org/04wz9m339"
+                  }
+               ]
+            },
+            {
+               "source": "hal",
+               "source_identifier": "217516",
+               "name": "Trajectoires - UMR 8215",
+               "type": "laboratory",
+               "identifiers": [
+                  {
+                     "type": "hal",
+                     "value": "217516"
+                  },
+                  {
+                     "type": "rnsr",
+                     "value": "201220425D"
+                  },
+                  {
+                     "type": "idref",
+                     "value": "197718469"
+                  },
+                  {
+                     "type": "ror",
+                     "value": "https://ror.org/03wdx6c48"
+                  }
+               ]
+            },
+            {
+               "source": "hal",
+               "source_identifier": "116205",
+               "name": "Université Paris Nanterre",
+               "type": "institution",
+               "identifiers": [
+                  {
+                     "type": "hal",
+                     "value": "116205"
+                  },
+                  {
+                     "type": "idref",
+                     "value": "026403587"
+                  },
+                  {
+                     "type": "ror",
+                     "value": "https://ror.org/013bkhk48"
+                  }
+               ]
+            }
+         ]
+      }
+   ],
+   "issue": {
+      "source": "HAL",
+      "source_identifier": "journal-issue-identifier",
+      "titles": [],
+      "volume": "164",
+      "number": [
+         "4"
+      ],
+      "rights": null,
+      "date": null,
+      "journal": {
+         "source": "HAL",
+         "source_identifier": "2871",
+         "issn": [
+            "0002-9483"
+         ],
+         "eissn": [
+            "1096-8644"
+         ],
+         "issn_l": null,
+         "publisher": "Example Publisher",
+         "titles": [
+            "Sample Journal Title"
+         ]
+      }
+   },
+   "page": "702-719",
+   "book": null,
+   "raw_issued": "2017",
+   "issued": "2017-01-01T00:00:00Z",
+   "created": "2017-01-01T00:00:00",
+   "custom_metadata": {
+      "hal_collection_codes": [
+         "SHS",
+         "UNIV-PARIS1",
+         "UNIV-PARIS8-OA",
+         "PASP"
+      ],
+      "hal_submit_type": "file"
+   },
+   "version": 3
+}
