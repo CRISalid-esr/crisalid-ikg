@@ -305,7 +305,9 @@ class SourceRecordDAO(Neo4jDAO):
             issued=source_record.issued.isoformat() if source_record.issued else None,
             raw_issued=source_record.raw_issued,
             hal_collection_codes=source_record.custom_metadata["hal_collection_codes"] \
-                if source_record.custom_metadata.get("hal_collection_codes") else None
+                if source_record.custom_metadata.get("hal_collection_codes") else None,
+            hal_submit_type=source_record.custom_metadata["hal_submit_type"] \
+                if source_record.custom_metadata.get("hal_submit_type") else None
         )
 
     @classmethod
@@ -345,7 +347,9 @@ class SourceRecordDAO(Neo4jDAO):
             issued=source_record.issued.isoformat() if source_record.issued else None,
             raw_issued=source_record.raw_issued,
             hal_collection_codes=source_record.custom_metadata["hal_collection_codes"] \
-                if source_record.custom_metadata.get("hal_collection_codes") else None
+                if source_record.custom_metadata.get("hal_collection_codes") else None,
+            hal_submit_type = source_record.custom_metadata["hal_submit_type"] \
+                if source_record.custom_metadata.get("hal_submit_type") else None
         )
         return source_record.uid, SourceRecordDAO.Status.UPDATED, None
 
@@ -430,6 +434,8 @@ class SourceRecordDAO(Neo4jDAO):
                 source_record.issue = SourceIssue(**issue)
         if record["s"]["hal_collection_codes"]:
             source_record.hal_collection_codes = record["s"]["hal_collection_codes"]
+        if record["s"]["hal_submit_type"]:
+            source_record.hal_submit_type = record["s"]["hal_submit_type"]
         contributions = record.get("contributions", [])
         SourceRecordDAO._hydrate_contributions(contributions, source_record)
         return source_record
