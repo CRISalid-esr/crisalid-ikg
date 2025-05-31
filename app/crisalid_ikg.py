@@ -21,6 +21,7 @@ from app.search.source_record_index import SourceRecordIndex
 from app.services.documents.document_service import DocumentService
 from app.services.journals.journal_service import JournalService
 from app.services.source_records.equivalence_service import EquivalenceService
+from app.settings.app_env_types import AppEnvTypes
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
     person_unchanged, document_updated, source_record_updated, structure_created, \
     structure_updated, document_sources_changed, document_created, \
@@ -45,12 +46,13 @@ class CrisalidIKG(FastAPI):
 
         self.include_router(healthness_router, prefix="/health")
 
-        logger.remove()
-        logger.add(
-            settings.logger_sink,
-            level=settings.loguru_level,
-            **({"rotation": "100 MB"} if settings.logger_sink != sys.stderr else {}),
-        )
+        if settings.app_env!=AppEnvTypes.TEST:
+            logger.remove()
+            logger.add(
+                settings.logger_sink,
+                level=settings.loguru_level,
+                **({"rotation": "100 MB"} if settings.logger_sink != sys.stderr else {}),
+            )
 
         self.add_exception_handler(NotFoundError, not_found_entity_error_handler)
         self.add_exception_handler(ConflictError, conflicting_entity_error_handler)

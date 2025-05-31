@@ -108,9 +108,11 @@ async def test_merge_documents_with_journal_information(
 
 
 async def test_merge_documents_with_inconsistent_journal_information(
+        # test_app is  invoked to register the signals
         test_app,  # pylint: disable=unused-argument
+        caplog, # pylint: disable=unused-argument
         hal_article_with_inconsistent_journal_1_persisted_model,
-        open_alex_article_with_journal_1_persisted_model  # pylint: disable=unused-argument
+        open_alex_article_with_journal_1_persisted_model,
 ) -> None:
     """
     Test that when 2 equivalent source records with journal information come but the first one (
@@ -143,6 +145,9 @@ async def test_merge_documents_with_inconsistent_journal_information(
     assert journal.titles == ["Journal of Geotechnical and Geoenvironmental Engineering"]
     assert journal.acronym == []
     assert journal.publisher == "American Society of Civil Engineers v2"
+    # FIXME: caplog does not caputure the warning from the journal service
+    # assert "Multiple journals found for source journal issn-l-1090-0241,
+    # ignoring this source record." in caplog.text
 
 
 async def test_merge_documents_with_different_journal_information(
