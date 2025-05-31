@@ -3,6 +3,7 @@ from unittest.mock import patch, AsyncMock, MagicMock
 
 import pytest
 
+from app.models.journal_identifiers import JournalIdentifier
 from app.services.journals.issn_info import IssnInfo
 from app.services.journals.issn_service import ISSNService
 
@@ -55,19 +56,31 @@ def fixture_mock_issn_service():
     Mock the ISSN service response for testing.
     :return:
     """
-    mock_info = IssnInfo(
-        checked_issn="0007-4217",
-        issn_l="0007-4217",
-        related_issns_with_format={
-            "0007-4217": "Print",
-            "2241-0104": "Online",
-            "1234-5678": "Unknown"
-        },
-        title="Sample Journal Title",
-        urls=["http://journal.example.org"]
-    )
 
-    async_mock = AsyncMock(return_value=mock_info)
+    async def mock_check_identifier(identifier: JournalIdentifier):
+        if identifier.value in ["1943-5606", "1090-0241"]:
+            return IssnInfo(
+                checked_issn=identifier.value,
+                issn_l='1090-0241',
+                related_issns_with_format={
+                    '1090-0241': "Print",
+                    '1943-5606': "Online",
+                },
+                title="Journal of Geotechnical and Geoenvironmental Engineering",
+                urls=["http://journalA.example.org"]
+            )
+        return IssnInfo(
+            checked_issn="0007-4217",
+            issn_l="0007-4217",
+            related_issns_with_format={
+                "0007-4217": "Print",
+                "2241-0104": "Online",
+                "1234-5678": "Unknown"
+            },
+            title="Sample Journal Title",
+            urls=["http://journal.example.org"]
+        )
+    async_mock = AsyncMock(side_effect=mock_check_identifier)
 
     with patch.object(ISSNService, "check_identifier", async_mock):
         yield

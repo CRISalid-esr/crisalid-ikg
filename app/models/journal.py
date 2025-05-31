@@ -1,14 +1,15 @@
 from typing import Optional, List, ClassVar
 
 from loguru import logger
-from pydantic import BaseModel, model_validator, Field
+from pydantic import model_validator, Field
 
 from app.models.identifier_types import JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifier, JournalIdentifierFormat
+from app.models.publication_channel import PublicationChannel
 from app.services.journals.issn_info import IssnInfo
 
 
-class Journal(BaseModel):
+class Journal(PublicationChannel):
     """
     Journal API model
     """
@@ -17,8 +18,6 @@ class Journal(BaseModel):
     uid: Optional[str] = None
 
     publisher: Optional[str] = None
-
-    titles: List[str] = []
 
     identifiers: List[JournalIdentifier] = Field(default_factory=list)
 

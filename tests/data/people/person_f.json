@@ -1,0 +1,29 @@
+{
+  "names": [
+    {
+      "last_names": [
+        {
+          "value": "Glemarec",
+          "language": "fr"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "Joelle",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "local",
+      "value": "glemarec-j@univ-nantes.fr"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_uid": "local-U123"
+    }
+  ]
+}

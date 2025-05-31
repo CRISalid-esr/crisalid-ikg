@@ -1,4 +1,4 @@
-MATCH (s:Journal {uid: $uid})
-OPTIONAL MATCH (s)-[r:HAS_IDENTIFIER]->(i:JournalIdentifier)
-RETURN s,
+MATCH (j:Journal {uid: $uid})
+OPTIONAL MATCH (j)-[r:HAS_IDENTIFIER]->(i:JournalIdentifier)
+RETURN j,
        collect(i) AS identifiers

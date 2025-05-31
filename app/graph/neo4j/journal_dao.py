@@ -63,6 +63,19 @@ class JournalDAO(Neo4jDAO):
                 async with await session.begin_transaction() as tx:
                     return await JournalDAO._get_journal_by_uid(tx, journal_uid)
 
+    @handle_database_errors
+    async def get_by_identifier(self, identifier: JournalIdentifier) -> Journal | None:
+        """
+        Get a journal by its identifier from the graph database
+
+        :param identifier: JournalIdentifier object
+        :return: Journal object or None if not found
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await self._get_journal_by_identifier(tx, identifier)
+
     @staticmethod
     async def _journal_exists(tx: AsyncManagedTransaction, journal_uid: str) -> bool:
         result = await tx.run(
@@ -78,6 +91,20 @@ class JournalDAO(Neo4jDAO):
         result = await tx.run(
             load_query("get_journal_by_uid"),
             uid=journal_uid
+        )
+        journal = await result.single()
+        if journal:
+            return cls._hydrate(journal)
+        return None
+
+    @classmethod
+    async def _get_journal_by_identifier(cls, tx: AsyncManagedTransaction,
+                                         identifier: JournalIdentifier
+                                         ) -> Journal | None:
+        result = await tx.run(
+            load_query("get_journal_by_identifier"),
+            identifier_type=identifier.type.value,
+            identifier_value=identifier.value
         )
         journal = await result.single()
         if journal:
@@ -122,10 +149,10 @@ class JournalDAO(Neo4jDAO):
     @staticmethod
     def _hydrate(record) -> Journal:
         journal = Journal(
-            uid=record["s"]["uid"],
-            issn_l=record["s"]["issn_l"],
-            publisher=record["s"]["publisher"],
-            titles=record["s"]["titles"],
+            uid=record["j"]["uid"],
+            issn_l=record["j"]["issn_l"],
+            publisher=record["j"]["publisher"],
+            titles=record["j"]["titles"],
             identifiers=[],
         )
         for identifier in record["identifiers"]:

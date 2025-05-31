@@ -19,7 +19,7 @@ class SourceIssue(BaseModel):
 
     volume: Optional[str] = None
 
-    number: List[str] = []
+    number: Optional[List[str]] = []
 
     rights: Optional[str] = None
 

@@ -6,6 +6,7 @@ from pydantic import BaseModel, model_validator
 
 from app.models.concepts import Concept
 from app.models.contributions import Contribution
+from app.models.document_publication_channel import DocumentPublicationChannel
 from app.models.literal import Literal
 from app.utils.date.partial_iso_8601 import partial_iso8601_interval
 
@@ -24,6 +25,7 @@ class Document(BaseModel):
     to_be_merged_into_uid: Optional[str] = None
     source_record_uids: Optional[List[str]] = None
     contributions: Optional[List[Contribution]] = []
+    publication_channels: List[DocumentPublicationChannel] = []
     type: str = "Document"
 
     _publication_date: Optional[str] = None
