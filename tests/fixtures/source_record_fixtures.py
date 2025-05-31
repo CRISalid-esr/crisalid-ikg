@@ -747,6 +747,46 @@ async def fixture_open_alex_article_with_journal_1_json_data(_base_path) -> dict
     return _source_record_json_data_from_file(_base_path, "open_alex_article_with_journal_1")
 
 
+@pytest_asyncio.fixture(name="open_alex_article_with_journal_2_persisted_model")
+async def fixture_open_alex_article_with_journal_2_persisted_model(
+        open_alex_article_with_journal_2_pydantic_model: SourceRecord,
+        persisted_person_f_pydantic_model: Person) -> SourceRecord:
+    """
+    Persist a source record pydantic model from OpenAlex data with journal 2 information
+    :param open_alex_article_with_journal_2_pydantic_model:
+    :param persisted_person_f_pydantic_model:
+    :return:
+    """
+    service = SourceRecordService()
+    await service.create_source_record(
+        source_record=open_alex_article_with_journal_2_pydantic_model,
+        harvested_for=persisted_person_f_pydantic_model
+    )
+    return await service.get_source_record(
+        open_alex_article_with_journal_2_pydantic_model.uid)
+
+
+@pytest_asyncio.fixture(name="open_alex_article_with_journal_2_pydantic_model")
+async def fixture_open_alex_article_with_journal_2_pydantic_model(
+        open_alex_article_with_journal_2_json_data) -> SourceRecord:
+    """
+    Create an article source record pydantic model from OpenAlex data with journal 2 information
+    :param open_alex_article_with_journal_2_json_data:
+    :return:
+    """
+    return _source_record_from_json_data(open_alex_article_with_journal_2_json_data)
+
+
+@pytest_asyncio.fixture(name="open_alex_article_with_journal_2_json_data")
+async def fixture_open_alex_article_with_journal_2_json_data(_base_path) -> dict:
+    """
+    Create an article source record dict from OpenAlex data with journal 2 information
+    :param _base_path:
+    :return:
+    """
+    return _source_record_json_data_from_file(_base_path, "open_alex_article_with_journal_2")
+
+
 @pytest_asyncio.fixture(name="hal_article_with_journal_1_persisted_model")
 async def fixture_hal_article_with_journal_1_persisted_model(
         hal_article_with_journal_1_pydantic_model: SourceRecord,
@@ -786,6 +826,28 @@ async def fixture_hal_article_with_journal_1_json_data(_base_path) -> dict:
     """
     return _source_record_json_data_from_file(_base_path, "hal_article_with_journal_1")
 
+
+@pytest_asyncio.fixture(name="hal_article_with_journal_2_pydantic_model")
+async def fixture_hal_article_with_journal_2_pydantic_model(
+        hal_article_with_journal_2_json_data) -> SourceRecord:
+    """
+    Create an article source record pydantic model from HAL data with journal 2 information
+    :param hal_article_with_journal_2_json_data:
+    :return:
+    """
+    return _source_record_from_json_data(hal_article_with_journal_2_json_data)
+
+
+@pytest_asyncio.fixture(name="hal_article_with_journal_2_json_data")
+async def fixture_hal_article_with_journal_2_json_data(_base_path) -> dict:
+    """
+    Create an article source record dict from HAL data with journal 2 information
+    :param _base_path:
+    :return:
+    """
+    return _source_record_json_data_from_file(_base_path, "hal_article_with_journal_2")
+
+
 @pytest_asyncio.fixture(name="hal_article_with_inconsistent_journal_1_persisted_model")
 async def fixture_hal_article_with_inconsistent_journal_1_persisted_model(
         hal_article_with_inconsistent_journal_1_pydantic_model: SourceRecord,
@@ -804,6 +866,7 @@ async def fixture_hal_article_with_inconsistent_journal_1_persisted_model(
     return await service.get_source_record(
         hal_article_with_inconsistent_journal_1_pydantic_model.uid)
 
+
 @pytest_asyncio.fixture(name="hal_article_with_inconsistent_journal_1_pydantic_model")
 async def fixture_hal_article_with_inconsistent_journal_1_pydantic_model(
         hal_article_with_inconsistent_journal_1_json_data) -> SourceRecord:
@@ -814,6 +877,7 @@ async def fixture_hal_article_with_inconsistent_journal_1_pydantic_model(
     :return:
     """
     return _source_record_from_json_data(hal_article_with_inconsistent_journal_1_json_data)
+
 
 @pytest_asyncio.fixture(name="hal_article_with_inconsistent_journal_1_json_data")
 async def fixture_hal_article_with_inconsistent_journal_1_json_data(_base_path) -> dict:

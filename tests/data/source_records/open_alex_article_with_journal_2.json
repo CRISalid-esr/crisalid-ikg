@@ -99,15 +99,15 @@
     "date": null,
     "journal": {
       "source": "OpenAlex",
-      "source_identifier": "https://openalex.org/S178493899",
+      "source_identifier": "https://openalex.org/S1239876543",
       "issn": [
-        "1943-5606"
+        "0007-4217"
       ],
       "eissn": [],
       "issn_l": "",
-      "publisher": "American Society of Civil Engineers v2",
+      "publisher": "Publisher of sample journal",
       "titles": [
-        "Journal of Geotechnical and Geoenvironmental Engineering"
+        "Sample journal title"
       ]
     }
   },
