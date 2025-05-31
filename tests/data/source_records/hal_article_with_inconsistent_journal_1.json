@@ -1,0 +1,100 @@
+{
+  "source_identifier": "hal-01006849",
+  "harvester": "HAL",
+  "harvester_version": "1.2.0",
+  "identifiers": [
+    {
+      "type": "hal",
+      "value": "hal-01006849"
+    },
+    {
+      "type": "doi",
+      "value": "10.1061/(asce)1090-0241(2008)134:1(57)"
+    }
+  ],
+  "manifestations": [
+    {
+      "page": "https://hal.science/hal-01006849",
+      "download_url": "https://hal.science/hal-01006849/document",
+      "additional_files": []
+    },
+    {
+      "page": "https://hal.science/hal-01006849/file/FBDM.pdf",
+      "download_url": "https://hal.science/hal-01006849/file/FBDM.pdf",
+      "additional_files": []
+    }
+  ],
+  "titles": [
+    {
+      "value": "Experimental Parametric Study of Suffusion and Backward Erosion",
+      "language": "en"
+    }
+  ],
+  "subtitles": [],
+  "abstracts": [
+    {
+      "value": "Within hydraulic earth structures (dikes, levees, or dams), internal seepage flows can generate the entrainment of soil grains. [...] underlines complexity confinement stress effects phenomena.",
+      "language": "en"
+    }
+  ],
+  "subjects": [],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "hal",
+        "source_identifier": "0000001",
+        "name": "Fateh Bendahmane",
+        "identifiers": [
+          {
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0003-1874-4780"
+          }
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "Hal",
+    "source_identifier": "journal_of_geotechnical_and_geoenvironmental_engineering-134-1-Hal",
+    "titles": [],
+    "volume": "134",
+    "number": [],
+    "rights": null,
+    "date": null,
+    "journal": {
+      "source": "Hal",
+      "source_identifier": "0000-0000",
+      "issn": [
+        "0007-4217",
+        "1090-0241"
+      ],
+      "eissn": [],
+      "issn_l": "1090-0241",
+      "publisher": "American Society of Civil Engineers v1",
+      "titles": [
+        "Journal of Geotechnical and Geoenvironmental Engineering"
+      ]
+    }
+  },
+  "page": "57-67",
+  "book": null,
+  "raw_issued": "2007-12-28",
+  "issued": "2007-12-28 00:00:00",
+  "created": null,
+  "custom_metadata": {
+    "hal_submit_type": "ART",
+    "hal_collection_codes": [
+      "EXAMPLE_COLL"
+    ]
+  },
+  "version": 0
+}

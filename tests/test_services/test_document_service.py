@@ -72,7 +72,7 @@ async def test_update_document(
 async def test_merge_documents_with_journal_information(
         test_app,  # pylint: disable=unused-argument
         hal_article_with_journal_1_persisted_model,
-        open_alex_article_with_journal_1_persisted_model # pylint: disable=unused-argument
+        open_alex_article_with_journal_1_persisted_model  # pylint: disable=unused-argument
 ) -> None:
     """
     Test that when 2 equivalent source records come with journal issn pointing to the same journal,
@@ -95,6 +95,44 @@ async def test_merge_documents_with_journal_information(
     assert isinstance(publication_channel, DocumentPublicationChannel)
     assert publication_channel.pages == ''
     assert publication_channel.volume == '134'
+    assert publication_channel.issue == '1'
+    journal = publication_channel.publication_channel
+    assert journal is not None
+    assert isinstance(journal, Journal)
+    assert journal.uid == "issn-l-1090-0241"
+    assert journal.titles == ["Journal of Geotechnical and Geoenvironmental Engineering"]
+    assert journal.acronym == []
+    assert journal.publisher == "American Society of Civil Engineers v2"
+
+
+async def test_merge_documents_with_inconsistent_journal_information(
+        test_app,  # pylint: disable=unused-argument
+        hal_article_with_inconsistent_journal_1_persisted_model,
+        open_alex_article_with_journal_1_persisted_model  # pylint: disable=unused-argument
+) -> None:
+    """
+    Test that when 2 equivalent source records with journal information come but the first one (
+    from hal) has issn identifier pointing to 2 different journals, the journal information is taken
+    from the second one (from open alex) and the journal information is not merged
+    :param hal_article_with_journal_1_persisted_model: Pydantic SourceRecord object from
+    HAL with journal information and DOI identifier (carries volume information)
+    :param open_alex_article_with_journal__persisted_model: Pydantic SourceRecord object from
+    OpenAlex with journal information and the same DOI identifier (carries number information)
+    """
+    assert hal_article_with_inconsistent_journal_1_persisted_model is not None
+    assert open_alex_article_with_journal_1_persisted_model is not None
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
+    document = await document_dao.get_document_by_source_record_uid(
+        hal_article_with_inconsistent_journal_1_persisted_model.uid)
+    assert document is not None
+    assert document.publication_channels is not None
+    assert len(document.publication_channels) == 1
+    publication_channel = document.publication_channels[0]
+    assert publication_channel is not None
+    assert isinstance(publication_channel, DocumentPublicationChannel)
+    assert publication_channel.pages == ''
+    assert publication_channel.volume == ''
     assert publication_channel.issue == '1'
     journal = publication_channel.publication_channel
     assert journal is not None
