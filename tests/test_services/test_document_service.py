@@ -11,6 +11,7 @@ from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import source_record_created, source_record_updated, \
     document_sources_changed
 
+
 async def test_update_document(
         source_record_id_doi_1_persisted_model: SourceRecord,
         source_record_id_hal_1_persisted_model: SourceRecord,  # pylint: disable=unused-argument

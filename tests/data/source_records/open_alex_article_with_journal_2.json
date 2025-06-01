@@ -1,0 +1,121 @@
+{
+  "source_identifier": "https://openalex.org/W2081413706",
+  "harvester": "OpenAlex",
+  "harvester_version": "1.7.0",
+  "identifiers": [
+    {
+      "type": "open_alex",
+      "value": "https://openalex.org/W2081413706"
+    },
+    {
+      "type": "doi",
+      "value": "10.1061/(asce)1090-0241(2008)134:1(57)"
+    },
+    {
+      "type": "hal",
+      "value": "hal-01006849"
+    }
+  ],
+  "manifestations": [
+    {
+      "page": "https://doi.org/10.1061/(asce)1090-0241(2008)134:1(57)",
+      "download_url": null,
+      "additional_files": []
+    },
+    {
+      "page": "https://hal.science/hal-01006849",
+      "download_url": "https://hal.science/hal-01006849/document",
+      "additional_files": []
+    },
+    {
+      "page": "https://hal.science/hal-01006849/file/FBDM.pdf",
+      "download_url": "https://hal.science/hal-01006849/file/FBDM.pdf",
+      "additional_files": []
+    },
+    {
+      "page": "https://hal.archives-ouvertes.fr/hal-01006849/file/FBDM.pdf",
+      "download_url": "https://hal.archives-ouvertes.fr/hal-01006849/file/FBDM.pdf",
+      "additional_files": []
+    }
+  ],
+  "titles": [
+    {
+      "value": "Experimental Parametric Study of Suffusion and Backward Erosion",
+      "language": "en"
+    }
+  ],
+  "subtitles": [],
+  "abstracts": [
+    {
+      "value": "Within hydraulic earth structures (dikes, levees, or dams), internal seepage flows can generate the entrainment of soil grains. Grain transportation affects both particle size distributions and porosity, changes mechanical characteristics earth\u2019s structure. The occurrence failures in new due to erosion demonstrates urgency improving our knowledge these phenomena erosion. With this intention, a experimental device has been developed that apply stresses reconstituted consolidated cohesive soils without cracks order characterize evolution processes might be present. A parametric study was conducted examine influence three critical parameters on clay sand mechanisms. When gradient low, it concluded structure\u2019s fraction suffusion. increased, initiation backward extent dependent content. underlines complexity confinement stress effects phenomena.",
+      "language": "en"
+    }
+  ],
+  "subjects": [
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "open_alex",
+        "source_identifier": "https://openalex.org/A5063392350",
+        "name": "Fateh Bendahmane",
+        "first_name": null,
+        "last_name": null,
+        "name_variants": [],
+        "structured_name_variants": [],
+        "identifiers": [
+          {
+            "source": "open_alex",
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0003-1874-4780"
+          },
+          {
+            "source": "open_alex",
+            "type": "open_alex",
+            "value": "https://openalex.org/A5063392350"
+          }
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "OpenAlex",
+    "source_identifier": "journal_of_geotechnical_and_geoenvironmental_engineering-134-1-OpenAlex",
+    "titles": [],
+    "volume": null,
+    "number": [
+      "1"
+    ],
+    "rights": null,
+    "date": null,
+    "journal": {
+      "source": "OpenAlex",
+      "source_identifier": "https://openalex.org/S1239876543",
+      "issn": [
+        "0007-4217"
+      ],
+      "eissn": [],
+      "issn_l": "",
+      "publisher": "Publisher of sample journal",
+      "titles": [
+        "Sample journal title"
+      ]
+    }
+  },
+  "page": "57-67",
+  "book": null,
+  "raw_issued": "2007-12-28",
+  "issued": "2007-12-28 00:00:00",
+  "created": "2016-06-24 00:00:00",
+  "custom_metadata": null,
+  "version": 0
+}

@@ -6,8 +6,10 @@ from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.document import Document
+from app.models.document_publication_channel import DocumentPublicationChannel
 from app.models.source_records import SourceRecord
 from app.services.documents.metadata_computation_service import MetadataComputationService
+from app.services.journals.journal_service import JournalService
 from app.services.source_contributors.source_contributor_mapping_service import \
     SourceContributorMappingService
 from app.signals import document_updated, document_created, \
@@ -38,6 +40,12 @@ class DocumentService:
         # set it explicitly to False for code clarity although it is the default value
         document.to_be_recomputed = False
         document.to_be_deleted = False
+        publication_channel: DocumentPublicationChannel = (
+            await JournalService().compute_document_publication_channel(
+                document_uid=document_uid,
+                source_records=sources_records))
+        if publication_channel is not None:
+            document.publication_channels.append(publication_channel)
         # persist the merged document
         dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
         await dao.create_or_update_document(document)

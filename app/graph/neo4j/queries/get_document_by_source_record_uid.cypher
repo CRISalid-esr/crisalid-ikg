@@ -4,11 +4,13 @@ OPTIONAL MATCH (document)-[:HAS_CONTRIBUTION]->(contribution:Contribution)<-[:HA
 OPTIONAL MATCH (contributor:Person)-[:RECORDED_BY]->(sp:SourcePerson)
 MATCH (document)-[:RECORDED_BY]->(sr:SourceRecord)
 OPTIONAL MATCH (document)-[:HAS_SUBJECT]->(c:Concept)
-WITH document, title, collect(DISTINCT contribution {. *, contributor:contributor}) AS contributions, sr, c
+OPTIONAL MATCH (document)-[pi:PUBLISHED_IN]->(journal:Journal)
+WITH document, title, collect(DISTINCT contribution {. *, contributor:contributor}) AS contributions,
+     sr, c, pi, journal
 RETURN document,
        collect(DISTINCT sr) AS source_records,
        collect(DISTINCT title) AS titles,
        collect(DISTINCT c) AS subjects,
        contributions,
+       collect(DISTINCT {volume: pi.volume, issue: pi.issue, pages: pi.pages, journal: journal }) AS publication_channels,
        labels(document) AS labels
-       

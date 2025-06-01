@@ -12,6 +12,8 @@ from app.models.concepts import Concept
 from app.models.conference_article import ConferenceArticle
 from app.models.contributions import Contribution
 from app.models.document import Document
+from app.models.document_publication_channel import DocumentPublicationChannel
+from app.models.journal import Journal
 from app.models.journal_article import JournalArticle
 from app.models.literal import Literal
 from app.models.monograph import Monograph
@@ -75,7 +77,6 @@ class DocumentDAO(Neo4jDAO):
                 )
         return document
 
-
     @handle_database_errors
     async def attach_source_records_to_document(self, document_uid: str,
                                                 source_record_uids: list[str]) -> None:
@@ -128,6 +129,21 @@ class DocumentDAO(Neo4jDAO):
             document_uid=document.uid,
             subject_uids=[subject.uid for subject in document.subjects],
         )
+        update_publication_channels_query = load_query("update_document_publication_channels")
+        await tx.run(
+            update_publication_channels_query,
+            document_uid=document.uid,
+            publication_channels=[
+                {
+                    "journal_uid": pc.publication_channel.uid,
+                    "volume": pc.volume,
+                    "issue": pc.issue,
+                    "pages": pc.pages,
+                }
+                for pc in (document.publication_channels or [])
+            ]
+        )
+
         return result
 
     @classmethod
@@ -328,6 +344,20 @@ class DocumentDAO(Neo4jDAO):
             document.contributions.append(Contribution(**contribution))
 
         document.publication_date = record['document'].get('publication_date')
+
+        publication_channels_data = record.get('publication_channels', [])
+
+        for pc in publication_channels_data:
+            if pc['journal'] is not None:
+                journal = Journal(**pc['journal'])
+                document.publication_channels.append(
+                    DocumentPublicationChannel(
+                        volume=pc.get('volume') or "",
+                        issue=pc.get('issue') or "",
+                        pages=pc.get('pages') or "",
+                        publication_channel=journal
+                    )
+                )
 
         return document
 
