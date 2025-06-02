@@ -10,10 +10,10 @@ from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 
-source_records_cli = typer.Typer()
+source_record_cli = typer.Typer()
 
 
-@source_records_cli.command()
+@source_record_cli.command()
 def resave_source_records_all():
     """
     Reads all source_records from the database and saves them again.
@@ -37,7 +37,7 @@ def resave_source_records_all():
     asyncio.run(_resave_source_records_all())
 
 
-@source_records_cli.command()
+@source_record_cli.command()
 def resave_source_record(
         uid: str = typer.Argument(..., help="The UID of the source_record")
 ):

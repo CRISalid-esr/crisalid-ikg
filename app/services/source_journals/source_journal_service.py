@@ -31,6 +31,15 @@ class SourceJournalService:
             await source_journal_created.send_async(self, source_journal_uid=source_journal.uid)
         return journal
 
+    async def get_source_journal_uids(self) -> list[str]:
+        """
+        Get all source journal UIDs
+        :return:
+        """
+        factory = self._get_dao_factory()
+        source_journal_dao: SourceJournalDAO = factory.get_dao(SourceJournal)
+        return await source_journal_dao.get_source_journal_uids()
+
     @staticmethod
     def _get_dao_factory() -> DAOFactory:
         settings = get_app_settings()
