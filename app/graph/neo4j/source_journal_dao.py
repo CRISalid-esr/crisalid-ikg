@@ -1,6 +1,6 @@
 from typing import NamedTuple
 
-from neo4j import AsyncManagedTransaction
+from neo4j import AsyncManagedTransaction, AsyncTransaction
 
 from app.errors.conflict_error import ConflictError
 from app.errors.database_error import handle_database_errors
@@ -72,6 +72,17 @@ class SourceJournalDAO(Neo4jDAO):
                 async with await session.begin_transaction() as tx:
                     return await SourceJournalDAO._get_source_journal_by_uid(tx, source_journal_uid)
 
+    @handle_database_errors
+    async def get_source_journal_uids(self) -> list[str]:
+        """
+        Get all source journal UIDs from the graph database
+        :return:
+        """
+        async for driver in Neo4jConnexion().get_driver():
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await self._get_source_journal_uids(tx)
+
     @staticmethod
     async def _source_journal_exists(tx: AsyncManagedTransaction, source_journal_uid: str) -> bool:
         result = await tx.run(
@@ -92,6 +103,18 @@ class SourceJournalDAO(Neo4jDAO):
         if source_journal:
             return cls._hydrate(source_journal)
         return None
+
+    @classmethod
+    async def _get_source_journal_uids(cls, tx: AsyncTransaction) -> list[str]:
+        """
+        Get all source journal UIDs from the graph database
+        :param tx: Neo4j transaction object
+        :return:
+        """
+        result = await tx.run(
+            load_query("get_source_journal_uids")
+        )
+        return [record['uid'] async for record in result]
 
     @classmethod
     async def _create_source_journal_transaction(cls, tx: AsyncManagedTransaction,
