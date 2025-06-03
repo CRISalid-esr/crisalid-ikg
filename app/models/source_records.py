@@ -63,7 +63,11 @@ class SourceRecord(BaseModel):
     @classmethod
     def _convert_custom_metadata(cls, values):
         harvester = values.get("harvester")
-        metadata = values.get("custom_metadata", {}) or {}
+        metadata = values.get("custom_metadata")
+
+        if not isinstance(metadata, dict):
+            metadata = {}
+
         if harvester == "HAL":
             values["custom_metadata"] = HalCustomMetadata(**metadata)
         else:

@@ -447,8 +447,8 @@ class SourceRecordDAO(Neo4jDAO):
                 source_record.issue = SourceIssue(**issue)
         if record["s"]["harvester"] == "HAL":
             source_record.custom_metadata = HalCustomMetadata(
-                hal_collection_codes=record["s"].get("hal_collection_codes", []),
-                hal_submit_type=record["s"].get("hal_submit_type", "")
+                hal_collection_codes=record["s"].get("hal_collection_codes", None),
+                hal_submit_type=record["s"].get("hal_submit_type", None)
             )
         contributions = record.get("contributions", [])
         SourceRecordDAO._hydrate_contributions(contributions, source_record)

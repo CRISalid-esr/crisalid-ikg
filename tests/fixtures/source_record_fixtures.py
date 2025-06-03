@@ -706,6 +706,29 @@ async def fixture_hal_article_source_record_with_custom_metadata_v2_json_data(_b
     return _source_record_json_data_from_file(_base_path,
                                               "hal_article_source_record_with_custom_metadata_v2")
 
+@pytest_asyncio.fixture(name=\
+                       "hal_article_source_record_with_inconsistent_custom_metadata_pydantic_model")
+async def fixture_hal_article_source_record_with_inconsistent_custom_metadata_pydantic_model(
+        hal_article_source_record_with_inconsistent_custom_metadata_json_data) -> SourceRecord:
+    """
+    Create an article source record pydantic model from open_alex data
+    :return: basic source record pydantic model from open_alex data
+    """
+    return _source_record_from_json_data(
+        hal_article_source_record_with_inconsistent_custom_metadata_json_data)
+
+
+@pytest_asyncio.fixture(name=\
+                       "hal_article_source_record_with_inconsistent_custom_metadata_json_data")
+async def fixture_hal_article_source_record_with_inconsistent_custom_metadata_json_data(
+        _base_path) -> dict:
+    """
+    Create an article source record dict from open_alex data
+    :return: basic source record dict from open_alex data
+    """
+    return _source_record_json_data_from_file(_base_path,
+                                 "hal_article_source_record_with_inconsistent_custom_metadata")
+
 
 @pytest_asyncio.fixture(name="open_alex_article_with_journal_1_persisted_model")
 async def fixture_open_alex_article_with_journal_1_persisted_model(
