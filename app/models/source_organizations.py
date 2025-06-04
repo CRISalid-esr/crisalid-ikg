@@ -16,6 +16,7 @@ class SourceOrganization(BaseModel):
         """
         Source Organization types
         """
+        ORGANIZATION = "organization"  # generic placeholder when type is not specified
         INSTITUTION = "institution"
         LABORATORY = "laboratory"
         INSTITUTION_GROUP = "institution_group"
@@ -23,14 +24,13 @@ class SourceOrganization(BaseModel):
         RESEARCH_TEAM = "research_team"
         RESEARCH_TEAM_GROUP = "research_team_group"
 
-
     IDENTIFIER_SEPARATOR: ClassVar[str] = "-"
 
     uid: str
     source: str
     source_identifier: str
     name: str
-    type: SourceOrganisationType | None = None
+    type: SourceOrganisationType = SourceOrganisationType.ORGANIZATION
     identifiers: List[SourceOrganizationIdentifier] = []
 
     @model_validator(mode="before")

@@ -167,9 +167,10 @@ class SourceOrganizationDAO(Neo4jDAO):
 
     @staticmethod
     def _hydrate(record) -> SourceOrganization:
-        organization_type_label, = record["s"].labels.difference({"SourceOrganization"})
-        organization_type_label = organization_type_label.replace("Source", "")
-        organization_type = inflection.underscore(organization_type_label).upper()
+        if record["s"]["type"]:
+            organization_type = record["s"]["type"].upper()
+        else:
+            organization_type = "ORGANIZATION"
         assert organization_type in SourceOrganization.SourceOrganisationType.__members__
         source_organization = SourceOrganization(
             uid=record["s"]["uid"],
@@ -187,5 +188,8 @@ class SourceOrganizationDAO(Neo4jDAO):
     @staticmethod
     def _replace_dynamic_label(query: str,
                                organization_type: SourceOrganization.SourceOrganisationType) -> str:
-        dynamic_label = inflection.camelize(organization_type.value)
-        return query.replace("${dynamicLabel}", f"Source{dynamic_label}")
+        if organization_type is None:
+            dynamic_label = ""  # no colon needed; it's already in the template
+        else:
+            dynamic_label = f":Source{inflection.camelize(organization_type.value)}"
+        return query.replace(":${dynamicLabel}", dynamic_label)

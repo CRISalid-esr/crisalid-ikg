@@ -70,3 +70,27 @@ async def test_create_source_laboratory(hal_source_laboratory_pydantic_model: So
     assert source_laboratory.source_identifier == '3002'
     assert source_laboratory.name == 'Laboratoire Interdisciplinaire'
     assert source_laboratory.type == SourceOrganization.SourceOrganisationType.LABORATORY
+
+
+async def test_create_source_org_without_type(
+        hal_source_org_without_type_pydantic_model: SourceOrganization
+) -> None:
+    """
+    Given a source organization Pydantic model without type
+    When the source record is added to the graph
+    Then the source record can be read from the graph with type set to ORGANIZATION
+    :param hal_source_org_without_type_pydantic_model:
+    :return:
+    """
+    service = SourceOrganizationService()
+    await service.create_or_update_source_organization(
+        source_organization=hal_source_org_without_type_pydantic_model)
+    source_org = await service.get_source_organization_by_uid(
+        hal_source_org_without_type_pydantic_model.uid)
+    assert source_org
+    assert source_org.identifiers
+    assert len(source_org.identifiers) == 1
+    assert source_org.identifiers[0].type == 'hal'
+    assert source_org.identifiers[0].value == '9999'
+    assert source_org.name == 'Organization Without Type'
+    assert source_org.type is SourceOrganization.SourceOrganisationType.ORGANIZATION
