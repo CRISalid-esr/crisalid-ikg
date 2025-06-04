@@ -65,6 +65,8 @@ def recompute_metadata_all():
     async def _recompute_metadata_all():
         service = DocumentService()
         uids = await service.get_document_uids()
+        # shuffle the list of UIDs to avoid processing in the same order
+        random.shuffle(uids)
         for uid in uids:
             try:
                 await service.update_from_source_records(None, uid)

@@ -101,7 +101,7 @@ class AMQPMessagePublisher:
                       content: dict) -> None:
         """Publish a message to the AMQP queue"""
         payload, routing_key = await self._build_message(message_type, message_subtype, content)
-        if routing_key is None:
+        if routing_key is None or payload is None:
             return
         try:
             message = aio_pika.Message(
