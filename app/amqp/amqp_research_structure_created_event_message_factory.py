@@ -16,5 +16,4 @@ class AMQPResearchStructureCreatedEventMessageFactory(AMQPResearchStructureEvent
             "type": "research_structure",
             "event": "created",
             "fields": await self._build_research_structure_message_payload(research_structure_uid)
-
         }

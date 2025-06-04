@@ -12,12 +12,23 @@ class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
     def _build_routing_key(self) -> str:
         return self.settings.amqp_harvester_publication_retrieval_routing_key
 
-    async def _build_payload(self) -> dict[str, Any]:
+    async def _build_payload(self) -> dict[str, Any] | None:
         harvesters = os.getenv("HARVESTERS", "idref,scanr,hal,openalex,scopus").split(",")
         person_uid = self.content.get("person_uid")
         print(f"Fetching publications for {person_uid}")
         people_service = PeopleService()
         person = await people_service.get_person(person_uid)
+        identifiers = [
+            {"type": id.type.value, "value": id.value}
+            for id in person.identifiers
+            if id.type not in {PersonIdentifierType.LOCAL, PersonIdentifierType.EPPN}
+        ]
+        # abort if identifiers are empty ; no useful identifiers to harvest publications
+        if not identifiers:
+            print(
+                f"No useful identifiers found for person {person_uid}, "
+                "aborting publication retrieval")
+            return None
         return {
             "type": "person",
             "reply": True,
@@ -26,10 +37,6 @@ class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
             "harvesters": harvesters,
             "fields": {
                 "name": person.display_name if person.display_name else "n/c",
-                "identifiers": [
-                    {"type": id.type.value, "value": id.value}
-                    for id in person.identifiers
-                    if id.type is not PersonIdentifierType.LOCAL
-                ],
+                "identifiers": identifiers,
             },
         }
