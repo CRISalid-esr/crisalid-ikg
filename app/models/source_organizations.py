@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, ClassVar
 
 from loguru import logger
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, field_validator
 
 from app.models.source_organization_identifiers import SourceOrganizationIdentifier
 
@@ -32,6 +32,13 @@ class SourceOrganization(BaseModel):
     name: str
     type: SourceOrganisationType = SourceOrganisationType.ORGANIZATION
     identifiers: List[SourceOrganizationIdentifier] = []
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def _set_default_type(cls, v):
+        if v is None:
+            return SourceOrganization.SourceOrganisationType.ORGANIZATION
+        return v
 
     @model_validator(mode="before")
     @classmethod
