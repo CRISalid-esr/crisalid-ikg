@@ -71,7 +71,7 @@ class ISSNService:
         url = f"{self.BASE_URL}/{issn}?format=json"
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=self.headers) as resp:
+                async with session.get(url, headers=self.headers, allow_redirects=False) as resp:
                     if resp.status != 200:
                         logger.error(f"HTTP error {resp.status} fetching {url}")
                         return None
