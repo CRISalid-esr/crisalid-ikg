@@ -910,3 +910,46 @@ async def fixture_hal_article_with_inconsistent_journal_1_json_data(_base_path) 
     :return:
     """
     return _source_record_json_data_from_file(_base_path, "hal_article_with_inconsistent_journal_1")
+
+
+@pytest_asyncio.fixture(name="hal_article_with_first_version_journal_pydantic_model")
+async def fixture_hal_article_with_first_version_journal_pydantic_model(
+        hal_article_with_first_version_journal_json_data) -> SourceRecord:
+    """
+    Create an article source record pydantic model from HAL data
+    with inconsistent journal 1 information
+    :param hal_article_with_inconsistent_journal_1_json_data:
+    :return:
+    """
+    return _source_record_from_json_data(hal_article_with_first_version_journal_json_data)
+
+
+@pytest_asyncio.fixture(name="hal_article_with_first_version_journal_json_data")
+async def fixture_hal_article_with_first_version_journal_json_data(_base_path) -> dict:
+    """
+    Create an article source record dict from HAL data with inconsistent journal 1 information
+    :param _base_path:
+    :return:
+    """
+    return _source_record_json_data_from_file(_base_path, "hal_article_with_first_version_journal")
+
+@pytest_asyncio.fixture(name="hal_article_with_second_version_journal_pydantic_model")
+async def fixture_hal_article_with_second_version_journal_pydantic_model(
+        hal_article_with_second_version_journal_json_data) -> SourceRecord:
+    """
+    Create an article source record pydantic model from HAL data
+    with inconsistent journal 1 information
+    :param hal_article_with_inconsistent_journal_1_json_data:
+    :return:
+    """
+    return _source_record_from_json_data(hal_article_with_second_version_journal_json_data)
+
+
+@pytest_asyncio.fixture(name="hal_article_with_second_version_journal_json_data")
+async def fixture_hal_article_with_second_version_journal_json_data(_base_path) -> dict:
+    """
+    Create an article source record dict from HAL data with inconsistent journal 1 information
+    :param _base_path:
+    :return:
+    """
+    return _source_record_json_data_from_file(_base_path, "hal_article_with_second_version_journal")
