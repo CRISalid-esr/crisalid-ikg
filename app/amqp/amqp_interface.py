@@ -62,16 +62,11 @@ class AMQPInterface:
                                self.settings.amqp_publications_queue_name)
 
         logger.info("Attaching message processing workers...")
-        await self._attach_message_processing_workers(self.settings.amqp_people_topic)
-        await self._attach_message_processing_workers(self.settings.amqp_publications_topic)
-        await self._attach_message_processing_workers(self.settings.amqp_structures_topic)
+        self._attach_message_processing_workers(self.settings.amqp_people_topic)
+        self._attach_message_processing_workers(self.settings.amqp_publications_topic)
+        self._attach_message_processing_workers(self.settings.amqp_structures_topic)
 
         logger.info("AMQP interface setup complete")
-
-    async def listen(self, topic: str) -> None:
-        """Listen to AMQP queue"""
-        logger.info(f"Starting to listen on topic: {topic}")
-        await self._listen_to_messages(topic)
 
     async def stop_listening(self) -> None:
         """Stop listening to AMQP queue"""
@@ -284,28 +279,33 @@ class AMQPInterface:
                                 {"document_uid": document_uid
                                  })
 
-    async def _attach_message_processing_workers(self, topic: str):
+    def _attach_message_processing_workers(self, topic: str):
         logger.info(f"Attaching message processing workers for topic: {topic}")
         self.inner_tasks_queues[topic] = asyncio.Queue(
             maxsize=self.INNER_TASKS_QUEUE_LENGTH)
         for worker_id in range(self.settings.amqp_task_parallelism_limit):
-            await self._attach_message_processing_worker(topic, worker_id)
+            self._attach_message_processing_worker(topic, worker_id)
 
-    async def _attach_message_processing_worker(self, topic, worker_id):
+    def _attach_message_processing_worker(self, topic, worker_id):
         logger.info(f"Creating message processor for worker {worker_id} on topic: {topic}")
-        processor = await self._message_processor(topic)
+        processor = self._message_processor(topic)
         task = asyncio.create_task(
             processor.wait_for_message(worker_id),
             name=f"amqp_message_processor_{topic}_{worker_id}",
         )
         self.message_processing_workers[topic].append(task)
 
-    async def _message_processor(self, topic: str) -> AMQPMessageProcessor:
+    def _message_processor(self, topic: str) -> AMQPMessageProcessor:
         return AMQPMessageProcessorFactory.get_processor(topic,
                                                          self.inner_tasks_queues[topic])
 
-    async def _listen_to_messages(self, topic: str):
-        logger.info(f"Listening to messages on topic: {topic}")
+    async def listen(self, topic: str) -> None:
+        """
+        Listen to AMQP queue
+        :param topic: topic to listen to
+        :return: None
+        """
+        logger.info(f"Starting to listen on topic: {topic}")
         try:
             async with self.pika_queues[topic].iterator() as queue_iter:
                 async for message in queue_iter:

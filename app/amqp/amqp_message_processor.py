@@ -31,9 +31,11 @@ class AMQPMessageProcessor(ABC):
         :param worker_id: queue worker identifier
         :return: None
         """
+        message: IncomingMessage | None = None
+        payload = None
 
         while True:
-            message: IncomingMessage | None = await self.tasks_queue.get()
+            message = await self.tasks_queue.get()
             start_time = datetime.now()
             requeue = False
             async with message.process(ignore_processed=True):
@@ -42,7 +44,6 @@ class AMQPMessageProcessor(ABC):
                 try:
                     await self._process_message(key, payload)
                     await message.ack()
-                    self.tasks_queue.task_done()
                 except ValueError as error:
                     logger.error(
                         f"Invalid message received by {worker_id} : {error}",
@@ -70,7 +71,7 @@ class AMQPMessageProcessor(ABC):
                 finally:
                     if not message.processed:
                         await message.nack(requeue=requeue)
-                        self.tasks_queue.task_done()
+                    self.tasks_queue.task_done()
                     end_time = datetime.now()
                     logger.warning(
                         f"Performance : Message  processed by {worker_id} "
