@@ -3,7 +3,7 @@ App settings base class
 """
 import logging
 import os
-from typing import ClassVar, TextIO
+from typing import ClassVar, TextIO, List
 
 import yaml
 from pydantic_settings import BaseSettings
@@ -85,6 +85,13 @@ class AppSettings(BaseSettings):
     amqp_directory_structure_event_routing_key: str = "event.structures.structure.*"
     amqp_harvester_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
 
+    event_types_to_process: List[str] = [
+        "created",
+        "updated",
+        "unchanged",
+        "deleted"
+    ]
+
     org_registry_url: str = "http://localhost:3000"
 
     institution_name: str = "XYZ University"
@@ -134,4 +141,4 @@ class AppSettings(BaseSettings):
     coauthor_names_maximal_distance: int = 30
     reluctance_to_fuzzy_match_authors: int = 3  # 1 is low, 10 is high, 30 is very high
 
-    issn_check_delay: int = 3 * 30 * 24 * 60 * 60 # 3 months in seconds
+    issn_check_delay: int = 3 * 30 * 24 * 60 * 60  # 3 months in seconds
