@@ -322,6 +322,7 @@ class AMQPInterface:
                                 self.message_processing_workers[
                                     topic]) + 1)
                     await self.inner_tasks_queues[topic].put(message)
+                    await asyncio.sleep(0)
                     logger.debug(f"Number of messages in queue after adding :"
                                  f" {self.inner_tasks_queues[topic].qsize()}")
                     logger.debug(f"Message added to inner queue for topic: {topic}")
