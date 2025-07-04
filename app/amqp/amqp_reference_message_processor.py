@@ -28,6 +28,10 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         event_data = json_payload["reference_event"]
         person_data = json_payload["entity"]
         event_type = event_data["type"]
+        # If the event type is not in settings.event_types_to_process, we skip processing
+        if event_type not in self.settings.event_types_to_process:
+            logger.info(f"Event type {event_type} not in settings, skipping processing")
+            return
         reference_data = event_data["reference"]
         try:
             person = Person(**person_data | {'display_name': person_data['name']})

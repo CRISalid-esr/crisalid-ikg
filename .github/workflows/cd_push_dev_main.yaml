@@ -22,4 +22,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: crisalidesr/crisalid-ikg:v0.18-dev
+          tags: |
+            crisalidesr/crisalid-ikg:v0.19-dev
+            crisalidesr/crisalid-ikg:latest

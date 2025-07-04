@@ -3,7 +3,7 @@ App settings base class
 """
 import logging
 import os
-from typing import ClassVar, TextIO
+from typing import ClassVar, TextIO, List
 
 import yaml
 from pydantic_settings import BaseSettings
@@ -56,13 +56,13 @@ class AppSettings(BaseSettings):
     amqp_structures_queue_name: str = "crisalid-ikg-structures"
     amqp_wait_before_shutdown: int = 30
     amqp_task_parallelism_limit: int = 10
+    amqp_prefetch_count: int = 10
     amqp_publications_topic: str = "publications"
     amqp_publications_exchange_name: str = "publications"
     amqp_people_topic: str = "people"
     amqp_structures_topic: str = "structures"
     amqp_directory_exchange_name: str = "directory"
     amqp_graph_exchange_name: str = "graph"
-    amqp_prefetch_count: int = 10
     amqp_consumer_ack_timeout: int = 43200000
     amqp_harvester_reference_event_routing_key: str = "event.references.reference.*"
     amqp_directory_people_event_routing_key: str = "event.people.person.*"
@@ -84,6 +84,13 @@ class AppSettings(BaseSettings):
     amqp_graph_document_event_unchanged_routing_key: str = "event.documents.document.unchanged"
     amqp_directory_structure_event_routing_key: str = "event.structures.structure.*"
     amqp_harvester_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
+
+    event_types_to_process: List[str] = [
+        "created",
+        "updated",
+        "unchanged",
+        "deleted"
+    ]
 
     org_registry_url: str = "http://localhost:3000"
 
@@ -134,4 +141,4 @@ class AppSettings(BaseSettings):
     coauthor_names_maximal_distance: int = 30
     reluctance_to_fuzzy_match_authors: int = 3  # 1 is low, 10 is high, 30 is very high
 
-    issn_check_delay: int = 3 * 30 * 24 * 60 * 60 # 3 months in seconds
+    issn_check_delay: int = 3 * 30 * 24 * 60 * 60  # 3 months in seconds
