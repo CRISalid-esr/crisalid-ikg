@@ -316,7 +316,7 @@ class AMQPInterface:
                     if queue_size == self.settings.amqp_prefetch_count - 2:
                         logger.warning(f"Queue for topic '{topic}' is almost full. "
                                        f"Attaching a new worker to process messages.")
-                        await self._attach_message_processing_worker(
+                        self._attach_message_processing_worker(
                             topic,
                             len(
                                 self.message_processing_workers[
