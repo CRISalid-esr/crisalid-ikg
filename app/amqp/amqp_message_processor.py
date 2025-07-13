@@ -42,22 +42,27 @@ class AMQPMessageProcessor(ABC):
                 async with message.process(ignore_processed=True):
                     payload = message.body
                     key = message.routing_key
-                    await self._process_message(key, payload)
-                    await message.ack()
-            except ValueError as error:
-                logger.error(
-                    f"Invalid message received by {worker_id} : {error}",
-                    exc_info=True
-                )
-                traceback.print_exc()
-            except DatabaseError as database_error:
-                logger.error(traceback.format_exc())
-                logger.error(
-                    f"Database error for worker {worker_id} "
-                    f"message processing : {database_error}",
-                    exc_info=True
-                )
-                requeue = True
+                    try:
+                        await self._process_message(key, payload)
+                        await message.ack()
+                    # inner exceptions
+                    except ValueError as error:
+                        logger.error(
+                            f"Invalid message received by {worker_id} : {error}",
+                            exc_info=True
+                        )
+                    except DatabaseError as database_error:
+                        logger.error(traceback.format_exc())
+                        logger.error(
+                            f"Database error for worker {worker_id} "
+                            f"message processing : {database_error}",
+                            exc_info=True
+                        )
+                        requeue = True
+                    finally:
+                        if not message.processed:
+                            await message.nack(requeue=requeue)
+            # outer  exceptions
             except KeyboardInterrupt as keyboard_interrupt:
                 logger.warning(f"Amqp connect worker {worker_id} has been cancelled")
                 await message.nack(requeue=True)
@@ -70,8 +75,6 @@ class AMQPMessageProcessor(ABC):
                 logger.error(traceback.format_exc())
             finally:
                 self.tasks_queue.task_done()
-                if not message.processed:
-                    await message.nack(requeue=requeue)
                 await asyncio.sleep(0)
                 end_time = datetime.now()
                 logger.warning(
