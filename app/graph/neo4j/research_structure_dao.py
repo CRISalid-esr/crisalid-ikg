@@ -26,7 +26,7 @@ class ResearchStructureDAO(Neo4jDAO):
         :param research_structure: research_structure object
         :return: None
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_research_structure_transaction,
                                                 research_structure)
@@ -40,7 +40,7 @@ class ResearchStructureDAO(Neo4jDAO):
         :param research_structure: research_structure object
         :return: None
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._update_research_structure_transaction,
                                                 research_structure)
@@ -56,7 +56,7 @@ class ResearchStructureDAO(Neo4jDAO):
         :return: the uid of the research_structure and the status of the operation
         """
         status: Neo4jDAO.Status = None
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 local_identifier_value = research_structure.get_identifier(
                     OrganizationIdentifierType.LOCAL).value
@@ -84,7 +84,7 @@ class ResearchStructureDAO(Neo4jDAO):
         :param identifier_value: identifier value
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(
@@ -105,7 +105,7 @@ class ResearchStructureDAO(Neo4jDAO):
         :param research_structure_uid: research_structure uid
         :return: research_structure object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(self._get_research_structure_by_uid,
                                                       research_structure_uid)
@@ -117,7 +117,7 @@ class ResearchStructureDAO(Neo4jDAO):
 
         :return: A list of all research structure UIDs.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(load_query("get_all_research_structure_uids"))

@@ -60,7 +60,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param source_record: source record object
         :return: source record uid, operation status and update status details
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_source_record_transaction,
                                                 source_record,
@@ -80,7 +80,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param source_record: source record object
         :return: source record uid, operation status and update status details
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._update_source_record_transaction(tx, source_record,
@@ -93,7 +93,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param source_record_id:
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._get_source_records_with_shared_identifier_uids(
@@ -109,7 +109,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param equivalence_type: The type of equivalence (INFERRED, ASSERTED, PREDICTED).
         :return: A list of equivalent UIDs.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._get_source_records_equivalent_uids(tx, source_record_uid,
@@ -123,7 +123,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param document_uid:
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 result = await session.run(
                     load_query("get_source_record_uids_by_document_uid"),
@@ -141,7 +141,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param target_source_record_uids:
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._delete_inferred_equivalence_relationships(
@@ -156,7 +156,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param source_record_uids:
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._create_inferred_equivalence_relationships(tx,
@@ -170,7 +170,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param source_record_uid: source record uid
         :return: source record object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(self._get_source_record_by_uid,
                                                       source_record_uid)
@@ -181,7 +181,7 @@ class SourceRecordDAO(Neo4jDAO):
         Get all source record UIDs
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(self._get_all_uids_transaction)
 
@@ -193,7 +193,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param source_record_uid: source record uid
         :return: True if the source record exists, False otherwise
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourceRecordDAO._source_record_exists(tx, source_record_uid)
@@ -205,7 +205,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param source_record_uid:
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.run(
                     load_query("delete_source_record_contributions"),
@@ -221,7 +221,7 @@ class SourceRecordDAO(Neo4jDAO):
         :param source_record_uid:
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     await SourceRecordDAO._create_contribution_transaction(tx, source_contribution,

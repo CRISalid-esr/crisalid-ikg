@@ -20,7 +20,7 @@ class Neo4jDAO(DAO[AsyncDriver]):
         :param language: literal language
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(

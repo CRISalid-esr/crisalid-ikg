@@ -8,6 +8,7 @@ from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.document import Document
 from app.models.document_publication_channel import DocumentPublicationChannel
 from app.models.source_records import SourceRecord
+from app.services.changes.change_service import ChangeService
 from app.services.documents.metadata_computation_service import MetadataComputationService
 from app.services.journals.journal_service import JournalService
 from app.services.source_contributors.source_contributor_mapping_service import \
@@ -49,6 +50,7 @@ class DocumentService:
         # persist the merged document
         dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
         await dao.create_or_update_document(document)
+        await ChangeService().apply_changes_to_node(document_uid)
         await self.signal_document_updated(document_uid)
 
     async def signal_document_updated(self, document_uid):

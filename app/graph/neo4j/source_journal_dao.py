@@ -32,7 +32,7 @@ class SourceJournalDAO(Neo4jDAO):
         :param source_journal: source journal Pydantic object
         :return: source journal object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_source_journal_transaction,
                                                 source_journal
@@ -47,7 +47,7 @@ class SourceJournalDAO(Neo4jDAO):
         :param source_journal: source journal Pydantic object
         :return: source journal object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     source_journal_exists = await SourceJournalDAO._source_journal_exists(
@@ -67,7 +67,7 @@ class SourceJournalDAO(Neo4jDAO):
         :param source_journal_uid: source journal uid
         :return: source journal object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourceJournalDAO._get_source_journal_by_uid(tx, source_journal_uid)
@@ -78,7 +78,7 @@ class SourceJournalDAO(Neo4jDAO):
         Get all source journal UIDs from the graph database
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._get_source_journal_uids(tx)

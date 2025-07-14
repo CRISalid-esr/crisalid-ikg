@@ -26,7 +26,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param source_person: source person Pydantic object
         :return: source person object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_source_person_transaction,
                                                 source_person
@@ -41,7 +41,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param source_person: source person Pydantic object
         :return: source person object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     source_person_exists = await SourcePersonDAO._source_person_exists(
@@ -61,7 +61,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param source_person_uid: source person uid
         :return: True if the source person exists, False otherwise
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourcePersonDAO._source_person_exists(tx, source_person_uid)
@@ -79,7 +79,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param document_uid: the context document in which the distances are computed
         :param number_of_layers: the depth of the equivalence paths to compute
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._create_source_people_clusters(tx, source_people_uids,
@@ -97,7 +97,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param document_uid: the context document in which the relationships are computed
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     await self._create_contextual_equivalents(tx, source_people_couples,
@@ -111,7 +111,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param source_person_uid: The UID of the source person to find equivalents for.
         :return: List of inferred equivalent UIDs.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(self._get_equivalents_transaction,
                                                       source_person_uid)
@@ -124,7 +124,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param uids: List of SourcePerson UIDs.
         :return: List of identifiers as dictionaries with 'type' and 'value'.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(self._get_identifiers_by_uids, uids)
 
@@ -137,7 +137,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param source_person_uids: List of SourcePerson UIDs.
         :param person_uid: UID of the Person to link with RECORDED_BY relationships.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._link_to_person_transaction,
                                                 source_person_uids, person_uid)
@@ -247,7 +247,7 @@ class SourcePersonDAO(Neo4jDAO):
         :param source_person_uid: source person uid
         :return: source person object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourcePersonDAO._get_source_person_by_uid(tx, source_person_uid)

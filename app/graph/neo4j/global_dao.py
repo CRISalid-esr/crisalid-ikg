@@ -24,7 +24,7 @@ class GlobalDAO(Neo4jDAO):
         # if environment is not test, raise an error
         if settings.app_env not in [AppEnvTypes.TEST, AppEnvTypes.DEV]:
             raise ValueError("This method is only available in the test or dev environment")
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._reset_all_transaction)
 

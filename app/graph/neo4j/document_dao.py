@@ -44,7 +44,7 @@ class DocumentDAO(Neo4jDAO):
         :param uid: UID of the document
         :return: Document object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._get_document_by_uid(tx, uid)
@@ -55,7 +55,7 @@ class DocumentDAO(Neo4jDAO):
         Get all document uids
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._get_document_uids(tx)
@@ -69,7 +69,7 @@ class DocumentDAO(Neo4jDAO):
         :type document: a document object
         :return: document object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 document = await session.write_transaction(
                     self._create_or_update_document_transaction,
@@ -86,7 +86,7 @@ class DocumentDAO(Neo4jDAO):
         :param source_record_uids: list of source record UIDs
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(
                     self._attach_source_records_to_document_transaction,
@@ -194,7 +194,7 @@ class DocumentDAO(Neo4jDAO):
         :param source_record_uid:
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._get_document_by_source_record_uid(tx,
@@ -225,7 +225,7 @@ class DocumentDAO(Neo4jDAO):
         :param roles: List of roles to attach to the contribution.
         :return: UID of the created Contribution.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.write_transaction(
                     self._create_contribution_transaction,
@@ -276,7 +276,7 @@ class DocumentDAO(Neo4jDAO):
         :param contribution_ids: List of contribution IDs to retain.
         :return: None
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(
                     self._delete_contributions_not_in_transaction,
