@@ -1,6 +1,7 @@
 from loguru import logger
-from pydantic import BaseModel
 from neo4j import Record, AsyncTransaction, AsyncResult, AsyncManagedTransaction
+# pylint: disable=wrong-import-order
+from pydantic import BaseModel
 
 from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
@@ -376,3 +377,32 @@ class DocumentDAO(Neo4jDAO):
         most_specific_class = matched_classes[-1]
 
         return cls.DOCUMENT_CLASS_MAP[most_specific_class]
+
+    @handle_database_errors
+    async def remove_subjects(
+            self,
+            document_uid: str,
+            subject_uids: list[str]
+    ) -> None:
+        """
+        Remove specific subject relationships from a document node.
+
+        :param document_uid: UID of the document
+        :param subject_uids: List of concept UIDs to remove from the document
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._remove_subjects_transaction,
+                    document_uid=document_uid,
+                    subject_uids=subject_uids
+                )
+
+    @staticmethod
+    async def _remove_subjects_transaction(
+            tx: AsyncManagedTransaction,
+            document_uid: str,
+            subject_uids: list[str]
+    ) -> None:
+        query = load_query("remove_document_subjects")
+        await tx.run(query, document_uid=document_uid, subject_uids=subject_uids)

@@ -1,5 +1,9 @@
-from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
-from app.graph.neo4j.utils import load_query
+from typing import cast
+
+from app.config import get_app_settings
+from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from app.graph.neo4j.document_dao import DocumentDAO
+from app.models.document import Document
 from app.services.changes.processors.abstract_change_processor import AbstractChangeProcessor
 
 
@@ -17,16 +21,13 @@ class DocumentSubjectsChangeProcessor(AbstractChangeProcessor):
         document_uid = self.change.target_uid
         if not isinstance(document_uid, str):
             raise ValueError(f"Invalid 'targetUid' in change: {self.change.target_uid}")
+        await self._get_document_dao().remove_subjects(document_uid=document_uid,
+                                                       subject_uids=subject_uids)
 
-        async with Neo4jConnexion().get_driver() as driver:
-            async with driver.session() as session:
-                await session.execute_write(
-                    self._remove_subjects_tx,
-                    document_uid=document_uid,
-                    subject_uids=subject_uids,
-                )
+    def _get_document_dao(self) -> DocumentDAO:
+        factory = self._get_dao_factory()
+        return cast(DocumentDAO, factory.get_dao(Document))
 
-    @staticmethod
-    async def _remove_subjects_tx(tx, document_uid: str, subject_uids: list[str]):
-        query = load_query("remove_document_subjects")
-        await tx.run(query, document_uid=document_uid, subject_uids=subject_uids)
+    def _get_dao_factory(self):
+        settings = get_app_settings()
+        return AbstractDAOFactory().get_dao_factory(settings.graph_db)
