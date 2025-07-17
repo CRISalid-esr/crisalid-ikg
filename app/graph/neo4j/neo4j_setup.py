@@ -13,7 +13,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
     """
 
     async def run(self):
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_constraints)
 

@@ -32,6 +32,7 @@ class AMQPInterface:
             "people": [self.settings.amqp_directory_people_event_routing_key],
             "structures": [self.settings.amqp_directory_structure_event_routing_key],
             "publications": [self.settings.amqp_harvester_reference_event_routing_key],
+            "user_actions": [self.settings.amqp_graph_document_task_routing_key],
         }
 
     async def connect(self, listen=True) -> None:
@@ -41,7 +42,7 @@ class AMQPInterface:
         logger.info("Connected to AMQP broker")
 
         logger.info("Declaring exchanges...")
-        await self._declare_exchange(self.settings.amqp_graph_exchange_name)
+        await self._declare_exchange(self.settings.amqp_graph_exchange_name, with_dlx=True)
         await self._declare_exchange(self.settings.amqp_publications_exchange_name)
 
         if not listen:
@@ -60,11 +61,16 @@ class AMQPInterface:
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
                                self.settings.amqp_publications_topic,
                                self.settings.amqp_publications_queue_name)
+        await self._bind_queue(self.settings.amqp_graph_exchange_name,
+                               self.settings.amqp_user_actions_topic,
+                               self.settings.amqp_user_actions_queue_name,
+                               with_dlq=True)
 
         logger.info("Attaching message processing workers...")
         self._attach_message_processing_workers(self.settings.amqp_people_topic)
         self._attach_message_processing_workers(self.settings.amqp_publications_topic)
         self._attach_message_processing_workers(self.settings.amqp_structures_topic)
+        self._attach_message_processing_workers(self.settings.amqp_user_actions_topic)
 
         logger.info("AMQP interface setup complete")
 
@@ -331,7 +337,28 @@ class AMQPInterface:
             logger.error(f"Error while listening to messages on topic '{topic}': {e}",
                          exc_info=True)
 
-    async def _declare_exchange(self, exchange_name: str) -> None:
+    async def _declare_exchange(self, exchange_name: str, with_dlx=False) -> None:
+        if exchange_name in self.pika_exchanges:
+            logger.info(f"Exchange {exchange_name} already declared, skipping.")
+            return
+        if with_dlx:
+            logger.info(f"Declaring exchange with dead-letter support: {exchange_name}")
+            dlx_exchange_name = f"dlx.{exchange_name}"
+            if dlx_exchange_name not in self.pika_exchanges:
+                logger.info(f"Declaring dead-letter exchange: {dlx_exchange_name}")
+                self.pika_exchanges[dlx_exchange_name] = await self.pika_channel.declare_exchange(
+                    dlx_exchange_name,
+                    ExchangeType.TOPIC,
+                    durable=True,
+                )
+                logger.info(f"Dead-letter exchange declared: {dlx_exchange_name}")
+            logger.info(f"Declaring exchange with dead-letter support: {exchange_name}")
+            self.pika_exchanges[exchange_name] = await self.pika_channel.declare_exchange(
+                exchange_name,
+                ExchangeType.TOPIC,
+                durable=True,
+            )
+            return
         logger.info(f"Declaring exchange: {exchange_name}")
         self.pika_exchanges[exchange_name] = await self.pika_channel.declare_exchange(
             exchange_name,
@@ -341,19 +368,41 @@ class AMQPInterface:
         logger.info(f"Exchange declared: {exchange_name}")
 
     async def _bind_queue(self, exchange_name: str,
-                          topic: str, queue_name: str) -> None:
+                          topic: str, queue_name: str, with_dlq=False) -> None:
         logger.info(
             f"Declaring and binding queue '{queue_name}' "
             f"to exchange '{exchange_name}' with topic '{topic}'")
+
+        queue_arguments = {
+            "x-consumer-timeout": self.settings.amqp_consumer_ack_timeout,
+        }
+
+        if with_dlq:
+            queue_arguments["x-dead-letter-exchange"] = f"dlx.{exchange_name}"
+            queue_arguments["x-dead-letter-routing-key"] = topic
+
         self.pika_queues[topic] = await self.pika_channel.declare_queue(
             queue_name,
             durable=True,
-            arguments={"x-consumer-timeout": self.settings.amqp_consumer_ack_timeout},
+            arguments=queue_arguments,
         )
+
         for key in self.keys[topic]:
-            await self.pika_queues[topic].bind(self.pika_exchanges[exchange_name],
-                                               routing_key=key)
+            await self.pika_queues[topic].bind(self.pika_exchanges[exchange_name], routing_key=key)
+
         logger.info(f"Queue '{queue_name}' bound to exchange '{exchange_name}'")
+
+        if with_dlq:
+            dlq_name = f"dlq.{queue_name}"
+            dlx_key = f"dlx.{topic}"
+            self.pika_queues[dlx_key] = await self.pika_channel.declare_queue(
+                dlq_name,
+                durable=True,
+                arguments={"x-consumer-timeout": self.settings.amqp_consumer_ack_timeout},
+            )
+            await self.pika_queues[dlx_key].bind(self.pika_exchanges[f"dlx.{exchange_name}"],
+                                                 routing_key="#")
+            logger.info(f"Dead-letter queue '{dlq_name}' bound to DLX '{f'dlx.{exchange_name}'}'")
 
     async def _connect(self) -> None:
         logger.info("Establishing AMQP connection...")

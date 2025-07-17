@@ -23,7 +23,7 @@ class ConceptDAO(Neo4jDAO):
         :param uid: concept uid
         :return: concept object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(
@@ -42,7 +42,7 @@ class ConceptDAO(Neo4jDAO):
         :param uri: concept uri
         :return: concept object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(
@@ -62,7 +62,7 @@ class ConceptDAO(Neo4jDAO):
         :param concept: concept object
         :return: concept uid
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_concept_transaction, concept)
         return concept.uri
@@ -79,7 +79,7 @@ class ConceptDAO(Neo4jDAO):
         if not concept:
             raise ConflictError(
                 f"Concept identified by {concept.uri} cannot be updated as it does not exist")
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._update_concept_transaction, concept,
                                                 existing_concept)

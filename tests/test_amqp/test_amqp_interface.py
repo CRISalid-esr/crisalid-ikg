@@ -19,6 +19,6 @@ async def test_amqp_connect(mock_connect):
     assert mock_connect.call_args[0][
                0] == "amqp://rabbitmq_test_user:rabbitmq_test_password@rabbitmq_test_host/"
     assert amqp_interface.pika_channel.set_qos.called
-    assert amqp_interface.pika_channel.declare_exchange.call_count == 3
+    assert amqp_interface.pika_channel.declare_exchange.call_count == 4
     assert [key in amqp_interface.pika_exchanges for key in
             ["people", "structures", "publications"]]

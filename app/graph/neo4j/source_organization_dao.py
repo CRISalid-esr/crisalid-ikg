@@ -25,7 +25,7 @@ class SourceOrganizationDAO(Neo4jDAO):
         :param source_organization: source organization Pydantic object
         :return: source organization object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_source_organization_transaction,
                                                 source_organization
@@ -40,7 +40,7 @@ class SourceOrganizationDAO(Neo4jDAO):
         :param source_organization: source organization Pydantic object
         :return: source organization object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     source_organization_exists = \
@@ -62,7 +62,7 @@ class SourceOrganizationDAO(Neo4jDAO):
         :param source_organization_uid: source organization uid
         :return: True if the source organization exists, False otherwise
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourceOrganizationDAO._source_organization_exists(
@@ -77,7 +77,7 @@ class SourceOrganizationDAO(Neo4jDAO):
         :param source_organization_uid: source organization uid
         :return: source organization object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourceOrganizationDAO._get_source_organization_by_uid(

@@ -42,7 +42,7 @@ class PersonDAO(Neo4jDAO):
         :param person_uid: person uid
         :return: person object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(self._get_person_by_uid, person_uid)
 
@@ -54,7 +54,7 @@ class PersonDAO(Neo4jDAO):
         :param person: person object
         :return: person uid and operation status
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_person_transaction, person)
         return person.uid, PersonDAO.Status.CREATED, None
@@ -67,7 +67,7 @@ class PersonDAO(Neo4jDAO):
         :param person: person object
         :return: person uid, operation status and update status details
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 update_status = await session.write_transaction(self._update_person_transaction,
                                                                 person)
@@ -84,7 +84,7 @@ class PersonDAO(Neo4jDAO):
         """
         status = None
         update_status = None
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 try:
                     await session.write_transaction(self._create_person_transaction, person)
@@ -125,7 +125,7 @@ class PersonDAO(Neo4jDAO):
         :return: person object or None
         """
         # pylint: disable=duplicate-code
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(
@@ -148,7 +148,7 @@ class PersonDAO(Neo4jDAO):
         :param external: Whether to search for an external person (default: True).
         :return: UID of the Person or None if no match is found.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 result = await session.read_transaction(
                     self._get_person_uid_by_source_person_uid_transaction, source_person_uid,
@@ -161,7 +161,7 @@ class PersonDAO(Neo4jDAO):
 
         :return: A list of all person UIDs.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._get_all_uids_transaction(tx, external)
@@ -426,7 +426,7 @@ class PersonDAO(Neo4jDAO):
         :param identifiers: List of dictionaries with 'type' and 'value'.
         :return: UID of the first matched Person or None if no match is found.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(self._find_by_identifiers_transaction,
                                                       identifiers)
@@ -494,7 +494,7 @@ class PersonDAO(Neo4jDAO):
         :param person_to_keep_uid: UID of the person to keep.
         :param person_to_merge_uid: UID of the person to delete.
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(
                     self._merge_people_transaction,

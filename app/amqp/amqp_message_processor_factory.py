@@ -4,6 +4,7 @@ from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_people_message_processor import AMQPPeopleMessageProcessor
 from app.amqp.amqp_reference_message_processor import AMQReferenceMessageProcessor
 from app.amqp.amqp_structure_message_processor import AMQPStructureMessageProcessor
+from app.amqp.amqp_user_actions_message_processor import AMQPUserActionsMessageProcessor
 from app.config import get_app_settings
 
 
@@ -31,4 +32,6 @@ class AMQPMessageProcessorFactory:
             return AMQPPeopleMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_structures_topic:
             return AMQPStructureMessageProcessor(tasks_queue, settings)
+        if topic == settings.amqp_user_actions_topic:
+            return AMQPUserActionsMessageProcessor(tasks_queue, settings)
         raise ValueError(f"No processor found for topic: {topic}")

@@ -1,12 +1,13 @@
 from typing import Type
 
-from pydantic import BaseModel
 from neo4j import AsyncDriver
+from pydantic import BaseModel  # pylint: disable=wrong-import-order
 
 from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.neo4j_setup import Neo4jSetup
+from app.models.change import Change
 from app.models.concepts import Concept
 from app.models.document import Document
 from app.models.institution import Institution
@@ -38,6 +39,7 @@ class Neo4jDAOFactory(DAOFactory):
             SourcePerson: "app.graph.neo4j.source_person_dao.SourcePersonDAO",
             Document: "app.graph.neo4j.document_dao.DocumentDAO",
             Journal: "app.graph.neo4j.journal_dao.JournalDAO",
+            Change: "app.graph.neo4j.change_dao.ChangeDAO",
         }
 
     def get_dao(self, object_type: Type[BaseModel] = None) -> Neo4jDAO:

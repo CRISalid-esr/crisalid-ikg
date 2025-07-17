@@ -25,7 +25,7 @@ class InstitutionDAO(Neo4jDAO):
         :param institution: institution object
         :return: None
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_institution_transaction,
                                                 institution)
@@ -39,7 +39,7 @@ class InstitutionDAO(Neo4jDAO):
         :param institution: institution object
         :return: None
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._update_institution_transaction,
                                                 institution)
@@ -55,7 +55,7 @@ class InstitutionDAO(Neo4jDAO):
         :return: the uid of the institution and the status of the operation
         """
         status: Neo4jDAO.Status | None = None
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 existing_uid = await session.read_transaction(self._institution_uid, institution)
                 if existing_uid is not None:
@@ -78,7 +78,7 @@ class InstitutionDAO(Neo4jDAO):
         :param identifiers: list of identifiers
         :return:
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     find_institution_query = load_query("find_institution_by_identifiers")
@@ -101,7 +101,7 @@ class InstitutionDAO(Neo4jDAO):
         :param institution_uid: institution uid
         :return: institution object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(self._get_institution_by_uid,
                                                       institution_uid)
@@ -191,7 +191,7 @@ class InstitutionDAO(Neo4jDAO):
         :param institution:
         :return: The uid of the institution if exists, None else
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(self._institution_uid, institution)
 

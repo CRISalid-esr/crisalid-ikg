@@ -23,7 +23,7 @@ class JournalDAO(Neo4jDAO):
         :param journal: journal Pydantic object
         :return: journal object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_journal_transaction,
                                                 journal
@@ -38,7 +38,7 @@ class JournalDAO(Neo4jDAO):
         :param journal: journal Pydantic object
         :return: journal object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     journal_exists = await JournalDAO._journal_exists(
@@ -58,7 +58,7 @@ class JournalDAO(Neo4jDAO):
         :param journal_uid: journal uid
         :return: journal object
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await JournalDAO._get_journal_by_uid(tx, journal_uid)
@@ -71,7 +71,7 @@ class JournalDAO(Neo4jDAO):
         :param identifier: JournalIdentifier object
         :return: Journal object or None if not found
         """
-        async for driver in Neo4jConnexion().get_driver():
+        async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._get_journal_by_identifier(tx, identifier)
