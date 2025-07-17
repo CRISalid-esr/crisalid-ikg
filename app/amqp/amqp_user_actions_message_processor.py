@@ -23,7 +23,7 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
 
         self._check_keys(json_payload, {
             "id": None,
-            "action": None,
+            "actionType": None,
             "parameters": None,
             "path": None,
             "personUid": None,

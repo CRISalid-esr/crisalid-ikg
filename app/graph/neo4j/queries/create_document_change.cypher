@@ -2,7 +2,7 @@ MERGE (c:Change {uid: $uid})
 SET c.person_uid = $person_uid,
 c.application = $application,
 c.id = $id,
-c.action = $action,
+c.action_type = $action_type,
 c.path = $path,
 c.parameters = $params,
 c.timestamp = datetime($timestamp),

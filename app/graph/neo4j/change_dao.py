@@ -84,7 +84,7 @@ class ChangeDAO(Neo4jDAO):
             person_uid=change.person_uid,
             application=change.application,
             id=change.id,
-            action=change.action,
+            action_type=change.action_type,
             path=change.path,
             params=change.marshal_parameters(),
             timestamp=change.timestamp.isoformat(),

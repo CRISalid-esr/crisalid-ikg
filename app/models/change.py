@@ -37,7 +37,9 @@ class Change(BaseModel):
     person_uid: str = Field(validation_alias=AliasChoices("personUid", "person_uid"))
     application: str
     id: str  # unique within the source application
-    action: Literal["ADD", "REMOVE", "UPDATE"]
+    action_type: Literal["ADD", "REMOVE", "UPDATE"] = Field(
+        validation_alias=AliasChoices("actionType", "action_type")
+    )  # e.g., "ADD", "REMOVE", "UPDATE"
     path: str  # e.g., "subjects", "titles"
     parameters: dict
     timestamp: datetime

@@ -21,7 +21,7 @@ async def test_get_document_subjects_change_processor():
         personUid="person-456",
         application="test",
         id="001",
-        action="REMOVE",
+        action_type="REMOVE",
         path="subjects",
         parameters={"conceptUids": ["concept-789"]},
         timestamp="2025-07-13T12:00:00Z",
