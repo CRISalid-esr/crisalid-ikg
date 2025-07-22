@@ -1,5 +1,6 @@
 import asyncio
 
+from app.amqp.amqp_harvesting_events_message_processor import AMQPHarvestingEventsMessageProcessor
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_people_message_processor import AMQPPeopleMessageProcessor
 from app.amqp.amqp_reference_message_processor import AMQReferenceMessageProcessor
@@ -34,4 +35,6 @@ class AMQPMessageProcessorFactory:
             return AMQPStructureMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_user_actions_topic:
             return AMQPUserActionsMessageProcessor(tasks_queue, settings)
+        if topic == settings.amqp_harvesting_events_topic:
+            return AMQPHarvestingEventsMessageProcessor(tasks_queue, settings)
         raise ValueError(f"No processor found for topic: {topic}")

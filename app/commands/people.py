@@ -80,17 +80,31 @@ def dispatch_all(
 
 @people_cli.command()
 def fetch_publications(
-        uid: str = typer.Argument(..., help="The UID of the person")
+        uid: str = typer.Argument(..., help="The UID of the person"),
+        harvesters: str = typer.Option(
+            None,
+            "--harvesters",
+            "-h",
+            help="Comma-separated list of harvesters to use for fetching publications. "
+                 "If not provided, all configured harvesters will be used."
+        )
 ):
     """
     Fetch publications for a person.
     :param uid: The UID of the person
+    :param harvesters: Comma-separated list of harvesters to use for fetching publications.
+                       If not provided, all configured harvesters will be used.
     """
 
     @with_app_lifecycle
     async def _fetch_publications(uid: str):
         service = PeopleService()
-        await service.signal_publications_to_be_updated(uid)
+        if harvesters:
+            harvesters_list = [h.strip() for h in harvesters.split(",")]
+            if not harvesters_list:
+                typer.echo("No valid harvesters provided.")
+                return
+        await service.signal_publications_to_be_updated(uid, harvesters)
         typer.echo(f"Publications fetched for person {uid}.")
 
     asyncio.run(_fetch_publications(uid))

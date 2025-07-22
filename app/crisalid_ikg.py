@@ -27,7 +27,8 @@ from app.signals import person_created, person_identifiers_updated, source_recor
     structure_updated, document_sources_changed, document_created, \
     document_unchanged, document_deleted, structure_unchanged, structure_deleted, \
     person_deleted, person_updated, publications_to_be_updated, source_journal_created, \
-    source_journal_updated
+    source_journal_updated, harvesting_state_event_received, harvesting_result_event_received, \
+    document_created_from_sources
 
 
 class CrisalidIKG(FastAPI):
@@ -46,7 +47,7 @@ class CrisalidIKG(FastAPI):
 
         self.include_router(healthness_router, prefix="/health")
 
-        if settings.app_env!=AppEnvTypes.TEST:
+        if settings.app_env != AppEnvTypes.TEST:
             logger.remove()
             logger.add(
                 settings.logger_sink,
@@ -75,6 +76,7 @@ class CrisalidIKG(FastAPI):
         self._register_source_record_events()
         self._register_journal_events()
         self._register_document_events()
+        self._register_harvesting_events()
         self._register_person_events()
 
     @logger.catch(reraise=True)
@@ -116,10 +118,17 @@ class CrisalidIKG(FastAPI):
         self.document_service = DocumentService()
         document_sources_changed.connect(
             self.document_service.update_from_source_records)
+        document_created_from_sources.connect(
+            self.document_service.create_from_source_records)
         document_updated.connect(self.amqp_interface.dispatch_document_updated)
         document_created.connect(self.amqp_interface.dispatch_document_created)
         document_unchanged.connect(self.amqp_interface.dispatch_document_unchanged)
         document_deleted.connect(self.amqp_interface.dispatch_document_deleted)
+
+    def _register_harvesting_events(self):
+        harvesting_state_event_received.connect(self.amqp_interface.dispatch_harvesting_state_event)
+        harvesting_result_event_received.connect(
+            self.amqp_interface.dispatch_harvesting_result_event)
 
     @logger.catch(reraise=True)
     async def close_elasticsearch(self) -> None:  # pragma: no cover
@@ -143,7 +152,10 @@ class CrisalidIKG(FastAPI):
                 asyncio.create_task(self.amqp_interface.listen(settings.amqp_structures_topic),
                                     name="amqp_structures_listener")
                 asyncio.create_task(self.amqp_interface.listen(settings.amqp_user_actions_topic),
-                                                               name="amqp_user_actions_listener")
+                                    name="amqp_user_actions_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_harvesting_events_topic),
+                    name="amqp_harvesting_events_listener")
             logger.info("RabbitMQ connexion has been enabled")
         except AMQPConnectionError as error:
             logger.error(

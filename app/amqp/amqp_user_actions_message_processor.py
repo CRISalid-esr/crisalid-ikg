@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.models.change import Change
 from app.services.changes.change_service import ChangeService
+from app.services.people.people_service import PeopleService
 
 
 class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
@@ -32,6 +33,23 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
             "timestamp": None,
             "application": None,  # make sure 'clientApp' is present to build the UID
         })
+
+        if json_payload["actionType"] == "FETCH":
+            if json_payload["targetType"] != "PERSON":
+                raise ValueError("Target type must be 'PERSON' for FETCH action type.")
+            if not json_payload["targetUid"] or not isinstance(json_payload["targetUid"], str):
+                raise ValueError("Target UID is required for "
+                                 "FETCH action type and should be a string.")
+            harvesters = json_payload.get("parameters", {}).get("platforms")
+            if not isinstance(harvesters, list) or not harvesters:
+                logger.error(
+                    f"Invalid or empty harvesters in parameters: {json_payload.get('parameters')}")
+                harvesters = None
+            service = PeopleService()
+            await service.signal_publications_to_be_updated(json_payload["targetUid"],
+                                                            harvesters=harvesters)
+            logger.debug(f"Publications fetched for person {json_payload['targetUid']}.")
+            return
 
         try:
             change = Change.model_validate(json_payload)
