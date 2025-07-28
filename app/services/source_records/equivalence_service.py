@@ -166,7 +166,7 @@ class EquivalenceService:
             # Otherwise, send the document_sources_changed signal for each recorded document
             for document in recorded_documents:
                 await document_sources_changed.send_async(
-                    self, document_uid=document.uid, document_created=document_created
+                    self, document_uid=document.uid
                 )
 
     @staticmethod
