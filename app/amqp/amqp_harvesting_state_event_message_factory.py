@@ -13,6 +13,8 @@ class AMQPHarvestingStateEventMessageFactory(AbstractAMQPMessageFactory):
                 "fields": self.content}
 
     def _build_routing_key(self) -> str:
-        assert self.content["state"] in ["running", "completed", "failed"]
+        assert self.content["state"] in ["running", "completed", "failed", "not_applicable"], \
+            (f"Invalid state: {self.content['state']}. "
+             "Must be one of 'running', 'completed', 'failed', or 'not_applicable'.")
         return self.settings.amqp_graph_harvesting_state_event_routing_key.replace(
             "*", self.content["state"])
