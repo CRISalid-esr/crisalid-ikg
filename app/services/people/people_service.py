@@ -46,13 +46,17 @@ class PeopleService:
         """
         await person_deleted.send_async(self, payload=uid)
 
-    async def signal_publications_to_be_updated(self, person_uid):
+    async def signal_publications_to_be_updated(self, person_uid: str,
+                                                harvesters: list[str] | None = None):
         """
         Dispatch the 'publications_to_be_updated' signal for a person.
         :param person_uid:
         :return:
         """
-        await publications_to_be_updated.send_async(self, payload=person_uid)
+        await publications_to_be_updated.send_async(self, payload={
+            "person_uid": person_uid,
+            "harvesters": harvesters
+        })
 
     async def create_person(self, person: Person) -> Person:
         """

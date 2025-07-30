@@ -13,6 +13,10 @@ from app.amqp.amqp_document_unchanged_event_message_factory import \
     AMQPDocumentUnchangedEventMessageFactory
 from app.amqp.amqp_document_updated_event_message_factory import \
     AMQPDocumentUpdatedEventMessageFactory
+from app.amqp.amqp_harvesting_result_event_message_factory import \
+    AMQPHarvestingResultEventMessageFactory
+from app.amqp.amqp_harvesting_state_event_message_factory import \
+    AMQPHarvestingStateEventMessageFactory
 from app.amqp.amqp_person_created_event_message_factory import AMQPPersonCreatedEventMessageFactory
 from app.amqp.amqp_person_deleted_event_message_factory import AMQPPersonDeletedEventMessageFactory
 from app.amqp.amqp_person_unchanged_event_message_factory import \
@@ -71,6 +75,8 @@ class AMQPMessagePublisher:
         DOCUMENT_CREATED = "Document created"
         DOCUMENT_DELETED = "Document deleted"
         DOCUMENT_UNCHANGED = "Document unchanged"
+        HARVESTING_STATE_EVENT = "Harvesting state event"
+        HARVESTING_RESULT_EVENT = "Harvesting result event"
 
     MESSAGE_FACTORIES = {
         MessageType.TASK: {
@@ -90,6 +96,8 @@ class AMQPMessagePublisher:
             EventMessageSubtype.DOCUMENT_UPDATED: AMQPDocumentUpdatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_DELETED: AMQPDocumentDeletedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_UNCHANGED: AMQPDocumentUnchangedEventMessageFactory,
+            EventMessageSubtype.HARVESTING_STATE_EVENT: AMQPHarvestingStateEventMessageFactory,
+            EventMessageSubtype.HARVESTING_RESULT_EVENT: AMQPHarvestingResultEventMessageFactory,
         },
     }
 

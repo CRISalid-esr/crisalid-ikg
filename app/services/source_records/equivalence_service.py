@@ -5,9 +5,9 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
-from app.models.source_records import SourceRecord
 from app.models.document import Document
-from app.signals import document_sources_changed
+from app.models.source_records import SourceRecord
+from app.signals import document_sources_changed, document_created_from_sources
 
 MAX_EQUIVALENCES_RECURSION_LEVEL = 100
 
@@ -88,6 +88,7 @@ class EquivalenceService:
         :return:
         """
         factory = self._get_dao_factory()
+        document_created = False
         source_record_dao: SourceRecordDAO = factory.get_dao(SourceRecord)
         document_dao: DocumentDAO = factory.get_dao(Document)
         # get the weakly connected graph of source records that are equivalents (inferred,
@@ -113,6 +114,8 @@ class EquivalenceService:
         # and attach all the equivalent source records to it
         # then go to case 2
         if not recorded_documents:
+            logger.debug(f"Creating a new document for source record {origin_source_record_uid}")
+            document_created = True
             recorded_documents.append(Document(
                 source_record_uids=equivalent_source_record_uids))
         # case 2 : recorded_documents contains 1 element
@@ -155,10 +158,16 @@ class EquivalenceService:
                     document=document
                 )
         # Send signal to update the document
-        for document in recorded_documents:
-            await document_sources_changed.send_async(
-                self, document_uid=document.uid
-            )
+        # if the document was created, send the document_created_from_sources signal
+        if document_created:
+            await document_created_from_sources.send_async(self,
+                                                           document_uid=recorded_documents[0].uid)
+        else:
+            # Otherwise, send the document_sources_changed signal for each recorded document
+            for document in recorded_documents:
+                await document_sources_changed.send_async(
+                    self, document_uid=document.uid
+                )
 
     @staticmethod
     def _elect_main_document(documents: list[Document]) -> Document:

@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -66,3 +67,52 @@ async def test_amqp_user_actions_processor_applies_change(
     stored = await change_dao.get_by_uid(change_payload["uid"])
     assert stored is not None
     assert stored.status == ChangeStatus.APPLIED
+
+
+@pytest.fixture(name="mocked_fetch_publications")
+def mocked_fetch_publications_fixture():
+    """
+    Fixture to mock the `amqp_interface.fetch_publications` signal receiver.
+    """
+    with patch("app.amqp.amqp_interface.AMQPInterface.fetch_publications",
+               new_callable=AsyncMock) as mocked:
+        yield mocked
+
+
+@pytest.mark.asyncio
+async def test_amqp_user_actions_processor_fetch_triggers_signal(
+        mocked_fetch_publications,
+        test_app,  # pylint: disable=unused-argument
+):
+    """
+    Integration test for FETCH actionType:
+    Ensure that processing a FETCH message triggers the
+    AMQPInterface.fetch_publications signal receiver.
+    """
+    payload = {
+        "uid": "amqp-fetch-001",
+        "id": "001",
+        "actionType": "FETCH",
+        "path": "person",
+        "parameters": {
+            "platforms": ["hal", "scanr", "idref"]
+        },
+        "personUid": "person:test",
+        "targetType": "PERSON",
+        "targetUid": "person:test",
+        "timestamp": "2023-10-01T12:00:00Z",
+        "application": "pytest"
+    }
+
+    queue = asyncio.Queue()
+    settings = get_app_settings()
+    processor = AMQPUserActionsMessageProcessor(queue, settings)
+
+    payload_bytes = json.dumps(payload).encode("utf-8")
+    # pylint: disable=protected-access
+    await processor._process_message("event.person.fetch", payload_bytes)
+    mocked_fetch_publications.assert_awaited_once()
+    _, kwargs = mocked_fetch_publications.call_args
+    assert "payload" in kwargs
+    assert kwargs["payload"]["person_uid"] == "person:test"
+    assert kwargs["payload"]["harvesters"] == ["hal", "scanr", "idref"]

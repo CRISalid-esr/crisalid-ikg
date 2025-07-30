@@ -46,8 +46,10 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
             raise e
         if event_type in ["created"]:
             await self._create_source_record(source_record, person)
-        elif event_type in ["updated", "unchanged"]:
+        elif event_type in ["updated"]:
             await self._update_source_record(source_record, person)
+        elif event_type in ["unchanged"]:
+            logger.info(f"Source record {source_record.uid} is unchanged, no action taken")
 
     async def _create_source_record(self, source_record, person, first_attempt=True):
         try:
@@ -88,7 +90,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
                     await self._create_source_record(source_record, person, first_attempt=False)
                 else:
                     logger.error(f"Aborting create attempt for {source_record.uid}"
-                             f" after failed update attempt", exc_info=True)
+                                 f" after failed update attempt", exc_info=True)
         except ReferenceOwnerNotFoundError as e:
             logger.error(
                 f"Reference owner {person} not found while trying to update source record"

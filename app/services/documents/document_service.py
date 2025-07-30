@@ -24,13 +24,27 @@ class DocumentService:
 
     async def update_from_source_records(self, _, document_uid: str):
         """
-        Recompute metadata for a document
+        Recompute metadata for an existing document
         :param _: unused (for compatibility with signal handlers)
         :param document_uid: the document uid
         :return:
         """
         # fetch the source records to be merged
+        await self._compute_document_from_source_records(document_uid)
+        await self.signal_document_updated(document_uid)
 
+    async def create_from_source_records(self, _, document_uid: str):
+        """
+        Recompute metadata for a newly created document
+        :param _: unused (for compatibility with signal handlers)
+        :param document_uid: the document uid
+        :return:
+        """
+        # fetch the source records to be merged
+        await self._compute_document_from_source_records(document_uid)
+        await self.signal_document_created(document_uid)
+
+    async def _compute_document_from_source_records(self, document_uid):
         sources_records = await self._get_source_records_of_document(document_uid)
         source_contributor_mapping_service = SourceContributorMappingService(
             source_records=sources_records, document_uid=document_uid)
@@ -51,7 +65,6 @@ class DocumentService:
         dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
         await dao.create_or_update_document(document)
         await ChangeService().apply_changes_to_node(document_uid)
-        await self.signal_document_updated(document_uid)
 
     async def signal_document_updated(self, document_uid):
         """

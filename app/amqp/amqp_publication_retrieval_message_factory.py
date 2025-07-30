@@ -13,7 +13,20 @@ class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
         return self.settings.amqp_harvester_publication_retrieval_routing_key
 
     async def _build_payload(self) -> dict[str, Any] | None:
-        harvesters = os.getenv("HARVESTERS", "idref,scanr,hal,openalex,scopus").split(",")
+        allowed_harvesters = os.getenv("HARVESTERS", "idref,scanr,hal,openalex,scopus").split(",")
+        harvesters = self.content.get("harvesters")
+        if harvesters is None:
+            harvesters = allowed_harvesters
+        elif not isinstance(harvesters, list):
+            raise ValueError("harvesters must be a list")
+        else:
+            # filter out not allowed harvesters
+            harvesters = [h for h in harvesters if h in allowed_harvesters]
+            if len(harvesters) != len(self.content.get("harvesters", [])):
+                print(
+                    "Some harvesters were not allowed: "
+                    f"{set(self.content.get('harvesters', [])) - set(allowed_harvesters)}"
+                )
         person_uid = self.content.get("person_uid")
         print(f"Fetching publications for {person_uid}")
         people_service = PeopleService()
@@ -21,10 +34,13 @@ class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
         identifiers = [
             {"type": id.type.value, "value": id.value}
             for id in person.identifiers
-            if id.type not in {PersonIdentifierType.LOCAL, PersonIdentifierType.EPPN}
         ]
+        useful_identifiers = filter(
+            lambda id: id.type not in {PersonIdentifierType.LOCAL, PersonIdentifierType.EPPN},
+            person.identifiers,
+        )
         # abort if identifiers are empty ; no useful identifiers to harvest publications
-        if not identifiers:
+        if not useful_identifiers:
             print(
                 f"No useful identifiers found for person {person_uid}, "
                 "aborting publication retrieval")

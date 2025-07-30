@@ -52,6 +52,7 @@ class AppSettings(BaseSettings):
     amqp_password: str = "guest"
     amqp_host: str = "127.0.0.1"
     amqp_publications_queue_name: str = "crisalid-ikg-publications"
+    amqp_harvesting_events_queue_name: str = "crisalid-ikg-harvesting-events"
     amqp_people_queue_name: str = "crisalid-ikg-people"
     amqp_structures_queue_name: str = "crisalid-ikg-structures"
     amqp_user_actions_queue_name: str = "crisalid-ikg-user-actions"
@@ -59,6 +60,7 @@ class AppSettings(BaseSettings):
     amqp_task_parallelism_limit: int = 10
     amqp_prefetch_count: int = 10
     amqp_publications_topic: str = "publications"
+    amqp_harvesting_events_topic: str = "harvesting_events"
     amqp_publications_exchange_name: str = "publications"
     amqp_people_topic: str = "people"
     amqp_structures_topic: str = "structures"
@@ -67,12 +69,16 @@ class AppSettings(BaseSettings):
     amqp_graph_exchange_name: str = "graph"
     amqp_consumer_ack_timeout: int = 43200000
     amqp_harvester_reference_event_routing_key: str = "event.references.reference.*"
+    amqp_harvesting_event_routing_key: str = "event.references.*.*"
     amqp_directory_people_event_routing_key: str = "event.people.person.*"
     amqp_graph_people_event_created_routing_key: str = "event.people.person.created"
     amqp_graph_people_event_updated_routing_key: str = "event.people.person.updated"
     amqp_graph_people_event_deleted_routing_key: str = "event.people.person.deleted"
     amqp_graph_people_event_unchanged_routing_key: str = "event.people.person.unchanged"
+    amqp_graph_harvesting_state_event_routing_key: str = "event.harvestings.state.*"
+    amqp_graph_harvesting_result_event_routing_key: str = "event.harvestings.result.*"
     amqp_graph_document_task_routing_key: str = "task.documents.document.*"
+    amqp_graph_person_documents_fetch_task_routing_key: str = "task.person.documents.fetch"
     amqp_graph_resarch_structure_event_created_routing_key: str = \
         "event.structures.structure.created"
     amqp_graph_resarch_structure_event_updated_routing_key: str = \
