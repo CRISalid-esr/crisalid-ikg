@@ -49,7 +49,6 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         elif event_type in ["updated"]:
             await self._update_source_record(source_record, person)
         elif event_type in ["unchanged"]:
-            # TODO just emit the unchanged signal for associated document
             logger.info(f"Source record {source_record.uid} is unchanged, no action taken")
 
     async def _create_source_record(self, source_record, person, first_attempt=True):
