@@ -27,16 +27,20 @@ async def test_publish_fetch_publications_taks(
     persisted_person_a_pydantic_model = await dao.find_by_identifier(local_identifier.type,
                                                                      local_identifier.value)
     publisher = AMQPMessagePublisher(mocked_exchange)
-    expected_sent_message_payload = {'type': 'person', 'reply': True,
-                                     'identifiers_safe_mode': False,
-                                     'events': ['created', 'updated', 'deleted', 'unchanged'],
-                                     'harvesters': ['idref', 'scanr', 'hal', 'openalex', 'scopus'],
-                                     'fields': {'name': 'John Doe',
-                                                'identifiers': [
-                                                    {'type': 'orcid',
-                                                     'value': '0000-0001-2345-6789'}]
-                                                }
-                                     }
+    expected_sent_message_payload = {
+        "type": "person",
+        "reply": True,
+        "identifiers_safe_mode": False,
+        "events": ["created", "updated", "deleted", "unchanged"],
+        "harvesters": ["idref", "scanr", "hal", "openalex", "scopus"],
+        "fields": {
+            "name": "John Doe",
+            "identifiers": [
+                {"type": "local", "value": "jdoe@univ-domain.edu"},
+                {"type": "orcid", "value": "0000-0001-2345-6789"}
+            ]
+        }
+    }
     expected_sent_message_routing_key = "task.entity.references.retrieval"
     await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
                             AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
