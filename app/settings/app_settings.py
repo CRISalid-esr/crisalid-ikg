@@ -78,7 +78,8 @@ class AppSettings(BaseSettings):
     amqp_graph_harvesting_state_event_routing_key: str = "event.harvestings.state.*"
     amqp_graph_harvesting_result_event_routing_key: str = "event.harvestings.result.*"
     amqp_graph_document_task_routing_key: str = "task.documents.document.*"
-    amqp_graph_person_documents_fetch_task_routing_key: str = "task.person.documents.fetch"
+    amqp_graph_person_documents_fetch_task_routing_key: str = "task.people.documents.fetch"
+    amqp_graph_person_attribute_update_task_routing_key: str = "task.people.person.*"
     amqp_graph_resarch_structure_event_created_routing_key: str = \
         "event.structures.structure.created"
     amqp_graph_resarch_structure_event_updated_routing_key: str = \
