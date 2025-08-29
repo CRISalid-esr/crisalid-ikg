@@ -34,6 +34,30 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
             "application": None,  # make sure 'clientApp' is present to build the UID
         })
 
+        if self._check_registration_need(json_payload):
+            await self._process_registered_change(json_payload)
+        else:
+            await self._process_unregistered_change(json_payload)
+
+    async def _check_registration_need(self, json_payload: str):
+        if json_payload["actionType"] in ["ADD", "REMOVE", "UPDATE"]:
+            if json_payload["targetType"] == "DOCUMENT":
+                return True
+        else:
+            return False
+
+    async def _process_registered_change(self, json_payload: str):
+        try:
+            change = Change.model_validate(json_payload)
+        except ValidationError as e:
+            raise ValueError(f"Failed to build Change object: {e}") from e
+        # exceptions are handled in the base class
+        await self.change_service.create_and_apply_change(change)
+
+    async def _process_unregistered_change(self, json_payload: str):
+        """
+        Method handling different cases of unregistered changes
+        """
         if json_payload["actionType"] == "FETCH":
             if json_payload["targetType"] != "PERSON":
                 raise ValueError("Target type must be 'PERSON' for FETCH action type.")
@@ -51,9 +75,20 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
             logger.debug(f"Publications fetched for person {json_payload['targetUid']}.")
             return
 
-        try:
-            change = Change.model_validate(json_payload)
-        except ValidationError as e:
-            raise ValueError(f"Failed to build Change object: {e}") from e
-        # exceptions are handled in the base class
-        await self.change_service.create_and_apply_change(change)
+        if json_payload["actionType"] == "ADD":
+            if json_payload["targetType"] != "PERSON":
+                raise ValueError("Target type must be 'PERSON' for unregistered ADD action type.")
+            if not json_payload["targetUid"] or not isinstance(json_payload["targetUid"], str):
+                raise ValueError("Target UID is required for person-related"
+                                 "ADD action type and should be a string.")
+
+            service = PeopleService()
+            person = await service.get_person(json_payload["targetUid"])
+
+            # add test  and following cases :
+                # same ORCID => status AUTH
+                # different ORCID => Nothing
+                # no ORCID => add identifier and status
+
+            logger.debug(f"Identifier added for person {json_payload['targetUid']}.")
+            return
