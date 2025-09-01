@@ -13,6 +13,7 @@ from app.models.change import Change, ChangeStatus
 from app.models.document import Document
 
 
+@pytest.mark.current
 @pytest.mark.asyncio
 async def test_amqp_user_actions_processor_applies_change(
         test_app,  # pylint: disable=unused-argument
@@ -69,6 +70,7 @@ async def test_amqp_user_actions_processor_applies_change(
     assert stored.status == ChangeStatus.APPLIED
 
 
+@pytest.mark.current
 @pytest.fixture(name="mocked_fetch_publications")
 def mocked_fetch_publications_fixture():
     """
@@ -79,6 +81,7 @@ def mocked_fetch_publications_fixture():
         yield mocked
 
 
+@pytest.mark.current
 @pytest.mark.asyncio
 async def test_amqp_user_actions_processor_fetch_triggers_signal(
         mocked_fetch_publications,

@@ -33,8 +33,7 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
             "timestamp": None,
             "application": None,  # make sure 'clientApp' is present to build the UID
         })
-
-        if self._check_registration_need(json_payload):
+        if await self._check_registration_need(json_payload):
             await self._process_registered_change(json_payload)
         else:
             await self._process_unregistered_change(json_payload)
