@@ -1,7 +1,8 @@
 """
 Agent identifiers model
 """
-from typing import Generic
+from datetime import datetime
+from typing import Generic, Optional
 
 from pydantic import BaseModel, model_validator
 
@@ -22,7 +23,8 @@ class AgentIdentifier(BaseModel, Generic[IdType]):
 class PersonIdentifier(AgentIdentifier[PersonIdentifierType]):
     """Person identifier model"""
     type: PersonIdentifierType
-
+    authenticated: Optional[bool] = None
+    authentication_date: Optional[datetime] = None
 
 class OrganizationIdentifier(AgentIdentifier[OrganizationIdentifierType]):
     """Organization identifier model"""

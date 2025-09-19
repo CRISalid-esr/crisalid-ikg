@@ -23,7 +23,7 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
         logger.debug(f"Processing user action message: {json_payload}")
 
         self._check_keys(json_payload, {
-            "id": None,
+            #"id": None,
             "actionType": None,
             "parameters": None,
             "path": None,
@@ -81,13 +81,31 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
                 raise ValueError("Target UID is required for person-related"
                                  "ADD action type and should be a string.")
 
+            received_orcid = None
+            received_identifier = json_payload.get("parameters", {}).get("identifiers", {})
+            if received_identifier.get("type", "") == "ORCID":
+                received_orcid = received_identifier.get("value")
+
+
             service = PeopleService()
             person = await service.get_person(json_payload["targetUid"])
+            existing_orcid = None
+            authenticated_orcid = False
 
-            # add test  and following cases :
-                # same ORCID => status AUTH
-                # different ORCID => Nothing
-                # no ORCID => add identifier and status
+            for identifier in person.identifiers:
+                if identifier.type.value == "orcid":
+                    existing_orcid = identifier.value
+                    if identifier.authenticated:
+                        authenticated_orcid = True
+
+            if existing_orcid != received_orcid:
+                # return message of non-corresponding orcid to merge
+                pass
+            elif existing_orcid == received_orcid and authenticated_orcid:
+                # return  of nothing to do ?
+                pass
+
+            # in other cases, update the person
 
             logger.debug(f"Identifier added for person {json_payload['targetUid']}.")
             return
