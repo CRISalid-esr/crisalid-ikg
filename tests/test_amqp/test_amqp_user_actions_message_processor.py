@@ -93,12 +93,12 @@ async def test_amqp_user_actions_processor_fetch_triggers_signal(
         "uid": "amqp-fetch-001",
         "id": "001",
         "actionType": "FETCH",
-        "path": "person",
+        "path": None,
         "parameters": {
             "platforms": ["hal", "scanr", "idref"]
         },
         "personUid": "person:test",
-        "targetType": "PERSON",
+        "targetType": "HARVESTING",
         "targetUid": "person:test",
         "timestamp": "2023-10-01T12:00:00Z",
         "application": "pytest"
