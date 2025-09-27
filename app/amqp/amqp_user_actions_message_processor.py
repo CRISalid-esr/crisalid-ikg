@@ -35,8 +35,8 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
         })
 
         if json_payload["actionType"] == "FETCH":
-            if json_payload["targetType"] != "PERSON":
-                raise ValueError("Target type must be 'PERSON' for FETCH action type.")
+            if json_payload["targetType"] != "HARVESTING":
+                raise ValueError("Target type must be 'HARVESTING' for FETCH action type.")
             if not json_payload["targetUid"] or not isinstance(json_payload["targetUid"], str):
                 raise ValueError("Target UID is required for "
                                  "FETCH action type and should be a string.")
