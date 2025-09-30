@@ -5,7 +5,7 @@ from app.services.source_records.source_record_service import SourceRecordServic
 
 
 async def test_update_scanr_article_source_record(
-        scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_source_record_persisted_model: SourceRecord,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
         persisted_person_a_pydantic_model: Person
 ):
@@ -15,7 +15,7 @@ async def test_update_scanr_article_source_record(
         Then the values should be returned correctly
         """
     service = SourceRecordService()
-    common_uid = scanr_persisted_article_a_source_record_pydantic_model.uid
+    common_uid = scanr_article_a_source_record_persisted_model.uid
     assert scanr_article_a_v2_source_record_pydantic_model.uid == common_uid
     await service.update_source_record(
         source_record=scanr_article_a_v2_source_record_pydantic_model,
@@ -57,7 +57,7 @@ async def test_update_scanr_article_source_record(
 
 
 async def test_update_hal_article_source_record_with_custom_metadata(
-        hal_persisted_article_source_record_pydantic_model: SourceRecord,
+        hal_article_source_record_persisted_model: SourceRecord,
         hal_article_source_record_with_custom_metadata_v2_pydantic_model: SourceRecord,
         persisted_person_a_pydantic_model: Person
 ):
@@ -67,7 +67,7 @@ async def test_update_hal_article_source_record_with_custom_metadata(
         Then the values should be returned correctly
         """
     service = SourceRecordService()
-    common_uid = hal_persisted_article_source_record_pydantic_model.uid
+    common_uid = hal_article_source_record_persisted_model.uid
     assert hal_article_source_record_with_custom_metadata_v2_pydantic_model.uid == common_uid
     await service.update_source_record(
         source_record=hal_article_source_record_with_custom_metadata_v2_pydantic_model,
@@ -100,11 +100,11 @@ async def test_update_hal_article_source_record_with_custom_metadata(
                custom_metadata.hal_collection_codes
     assert fetched_source_record.custom_metadata.hal_submit_type == "file"
     assert fetched_source_record.custom_metadata.hal_submit_type != \
-           hal_persisted_article_source_record_pydantic_model.custom_metadata.hal_submit_type
+           hal_article_source_record_persisted_model.custom_metadata.hal_submit_type
 
 
 async def test_double_update_scanr_article_source_record(
-        scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_source_record_persisted_model: SourceRecord,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
         scanr_article_a_v3_source_record_pydantic_model: SourceRecord,
         persisted_person_a_pydantic_model: Person
@@ -115,7 +115,7 @@ async def test_double_update_scanr_article_source_record(
         Then the values should be returned correctly
         """
     service = SourceRecordService()
-    common_uid = scanr_persisted_article_a_source_record_pydantic_model.uid
+    common_uid = scanr_article_a_source_record_persisted_model.uid
     assert scanr_article_a_v2_source_record_pydantic_model.uid == common_uid
     await service.update_source_record(
         source_record=scanr_article_a_v2_source_record_pydantic_model,
@@ -164,8 +164,8 @@ async def test_double_update_scanr_article_source_record(
 
 async def test_update_record_with_shared_concept(
         persisted_person_b_pydantic_model: Person,
-        scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
-        scanr_persisted_article_c_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_source_record_persisted_model: SourceRecord,
+        scanr_article_c_source_record_persisted_model: SourceRecord,
         scanr_article_c_v2_source_record_pydantic_model: SourceRecord
 ):
     """
@@ -178,17 +178,17 @@ async def test_update_record_with_shared_concept(
     shared_concept_uri = "http://www.idref.fr/027818055/id"
 
     fetched_source_record_a = await service.get_source_record(
-        scanr_persisted_article_a_source_record_pydantic_model.uid)
+        scanr_article_a_source_record_persisted_model.uid)
     assert all(
         concept in fetched_source_record_a.subjects for concept in
-        scanr_persisted_article_a_source_record_pydantic_model.subjects
+        scanr_article_a_source_record_persisted_model.subjects
     )
 
     fetched_source_record_c = await service.get_source_record(
-        scanr_persisted_article_c_source_record_pydantic_model.uid)
+        scanr_article_c_source_record_persisted_model.uid)
     assert all(
         concept in fetched_source_record_c.subjects for concept in
-        scanr_persisted_article_c_source_record_pydantic_model.subjects
+        scanr_article_c_source_record_persisted_model.subjects
     )
     assert any(
         shared_concept_uri == subject.uri for subject in fetched_source_record_a.subjects
@@ -204,7 +204,7 @@ async def test_update_record_with_shared_concept(
         scanr_article_c_v2_source_record_pydantic_model.uid)
 
     post_update_fetched_source_record_a = await service.get_source_record(
-        scanr_persisted_article_a_source_record_pydantic_model.uid)
+        scanr_article_a_source_record_persisted_model.uid)
     assert post_update_fetched_source_record_a == fetched_source_record_a
     assert any(
         shared_concept_uri == subject.uri for subject in
@@ -216,14 +216,14 @@ async def test_update_record_with_shared_concept(
 
     assert fetched_source_record_c.subjects != fetched_source_record_c_v2.subjects
     assert all(
-        concept.uri in map(lambda x: x.uri, fetched_source_record_c_v2.subjects)
+        concept.uri in [x.uri for x in fetched_source_record_c_v2.subjects]
         for concept in scanr_article_c_v2_source_record_pydantic_model.subjects
     )
 
 
 async def test_update_source_record_issue(
         persisted_person_a_pydantic_model: Person,
-        scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_source_record_persisted_model: SourceRecord,
         scanr_article_a_source_record_with_updated_issue_pydantic_model: SourceRecord,
 ):
     """
@@ -233,10 +233,10 @@ async def test_update_source_record_issue(
     """
     service = SourceRecordService()
     fetched_source_record = await service.get_source_record(
-        scanr_persisted_article_a_source_record_pydantic_model.uid)
-    assert fetched_source_record.uid == scanr_persisted_article_a_source_record_pydantic_model.uid
+        scanr_article_a_source_record_persisted_model.uid)
+    assert fetched_source_record.uid == scanr_article_a_source_record_persisted_model.uid
     assert (fetched_source_record.issue ==
-            scanr_persisted_article_a_source_record_pydantic_model.issue)
+            scanr_article_a_source_record_persisted_model.issue)
     await service.update_source_record(
         source_record=scanr_article_a_source_record_with_updated_issue_pydantic_model,
         harvested_for=persisted_person_a_pydantic_model)

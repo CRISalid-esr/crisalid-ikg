@@ -152,6 +152,10 @@ class EquivalenceService:
                     document.source_record_uids = remaining_source_record_uids
                     if len(remaining_source_record_uids) == 0:
                         document.to_be_merged_into_uid = main_document.uid
+                        # for now it's the only place where to_be_deleted is set to True
+                        # as it's here that a document could be left with no source records
+                        # and would not represent any entity anymore
+                        document.to_be_deleted = True
                     else:
                         document.to_be_recomputed = True
                 await document_dao.create_or_update_document(

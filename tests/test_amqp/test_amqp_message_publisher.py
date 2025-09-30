@@ -8,6 +8,7 @@ from app.models.document import Document
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.models.research_structures import ResearchStructure
+from tests.test_utils.comparaison import force_dict_inner_list_ordering
 
 
 async def test_publish_fetch_publications_taks(
@@ -48,7 +49,13 @@ async def test_publish_fetch_publications_taks(
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
     assert mocked_exchange.publish.call_args[1]["routing_key"] == expected_sent_message_routing_key
-    assert message.body == json.dumps(expected_sent_message_payload).encode()
+    actual_payload = json.loads(message.body)
+    expected_payload = expected_sent_message_payload
+
+    force_dict_inner_list_ordering(actual_payload, 'fields', 'identifiers')
+    force_dict_inner_list_ordering(expected_payload, 'fields', 'identifiers')
+
+    assert actual_payload == expected_payload
 
 
 async def test_publish_person_event(

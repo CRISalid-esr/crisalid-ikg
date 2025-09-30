@@ -163,6 +163,25 @@ class SourceRecordDAO(Neo4jDAO):
                                                                                  source_record_uids)
 
     @handle_database_errors
+    async def create_asserted_equivalence_relationships(
+            self,
+            source_record_uids_1: set[str],
+            source_record_uids_2: set[str],
+    ):
+        """
+        Create :ASSERTED_EQUIVALENT relationships between every UID in set 1 and every UID in set 2.
+        """
+        if not source_record_uids_1 or not source_record_uids_2:
+            return
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    await self._create_asserted_equivalence_relationships(
+                        tx, source_record_uids_1, source_record_uids_2
+                    )
+
+    @handle_database_errors
     async def get(self, source_record_uid: str) -> SourceRecord:
         """
         Get a source record from the graph database
@@ -412,6 +431,19 @@ class SourceRecordDAO(Neo4jDAO):
         await tx.run(
             load_query("create_source_record_inferred_equivalence_relationships"),
             source_record_uids=source_record_uids
+        )
+
+    @classmethod
+    async def _create_asserted_equivalence_relationships(
+            cls,
+            tx: AsyncManagedTransaction,
+            source_record_uids_1: set[str],
+            source_record_uids_2: set[str],
+    ):
+        await tx.run(
+            load_query("create_source_record_asserted_equivalence_relationships"),
+            source_record_uids_1=list(source_record_uids_1),
+            source_record_uids_2=list(source_record_uids_2),
         )
 
     @staticmethod

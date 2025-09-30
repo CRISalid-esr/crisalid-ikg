@@ -8,7 +8,7 @@ from app.services.source_records.source_record_service import SourceRecordServic
 async def test_create_source_record_with_contributions(
         # test_app,  # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
-        hal_persisted_chapter_a_source_record_pydantic_model: SourceRecord,
+        hal_chapter_a_source_record_persisted_model: SourceRecord,
         hal_chapter_a_v2_source_record_pydantic_model: SourceRecord
 ) -> None:
     """
@@ -23,7 +23,7 @@ async def test_create_source_record_with_contributions(
     """
     service = SourceRecordService()
     fetched_source_record = await service.get_source_record(
-        hal_persisted_chapter_a_source_record_pydantic_model.uid)
+        hal_chapter_a_source_record_persisted_model.uid)
     assert fetched_source_record
     await service.update_source_record(
         source_record=hal_chapter_a_v2_source_record_pydantic_model,
