@@ -113,6 +113,9 @@ class DocumentService:
         # persist the merged document
         dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
         await dao.create_or_update_document(document)
+        # pylint: disable=fixme
+        # TODO : if the document has an entering edge "to_be_merged_into",
+        # take all changes from the source document and reapply them to the target
         # import dynamically to avoid circular imports
         # pylint: disable=import-outside-toplevel,cyclic-import
         from app.services.changes.change_service import ChangeService
