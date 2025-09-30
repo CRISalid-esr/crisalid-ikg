@@ -73,9 +73,9 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
 async def test_update_one_source_record_between_multiple_related_source_records(
         test_app,  # pylint: disable=unused-argument # connect signal listeners
         persisted_person_b_pydantic_model: Person,
-        hal_persisted_article_a_source_record_pydantic_model: SourceRecord,
-        open_alex_persisted_article_a_source_record_pydantic_model: SourceRecord,
-        scanr_persisted_article_a_v2_source_record_pydantic_model: SourceRecord,
+        hal_article_a_source_record_persisted_model: SourceRecord,
+        open_alex_article_a_source_record_persisted_model: SourceRecord,
+        scanr_article_a_v2_source_record_persisted_model: SourceRecord,
         scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model: SourceRecord
 ) -> None:
     """
@@ -89,12 +89,12 @@ async def test_update_one_source_record_between_multiple_related_source_records(
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
     initial_document = await document_dao.get_document_by_source_record_uid(
-        open_alex_persisted_article_a_source_record_pydantic_model.uid)
+        open_alex_article_a_source_record_persisted_model.uid)
     assert initial_document is not None
     assert sorted(initial_document.source_record_uids) == sorted([
-        scanr_persisted_article_a_v2_source_record_pydantic_model.uid,
-        hal_persisted_article_a_source_record_pydantic_model.uid,
-        open_alex_persisted_article_a_source_record_pydantic_model.uid
+        scanr_article_a_v2_source_record_persisted_model.uid,
+        hal_article_a_source_record_persisted_model.uid,
+        open_alex_article_a_source_record_persisted_model.uid
     ])
 
     await source_record_service.update_source_record(
@@ -114,11 +114,11 @@ async def test_update_one_source_record_between_multiple_related_source_records(
     ]
 
     second_document = await document_dao.get_document_by_source_record_uid(
-        open_alex_persisted_article_a_source_record_pydantic_model.uid)
+        open_alex_article_a_source_record_persisted_model.uid)
     assert second_document.uid != initial_document.uid
     assert sorted(second_document.source_record_uids) == sorted([
-        open_alex_persisted_article_a_source_record_pydantic_model.uid,
-        hal_persisted_article_a_source_record_pydantic_model.uid
+        open_alex_article_a_source_record_persisted_model.uid,
+        hal_article_a_source_record_persisted_model.uid
     ])
 
 
@@ -162,8 +162,8 @@ async def test_create_source_records_with_one_having_common_id_with_others(
 async def test_create_source_record_with_common_id_with_persisted_source_records(
         test_app,  # pylint: disable=unused-argument # connect signal listeners
         persisted_person_a_pydantic_model: Person,
-        scanr_persisted_article_a_source_record_pydantic_model: SourceRecord,
-        idref_persisted_article_a_source_record_pydantic_model: SourceRecord,
+        scanr_article_a_source_record_persisted_model: SourceRecord,
+        idref_article_a_source_record_persisted_model: SourceRecord,
         open_alex_article_b_source_record_pydantic_model: SourceRecord,
 ) -> None:
     """
@@ -176,9 +176,9 @@ async def test_create_source_record_with_common_id_with_persisted_source_records
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
     document_a = await document_dao.get_document_by_source_record_uid(
-        scanr_persisted_article_a_source_record_pydantic_model.uid)
+        scanr_article_a_source_record_persisted_model.uid)
     document_b = await document_dao.get_document_by_source_record_uid(
-        idref_persisted_article_a_source_record_pydantic_model.uid
+        idref_article_a_source_record_persisted_model.uid
     )
     assert document_a.uid != document_b.uid
 
@@ -195,7 +195,7 @@ async def test_create_source_record_with_common_id_with_persisted_source_records
         for record in [document_a, document_b]
     )
     assert sorted(document_after_update.source_record_uids) == sorted([
-        scanr_persisted_article_a_source_record_pydantic_model.uid,
+        scanr_article_a_source_record_persisted_model.uid,
         open_alex_article_b_source_record_pydantic_model.uid,
-        idref_persisted_article_a_source_record_pydantic_model.uid
+        idref_article_a_source_record_persisted_model.uid
     ])

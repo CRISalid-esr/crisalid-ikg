@@ -112,18 +112,18 @@ async def test_signal_document_created(
         expected_sent_message_payload_fields['abstracts'])
     assert all(
         subject['uid'] in [subject['uid'] for subject in
-                            expected_sent_message_payload_fields['subjects']] for
-         subject in message_payload['fields']['subjects'])
+                           expected_sent_message_payload_fields['subjects']] for
+        subject in message_payload['fields']['subjects'])
     assert all(
         subject['uid'] in [subject['uid'] for subject in message_payload['fields']['subjects']] for
-         subject in expected_sent_message_payload_fields['subjects'])
+        subject in expected_sent_message_payload_fields['subjects'])
     # compare contribution length
     assert len(message_payload['fields']['contributions']) == len(
         expected_sent_message_payload_fields['contributions'])
     local_contributor = [contrib for contrib in message_payload['fields']['contributions'] if
-                         contrib['contributor']['uid'] == 'local-rgarcia@univ-domain.edu'][0]
+                         contrib['contributor']['uid'] == 'hal-3478654'][0]
     assert local_contributor['contributor']['names'][0]['last_names'][0]['value'] == 'Garcia'
-    assert local_contributor['contributor']['names'][0]['last_names'][0]['language'] == 'fr'
+    assert local_contributor['contributor']['names'][0]['last_names'][0]['language'] is None
     assert local_contributor['contributor']['names'][0]['first_names'][0]['value'] == 'Raymond'
-    assert local_contributor['contributor']['names'][0]['first_names'][0]['language'] == 'fr'
+    assert local_contributor['contributor']['names'][0]['first_names'][0]['language'] is None
     assert local_contributor['roles'] == ['LocContributionRole.AUTHOR']
