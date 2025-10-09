@@ -82,7 +82,7 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
                                  "ADD action type and should be a string.")
 
             received_orcid = None
-            received_identifier = json_payload.get("parameters", {}).get("identifiers", {})
+            received_identifier = json_payload.get("parameters", {}).get("identifier", {})
             if received_identifier.get("type", "") == "ORCID":
                 received_orcid = received_identifier.get("value")
 
@@ -90,22 +90,29 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
             service = PeopleService()
             person = await service.get_person(json_payload["targetUid"])
             existing_orcid = None
-            authenticated_orcid = False
+            authenticated_existing_orcid = False
 
             for identifier in person.identifiers:
                 if identifier.type.value == "orcid":
                     existing_orcid = identifier.value
                     if identifier.authenticated:
-                        authenticated_orcid = True
+                        authenticated_existing_orcid = True
 
             if existing_orcid != received_orcid:
                 # return message of non-corresponding orcid to merge
-                pass
-            elif existing_orcid == received_orcid and authenticated_orcid:
-                # return  of nothing to do ?
-                pass
+                logger.debug(f"Existing and received ORCID are different for person "
+                             f"{json_payload['targetUid']}. No authentication possible")
+                return
 
-            # in other cases, update the person
+            if existing_orcid == received_orcid and authenticated_existing_orcid:
+                # return message of orcid already authenticated ? Just a lo
+                logger.debug(f"ORCID already authenticated for person {json_payload['targetUid']}.")
+                return
 
-            logger.debug(f"Identifier added for person {json_payload['targetUid']}.")
+            for identifier in person.identifiers:
+                if identifier.type.value == "orcid":
+                    identifier.authenticated = True
+                    identifier.authentication_date = json_payload.get("timestamp", {})
+            await service.update_person(person)
+            logger.debug(f"ORCID authenticated for person {json_payload['targetUid']}.")
             return
