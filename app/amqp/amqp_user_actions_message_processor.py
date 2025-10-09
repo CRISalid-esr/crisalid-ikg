@@ -53,7 +53,9 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
         # exceptions are handled in the base class
         await self.change_service.create_and_apply_change(change)
 
-    async def _process_unregistered_change(self, json_payload: str):
+    async def _process_unregistered_change(self, json_payload: str,
+                                           # pylint: disable=too-many-branches
+                                           ):
         """
         Method handling different cases of unregistered changes
         """
