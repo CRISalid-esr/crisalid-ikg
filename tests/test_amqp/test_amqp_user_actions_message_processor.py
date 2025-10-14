@@ -127,7 +127,6 @@ def mocked_authenticate_orcid_fixture():
         yield mocked
 
 
-@pytest.mark.current
 @pytest.mark.asyncio
 async def test_amqp_user_actions_processor_authenticate_orcid(
         mocked_authenticate_orcid,

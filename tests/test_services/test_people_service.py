@@ -322,7 +322,6 @@ async def test_update_person_employment_position(
     )
 
 
-@pytest.mark.current
 async def test_authenticate_orcid_same(
         persisted_person_a_pydantic_model: Person,
 ) -> None:
@@ -353,11 +352,11 @@ async def test_authenticate_orcid_same(
         (id for id in person_after_auth.identifiers if id.type.value == "orcid"), None
     )
     assert orcid_identifier.value == received_orcid
-    assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(timestamp)
+    assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00"))
     assert orcid_identifier.authenticated
 
 
-@pytest.mark.current
 async def test_authenticate_orcid_same_authenticated(
         persisted_person_a_orcid_authenticated_pydantic_model: Person,
 ) -> None:
@@ -379,7 +378,7 @@ async def test_authenticate_orcid_same_authenticated(
     assert orcid_identifier.value == received_orcid
     assert orcid_identifier.authenticated is True
     assert (orcid_identifier.authentication_date ==
-            datetime.datetime.fromisoformat(actual_authentication_date))
+            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
 
     with pytest.raises(ValueError):
         await service.authenticate_orcid(person_uid, received_orcid, timestamp)
@@ -391,10 +390,9 @@ async def test_authenticate_orcid_same_authenticated(
     assert orcid_identifier.value == received_orcid
     assert orcid_identifier.authenticated is True
     assert (orcid_identifier.authentication_date ==
-            datetime.datetime.fromisoformat(actual_authentication_date))
+            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
 
 
-@pytest.mark.current
 async def test_authenticate_orcid_different(
         persisted_person_a_pydantic_model: Person,
 ) -> None:
@@ -427,7 +425,6 @@ async def test_authenticate_orcid_different(
     assert orcid_identifier.value == actual_orcid
     assert orcid_identifier.authenticated is None
 
-@pytest.mark.current
 async def test_authenticate_orcid_new(
         persisted_person_a_no_orcid_pydantic_model: Person,
 ) -> None:
@@ -454,5 +451,6 @@ async def test_authenticate_orcid_new(
         (id for id in person_after_auth.identifiers if id.type.value == "orcid"), None
     )
     assert orcid_identifier.value == received_orcid
-    assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(timestamp)
+    assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00"))
     assert orcid_identifier.authenticated
