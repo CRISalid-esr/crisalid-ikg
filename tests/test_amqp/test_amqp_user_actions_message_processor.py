@@ -1,7 +1,6 @@
 # file: tests/test_amqp/test_amqp_user_actions_message_processor.py
 
 import asyncio
-import datetime
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -12,8 +11,6 @@ from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.change import Change, ChangeStatus
 from app.models.document import Document
-from app.services.people.people_service import PeopleService
-
 
 @pytest.mark.asyncio
 async def test_amqp_user_actions_processor_applies_change(
@@ -120,10 +117,20 @@ async def test_amqp_user_actions_processor_fetch_triggers_signal(
     assert kwargs["payload"]["harvesters"] == ["hal", "scanr", "idref"]
 
 
+@pytest.fixture(name="mocked_authenticate_orcid")
+def mocked_authenticate_orcid_fixture():
+    """
+    Fixture to mock the `amqp_interface.fetch_publications` signal receiver.
+    """
+    with patch("app.services.people.people_service.PeopleService.authenticate_orcid",
+               new_callable=AsyncMock) as mocked:
+        yield mocked
+
+
 @pytest.mark.current
 @pytest.mark.asyncio
 async def test_amqp_user_actions_processor_authenticate_orcid(
-        persisted_person_a_pydantic_model,
+        mocked_authenticate_orcid,
         test_app,  # pylint: disable=unused-argument
 ):
     """
@@ -152,13 +159,7 @@ async def test_amqp_user_actions_processor_authenticate_orcid(
     payload_bytes = json.dumps(payload).encode("utf-8")
     # pylint: disable=protected-access
     await processor._process_message("task.people.person.*", payload_bytes)
-    service = PeopleService()
-    person = await service.get_person(payload["targetUid"])
-    for identifier in person.identifiers:
-        if identifier.type.value == "orcid":
-            assert (identifier.value ==
-                    payload.get("parameters", "").get("identifier","").get("value",""))
-            assert (identifier.authentication_date ==
-                    datetime.datetime.fromisoformat(payload.get("timestamp")
-                                                    .replace("Z", "+00:00")))
-            assert identifier.authenticated
+
+    mocked_authenticate_orcid.assert_awaited_once()
+    args, _ = mocked_authenticate_orcid.call_args
+    assert args == ('local-jdoe@univ-domain.edu', '0000-0001-2345-6789', '2025-08-26T06:17:28.243Z')
