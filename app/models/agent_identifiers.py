@@ -30,6 +30,7 @@ class PersonIdentifier(AgentIdentifier[PersonIdentifierType]):
     @field_validator("authenticated", mode="before")
     @classmethod
     def parse_authenticated(cls, value):
+        """Ensures that authenticated boolean given as a string is registered as a boolean"""
         if isinstance(value, str):
             return value.lower() == "true"
         return value
@@ -37,8 +38,9 @@ class PersonIdentifier(AgentIdentifier[PersonIdentifierType]):
     @field_validator("authentication_date", mode="before")
     @classmethod
     def convert_neo4j_datetime(cls, value):
+        """Converts neo4j time back to datetime"""
         if isinstance(value, neo4j.time.DateTime):
-            return value.to_native()  # returns a datetime.datetime object
+            return value.to_native()
         return value
 
 class OrganizationIdentifier(AgentIdentifier[OrganizationIdentifierType]):
