@@ -16,4 +16,6 @@ FOREACH (name IN $names |
 WITH p
 UNWIND $identifiers AS identifier
 CREATE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
+SET i.authenticated = CASE WHEN identifier.authenticated IS NOT NULL THEN identifier.authenticated ELSE i.authenticated END,
+    i.authentication_date = CASE WHEN identifier.authentication_date IS NOT NULL THEN identifier.authentication_date ELSE i.authentication_date END
 CREATE (p)-[:HAS_IDENTIFIER]->(i)

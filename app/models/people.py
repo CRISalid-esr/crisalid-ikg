@@ -172,3 +172,13 @@ class Person(Agent[PersonIdentifierType]):
         if not last_name:
             return ""
         return last_name[0].value
+
+    def has_orcid(self):
+        """
+        Get the orcid identifier of the person and if it is authenticated
+        """
+        return next(
+            ((id.value, bool(getattr(id, "authenticated", None))) for id in self.identifiers if
+             id.type.value == "orcid"),
+            (None, None)
+        )

@@ -53,9 +53,7 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
         # exceptions are handled in the base class
         await self.change_service.create_and_apply_change(change)
 
-    async def _process_unregistered_change(self, json_payload: str,
-                                           # pylint: disable=too-many-branches
-                                           ):
+    async def _process_unregistered_change(self, json_payload: str):
         """
         Method handling different cases of unregistered changes
         """
@@ -83,38 +81,14 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
                 raise ValueError("Target UID is required for person-related"
                                  "ADD action type and should be a string.")
 
-            received_orcid = None
-            received_identifier = json_payload.get("parameters", {}).get("identifier", {})
-            if received_identifier.get("type", "") == "ORCID":
-                received_orcid = received_identifier.get("value")
 
+            received_orcid = ((json_payload.get("parameters", {}).get("identifier") or {}).
+                              get("value")) if (json_payload.get("parameters", {}).
+                                                get("identifier", {}).
+                                                get("type") == "ORCID") else None
 
             service = PeopleService()
-            person = await service.get_person(json_payload["targetUid"])
-            existing_orcid = None
-            authenticated_existing_orcid = False
+            await service.authenticate_orcid(json_payload["targetUid"],
+                                             received_orcid, json_payload["timestamp"])
 
-            for identifier in person.identifiers:
-                if identifier.type.value == "orcid":
-                    existing_orcid = identifier.value
-                    if identifier.authenticated:
-                        authenticated_existing_orcid = True
-
-            if existing_orcid != received_orcid:
-                # return message of non-corresponding orcid to merge
-                logger.debug(f"Existing and received ORCID are different for person "
-                             f"{json_payload['targetUid']}. No authentication possible")
-                return
-
-            if existing_orcid == received_orcid and authenticated_existing_orcid:
-                # return message of orcid already authenticated ? Just a lo
-                logger.debug(f"ORCID already authenticated for person {json_payload['targetUid']}.")
-                return
-
-            for identifier in person.identifiers:
-                if identifier.type.value == "orcid":
-                    identifier.authenticated = True
-                    identifier.authentication_date = json_payload.get("timestamp", {})
-            await service.update_person(person)
-            logger.debug(f"ORCID authenticated for person {json_payload['targetUid']}.")
             return
