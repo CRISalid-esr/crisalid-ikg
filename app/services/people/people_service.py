@@ -6,6 +6,7 @@ from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.person_dao import PersonDAO
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.employments import Employment
 from app.models.people import Person
 from app.services.organizations.institution_service import InstitutionService
@@ -148,6 +149,48 @@ class PeopleService:
         factory = self._get_dao_factory()
         dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.get_all_uids(external=external)
+
+    async def authenticate_orcid(self, person_uid: str, received_orcid: str, timestamp: str):
+        """
+        Authenticate a person's Orcid if necessary
+        """
+        person = await self.get_person(person_uid)
+        existing_orcid, authenticated_existing_orcid = person.has_orcid()
+
+        if existing_orcid is None:
+            new_orcid_identifier = PersonIdentifier(
+                type="orcid",
+                value=received_orcid,
+                authenticated=True,
+                authentication_date=timestamp
+            )
+            person.identifiers.append(new_orcid_identifier)
+
+        elif existing_orcid != received_orcid:
+            logger.debug(
+                f"Existing and received ORCID are different for person "
+                f"{person_uid}. No authentication possible"
+            )
+            raise ValueError(
+                f"Existing ORCID ({existing_orcid}) and received ORCID ({received_orcid})"
+                f" do not match for person {person_uid}. Authentication aborted."
+            )
+
+        elif existing_orcid == received_orcid and authenticated_existing_orcid:
+            logger.debug(f"ORCID already authenticated for person {person_uid}.")
+            raise ValueError(f"ORCID {existing_orcid} is already authenticated "
+                             f"for person {person_uid}.")
+
+        else:
+            orcid_identifier = next(
+                (id for id in person.identifiers if id.type.value == "orcid"), None
+            )
+            orcid_identifier.authenticated = True
+            orcid_identifier.authentication_date = timestamp
+
+        await self.update_person(person)
+        logger.debug(f"ORCID authenticated for person {person_uid}.")
+        return
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

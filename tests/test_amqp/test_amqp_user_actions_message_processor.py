@@ -12,7 +12,6 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.change import Change, ChangeStatus
 from app.models.document import Document
 
-
 @pytest.mark.asyncio
 async def test_amqp_user_actions_processor_applies_change(
         test_app,  # pylint: disable=unused-argument
@@ -116,3 +115,50 @@ async def test_amqp_user_actions_processor_fetch_triggers_signal(
     assert "payload" in kwargs
     assert kwargs["payload"]["person_uid"] == "person:test"
     assert kwargs["payload"]["harvesters"] == ["hal", "scanr", "idref"]
+
+
+@pytest.fixture(name="mocked_authenticate_orcid")
+def mocked_authenticate_orcid_fixture():
+    """
+    Fixture to mock the `amqp_interface.fetch_publications` signal receiver.
+    """
+    with patch("app.services.people.people_service.PeopleService.authenticate_orcid",
+               new_callable=AsyncMock) as mocked:
+        yield mocked
+
+
+@pytest.mark.asyncio
+async def test_amqp_user_actions_processor_authenticate_orcid(
+        mocked_authenticate_orcid,
+        test_app,  # pylint: disable=unused-argument
+):
+    """
+    Integration test for ADD actionType to authenticate an ORCID identifier
+    """
+    payload = {
+      "actionType": "ADD",
+      "targetType": "PERSON",
+      "targetUid": "local-jdoe@univ-domain.edu",
+      "path": "identifiers",
+      "parameters": {
+        "identifier": {
+          "type": "ORCID",
+          "value": "0000-0001-2345-6789"
+        }
+      },
+      "timestamp": "2025-08-26T06:17:28.243Z",
+      "personUid": "local-jdoe@univ-domain.edu",
+      "application": "sovisuplus"
+    }
+
+    queue = asyncio.Queue()
+    settings = get_app_settings()
+    processor = AMQPUserActionsMessageProcessor(queue, settings)
+
+    payload_bytes = json.dumps(payload).encode("utf-8")
+    # pylint: disable=protected-access
+    await processor._process_message("task.people.person.*", payload_bytes)
+
+    mocked_authenticate_orcid.assert_awaited_once()
+    args, _ = mocked_authenticate_orcid.call_args
+    assert args == ('local-jdoe@univ-domain.edu', '0000-0001-2345-6789', '2025-08-26T06:17:28.243Z')

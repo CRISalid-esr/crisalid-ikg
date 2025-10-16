@@ -34,7 +34,8 @@ class AMQPInterface:
             "publications": [self.settings.amqp_harvester_reference_event_routing_key],
             "harvesting_events": [self.settings.amqp_harvesting_event_routing_key],
             "user_actions": [self.settings.amqp_graph_document_task_routing_key,
-                             self.settings.amqp_graph_person_documents_fetch_task_routing_key],
+                             self.settings.amqp_graph_person_documents_fetch_task_routing_key,
+                             self.settings.amqp_graph_person_attribute_update_task_routing_key],
         }
 
     async def connect(self, listen=True) -> None:

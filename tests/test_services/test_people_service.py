@@ -1,3 +1,4 @@
+import datetime
 from typing import cast
 
 import pytest
@@ -319,3 +320,137 @@ async def test_update_person_employment_position(
         if employment.position.code ==
         person_a_with_different_employment_pydantic_model.employments[0].position.code
     )
+
+
+async def test_authenticate_orcid_same(
+        persisted_person_a_pydantic_model: Person,
+) -> None:
+    """
+    Given an existing person with a non authenticated orcid
+    Given an authentication with the same orcid
+    Check that authenticating updates the orcid identifier
+    """
+    person_uid = "local-jdoe@univ-domain.edu"
+    received_orcid = "0000-0001-2345-6789"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+
+    service = PeopleService()
+
+    person_before_auth = await service.get_person(person_uid)
+    orcid_identifier = next(
+        (id for id in person_before_auth.identifiers if id.type.value == "orcid"), None
+    )
+    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.authentication_date is None
+    assert orcid_identifier.authenticated is None
+
+    await service.authenticate_orcid(person_uid, received_orcid, timestamp)
+
+    person_after_auth = await service.get_person(person_uid)
+    orcid_identifier = next(
+        (id for id in person_after_auth.identifiers if id.type.value == "orcid"), None
+    )
+    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00"))
+    assert orcid_identifier.authenticated
+
+
+async def test_authenticate_orcid_same_authenticated(
+        persisted_person_a_orcid_authenticated_pydantic_model: Person,
+) -> None:
+    """
+    Given an existing person with an authenticated orcid
+    Check that authenticating returns a value error because it is already authenticated
+    """
+    person_uid = "local-jdoe_auth_orcid@univ-domain.edu"
+    received_orcid = "0000-0001-2345-6789"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+    actual_authentication_date = "2025-08-25T06:17:28.243Z"
+
+    service = PeopleService()
+    person_before_auth = await service.get_person(person_uid)
+    orcid_identifier = next(
+        (id for id in person_before_auth.identifiers if id.type.value == "orcid"), None
+    )
+    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.authenticated is True
+    assert (orcid_identifier.authentication_date ==
+            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
+
+    with pytest.raises(ValueError):
+        await service.authenticate_orcid(person_uid, received_orcid, timestamp)
+
+    person_after_auth = await service.get_person(person_uid)
+    orcid_identifier = next(
+        (id for id in person_after_auth.identifiers if id.type.value == "orcid"), None
+    )
+    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.authenticated is True
+    assert (orcid_identifier.authentication_date ==
+            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
+
+
+async def test_authenticate_orcid_different(
+        persisted_person_a_pydantic_model: Person,
+) -> None:
+    """
+    Given an existing person with a non authenticated orcid
+    Check that authenticating updates the orcid identifier if they are similar
+    """
+    person_uid = "local-jdoe@univ-domain.edu"
+    actual_orcid = "0000-0001-2345-6789"
+    received_orcid = "0000-0001-2345-1234"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+
+    service = PeopleService()
+    person_before_auth = await service.get_person(person_uid)
+    orcid_identifier = next(
+        (id for id in person_before_auth.identifiers if id.type.value == "orcid"), None
+    )
+    assert orcid_identifier.value == actual_orcid
+    assert orcid_identifier.authentication_date is None
+    assert orcid_identifier.authenticated is None
+
+    with pytest.raises(ValueError):
+        await service.authenticate_orcid(person_uid, received_orcid, timestamp)
+
+    person_after_auth = await service.get_person(person_uid)
+    orcid_identifier = next(
+        (id for id in person_after_auth.identifiers if id.type.value == "orcid"), None
+    )
+    assert orcid_identifier.value == actual_orcid
+    assert orcid_identifier.authenticated is None
+
+async def test_authenticate_orcid_new(
+        persisted_person_a_no_orcid_pydantic_model: Person,
+) -> None:
+    """
+    Given an existing person with no orcid identifier
+    Check that the identifier is added, directly authenticated
+    """
+    person_uid = "local-jdoe_no_orcid@univ-domain.edu"
+    received_orcid = "0000-0001-2345-6789"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+
+    service = PeopleService()
+    person_before_auth = await service.get_person(person_uid)
+    orcid_identifier = next(
+        (id for id in person_before_auth.identifiers if id.type.value == "orcid"), None
+    )
+    assert orcid_identifier is None
+
+    await service.authenticate_orcid(person_uid, received_orcid, timestamp)
+
+    person_after_auth = await service.get_person(person_uid)
+    orcid_identifier = next(
+        (id for id in person_after_auth.identifiers if id.type.value == "orcid"), None
+    )
+    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00"))
+    assert orcid_identifier.authenticated
