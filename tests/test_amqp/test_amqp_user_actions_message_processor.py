@@ -12,6 +12,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.change import Change, ChangeStatus
 from app.models.document import Document
 
+
 @pytest.mark.asyncio
 async def test_amqp_user_actions_processor_applies_change(
         test_app,  # pylint: disable=unused-argument
@@ -136,19 +137,19 @@ async def test_amqp_user_actions_processor_authenticate_orcid(
     Integration test for ADD actionType to authenticate an ORCID identifier
     """
     payload = {
-      "actionType": "ADD",
-      "targetType": "PERSON",
-      "targetUid": "local-jdoe@univ-domain.edu",
-      "path": "identifiers",
-      "parameters": {
-        "identifier": {
-          "type": "ORCID",
-          "value": "0000-0001-2345-6789"
-        }
-      },
-      "timestamp": "2025-08-26T06:17:28.243Z",
-      "personUid": "local-jdoe@univ-domain.edu",
-      "application": "sovisuplus"
+        "actionType": "ADD",
+        "targetType": "PERSON",
+        "targetUid": "local-jdoe@univ-domain.edu",
+        "path": "identifiers",
+        "parameters": {
+            "identifier": {
+                "type": "ORCID",
+                "value": "0000-0001-2345-6789"
+            }
+        },
+        "timestamp": "2025-08-26T06:17:28.243Z",
+        "personUid": "local-jdoe@univ-domain.edu",
+        "application": "sovisuplus"
     }
 
     queue = asyncio.Queue()
@@ -162,3 +163,42 @@ async def test_amqp_user_actions_processor_authenticate_orcid(
     mocked_authenticate_orcid.assert_awaited_once()
     args, _ = mocked_authenticate_orcid.call_args
     assert args == ('local-jdoe@univ-domain.edu', '0000-0001-2345-6789', '2025-08-26T06:17:28.243Z')
+
+
+@pytest.mark.asyncio
+async def test_amqp_user_actions_processor_merges_document_triggers_registered_change(
+        test_app  # pylint: disable=unused-argument
+):
+    """
+    Regression test:
+    Given a MERGE action on a DOCUMENT,
+    When the message is processed,
+    Then ChangeService.create_and_apply_change should be awaited with a Change instance.
+    """
+    payload = {
+        "id": "374606b8-098c-4287-86ce-1b66c6e49490",
+        "actionType": "MERGE",
+        "targetType": "DOCUMENT",
+        "targetUid": "79098c18-a4ed-4bf2-b927-8ce473fa8110",
+        "path": None,
+        "parameters": {
+            "mergedDocumentUids": ["5fe031b8-597e-449c-917d-2826f7b43b15"]
+        },
+        "timestamp": "2025-10-19T16:31:27.509Z",
+        "personUid": "local-jdornbusch",
+        "application": "sovisuplus",
+    }
+
+    queue = asyncio.Queue()
+    settings = get_app_settings()
+    processor = AMQPUserActionsMessageProcessor(queue, settings)
+
+    with patch("app.services.changes.change_service.ChangeService.create_and_apply_change",
+               new_callable=AsyncMock) as mocked_apply:
+        # pylint: disable=protected-access
+        await processor._process_message("event.documents.document.merged",
+                                         json.dumps(payload).encode("utf-8"))
+
+        mocked_apply.assert_awaited_once()
+        (change_arg,), _ = mocked_apply.await_args
+        assert isinstance(change_arg, Change)
