@@ -39,7 +39,7 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
             await self._process_unregistered_change(json_payload)
 
     async def _check_registration_need(self, json_payload: str):
-        if json_payload["actionType"] in ["ADD", "REMOVE", "UPDATE"]:
+        if json_payload["actionType"] in ["ADD", "REMOVE", "UPDATE", "MERGE"]:
             if json_payload["targetType"] == "DOCUMENT":
                 return True
         else:
