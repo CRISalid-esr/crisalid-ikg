@@ -420,21 +420,24 @@ class DocumentDAO(Neo4jDAO):
         await tx.run(query, document_uid=document_uid, subject_uids=subject_uids)
 
     @handle_database_errors
-    @classmethod
-    async def update_type(cls, document_uid: str, new_type: str) -> None:
+    async def update_type(self, document_uid: str, new_type: str) -> None:
         """
         Update a document type and associated labels
 
         :param document_uid: UID of the document
         :param subject_uids: New type of the document
         """
-        concrete_document_class = cls._get_concrete_document_class([new_type])
-        labels = cls._get_labels_from_hierarchy(concrete_document_class)
+
+        if new_type not in self.DOCUMENT_CLASS_MAP:
+            raise ValueError(f"Invalid new document type: {new_type}")
+
+        concrete_document_class = self.__class__._get_concrete_document_class([new_type])
+        labels = self.__class__._get_labels_from_hierarchy(concrete_document_class).split(':')
 
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(
-                    cls._update_type_transaction,
+                    self._update_type_transaction,
                     document_uid=document_uid,
                     new_labels=labels,
                     new_type=new_type
