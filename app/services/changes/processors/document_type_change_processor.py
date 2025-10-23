@@ -18,8 +18,11 @@ class DocumentTypeChangeProcessor(AbstractChangeProcessor):
         new_type = self.change.parameters.get("value")
         if not isinstance(document_uid, str):
             raise ValueError(f"Invalid 'targetUid' in change: {self.change.target_uid}")
-        await self._get_document_dao().update_type(document_uid=document_uid,
-                                                       type=new_type)
+        try :
+            await self._get_document_dao().update_type(document_uid=document_uid,
+                                                       new_type=new_type)
+        except ValueError as exc:
+            raise ValueError(f"Invalid new document type: {new_type}") from exc
 
     def _get_document_dao(self) -> DocumentDAO:
         factory = self._get_dao_factory()
