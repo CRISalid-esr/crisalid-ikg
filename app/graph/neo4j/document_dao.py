@@ -390,6 +390,14 @@ class DocumentDAO(Neo4jDAO):
 
         return cls.DOCUMENT_CLASS_MAP[most_specific_class]
 
+    @classmethod
+    def get_labels(cls, new_type: str):
+        """
+        Getter methods to get labels
+        """
+        concrete_class = cls._get_concrete_document_class([new_type])
+        return cls._get_labels_from_hierarchy(concrete_class).split(':')
+
     @handle_database_errors
     async def remove_subjects(
             self,
@@ -431,8 +439,8 @@ class DocumentDAO(Neo4jDAO):
         if new_type not in self.DOCUMENT_CLASS_MAP:
             raise ValueError(f"Invalid new document type: {new_type}")
 
-        concrete_document_class = self.__class__._get_concrete_document_class([new_type])
-        labels = self.__class__._get_labels_from_hierarchy(concrete_document_class).split(':')
+
+        labels = self.get_labels(new_type)
 
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
