@@ -1,3 +1,5 @@
+from typing import Type
+
 from loguru import logger
 from neo4j import Record, AsyncTransaction, AsyncResult, AsyncManagedTransaction
 # pylint: disable=wrong-import-order
@@ -320,7 +322,7 @@ class DocumentDAO(Neo4jDAO):
         )
 
     @staticmethod
-    def _get_labels_from_hierarchy(document_class: Document.__class__) -> str:
+    def _get_labels_from_hierarchy(document_class: Type[Document]) -> str:
         """
         Get the labels for a document based on its class hierarchy
         e.g. "Document:Publication:Article"
