@@ -1,3 +1,5 @@
+from typing import Type
+
 from loguru import logger
 from neo4j import Record, AsyncTransaction, AsyncResult, AsyncManagedTransaction
 # pylint: disable=wrong-import-order
@@ -7,9 +9,13 @@ from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
+from app.models.article import Article
 from app.models.book import Book
 from app.models.book_chapter import BookChapter
+from app.models.book_of_chapters import BookOfChapters
+from app.models.comment import Comment
 from app.models.concepts import Concept
+from app.models.conference_abstract import ConferenceAbstract
 from app.models.conference_article import ConferenceArticle
 from app.models.contributions import Contribution
 from app.models.document import Document
@@ -18,6 +24,8 @@ from app.models.journal import Journal
 from app.models.journal_article import JournalArticle
 from app.models.literal import Literal
 from app.models.monograph import Monograph
+from app.models.preface import Preface
+from app.models.presentation import Presentation
 from app.models.proceedings import Proceedings
 from app.models.scholarly_publication import ScholarlyPublication
 
@@ -30,12 +38,18 @@ class DocumentDAO(Neo4jDAO):
     DOCUMENT_CLASS_MAP = {
         "Document": Document,
         "ScholarlyPublication": ScholarlyPublication,
-        "Article": JournalArticle,
+        "Article": Article,
+        "JournalArticle": JournalArticle,
+        "ConferenceArticle": ConferenceArticle,
+        "ConferenceAbstract": ConferenceAbstract,
+        "Preface": Preface,
+        "Comment": Comment,
+        "BookChapter": BookChapter,
         "Book": Book,
         "Monograph": Monograph,
-        "BookChapter": BookChapter,
-        "ConferenceArticle": ConferenceArticle,
-        "Proceedings": Proceedings
+        "Proceedings": Proceedings,
+        "BookOfChapters": BookOfChapters,
+        "Presentation": Presentation,
     }
 
     @handle_database_errors
@@ -102,7 +116,7 @@ class DocumentDAO(Neo4jDAO):
         create_document_query = load_query(
             "create_or_update_document"
         )
-        labels = cls._get_labels_from_hierarchy(document)
+        labels = cls._get_labels_from_hierarchy(document.__class__)
         publication_date_start = document.publication_date_start.isoformat() \
             if document.publication_date_start else None
         publication_date_end = document.publication_date_end.isoformat() \
@@ -308,7 +322,7 @@ class DocumentDAO(Neo4jDAO):
         )
 
     @staticmethod
-    def _get_labels_from_hierarchy(document: Document) -> str:
+    def _get_labels_from_hierarchy(document_class: Type[Document]) -> str:
         """
         Get the labels for a document based on its class hierarchy
         e.g. "Document:Publication:Article"
@@ -316,7 +330,7 @@ class DocumentDAO(Neo4jDAO):
         """
         return ":".join(reversed([
             cls.__name__
-            for cls in document.__class__.mro()[:-1]  # Exclude object
+            for cls in document_class.mro()[:-1]  # Exclude object
             if cls not in (BaseModel,)  # Exclude BaseModel
         ]))
 
@@ -378,6 +392,14 @@ class DocumentDAO(Neo4jDAO):
 
         return cls.DOCUMENT_CLASS_MAP[most_specific_class]
 
+    @classmethod
+    def get_labels(cls, new_type: str):
+        """
+        Getter methods to get labels
+        """
+        concrete_class = cls._get_concrete_document_class([new_type])
+        return cls._get_labels_from_hierarchy(concrete_class).split(':')
+
     @handle_database_errors
     async def remove_subjects(
             self,
@@ -406,3 +428,38 @@ class DocumentDAO(Neo4jDAO):
     ) -> None:
         query = load_query("remove_document_subjects")
         await tx.run(query, document_uid=document_uid, subject_uids=subject_uids)
+
+    @handle_database_errors
+    async def update_type(self, document_uid: str, new_type: str) -> None:
+        """
+        Update a document type and associated labels
+
+        :param document_uid: UID of the document
+        :param subject_uids: New type of the document
+        """
+
+        if new_type not in self.DOCUMENT_CLASS_MAP:
+            raise ValueError(f"Invalid new document type: {new_type}")
+
+
+        labels = self.get_labels(new_type)
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._update_type_transaction,
+                    document_uid=document_uid,
+                    new_labels=labels,
+                    new_type=new_type
+                )
+
+    @staticmethod
+    async def _update_type_transaction(
+            tx: AsyncManagedTransaction,
+            document_uid: str,
+            new_labels: list[str],
+            new_type: str
+    ) -> None:
+        query = load_query("update_document_type")
+        await tx.run(query, document_uid=document_uid,
+                     document_labels=new_labels, document_type=new_type)
