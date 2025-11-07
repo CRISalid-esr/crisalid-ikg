@@ -451,8 +451,8 @@ class DocumentDAO(Neo4jDAO):
                     document_uid=document_uid,
                     subject_uid=subject_uid,
                     subject_uri=subject_uri,
-                    subject_prefLabels=subject_pref_labels,
-                    subject_altLabels=subject_alt_labels
+                    subject_pref_labels=subject_pref_labels,
+                    subject_alt_labels=subject_alt_labels
                 )
 
     @staticmethod
