@@ -429,6 +429,7 @@ class DocumentDAO(Neo4jDAO):
         query = load_query("remove_document_subjects")
         await tx.run(query, document_uid=document_uid, subject_uids=subject_uids)
 
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     @handle_database_errors
     async def add_subject(
             self,
@@ -455,6 +456,7 @@ class DocumentDAO(Neo4jDAO):
                     subject_alt_labels=subject_alt_labels
                 )
 
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     @staticmethod
     async def _add_subject_transaction(
             tx: AsyncManagedTransaction,
