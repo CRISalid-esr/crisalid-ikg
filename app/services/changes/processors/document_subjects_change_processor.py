@@ -44,10 +44,10 @@ class DocumentSubjectsChangeProcessor(AbstractChangeProcessor):
                                  f"parameters of change {self.change.uid}")
 
             await self._get_document_dao().add_subject(document_uid=document_uid,
-                                                    subject_uid=subject_uid,
-                                                    subject_uri=subject_uri,
-                                                    subject_prefLabels=subject_pref_labels,
-                                                    subject_altLabels=subject_alt_labels)
+                                                       subject_uid=subject_uid,
+                                                       subject_uri=subject_uri,
+                                                       subject_pref_labels=subject_pref_labels,
+                                                       subject_alt_labels=subject_alt_labels)
 
     def _get_document_dao(self) -> DocumentDAO:
         factory = self._get_dao_factory()
