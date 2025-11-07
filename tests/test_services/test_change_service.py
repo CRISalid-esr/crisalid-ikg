@@ -21,6 +21,7 @@ def mocked_document_updated_signal_fixture():
 
 
 @pytest.mark.asyncio
+@pytest.mark.current
 async def test_change_service_removes_subjects_from_document(
         test_app,  # pylint: disable=unused-argument
         document_hal_article_a_persisted_model: Document,
@@ -44,7 +45,7 @@ async def test_change_service_removes_subjects_from_document(
         person_uid="person:test",
         application="pytest",
         id="001",
-        action_type="UPDATE",
+        action_type="REMOVE",
         path="subjects",
         parameters={"conceptUids": to_remove},
         timestamp="2023-10-01T12:00:00Z",
@@ -88,7 +89,7 @@ async def test_change_service_raises_if_document_does_not_exist(
         person_uid="person:test",
         application="pytest",
         id="002",
-        action_type="UPDATE",
+        action_type="REMOVE",
         path="subjects",
         parameters={"conceptUids": ["http://example.org/concept/abc"]},
         timestamp="2023-10-01T12:00:00Z",
