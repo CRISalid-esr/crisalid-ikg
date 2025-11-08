@@ -34,7 +34,7 @@ async def test_document_subjects_change_processor_applies_subject_removal(
         person_uid="person:test",
         application="pytest",
         id="001",
-        action_type="UPDATE",
+        action_type="REMOVE",
         path="subjects",
         parameters={"conceptUids": subjects_to_remove},
         timestamp="2023-10-01T12:00:00Z",

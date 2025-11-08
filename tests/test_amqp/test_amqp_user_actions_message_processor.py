@@ -35,7 +35,7 @@ async def test_amqp_user_actions_processor_applies_change(
     change_payload = {
         "uid": "amqp-change-001",
         "id": "001",
-        "actionType": "UPDATE",
+        "actionType": "REMOVE",
         "path": "subjects",
         "parameters": {
             "conceptUids": to_remove

@@ -429,6 +429,47 @@ class DocumentDAO(Neo4jDAO):
         query = load_query("remove_document_subjects")
         await tx.run(query, document_uid=document_uid, subject_uids=subject_uids)
 
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
+    @handle_database_errors
+    async def add_subject(
+            self,
+            document_uid: str,
+            subject_uid: str,
+            subject_uri: str,
+            subject_pref_labels: list[dict],
+            subject_alt_labels: list[dict]
+    ) -> None:
+        """
+        Remove specific subject relationships from a document node.
+
+        :param document_uid: UID of the document
+        :param subject_uids: List of concept UIDs to add to the document
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._add_subject_transaction,
+                    document_uid=document_uid,
+                    subject_uid=subject_uid,
+                    subject_uri=subject_uri,
+                    subject_pref_labels=subject_pref_labels,
+                    subject_alt_labels=subject_alt_labels
+                )
+
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
+    @staticmethod
+    async def _add_subject_transaction(
+            tx: AsyncManagedTransaction,
+            document_uid: str,
+            subject_uid: str,
+            subject_uri: str,
+            subject_pref_labels: list[dict],
+            subject_alt_labels: list[dict]
+    ) -> None:
+        query = load_query("add_concept_to_document")
+        await tx.run(query, document_uid=document_uid, uid=subject_uid, uri=subject_uri,
+                     pref_labels=subject_pref_labels, alt_labels=subject_alt_labels)
+
     @handle_database_errors
     async def update_type(self, document_uid: str, new_type: str) -> None:
         """
