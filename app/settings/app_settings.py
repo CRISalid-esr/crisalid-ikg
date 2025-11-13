@@ -110,6 +110,10 @@ class AppSettings(BaseSettings):
     git_branch: str = "-"
     docker_digest: str = "-"
 
+    http_client_limit: int = 100
+    http_client_ttl_dns_cache: int = 300
+    http_client_timeout_total: float = 7.0
+
     graph_db: str = "neo4j"
 
     neo4j_edition: str = "community"
