@@ -4,6 +4,7 @@ import aiohttp
 from loguru import logger
 
 from app.config import get_app_settings
+from app.http.aio_http_client_manager import AioHttpClientManager
 from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.institution import Institution
@@ -59,21 +60,21 @@ class InstitutionRegistryService:
                      "country,identifiers,"
                      "metadata->uo_lib_en,metadata->uo_lib_officiel")
 
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.get(query_url) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        if data:
-                            logger.info("Found institution using provided identifiers")
-                            return data
-                    else:
-                        logger.warning(
-                            f"No institution found for identifiers (status {response.status})"
-                        )
-            except aiohttp.ClientError as e:
-                logger.error(f"Error querying {query_url}: {e}")
-                return []
+        session = await AioHttpClientManager.get_session()
+        try:
+            async with session.get(query_url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data:
+                        logger.info("Found institution using provided identifiers")
+                        return data
+                else:
+                    logger.warning(
+                        f"No institution found for identifiers (status {response.status})"
+                    )
+        except aiohttp.ClientError as e:
+            logger.error(f"Error querying {query_url}: {e}")
+            return []
 
         logger.warning("No institution found from external source.")
         return []
