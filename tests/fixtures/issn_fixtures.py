@@ -3,6 +3,7 @@ from unittest.mock import patch, AsyncMock, MagicMock
 
 import pytest
 
+from app.http.aio_http_client_manager import AioHttpClientManager
 from app.models.journal_identifiers import JournalIdentifier
 from app.services.journals.issn_info import IssnInfo
 from app.services.journals.issn_service import ISSNService
@@ -13,7 +14,7 @@ TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/issn")
 @pytest.fixture(autouse=True)
 def mock_issn_portal():
     """
-    Patch aiohttp.ClientSession to mock session.get(url) as an async context manager.
+    Patch AioHttpClientManager.get_session to mock session.get(url) as an async context manager.
     """
     requested_urls = []
 
@@ -40,13 +41,13 @@ def mock_issn_portal():
         mock_ctx_manager.__aexit__.return_value = None
         return mock_ctx_manager
 
-    # Patch aiohttp.ClientSession globally
-    patcher = patch("aiohttp.ClientSession")
+    # Mock session with .get()
+    mock_session = MagicMock()
+    mock_session.get.side_effect = _mock_get
 
-    with patcher as mock_session_class:
-        mock_session = MagicMock()
-        mock_session.get.side_effect = _mock_get
-        mock_session_class.return_value.__aenter__.return_value = mock_session
+    # Patch the AioHttpClientManager to return our mock session
+    with patch.object(AioHttpClientManager, "get_session",
+                      new=AsyncMock(return_value=mock_session)):
         yield requested_urls
 
 

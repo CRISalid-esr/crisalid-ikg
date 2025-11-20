@@ -6,6 +6,7 @@ from aiohttp import ClientError
 from loguru import logger
 from rdflib import Graph, URIRef, Namespace, RDF
 
+from app.http.aio_http_client_manager import AioHttpClientManager
 from app.models.journal_identifiers import JournalIdentifier
 from app.services.journals.issn_info import IssnInfo
 
@@ -70,12 +71,12 @@ class ISSNService:
     async def _fetch_issn_rdf(self, issn: str) -> str | None:
         url = f"{self.BASE_URL}/{issn}?format=json"
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=self.headers, allow_redirects=False) as resp:
-                    if resp.status != 200:
-                        logger.error(f"HTTP error {resp.status} fetching {url}")
-                        return None
-                    return await resp.text()
+            session = await AioHttpClientManager.get_session()
+            async with session.get(url, headers=self.headers, allow_redirects=False) as resp:
+                if resp.status != 200:
+                    logger.error(f"HTTP error {resp.status} fetching {url}")
+                    return None
+                return await resp.text()
         except ClientError as e:
             logger.exception(f"ClientError while fetching {url}: {e}")
             return None
