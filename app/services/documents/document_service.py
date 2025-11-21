@@ -10,6 +10,7 @@ from app.models.document import Document
 from app.models.document_publication_channel import DocumentPublicationChannel
 from app.models.source_records import SourceRecord
 from app.services.documents.metadata_computation_service import MetadataComputationService
+from app.services.documents.oa_colors_computation_service import OAColorsComputationService
 from app.services.journals.journal_service import JournalService
 from app.services.source_contributors.source_contributor_mapping_service import \
     SourceContributorMappingService
@@ -97,6 +98,11 @@ class DocumentService:
         await source_contributor_mapping_service.update_contributions()
         # delegate the merge operation to the metadata computation service
         document = MetadataComputationService(sources_records).merge()
+
+        ### Add BSO color computation service call
+
+        document = await OAColorsComputationService(document, sources_records).compute_oa_colors()
+
         document.uid = document_uid
         # set it explicitly to False for code clarity although it is the default value
         document.to_be_recomputed = False
