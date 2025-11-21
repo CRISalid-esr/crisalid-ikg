@@ -8,6 +8,7 @@ from app.models.concepts import Concept
 from app.models.contributions import Contribution
 from app.models.document_publication_channel import DocumentPublicationChannel
 from app.models.literal import Literal
+from app.models.open_access_status import OpenAccessStatus
 from app.utils.date.partial_iso_8601 import partial_iso8601_interval
 
 
@@ -26,6 +27,7 @@ class Document(BaseModel):
     source_record_uids: Optional[List[str]] = None
     contributions: Optional[List[Contribution]] = []
     publication_channels: List[DocumentPublicationChannel] = []
+    open_access_status: Optional[OpenAccessStatus] = None
     type: str = "Document"
 
     _publication_date: Optional[str] = None
