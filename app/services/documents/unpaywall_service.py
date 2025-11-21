@@ -1,5 +1,5 @@
 from app.services.documents.doaj_service import DoajService
-from app.services.documents.publication_api_service import PublicationApiService
+from app.utils.publication_api.publication_api_service import PublicationApiService
 
 
 class UnpaywallService(PublicationApiService):
