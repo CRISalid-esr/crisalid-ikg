@@ -4,7 +4,6 @@ from typing import Optional
 from loguru import logger
 from rdflib import Graph, URIRef, Namespace, RDF
 
-from app.http.aio_http_client_manager import AioHttpClientManager
 from app.models.journal_identifiers import JournalIdentifier
 from app.services.journals.issn_info import IssnInfo
 from app.utils.publication_api.publication_api_service import PublicationApiService
