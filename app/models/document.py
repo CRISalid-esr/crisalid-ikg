@@ -27,7 +27,7 @@ class Document(BaseModel):
     source_record_uids: Optional[List[str]] = None
     contributions: Optional[List[Contribution]] = []
     publication_channels: List[DocumentPublicationChannel] = []
-    open_access_status: Optional[OpenAccessStatus] = None
+    open_access_status: OpenAccessStatus = OpenAccessStatus()
     type: str = "Document"
 
     _publication_date: Optional[str] = None

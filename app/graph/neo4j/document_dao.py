@@ -136,8 +136,12 @@ class DocumentDAO(Neo4jDAO):
             publication_date_start=publication_date_start,
             publication_date_end=publication_date_end,
             document_labels=labels.split(":"),
-            oa_computation_timestamp=(document.open_access_status
-                                      .oa_computation_timestamp.isoformat()),
+            oa_computation_timestamp=(
+                document.open_access_status.oa_computation_timestamp.isoformat()
+                if (document.open_access_status
+                and document.open_access_status.oa_computation_timestamp)
+                else None
+            ),
             oa_computed_status=document.open_access_status.oa_computed_status,
             oa_upw_success_status=document.open_access_status.oa_upw_success_status,
             oa_doaj_success_status=document.open_access_status.oa_doaj_success_status,
