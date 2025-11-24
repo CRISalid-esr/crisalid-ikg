@@ -99,8 +99,6 @@ class DocumentService:
         # delegate the merge operation to the metadata computation service
         document = MetadataComputationService(sources_records).merge()
 
-        ### Add BSO color computation service call
-
         document = await OAColorsComputationService(document, sources_records).compute_oa_colors()
 
         document.uid = document_uid

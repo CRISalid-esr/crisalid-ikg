@@ -37,7 +37,7 @@ class OAColorsComputationService:
         document_oa_status = self.document.open_access_status
         document_oa_status.oa_computation_timestamp = datetime.now()
         document_oa_status.oa_status = next(
-            ('Green' for sr in self.source_records if sr.harvester == 'HAL'
+            ('Green' for sr in self.source_records if sr.harvester in ['HAL','Hal','hal']
                   and getattr(sr.custom_metadata, 'hal_submit_type', None) == 'file'),
             None)
 
@@ -58,8 +58,10 @@ class OAColorsComputationService:
 
         if document_oa_status.oa_status != 'Green':
             if upw_data["repository_location"]:
+                document_oa_status.oa_computed_status = True
                 document_oa_status.oa_status = 'Green'
             else:
+                document_oa_status.oa_computed_status = True
                 document_oa_status.oa_status = 'Closed'
 
         # Add COAR color based on info from upw_data (when embargo date available...)
