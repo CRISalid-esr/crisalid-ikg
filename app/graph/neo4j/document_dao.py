@@ -373,8 +373,9 @@ class DocumentDAO(Neo4jDAO):
 
         document.publication_date = record['document'].get('publication_date')
 
+        ts = record["document"].get("oa_computation_timestamp")
         document.open_access_status = OpenAccessStatus(
-            oa_computation_timestamp=record["document"].get("oa_computation_timestamp").to_native(),
+            oa_computation_timestamp=ts.to_native() if ts else None,
             oa_computed_status=record["document"].get("oa_computed_status"),
             oa_upw_success_status=record["document"].get("oa_upw_success_status"),
             oa_doaj_success_status=record["document"].get("oa_doaj_success_status"),
