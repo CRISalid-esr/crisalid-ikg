@@ -1,10 +1,13 @@
 from datetime import datetime
 from typing import cast
 
+import pytest
+
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.models.document import Document
 from app.models.journal_article import JournalArticle
+from app.models.open_access_status import OAStatus
 from app.models.source_records import SourceRecord
 from app.services.documents.document_service import DocumentService
 from app.services.source_records.equivalence_service import EquivalenceService
@@ -12,6 +15,7 @@ from app.signals import source_record_created, source_record_updated, \
     document_sources_changed
 
 
+@pytest.mark.current
 async def test_update_document(
         source_record_id_doi_1_persisted_model: SourceRecord,
         source_record_id_hal_1_persisted_model: SourceRecord,  # pylint: disable=unused-argument
@@ -65,3 +69,8 @@ async def test_update_document(
                     "http://www.idref.fr/concept-d/id",
                     "http://www.idref.fr/concept-e/id"
                 ] for subject in document.subjects)
+                assert document.open_access_status.oa_computed_status
+                assert document.open_access_status.oa_status == OAStatus.CLOSED
+                assert document.open_access_status.upw_oa_status is None
+                assert not document.open_access_status.oa_upw_success_status
+                assert document.open_access_status.oa_doaj_success_status is None
