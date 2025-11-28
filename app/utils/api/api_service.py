@@ -1,11 +1,12 @@
 import aiohttp
 from aiohttp import ClientError
+from aiohttp.http_exceptions import HttpProcessingError
 from loguru import logger
 
 from app.config import get_app_settings
 from app.http.aio_http_client_manager import AioHttpClientManager
 
-class PublicationApiService:
+class ApiService:
     """
     Base service for API services
     """
@@ -24,7 +25,7 @@ class PublicationApiService:
         except ClientError as e:
             logger.exception(f"ClientError while fetching {url}: {e}")
             return None
-        except aiohttp.http_exceptions.HttpProcessingError as e:
+        except HttpProcessingError as e:
             logger.exception(f"HTTP processing error for {url}: {e}")
             return None
 
