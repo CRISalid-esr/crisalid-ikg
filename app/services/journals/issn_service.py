@@ -6,7 +6,7 @@ from rdflib import Graph, URIRef, Namespace, RDF
 
 from app.models.journal_identifiers import JournalIdentifier
 from app.services.journals.issn_info import IssnInfo
-from app.utils.publication_api.publication_api_service import PublicationApiService
+from app.utils.api.api_service import ApiService
 
 BF = Namespace("http://id.loc.gov/ontologies/bibframe/")
 DC = Namespace("http://purl.org/dc/elements/1.1/")
@@ -16,7 +16,7 @@ SCHEMA = Namespace("http://schema.org/")
 MAX_RECURSION_DEPTH = 10
 
 
-class ISSNService(PublicationApiService):
+class ISSNService(ApiService):
     """
     Service to check ISSN identifiers against the ISSN portal
     """
