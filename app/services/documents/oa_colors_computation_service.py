@@ -48,6 +48,8 @@ class OAColorsComputationService:
                 document_oa_status.oa_computed_status = True
                 return self.document
 
+            document_oa_status.oa_status = OAStatus.CLOSED
+            document_oa_status.oa_computed_status = True
             return self.document
 
         # get OA status from Unpaywall (with call to DOAJ if necessary
