@@ -47,12 +47,14 @@ class UnpaywallService(ApiService):
         oa_data.upw_success = True
         oa_data.upw_status = json_data.get("oa_status", None)
 
+        # Check if document file is available in a repository
         oa_data.repository_location = None if not json_data.get("oa_locations") else any(
             loc.get("host_type") == "repository" for loc in json_data["oa_locations"]
         )
 
         # Missing potential embargo date to get when example arises
 
+        # If gold status, check if Journal has APCs in DOAJ. If not, set status to Diamond
         if (oa_data.upw_status and oa_data.upw_status.lower() == UnpaywallOAStatus.GOLD
                 and json_data.get("journal_is_in_doaj", False)):
             apc_data = await DoajService().get_apc_status(json_data.get("journal_issn_l"))

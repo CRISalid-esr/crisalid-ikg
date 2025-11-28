@@ -35,11 +35,14 @@ class OAColorsComputationService:
 
         document_oa_status = self.document.open_access_status
         document_oa_status.oa_computation_timestamp = datetime.now()
+
+        # Add green open access status if file is available in Hal
         document_oa_status.oa_status = next(
             (OAStatus.GREEN for sr in self.source_records if sr.harvester.lower() == 'hal'
                   and getattr(sr.custom_metadata, 'hal_submit_type', None) == 'file'),
             None)
 
+        # if no doi, the only status available depends on Hal (above)
         if doi is None:
             if document_oa_status.oa_status == OAStatus.GREEN:
                 document_oa_status.oa_computed_status = True
@@ -47,8 +50,10 @@ class OAColorsComputationService:
 
             return self.document
 
+        # get OA status from Unpaywall (with call to DOAJ if necessary
         upw_data = await UnpaywallService().get_data(doi)
 
+        # unpaywall oa status and success status are updated
         document_oa_status.upw_oa_status = UnpaywallOAStatus(upw_data.upw_status) \
             if upw_data.upw_status else None
         document_oa_status.oa_upw_success_status = upw_data.upw_success
@@ -56,6 +61,7 @@ class OAColorsComputationService:
         if document_oa_status.oa_upw_success_status:
             document_oa_status.oa_computed_status = True
 
+        # generic OA status is updated based on unpaywall information
         if document_oa_status.oa_status != OAStatus.GREEN:
             if upw_data.repository_location:
                 document_oa_status.oa_computed_status = True
