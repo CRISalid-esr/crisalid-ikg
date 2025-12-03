@@ -11,7 +11,7 @@ from app.services.journals.issn_service import ISSNService
 TEST_DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/issn")
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(name="mock_issn_portal")
 def mock_issn_portal():
     """
     Patch AioHttpClientManager.get_session to mock session.get(url) as an async context manager.
