@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 import pytest
 
 from app.services.documents.unpaywall_service import UnpaywallService
