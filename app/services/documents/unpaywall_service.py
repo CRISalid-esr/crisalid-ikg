@@ -1,4 +1,3 @@
-import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
@@ -42,13 +41,6 @@ class UnpaywallService(ApiService):
             # The error may result from either an invalid doi or from platform unavailability
             oa_data.upw_success = False
             return oa_data
-
-        try:
-            if not isinstance(json_data, dict) and isinstance(json_data, str):
-                json_data = json.loads(json_data)
-        except (json.JSONDecodeError, TypeError) as e:
-            # to handle an error in API response
-            print("Error parsing JSON from Unpaywall:", e)
 
         assert isinstance(json_data, dict), "Unpaywall API response should be a json dict"
 

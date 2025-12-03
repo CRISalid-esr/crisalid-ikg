@@ -1,4 +1,3 @@
-import json
 from dataclasses import dataclass
 from typing import Optional
 
@@ -36,13 +35,6 @@ class DoajService(ApiService):
         if json_data is None:
             apc_data.doaj_success = False
             return apc_data
-
-        try:
-            if not isinstance(json_data, dict) and isinstance(json_data, str):
-                json_data = json.loads(json_data)
-        except (json.JSONDecodeError, TypeError) as e:
-            # to handle an error in API response
-            print("Error parsing JSON from Unpaywall:", e)
 
         assert isinstance(json_data, dict), "Unpaywall API response should be a json dict"
 

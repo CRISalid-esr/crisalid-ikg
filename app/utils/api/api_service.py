@@ -1,3 +1,5 @@
+import json
+
 import aiohttp
 from aiohttp import ClientError
 from aiohttp.http_exceptions import HttpProcessingError
@@ -21,7 +23,14 @@ class ApiService:
                 if resp.status != 200:
                     logger.error(f"HTTP error {resp.status} fetching {url}")
                     return None
-                return await resp.json()
+                json_data = await resp.json()
+                try:
+                    if not isinstance(json_data, dict) and isinstance(json_data, str):
+                        json_data = json.loads(json_data)
+                except (json.JSONDecodeError, TypeError) as e:
+                    # to handle an error in API response
+                    print("Error parsing JSON from Unpaywall:", e)
+                return json_data
         except ClientError as e:
             logger.exception(f"ClientError while fetching {url}: {e}")
             return None
