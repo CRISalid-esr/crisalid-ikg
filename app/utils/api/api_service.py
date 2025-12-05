@@ -19,6 +19,8 @@ class ApiService:
     async def _fetch_json(self, url: str) -> dict | None:
         try:
             session = await AioHttpClientManager.get_session()
+            if self.settings.app_env == "TEST" and not hasattr(session.get, "mock_calls"):
+                raise RuntimeError("In TEST environment, aiohttp session must be mocked")
             async with session.get(url, headers=self.headers, allow_redirects=False) as resp:
                 if resp.status != 200:
                     logger.error(f"HTTP error {resp.status} fetching {url}")
