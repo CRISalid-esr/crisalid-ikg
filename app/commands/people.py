@@ -109,6 +109,26 @@ def fetch_publications(
 
     asyncio.run(_fetch_publications(uid))
 
+@people_cli.command()
+def fetch_publication_random(
+):
+    """
+    Fetch publications for a random person.
+    """
+
+    @with_app_lifecycle
+    async def _fetch_publication_random():
+        service = PeopleService()
+        try:
+            uids = await service.get_all_person_uids(external=False)
+            uid = random.choice(uids)
+            await service.signal_publications_to_be_updated(uid)
+            typer.echo(f"Publications fetched for person {uid}.")
+        # pylint: disable=broad-except
+        except Exception as e:
+            typer.echo(f"Failed to fetch publications for a random person: {e}")
+
+    asyncio.run(_fetch_publication_random())
 
 @people_cli.command()
 def fetch_publications_all():
