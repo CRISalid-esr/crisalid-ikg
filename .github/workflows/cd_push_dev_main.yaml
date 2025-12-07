@@ -23,5 +23,5 @@ jobs:
         with:
           push: true
           tags: |
-            crisalidesr/crisalid-ikg:v0.24-dev
+            crisalidesr/crisalid-ikg:v0.25-dev
             crisalidesr/crisalid-ikg:latest
