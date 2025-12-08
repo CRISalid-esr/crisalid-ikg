@@ -29,6 +29,7 @@ class OAColorsComputationService:
         Compute the OpenAccess status for the document
         :return: the Document instance
         """
+
         doi = next((id.value for sr in self.source_records
                 for id in sr.identifiers if id.type == PublicationIdentifierType.DOI),
                 None)
@@ -52,7 +53,7 @@ class OAColorsComputationService:
             document_oa_status.oa_computed_status = True
             return self.document
 
-        # get OA status from Unpaywall (with call to DOAJ if necessary
+        # if doi available, get OA status from Unpaywall (with call to DOAJ if necessary)
         upw_data = await UnpaywallService().get_data(doi)
 
         # unpaywall oa status and success status are updated
@@ -79,5 +80,6 @@ class OAColorsComputationService:
                 document_oa_status.oa_status = OAStatus.CLOSED
 
         # Add COAR color based on info from upw_data (when embargo date available...)
+        # TO BE ADDED
 
         return self.document

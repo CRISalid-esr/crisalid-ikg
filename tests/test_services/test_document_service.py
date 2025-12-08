@@ -78,7 +78,8 @@ async def test_oa_status_document_with_no_doi_and_no_hal(
         persisted_person_f_pydantic_model: Person,
 ) -> None:
     """
-    Test that when a journal is created from source records with no doi and no file in hal
+    Test that when a journal is created from source records with no doi and no file in hal,
+    then the Open Access status is CLOSED.
     :param hal_article_with_journal_1_pydantic_model: Pydantic SourceRecord object from
     HAL with journal information and DOI identifier (carries volume information)
     :param open_alex_article_with_journal_1_pydantic_model: Pydantic SourceRecord object from
@@ -133,7 +134,8 @@ async def test_oa_status_document_with_no_doi_but_hal(
         persisted_person_f_pydantic_model: Person,
 ) -> None:
     """
-    Test that when a journal is created from source records with no doi and no file in hal
+    Test that when a journal is created from source records with no doi but a file in hal,
+    then Open Access Status is Green
     :param hal_article_with_journal_1_pydantic_model: Pydantic SourceRecord object from
     HAL with journal information and DOI identifier (carries volume information)
     :param open_alex_article_with_journal_1_pydantic_model: Pydantic SourceRecord object from
@@ -193,7 +195,7 @@ async def test_oa_status_document_with_doi_but_no_hal(
 ) -> None:
     """
     Test that when a journal is created from source records with no doi and no file in
-    hal but a repository in Unpaywall
+    hal but a repository in Unpaywall, the Open Access status depends on Unpaywall data.
     :param hal_article_with_journal_1_pydantic_model: Pydantic SourceRecord object from
     HAL with journal information and DOI identifier (carries volume information)
     :param open_alex_article_with_journal_1_pydantic_model: Pydantic SourceRecord object from
@@ -250,7 +252,7 @@ async def test_oa_status_document_with_doi_not_in_upw_and_no_hal(
 ) -> None:
     """
     Test that when a journal is created from source records with no file in hal and the doi
-    that does not return anything from unpaywall
+    that does not return anything from unpaywall, then the Open Access status is CLOSED
     :param hal_article_with_journal_1_pydantic_model: Pydantic SourceRecord object from
     HAL with journal information and DOI identifier (carries volume information)
     :param open_alex_article_with_journal_1_pydantic_model: Pydantic SourceRecord object from
