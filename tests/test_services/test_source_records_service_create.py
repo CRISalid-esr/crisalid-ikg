@@ -307,3 +307,27 @@ async def test_create_source_record_with_issue(
     assert len(fetched_source_record.issue.titles) == 2
     assert 'Some title' in fetched_source_record.issue.titles
     assert 'Some other title' in fetched_source_record.issue.titles
+
+
+async def test_create_source_record_with_issue_datetime_including_t(
+        persisted_person_b_pydantic_model: Person,
+        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord
+) -> None:
+    """
+    Given a persisted person pydantic model and a non persisted source record pydantic model
+    When the source record data has raw_issued like YYYY-MM-DDTHH-MM-SS
+    Then the source record is created with a raw_issued like YYYY-MM-DD
+    :param persisted_person_a_pydantic_model:
+    :param scanr_record_with_person_b_as_contributor_pydantic_model:
+    :return:
+    """
+
+    service = SourceRecordService()
+    await service.create_source_record(
+        source_record=scanr_record_with_person_b_as_contributor_pydantic_model,
+        harvested_for=persisted_person_b_pydantic_model)
+    assert await service.source_record_exists(
+        scanr_record_with_person_b_as_contributor_pydantic_model.uid)
+    fetched_source_record = await service.get_source_record(
+        scanr_record_with_person_b_as_contributor_pydantic_model.uid)
+    assert fetched_source_record.raw_issued == "2023-10-26"
