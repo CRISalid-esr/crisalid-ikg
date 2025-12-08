@@ -24,6 +24,7 @@ from app.models.journal import Journal
 from app.models.journal_article import JournalArticle
 from app.models.literal import Literal
 from app.models.monograph import Monograph
+from app.models.open_access_status import OpenAccessStatus
 from app.models.preface import Preface
 from app.models.presentation import Presentation
 from app.models.proceedings import Proceedings
@@ -134,7 +135,19 @@ class DocumentDAO(Neo4jDAO):
             publication_date=document.publication_date,
             publication_date_start=publication_date_start,
             publication_date_end=publication_date_end,
-            document_labels=labels.split(":")
+            document_labels=labels.split(":"),
+            oa_computation_timestamp=(
+                document.open_access_status.oa_computation_timestamp.isoformat()
+                if (document.open_access_status
+                and document.open_access_status.oa_computation_timestamp)
+                else None
+            ),
+            oa_computed_status=document.open_access_status.oa_computed_status,
+            oa_upw_success_status=document.open_access_status.oa_upw_success_status,
+            oa_doaj_success_status=document.open_access_status.oa_doaj_success_status,
+            oa_status=document.open_access_status.oa_status,
+            upw_oa_status=document.open_access_status.upw_oa_status ,
+            coar_oa_status=document.open_access_status.coar_oa_status,
         )
         update_document_subjects_query = load_query(
             "update_document_subjects"
@@ -359,6 +372,17 @@ class DocumentDAO(Neo4jDAO):
             document.contributions.append(Contribution(**contribution))
 
         document.publication_date = record['document'].get('publication_date')
+
+        ts = record["document"].get("oa_computation_timestamp")
+        document.open_access_status = OpenAccessStatus(
+            oa_computation_timestamp=ts.to_native() if ts else None,
+            oa_computed_status=record["document"].get("oa_computed_status"),
+            oa_upw_success_status=record["document"].get("oa_upw_success_status"),
+            oa_doaj_success_status=record["document"].get("oa_doaj_success_status"),
+            oa_status=record["document"].get("oa_status"),
+            upw_oa_status=record["document"].get("upw_oa_status"),
+            coar_oa_status=record["document"].get("coar_oa_status"),
+        )
 
         publication_channels_data = record.get('publication_channels', [])
 

@@ -4,13 +4,28 @@ MERGE (doc:Document:Document {uid: $document_uid})
                 doc.to_be_deleted = $to_be_deleted,
                 doc.publication_date = $publication_date,
                 doc.publication_date_start = CASE WHEN $publication_date_start IS NOT NULL THEN datetime($publication_date_start) ELSE NULL END,
-                doc.publication_date_end = CASE WHEN $publication_date_end IS NOT NULL THEN datetime($publication_date_end) ELSE NULL END
+                doc.publication_date_end = CASE WHEN $publication_date_end IS NOT NULL THEN datetime($publication_date_end) ELSE NULL END,
+                doc.oa_computation_timestamp = CASE WHEN $oa_computation_timestamp IS NOT NULL THEN datetime($oa_computation_timestamp) ELSE NULL END,
+                doc.oa_computed_status = $oa_computed_status,
+                doc.oa_upw_success_status = $oa_upw_success_status,
+                doc.oa_doaj_success_status = $oa_doaj_success_status,
+                doc.oa_status = $oa_status,
+                doc.upw_oa_status = $upw_oa_status,
+                doc.coar_oa_status = $coar_oa_status
+
   ON MATCH SET  doc.document_type = $document_type,
-               doc.to_be_recomputed = $to_be_recomputed,
-               doc.to_be_deleted = $to_be_deleted,
-               doc.publication_date = $publication_date,
-               doc.publication_date_start = CASE WHEN $publication_date_start IS NOT NULL THEN datetime($publication_date_start) ELSE NULL END,
-               doc.publication_date_end = CASE WHEN $publication_date_end IS NOT NULL THEN datetime($publication_date_end) ELSE NULL END
+                doc.to_be_recomputed = $to_be_recomputed,
+                doc.to_be_deleted = $to_be_deleted,
+                doc.publication_date = $publication_date,
+                doc.publication_date_start = CASE WHEN $publication_date_start IS NOT NULL THEN datetime($publication_date_start) ELSE NULL END,
+                doc.publication_date_end = CASE WHEN $publication_date_end IS NOT NULL THEN datetime($publication_date_end) ELSE NULL END,
+                doc.oa_computation_timestamp = CASE WHEN $oa_computation_timestamp IS NOT NULL THEN datetime($oa_computation_timestamp) ELSE NULL END,
+                doc.oa_computed_status = $oa_computed_status,
+                doc.oa_upw_success_status = $oa_upw_success_status,
+                doc.oa_doaj_success_status = $oa_doaj_success_status,
+                doc.oa_status = $oa_status,
+                doc.upw_oa_status = $upw_oa_status,
+                doc.coar_oa_status = $coar_oa_status
 
 WITH doc
 CALL apoc.create.addLabels(doc, $document_labels) YIELD node

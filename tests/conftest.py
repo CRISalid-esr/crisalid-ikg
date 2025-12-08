@@ -20,6 +20,8 @@ from tests.fixtures.source_journal_fixtures import *  # pylint: disable=unused-i
 from tests.fixtures.source_organizations_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.institution_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.issn_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
+from tests.fixtures.doaj_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
+from tests.fixtures.unpaywall_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 
 environ["APP_ENV"] = "TEST"
 

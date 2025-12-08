@@ -1,14 +1,12 @@
 # file: app/services/journals/issn_service.py
 from typing import Optional
 
-import aiohttp
-from aiohttp import ClientError
 from loguru import logger
 from rdflib import Graph, URIRef, Namespace, RDF
 
-from app.http.aio_http_client_manager import AioHttpClientManager
 from app.models.journal_identifiers import JournalIdentifier
 from app.services.journals.issn_info import IssnInfo
+from app.utils.api.api_service import ApiService
 
 BF = Namespace("http://id.loc.gov/ontologies/bibframe/")
 DC = Namespace("http://purl.org/dc/elements/1.1/")
@@ -18,14 +16,11 @@ SCHEMA = Namespace("http://schema.org/")
 MAX_RECURSION_DEPTH = 10
 
 
-class ISSNService:
+class ISSNService(ApiService):
     """
     Service to check ISSN identifiers against the ISSN portal
     """
     BASE_URL = "https://portal.issn.org/resource/ISSN"
-
-    def __init__(self):
-        self.headers = {"Accept": "application/ld+json"}
 
     async def check_identifier(self, identifier: JournalIdentifier) -> IssnInfo:
         """
@@ -70,19 +65,7 @@ class ISSNService:
 
     async def _fetch_issn_rdf(self, issn: str) -> str | None:
         url = f"{self.BASE_URL}/{issn}?format=json"
-        try:
-            session = await AioHttpClientManager.get_session()
-            async with session.get(url, headers=self.headers, allow_redirects=False) as resp:
-                if resp.status != 200:
-                    logger.error(f"HTTP error {resp.status} fetching {url}")
-                    return None
-                return await resp.text()
-        except ClientError as e:
-            logger.exception(f"ClientError while fetching {url}: {e}")
-            return None
-        except aiohttp.http_exceptions.HttpProcessingError as e:
-            logger.exception(f"HTTP processing error for {url}: {e}")
-            return None
+        return await self._fetch_rdf(url)
 
     def _build_graph(self, raw_data: str, issn: str) -> Graph | None:
         g = Graph()

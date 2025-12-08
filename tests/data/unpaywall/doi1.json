@@ -1,0 +1,102 @@
+{
+  "doi": "10.1017/ash.2023.207",
+  "doi_url": "https://doi.org/10.1017/ash.2023.207",
+  "title": "Frontiers in antimicrobial stewardship: antimicrobial use during end-of-life care",
+  "genre": "journal-article",
+  "is_paratext": false,
+  "published_date": "2023-01-01",
+  "year": 2023,
+  "journal_name": "Antimicrobial Stewardship & Healthcare Epidemiology",
+  "journal_issns": "2732-494X",
+  "journal_issn_l": "2732-494X",
+  "journal_is_oa": true,
+  "journal_is_in_doaj": true,
+  "publisher": "Cambridge University Press (CUP)",
+  "is_oa": true,
+  "oa_status": "gold",
+  "has_repository_copy": true,
+  "best_oa_location": {
+    "url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/00EF7FA98DA20844956DB510779F65DB/S2732494X23002073a.pdf/div-class-title-frontiers-in-antimicrobial-stewardship-antimicrobial-use-during-end-of-life-care-div.pdf",
+    "url_for_pdf": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/00EF7FA98DA20844956DB510779F65DB/S2732494X23002073a.pdf/div-class-title-frontiers-in-antimicrobial-stewardship-antimicrobial-use-during-end-of-life-care-div.pdf",
+    "url_for_landing_page": "https://doi.org/10.1017/ash.2023.207",
+    "evidence": "deprecated",
+    "license": "cc-by",
+    "version": "publishedVersion",
+    "host_type": "publisher",
+    "is_best": true,
+    "pmh_id": null,
+    "endpoint_id": null,
+    "repository_institution": null,
+    "oa_date": "2023-01-01",
+    "updated": "deprecated"
+  },
+  "first_oa_location": {
+    "url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/00EF7FA98DA20844956DB510779F65DB/S2732494X23002073a.pdf/div-class-title-frontiers-in-antimicrobial-stewardship-antimicrobial-use-during-end-of-life-care-div.pdf",
+    "url_for_pdf": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/00EF7FA98DA20844956DB510779F65DB/S2732494X23002073a.pdf/div-class-title-frontiers-in-antimicrobial-stewardship-antimicrobial-use-during-end-of-life-care-div.pdf",
+    "url_for_landing_page": "https://doi.org/10.1017/ash.2023.207",
+    "evidence": "deprecated",
+    "license": "cc-by",
+    "version": "publishedVersion",
+    "host_type": "publisher",
+    "is_best": true,
+    "pmh_id": null,
+    "endpoint_id": null,
+    "repository_institution": null,
+    "oa_date": "2023-01-01",
+    "updated": "deprecated"
+  },
+  "oa_locations": [
+    {
+      "url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/00EF7FA98DA20844956DB510779F65DB/S2732494X23002073a.pdf/div-class-title-frontiers-in-antimicrobial-stewardship-antimicrobial-use-during-end-of-life-care-div.pdf",
+      "url_for_pdf": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/00EF7FA98DA20844956DB510779F65DB/S2732494X23002073a.pdf/div-class-title-frontiers-in-antimicrobial-stewardship-antimicrobial-use-during-end-of-life-care-div.pdf",
+      "url_for_landing_page": "https://doi.org/10.1017/ash.2023.207",
+      "evidence": "deprecated",
+      "license": "cc-by",
+      "version": "publishedVersion",
+      "host_type": "publisher",
+      "is_best": true,
+      "pmh_id": null,
+      "endpoint_id": null,
+      "repository_institution": null,
+      "oa_date": "2023-01-01",
+      "updated": "deprecated"
+    },
+    {
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10644156/pdf/S2732494X23002073a.pdf",
+      "url_for_pdf": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10644156/pdf/S2732494X23002073a.pdf",
+      "url_for_landing_page": "https://www.ncbi.nlm.nih.gov/pmc/articles/10644156",
+      "evidence": "deprecated",
+      "license": "cc-by",
+      "version": "submittedVersion",
+      "host_type": "repository",
+      "is_best": false,
+      "pmh_id": "oai:pubmedcentral.nih.gov:10644156",
+      "endpoint_id": "daaf77eacc58eec31bb",
+      "repository_institution": "National Institutes of Health",
+      "oa_date": "2023-01-01",
+      "updated": "deprecated"
+    }
+  ],
+  "oa_locations_embargoed": [],
+  "data_standard": 2,
+  "z_authors": [
+    {
+      "author_position": "first",
+      "raw_author_name": "Seohyuk Lee",
+      "is_corresponding": false,
+      "raw_affiliation_strings": [
+        "Department of Internal Medicine, Yale School of Medicine, New Haven, CT, USA"
+      ]
+    },
+    {
+      "author_position": "last",
+      "raw_author_name": "Rupak Datta",
+      "is_corresponding": true,
+      "raw_affiliation_strings": [
+        "Department of Internal Medicine, Yale School of Medicine, New Haven, CT, USA",
+        "Veterans Affairs Connecticut Healthcare System, West Haven, CT, USA"
+      ]
+    }
+  ],
+  "updated": "2025-10-23T16:56:47Z"
+}

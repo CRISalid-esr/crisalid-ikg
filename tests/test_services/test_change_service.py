@@ -21,7 +21,6 @@ def mocked_document_updated_signal_fixture():
 
 
 @pytest.mark.asyncio
-# @pytest.mark.current
 async def test_change_service_removes_subjects_from_document(
         test_app,  # pylint: disable=unused-argument
         document_hal_article_a_persisted_model: Document,
@@ -188,7 +187,6 @@ async def test_change_service_update_invalid_type_of_document(
 
 
 @pytest.mark.asyncio
-@pytest.mark.current
 async def test_change_service_add_subject_to_document(
         test_app,  # pylint: disable=unused-argument
         document_hal_article_a_persisted_model: Document,
@@ -236,7 +234,6 @@ async def test_change_service_add_subject_to_document(
     assert stored.status == ChangeStatus.APPLIED
 
 @pytest.mark.asyncio
-@pytest.mark.current
 async def test_change_service_add_same_subject_twice(
         test_app,  # pylint: disable=unused-argument
         document_hal_article_a_persisted_model: Document,
