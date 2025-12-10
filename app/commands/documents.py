@@ -54,6 +54,26 @@ def recompute_metadata(uid: str = typer.Argument(..., help="The UID of the docum
 
     asyncio.run(_recompute_metadata(uid))
 
+@document_cli.command()
+def recompute_metadata_random(
+):
+    """
+    Fetch publications for a random person.
+    """
+
+    @with_app_lifecycle
+    async def _recompute_metadata_random():
+        service = DocumentService()
+        try:
+            uids = await service.get_document_uids()
+            uid = random.choice(uids)
+            await service.update_from_source_records(None, uid)
+            typer.echo(f"Metadata recomputation for document {uid} completed.")
+        # pylint: disable=broad-except
+        except Exception as e:
+            typer.echo(f"Error recomputing metadata for document {uid}: {e}")
+
+    asyncio.run(_recompute_metadata_random())
 
 @document_cli.command()
 def recompute_metadata_all():
