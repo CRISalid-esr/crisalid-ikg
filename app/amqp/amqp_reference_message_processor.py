@@ -22,15 +22,22 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         json_payload = await self._read_message_json(payload)
         logger.info(f"Processing message {json_payload}")
         self._check_keys(json_payload, {
-            "reference_event": ["type"],
+            "reference_event": ["type", "enhanced", "reference"],
             "entity": []
         })
         event_data = json_payload["reference_event"]
         person_data = json_payload["entity"]
-        event_type = event_data["type"]
+        raw_event_type: str = event_data["type"]
+        enhanced: bool = event_data["enhanced"]
+
+        effective_event_type = (
+            "updated"
+            if raw_event_type == "unchanged" and enhanced
+            else raw_event_type
+        )
         # If the event type is not in settings.event_types_to_process, we skip processing
-        if event_type not in self.settings.event_types_to_process:
-            logger.info(f"Event type {event_type} not in settings, skipping processing")
+        if effective_event_type not in self.settings.event_types_to_process:
+            logger.info(f"Event type {effective_event_type} not in settings, skipping processing")
             return
         reference_data = event_data["reference"]
         try:
@@ -44,12 +51,14 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         except (ValueError, AttributeError) as e:
             logger.error(f"Error processing source record data {reference_data} : {e}")
             raise e
-        if event_type in ["created"]:
+        if effective_event_type in ["created"]:
             await self._create_source_record(source_record, person)
-        elif event_type in ["updated"]:
+        elif effective_event_type in ["updated"]:
             await self._update_source_record(source_record, person)
-        elif event_type in ["unchanged"]:
-            logger.info(f"Source record {source_record.uid} is unchanged, no action taken")
+        elif effective_event_type in ["unchanged"]:
+            logger.debug(f"Source record {source_record.uid} is unchanged (not enhanced), "
+                         f"no action "
+                        f"taken")
 
     async def _create_source_record(self, source_record, person, first_attempt=True):
         try:
