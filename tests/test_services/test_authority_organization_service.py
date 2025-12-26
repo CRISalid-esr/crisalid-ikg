@@ -34,8 +34,7 @@ async def test_get_or_create_authority_organization_single_state_no_root(
     assert root.uid is None, "No contradictions => no root should be created"
     assert len(root.states) == 1
     assert root.states[0].uid is not None, "State must be persisted and have uid"
-    assert root.root_only_source_organization_uids == []
-
+    assert root.source_organization_uids == []
 
 @pytest.mark.asyncio
 async def test_get_or_create_authority_organization_conflict_creates_root_and_two_states(
@@ -58,7 +57,7 @@ async def test_get_or_create_authority_organization_conflict_creates_root_and_tw
     assert len(root.states) >= 2, "Different hal values => at least two states"
 
     # scanr peer should be root_only (ambiguous wrt hal state)
-    assert persisted_conflict_peer_source_org_2.uid in root.root_only_source_organization_uids
+    assert persisted_conflict_peer_source_org_2.uid in root.source_organization_uids
 
     # ensure provenance tracking exists and contains the conflicting uids
     state_sources = [set(s.source_organization_uids) for s in root.states]
@@ -199,7 +198,7 @@ async def test_get_or_create_authority_organization_name_only_homonyms_return_ro
     assert s1_p.normalized_name == s2_p.normalized_name
 
     # 2) Create a root and attach both states
-    root = AuthorityOrganizationRoot(states=[s1_p, s2_p], root_only_source_organization_uids=[])
+    root = AuthorityOrganizationRoot(states=[s1_p, s2_p], source_organization_uids=[])
     root_uid = await dao.create_authority_organization_root(root)
     await dao.attach_authority_organization_states_to_root(
         root_uid=root_uid,
@@ -220,7 +219,6 @@ async def test_get_or_create_authority_organization_name_only_homonyms_return_ro
     assert resolved is not None
     assert resolved.uid == root_uid, \
         "Homonyms with a unique common root => service must return that root"
-
 
 def _get_authority_org_dao():
     factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)

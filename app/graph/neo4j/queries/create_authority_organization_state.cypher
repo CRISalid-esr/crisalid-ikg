@@ -2,5 +2,10 @@ MERGE (o:AuthorityOrganization:AuthorityOrganizationState {identifier_signature:
 ON CREATE SET
   o.uid = $uid,
   o.type = $org_type,
-  o.normalized_name = $normalized_name
+  o.normalized_name = $normalized_name,
+  o.source_organization_uids = coalesce($source_organization_uids, [])
+ON MATCH SET
+  o.type = $org_type,
+  o.normalized_name = $normalized_name,
+  o.source_organization_uids = coalesce($source_organization_uids, [])
 RETURN o;

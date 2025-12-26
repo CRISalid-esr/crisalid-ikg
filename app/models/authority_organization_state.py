@@ -25,7 +25,6 @@ class AuthorityOrganizationState(AuthorityOrganization):
     normalized_name: Optional[str] = None
 
     identifiers: List[OrganizationIdentifier] = []
-    source_organization_uids: List[str] = []
 
     @classmethod
     def compute_normalized_name(cls, name: str) -> str:

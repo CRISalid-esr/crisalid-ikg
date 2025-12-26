@@ -79,16 +79,16 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         :param state:
         :return:
         """
-
+        # will be applied only in case of new state creation
         state.random_uid()
-
+        new_state_uid = None
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
-                await session.write_transaction(
+                new_state_uid = await session.write_transaction(
                     self._create_authority_organization_state_tx,
                     state)
 
-        return state
+        return await self.get_authority_organization_state_by_uid(new_state_uid)
 
     @handle_database_errors
     async def update_authority_organization_state(
@@ -113,7 +113,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
 
     @classmethod
     async def _create_authority_organization_state_tx(cls, tx: AsyncSession,
-                                                      state: AuthorityOrganizationState) -> None:
+                                                      state: AuthorityOrganizationState) -> str:
         exists_result = await tx.run(
             load_query("authority_organization_exists"),
             uid=state.uid,
@@ -125,12 +125,13 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         # ensure the state is reused rather than duplicated
         identifier_signature = cls.compute_identifier_signature(state.identifiers)
 
-        await tx.run(
+        state_from_graph = await tx.run(
             load_query("create_authority_organization_state"),
             identifier_signature=identifier_signature,
             uid=state.uid,
             normalized_name=state.normalized_name,
             org_type=state.type.value,
+            source_organization_uids=state.source_organization_uids,
         )
 
         await tx.run(
@@ -144,6 +145,8 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             uid=state.uid,
             identifiers=[{"type": i.type.value, "value": i.value} for i in state.identifiers],
         )
+        state_record = await state_from_graph.single()
+        return state_record["o"]["uid"]
 
     @classmethod
     async def _update_authority_organization_state_tx(cls, tx: AsyncManagedTransaction,
@@ -162,6 +165,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             identifier_signature=identifier_signature,
             org_type=state.type.value,
             normalized_name=state.normalized_name,
+            source_organization_uids=state.source_organization_uids,
         )
 
         await tx.run(load_query("delete_authority_organization_names"), uid=state.uid)
@@ -183,6 +187,28 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             uid=state.uid,
             identifiers=[{"type": i.type.value, "value": i.value} for i in state.identifiers],
         )
+
+    @handle_database_errors
+    async def get_authority_organization_state_by_uid(
+            self,
+            state_uid: str) -> AuthorityOrganizationState:
+        """
+        Retrieve an AuthorityOrganizationState by its UID.
+        :param state_uid:
+        :return:
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        load_query("get_authority_organization_state_by_uid"),
+                        state_uid=state_uid,
+                    )
+                    record = await result.single()
+                    if not record:
+                        raise NotFoundError(
+                            f"AuthorityOrganizationState with uid {state_uid} not found")
+                    return self._hydrate_authority_organization_state(record)
 
     @handle_database_errors
     async def get_authority_organization_root_by_uid(
@@ -218,7 +244,9 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     result = await tx.run(load_query("create_authority_organization_root"),
-                                          uid=root.uid)
+                                          uid=root.uid,
+                                          source_organization_uids=root.source_organization_uids
+                                          )
                     rec = await result.single()
                     return rec["r"]["uid"]
 
@@ -303,7 +331,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         return AuthorityOrganizationRoot(
             uid=r["uid"],
             states=hydrated_states,
-            root_only_source_organization_uids=[],
+            source_organization_uids=[],
         )
 
     @staticmethod
@@ -336,6 +364,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         return AuthorityOrganizationState(
             uid=o["uid"],
             type=SourceOrganization.SourceOrganisationType(org_type),
+            source_organization_uids=o.get("source_organization_uids") or [],
             names=names,
             normalized_name=o.get("normalized_name"),
             identifiers=identifiers,

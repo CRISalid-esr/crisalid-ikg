@@ -68,7 +68,7 @@ class AuthorityOrganizationService:
         in_memory_root.states = persisted_states
 
         needs_root = len(in_memory_root.states) > 1 or len(
-            in_memory_root.root_only_source_organization_uids) > 0
+            in_memory_root.source_organization_uids) > 0
         cluster_state_uids = [s.uid for s in in_memory_root.states]
 
         # If no root is needed for this cluster, just return a wrapper root object
@@ -206,7 +206,7 @@ class AuthorityOrganizationService:
 
         return AuthorityOrganizationRoot(
             states=states,
-            root_only_source_organization_uids=root_only,
+            source_organization_uids=root_only,
         )
 
     @classmethod
