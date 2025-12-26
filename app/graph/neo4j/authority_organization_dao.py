@@ -47,7 +47,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
                         identifiers=payload,
                     )
                     records = await result.data()
-                    return [self._hydrate_state(r) for r in records]
+                    return [self._hydrate_authority_organization_state(r) for r in records]
 
     @handle_database_errors
     async def get_states_by_normalized_name(
@@ -67,10 +67,13 @@ class AuthorityOrganizationDAO(Neo4jDAO):
                         normalized_name=normalized_name,
                     )
                     records = await result.data()
-                    return [self._hydrate_state(r) for r in records]
+                    return [self._hydrate_authority_organization_state(r) for r in records]
 
     @handle_database_errors
-    async def create_state(self, state: AuthorityOrganizationState) -> AuthorityOrganizationState:
+    async def create_authority_organization_state(
+            self,
+            state: AuthorityOrganizationState
+    ) -> AuthorityOrganizationState:
         """
         Create a new AuthorityOrganizationState in the database.
         :param state:
@@ -81,12 +84,16 @@ class AuthorityOrganizationDAO(Neo4jDAO):
 
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
-                await session.write_transaction(self._create_state_tx, state)
+                await session.write_transaction(
+                    self._create_authority_organization_state_tx,
+                    state)
 
         return state
 
     @handle_database_errors
-    async def update_state(self, state: AuthorityOrganizationState) -> AuthorityOrganizationState:
+    async def update_authority_organization_state(
+            self,
+            state: AuthorityOrganizationState) -> AuthorityOrganizationState:
         """
         Update an existing AuthorityOrganizationState in the database.
         :param state:
@@ -97,12 +104,16 @@ class AuthorityOrganizationDAO(Neo4jDAO):
 
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
-                await session.write_transaction(self._update_state_tx, state)
+                await session.write_transaction(
+                    self._update_authority_organization_state_tx,
+                    state
+                )
 
         return state
 
     @classmethod
-    async def _create_state_tx(cls, tx: AsyncSession, state: AuthorityOrganizationState) -> None:
+    async def _create_authority_organization_state_tx(cls, tx: AsyncSession,
+                                                      state: AuthorityOrganizationState) -> None:
         exists_result = await tx.run(
             load_query("authority_organization_exists"),
             uid=state.uid,
@@ -135,8 +146,8 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         )
 
     @classmethod
-    async def _update_state_tx(cls, tx: AsyncManagedTransaction,
-                               state: AuthorityOrganizationState) -> None:
+    async def _update_authority_organization_state_tx(cls, tx: AsyncManagedTransaction,
+                                                      state: AuthorityOrganizationState) -> None:
         exists_result = await tx.run(
             load_query("authority_organization_exists"),
             uid=state.uid,
@@ -174,7 +185,9 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         )
 
     @handle_database_errors
-    async def get_root_by_uid(self, root_uid: str) -> AuthorityOrganizationRoot:
+    async def get_authority_organization_root_by_uid(
+            self,
+            root_uid: str) -> AuthorityOrganizationRoot:
         """
         Retrieve an AuthorityOrganizationRoot by its UID.
         :param root_uid:
@@ -191,7 +204,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
                     if not record:
                         raise NotFoundError(
                             f"AuthorityOrganizationRoot with uid {root_uid} not found")
-                    return self._hydrate_root(record)
+                    return self._hydrate_authority_organization_root(record)
 
     @handle_database_errors
     async def create_authority_organization_root(self, root: AuthorityOrganizationRoot) -> str:
@@ -278,22 +291,18 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         )
 
     @classmethod
-    def _hydrate_root(cls, record) -> AuthorityOrganizationRoot:
+    def _hydrate_authority_organization_root(cls, record) -> AuthorityOrganizationRoot:
         r = record["r"]
 
-        # Hydrate states using the same pattern as _hydrate_state
         hydrated_states: list[AuthorityOrganizationState] = []
         for state_row in (record.get("states") or []):
             if not state_row:
                 continue
-            hydrated_states.append(cls._hydrate_state(state_row))
+            hydrated_states.append(cls._hydrate_authority_organization_state(state_row))
 
         return AuthorityOrganizationRoot(
             uid=r["uid"],
             states=hydrated_states,
-            # you can store these later if you extend the model:
-            # names=root_names,
-            # identifiers=root_identifiers,
             root_only_source_organization_uids=[],
         )
 
@@ -318,7 +327,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     @staticmethod
-    def _hydrate_state(record) -> AuthorityOrganizationState:
+    def _hydrate_authority_organization_state(record) -> AuthorityOrganizationState:
         o = record["o"]
         names = [Literal(**n) for n in record["names"]]
         identifiers = [OrganizationIdentifier(**i) for i in record["identifiers"]]
@@ -330,6 +339,4 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             names=names,
             normalized_name=o.get("normalized_name"),
             identifiers=identifiers,
-            # if you persist it later:
-            # source_organization_uids=record.get("source_organization_uids", []),
         )

@@ -44,7 +44,7 @@ class AuthorityOrganizationService:
                 # handle case of state without identifiers
                 matching_states = await dao.get_states_by_normalized_name(state.normalized_name)
                 if len(matching_states) == 0:
-                    new_state = await dao.create_state(state)
+                    new_state = await dao.create_authority_organization_state(state)
                     persisted_states.append(new_state)
                 elif len(matching_states) == 1:  # an homonym was either found, either created
                     persisted_states.append(matching_states[0])
@@ -60,9 +60,9 @@ class AuthorityOrganizationService:
                         roots = await dao.find_organization_roots_of_states(
                             [c.uid for c in matching_states])
                         if len(roots) == 1:
-                            return await dao.get_organization_root_by_uid(roots[0])
+                            return await dao.get_authority_organization_root_by_uid(roots[0])
                         # as we cannot choose among homonyms, create a new state without identifiers
-                        new_state = await dao.create_state(state)
+                        new_state = await dao.create_authority_organization_state(state)
                         persisted_states.append(new_state)
 
         in_memory_root.states = persisted_states
@@ -332,7 +332,7 @@ class AuthorityOrganizationService:
         candidates = await dao.get_states_with_compatible_identifiers(desired.identifiers)
 
         if len(candidates) == 0:
-            return await dao.create_state(desired)
+            return await dao.create_authority_organization_state(desired)
 
         # case where compatible states are found (potentially more than one) :
         # select the candidate with the most identifiers
@@ -359,7 +359,7 @@ class AuthorityOrganizationService:
             selected.names = desired.names
         selected.normalize_name()
 
-        return await dao.update_state(selected)
+        return await dao.update_authority_organization_state(selected)
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:
