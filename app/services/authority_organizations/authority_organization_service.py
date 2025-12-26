@@ -100,12 +100,12 @@ class AuthorityOrganizationService:
                 return in_memory_root
             # case where all attached states are in the cluster:
             # reuse existing root
+            in_memory_root.uid = root_uid
             await dao.attach_authority_organization_states_to_root(
                 root_uid=root_uid,
                 state_uids=[s.uid for s in in_memory_root.states if s.uid],
             )
             await dao.update_authority_organization_root(in_memory_root)
-            in_memory_root.uid = root_uid
             return in_memory_root
         # case of multiple roots found for the same cluster
         states_by_root: Dict[str, List[str]] = {}

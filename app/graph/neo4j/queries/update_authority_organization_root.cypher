@@ -1,4 +1,4 @@
 MATCH (r:AuthorityOrganizationRoot {uid: $uid})
 SET
-  r.organization_uids = $organization_uids
+  r.source_organization_uids = $source_organization_uids
 RETURN r;

@@ -305,7 +305,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
                     result = await tx.run(
                         load_query("update_authority_organization_root"),
                         uid=root.uid,
-                        organization_uids=root.organization_uids or [],
+                        source_organization_uids=root.source_organization_uids or [],
                     )
                     record = await result.single()
                     if not record:
