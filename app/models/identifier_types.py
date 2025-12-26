@@ -1,18 +1,36 @@
 import re
 from enum import Enum
+from typing import Optional
 
 
 class AgentIdentifierType(Enum):
     """Base class for agent identifier types"""
 
+    @staticmethod
+    def _normalize(s: str) -> str:
+        """
+        Normalize identifier type:
+        - lowercase
+        - keep letters only (a–z)
+        """
+        return re.sub(r"[^a-z]", "", s.lower())
+
     @classmethod
-    def get_identifier_type_from_str(cls, identifier_type_str) -> 'AgentIdentifierType':
-        """Get the identifier type from a string, ignoring case"""
-        return next(
-            (identifier_type for identifier_type in cls if
-             identifier_type.value.lower() == identifier_type_str.lower()),
-            None
-        )
+    def get_identifier_type_from_str(
+            cls,
+            identifier_type_str: str,
+    ) -> Optional["AgentIdentifierType"]:
+        """Get the identifier type enum member from a string representation"""
+        if not identifier_type_str:
+            return None
+
+        normalized_input = cls._normalize(identifier_type_str)
+
+        for identifier_type in cls:
+            if cls._normalize(identifier_type.value) == normalized_input:
+                return identifier_type
+
+        return None
 
 
 # Access pattern through a class method in PersonIdentifierType
@@ -24,7 +42,7 @@ class PersonIdentifierType(AgentIdentifierType):
     ID_HAL_I = "id_hal_i"
     SCOPUS_EID = "scopus_eid"
     LOCAL = "local"
-    EPPN= "eppn"
+    EPPN = "eppn"
 
     @classmethod
     def get_pattern(cls, identifier_type):
@@ -61,7 +79,10 @@ class OrganizationIdentifierType(AgentIdentifierType):
     SIRET = "SIRET"
     WIKIDATA = "Wikidata"
     SCOPUS_ID = "scopus_id"
-    HAL= "hal"
+    HAL = "hal"
+    OPEN_ALEX = "openalex"
+    ISNI = "isni"
+    VIAF = "viaf"
 
 
 class PublicationIdentifierType(Enum):

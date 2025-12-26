@@ -453,7 +453,7 @@ class DocumentDAO(Neo4jDAO):
         query = load_query("remove_document_subjects")
         await tx.run(query, document_uid=document_uid, subject_uids=subject_uids)
 
-    # pylint: disable=too-many-arguments, too-many-positional-arguments
+    # pylint: disable=too-many-arguments
     @handle_database_errors
     async def add_subject(
             self,
@@ -480,7 +480,7 @@ class DocumentDAO(Neo4jDAO):
                     subject_alt_labels=subject_alt_labels
                 )
 
-    # pylint: disable=too-many-arguments, too-many-positional-arguments
+    # pylint: disable=too-many-arguments
     @staticmethod
     async def _add_subject_transaction(
             tx: AsyncManagedTransaction,
@@ -528,3 +528,39 @@ class DocumentDAO(Neo4jDAO):
         query = load_query("update_document_type")
         await tx.run(query, document_uid=document_uid,
                      document_labels=new_labels, document_type=new_type)
+
+    @handle_database_errors
+    async def update_contribution_affiliation_statements(
+            self,
+            contribution_id: str,
+            targets: list[str],
+    ) -> None:
+        """
+        Attach a Contribution (by elementId) to a list of AuthorityOrganization nodes (by uid).
+        Targets can be roots or states since they share the :AuthorityOrganization label.
+        """
+        if not contribution_id:
+            return
+        if not targets:
+            return
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._update_contribution_affiliation_statements_tx,
+                    contribution_id,
+                    targets,
+                )
+
+    @staticmethod
+    async def _update_contribution_affiliation_statements_tx(
+            tx: AsyncManagedTransaction,
+            contribution_id: str,
+            targets: list[str],
+    ) -> None:
+        query = load_query("update_contribution_affiliation_statements")
+        await tx.run(
+            query,
+            contribution_id=contribution_id,
+            targets=targets,
+        )

@@ -165,6 +165,44 @@ class SourceOrganizationDAO(Neo4jDAO):
             ],
         )
 
+    @handle_database_errors
+    async def create_source_organization_cluster(
+            self,
+            source_organization_uid: str,
+    ) -> list[SourceOrganization]:
+        """
+        Return the cluster of SourceOrganizations connected by identifiers
+        starting from the given source organization uid.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    exists = await SourceOrganizationDAO._source_organization_exists(
+                        tx, source_organization_uid
+                    )
+                    if not exists:
+                        raise NotFoundError(
+                            f"Source organization with uid {source_organization_uid} not found"
+                        )
+
+                    return await SourceOrganizationDAO._create_source_organization_cluster_tx(
+                        tx, source_organization_uid
+                    )
+
+    @classmethod
+    async def _create_source_organization_cluster_tx(
+            cls,
+            tx: AsyncManagedTransaction,
+            source_organization_uid: str,
+    ) -> list[SourceOrganization]:
+        result = await tx.run(
+            load_query("create_source_organizations_cluster"),
+            source_organization_uid=source_organization_uid,
+        )
+
+        records = await result.data()
+        return [cls._hydrate(r) for r in records]
+
     @staticmethod
     def _hydrate(record) -> SourceOrganization:
         if record["s"]["type"]:
@@ -181,6 +219,9 @@ class SourceOrganizationDAO(Neo4jDAO):
             identifiers=[]
         )
         for identifier in record["identifiers"]:
+            # continue if type or value is None
+            if identifier["type"] is None or identifier["value"] is None:
+                continue
             source_organization.identifiers.append(
                 SourceOrganizationIdentifier(**identifier))
         return source_organization

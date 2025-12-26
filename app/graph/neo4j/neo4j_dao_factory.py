@@ -7,6 +7,9 @@ from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.neo4j_setup import Neo4jSetup
+from app.models.authority_organization import AuthorityOrganization
+from app.models.authority_organization_root import AuthorityOrganizationRoot
+from app.models.authority_organization_state import AuthorityOrganizationState
 from app.models.change import Change
 from app.models.concepts import Concept
 from app.models.document import Document
@@ -30,6 +33,12 @@ class Neo4jDAOFactory(DAOFactory):
 
         self.dao_mapping = {
             Person: "app.graph.neo4j.person_dao.PersonDAO",
+            AuthorityOrganizationState:
+                "app.graph.neo4j.authority_organization_dao.AuthorityOrganizationDAO",
+            AuthorityOrganizationRoot:
+                "app.graph.neo4j.authority_organization_dao.AuthorityOrganizationDAO",
+            AuthorityOrganization:
+                "app.graph.neo4j.authority_organization_dao.AuthorityOrganizationDAO",
             ResearchStructure: "app.graph.neo4j.research_structure_dao.ResearchStructureDAO",
             Institution: "app.graph.neo4j.institution_dao.InstitutionDAO",
             SourceRecord: "app.graph.neo4j.source_record_dao.SourceRecordDAO",

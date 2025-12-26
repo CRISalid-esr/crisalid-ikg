@@ -12,14 +12,19 @@ from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.person_dao import PersonDAO
 from app.graph.neo4j.source_person_dao import SourcePersonDAO
+from app.models.authority_organization_root import AuthorityOrganizationRoot
 from app.models.document import Document
 from app.models.literal import Literal
 from app.models.loc_contribution_role import LocContributionRole
 from app.models.people import Person
 from app.models.people_names import PersonName
 from app.models.source_contributions import SourceContribution
+from app.models.source_organizations import SourceOrganization
 from app.models.source_people import SourcePerson
 from app.models.source_records import SourceRecord
+from app.services.authority_organizations.authority_organization_service import \
+    AuthorityOrganizationService
+from app.services.source_contributors.source_organization_service import SourceOrganizationService
 
 
 class SourceContributorMappingService:
@@ -28,16 +33,13 @@ class SourceContributorMappingService:
     """
 
     def __init__(self, source_records: List[SourceRecord], document_uid: str):
-        self.settings = get_app_settings()
         self.source_records = source_records
         self.document_uid = document_uid
-        self.contributions: List[SourceContribution] = [contribution for source_record in
-                                                        self.source_records for contribution
-                                                        in
-                                                        source_record.contributions]
         self.source_people: List[SourcePerson] = self._get_source_people(self.source_records)
         self.person_dao = self._get_person_dao()
         self.source_person_dao = self._get_source_person_dao()
+        self.source_organization_service = SourceOrganizationService()
+        self.authority_organization_service = AuthorityOrganizationService()
 
     async def update_contributions(self) -> None:
         """
@@ -218,9 +220,14 @@ class SourceContributorMappingService:
     async def _update_contributions(self, linked_people):
         document_dao = self._get_document_dao()
         current_contribution_ids = set()
+        contributions: List[SourceContribution] = [contribution for source_record in
+                                                   self.source_records for contribution
+                                                   in
+                                                   source_record.contributions]
         for person_uid, source_people_cluster in linked_people.items():
             roles = self._get_roles_by_harvester_order(
                 source_people_cluster,
+                contributions
             )
             # Create contribution node and relationships
             contribution_id = await document_dao.create_contribution(
@@ -228,6 +235,26 @@ class SourceContributorMappingService:
                 person_uid=person_uid,
                 roles=[role.value for role in roles]
             )
+            # get source organizations for the source people cluster
+            source_organisations = self._get_organisations_for_person(
+                source_people_cluster,
+                contributions
+            )
+            # create authority organization states in the graph and group them by authority
+            # organization roots
+            root_objects = await self._map_source_organizations_to_authority_organization_states(
+                source_organisations)
+            # elect the authority targets to attach the contribution affiliation statements
+            elected_target_uids = \
+                self._elect_authority_organizations_for_affiliation_statements(
+                    root_objects,
+                    source_organisations)
+            # Now attach the elected targets to the contribution
+            await document_dao.update_contribution_affiliation_statements(
+                contribution_id=contribution_id,
+                targets=elected_target_uids,
+            )
+
             if contribution_id is not None:
                 current_contribution_ids.add(contribution_id)
         # Delete contributions that are not in the current set
@@ -236,9 +263,67 @@ class SourceContributorMappingService:
             contribution_ids=list(current_contribution_ids)
         )
 
+    def _elect_authority_organizations_for_affiliation_statements(self, root_objects,
+                                                                        source_organisations):
+        # elect one target per root: either a state (unique match) or the root (0 or multiple
+        # matches)
+        elected_target_uids = []
+        source_org_uids = {so.uid for so in source_organisations}
+        for root in root_objects:
+            candidate_state_uids = set()
+            assert len(root.states) > 0, (
+                "AuthorityOrganizationRoot should have at least one state")
+            # if the root has only one state, elect it directly
+            if len(root.states) == 1:
+                assert root.states[0].uid is not None
+                elected_target_uids.append(root.states[0].uid)
+                continue
+            # root.uid cannot be None here as it has been created or fetched from the db
+            assert root.uid is not None
+            # Add a state if at least one source org uid belongs to that state's tracked uids
+            for state in root.states:
+                if any(so_uid in source_org_uids for so_uid in state.source_organization_uids):
+                    assert state.uid is not None
+                    candidate_state_uids.add(state.uid)
+
+            if len(candidate_state_uids) == 1:
+                elected_target_uids.append(next(iter(candidate_state_uids)))
+            else:
+                # if no state or multiple candidate states, elect the root
+                elected_target_uids.append(root.uid)
+        return elected_target_uids
+
+    async def _map_source_organizations_to_authority_organization_states(self,
+                                                                         source_organisations):
+        seen = set()
+        root_objects: list[AuthorityOrganizationRoot] = []
+        for source_organisation in source_organisations:
+            if source_organisation.uid in seen:
+                continue
+            # fetch the cluster of source organizations sharing identifiers with the current
+            # source organization
+            so_cluster = await self.source_organization_service.get_cluster(
+                source_organization_uid=source_organisation.uid)
+            seen.update(org.uid for org in so_cluster)
+            try:
+                root = await (
+                    self.authority_organization_service.get_or_create_authority_organization(
+                        so_cluster)
+                )
+                root_objects.append(root)
+            except ConflictError as e:
+                logger.error(
+                    "Conflict error while creating or fetching authority "
+                    "organization for source organization cluster %s : %s",
+                    [org.uid for org in so_cluster],
+                    e
+                )
+        return root_objects
+
     def _get_roles_by_harvester_order(
             self,
             source_people: List[SourcePerson],
+            contributions: List[SourceContribution]
     ) -> List[LocContributionRole]:
         """
         Sort source people by harvester order and extract roles based on contributions.
@@ -258,13 +343,37 @@ class SourceContributorMappingService:
 
         # Search for each person in contributions and extract roles
         for person in sorted_people:
-            for contribution in self.contributions:
+            for contribution in contributions:
                 if (contribution.contributor.uid == person.uid
                         and contribution.role is not None
                         and contribution.role not in roles):
                     roles.append(contribution.role)
 
         return roles
+
+    def _get_organisations_for_person(
+            self,
+            source_people: List[SourcePerson],
+            contributions: List[SourceContribution]
+    ) -> List[SourceOrganization]:
+        """
+        Sort source people by harvester order and extract roles based on contributions.
+
+        :param source_people: List of SourcePerson objects.
+        :return: the first encountered role
+        """
+        # Sort source_people by harvester order
+        source_people_uids = [person.uid for person in source_people]
+
+        organisations = {}
+
+        # Filter contributions to include only those from the given source people
+        for contribution in contributions:
+            if contribution.contributor.uid in source_people_uids:
+                for organisation in contribution.affiliations:
+                    organisations[organisation.uid] = organisation
+
+        return list(organisations.values())
 
     async def _fetch_harvested_for_people(
             self, person_dao: PersonDAO, source_records: list[SourceRecord]
@@ -404,7 +513,8 @@ class SourceContributorMappingService:
         return normalized
 
     def _coauthor_names_maximal_distance(self):
-        return self.settings.coauthor_names_maximal_distance
+        settings = get_app_settings()
+        return settings.coauthor_names_maximal_distance
 
     def _common_identifier(self, source_person: SourcePerson,
                            next_source_person: SourcePerson) -> bool:
@@ -479,7 +589,8 @@ class SourceContributorMappingService:
         return AbstractDAOFactory().get_dao_factory(settings.graph_db)
 
     def _get_policies(self):
-        return self.settings.publication_source_policies
+        settings = get_app_settings()
+        return settings.publication_source_policies
 
     def _get_harvesters(self):
         return [harvester.lower().replace('_', '')
