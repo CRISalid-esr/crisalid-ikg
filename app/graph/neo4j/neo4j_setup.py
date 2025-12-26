@@ -32,6 +32,8 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_concept_uid_constraint(tx)
         await cls._create_document_uid_constraint(tx)
         await cls._create_institution_uid_constraint(tx)
+        await cls._create_authority_organization_state_signature_constraint(tx)
+        await cls._create_authority_organization_uid_constraint(tx)
 
         if settings.neo4j_edition == "community":
             return
@@ -210,4 +212,40 @@ class Neo4jSetup(Setup[AsyncDriver]):
         except DatabaseError as e:
             logger.error("Error creating source record "
                          f"represented by document unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_authority_organization_state_signature_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT authority_org_state_signature_unique IF NOT EXISTS
+        FOR (o:AuthorityOrganizationState)
+        REQUIRE o.identifier_signature IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating AuthorityOrganizationState identifier_signature unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_authority_organization_uid_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT authority_organization_uid_unique IF NOT EXISTS
+        FOR (o:AuthorityOrganization)
+        REQUIRE o.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating AuthorityOrganization uid unique constraint: "
+                f"{e}"
+            )
             raise e
