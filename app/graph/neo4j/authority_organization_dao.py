@@ -288,6 +288,33 @@ class AuthorityOrganizationDAO(Neo4jDAO):
                     return rec["state_uids"] if rec and rec["state_uids"] else []
 
     @handle_database_errors
+    async def update_authority_organization_root(
+            self,
+            root: AuthorityOrganizationRoot,
+    ) -> AuthorityOrganizationRoot:
+        """
+        Update scalar properties of an AuthorityOrganizationRoot.
+        Relationships must be handled elsewhere.
+        """
+        if not root.uid:
+            raise ValueError("AuthorityOrganizationRoot.uid is required to update")
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        load_query("update_authority_organization_root"),
+                        uid=root.uid,
+                        organization_uids=root.organization_uids or [],
+                    )
+                    record = await result.single()
+                    if not record:
+                        raise NotFoundError(
+                            f"AuthorityOrganizationRoot with uid {root.uid} not found"
+                        )
+                    return self._hydrate_authority_organization_root(record)
+
+    @handle_database_errors
     async def attach_authority_organization_states_to_root(self, root_uid: str,
                                                            state_uids: list[str]) -> None:
         """

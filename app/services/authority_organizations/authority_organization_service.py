@@ -104,6 +104,7 @@ class AuthorityOrganizationService:
                 root_uid=root_uid,
                 state_uids=[s.uid for s in in_memory_root.states if s.uid],
             )
+            await dao.update_authority_organization_root(in_memory_root)
             in_memory_root.uid = root_uid
             return in_memory_root
         # case of multiple roots found for the same cluster
@@ -126,6 +127,7 @@ class AuthorityOrganizationService:
                     root_uid=root_uid,
                     state_uids=[s.uid for s in in_memory_root.states if s.uid],
                 )
+                await dao.update_authority_organization_root(in_memory_root)
                 in_memory_root.uid = root_uid
                 return in_memory_root
         # no suitable root found, create a new one
