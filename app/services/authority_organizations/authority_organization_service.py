@@ -42,7 +42,7 @@ class AuthorityOrganizationService:
                     await self._get_or_create_state_in_graph_by_identifier(dao, state))
             elif state.normalized_name:
                 # handle case of state without identifiers
-                matching_states = dao.get_states_by_normalized_name(state.normalized_name)
+                matching_states = await dao.get_states_by_normalized_name(state.normalized_name)
                 if len(matching_states) == 0:
                     new_state = await dao.create_state(state)
                     persisted_states.append(new_state)
