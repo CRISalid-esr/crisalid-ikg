@@ -108,7 +108,7 @@ class InstitutionRegistryService:
         if "identifiers" in data:
             for key, values in data["identifiers"].items():
                 for value in values:
-                    identifier_type = OrganizationIdentifierType.get_identifier_type_from_str(key)
+                    identifier_type = OrganizationIdentifierType.from_str(key)
                     if identifier_type:
                         identifiers.append(
                             OrganizationIdentifier(type=identifier_type, value=value))

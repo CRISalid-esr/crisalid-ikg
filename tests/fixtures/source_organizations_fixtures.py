@@ -376,3 +376,87 @@ async def fixture_persisted_conflict_peer_source_org_2(
 def _get_source_organization_dao() -> SourceOrganizationDAO:
     factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
     return factory.get_dao(SourceOrganization)
+
+@pytest_asyncio.fixture(name="hal_ambiguous_a_json_data")
+async def fixture_hal_ambiguous_a_json_data() -> dict:
+    """
+    A has idref + TWO idhal values => ambiguous on 'idhal'
+    """
+    return {
+        "source": "hal",
+        "source_identifier": "amb-idhal-a",
+        "name": "Ambiguous IDHAL Org",
+        "type": "institution",
+        "identifiers": [
+            {"type": "idref", "value": "IDREF_SHARED"},
+            {"type": "hal", "value": "IDHAL_1"},
+            {"type": "hal", "value": "IDHAL_2"},
+            {"type": "ror", "value": "https://ror.org/amb-idhal"},
+        ],
+    }
+
+
+@pytest_asyncio.fixture(name="hal_single_b_json_data")
+async def fixture_hal_single_b_json_data() -> dict:
+    """
+    B is otherwise compatible with A, but has idhal=1 only
+    """
+    return {
+        "source": "openalex",
+        "source_identifier": "amb-idhal-b",
+        "name": "Ambiguous IDHAL Org (B)",
+        "type": "institution",
+        "identifiers": [
+            {"type": "idref", "value": "IDREF_SHARED"},
+            {"type": "hal", "value": "IDHAL_1"},
+            {"type": "ror", "value": "https://ror.org/amb-idhal"},
+        ],
+    }
+
+
+@pytest_asyncio.fixture(name="hal_single_c_json_data")
+async def fixture_hal_single_c_json_data() -> dict:
+    """
+    C is otherwise compatible with A, but has idhal=2 only
+    """
+    return {
+        "source": "scopus",
+        "source_identifier": "amb-idhal-c",
+        "name": "Ambiguous IDHAL Org (C)",
+        "type": "institution",
+        "identifiers": [
+            {"type": "idref", "value": "IDREF_SHARED"},
+            {"type": "hal", "value": "IDHAL_2"},
+            {"type": "ror", "value": "https://ror.org/amb-idhal"},
+        ],
+    }
+
+
+@pytest_asyncio.fixture(name="hal_ambiguous_a_pydantic_model")
+async def fixture_hal_ambiguous_a_pydantic_model(hal_ambiguous_a_json_data) -> SourceOrganization:
+    """
+    Persist the hal ambiguous a source organization
+    :param hal_ambiguous_a_json_data:
+    :return:
+    """
+    return SourceOrganization(**hal_ambiguous_a_json_data)
+
+
+@pytest_asyncio.fixture(name="hal_single_b_pydantic_model")
+async def fixture_hal_single_b_pydantic_model(hal_single_b_json_data) -> SourceOrganization:
+    """
+    Persist the hal single b source organization
+    :param hal_single_b_json_data:
+    :return:
+    """
+    return SourceOrganization(**hal_single_b_json_data)
+
+
+@pytest_asyncio.fixture(name="hal_single_c_pydantic_model")
+async def fixture_hal_single_c_pydantic_model(hal_single_c_json_data) -> SourceOrganization:
+    """
+    Persist the hal single c source organization
+    :param hal_single_c_json_data:
+    :return:
+    """
+    return SourceOrganization(**hal_single_c_json_data)
