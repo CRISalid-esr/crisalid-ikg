@@ -14,6 +14,7 @@ from app.graph.neo4j.utils import load_query
 from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.authority_organization_root import AuthorityOrganizationRoot
 from app.models.authority_organization_state import AuthorityOrganizationState
+from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.source_organizations import SourceOrganization  # for enum
 
@@ -132,12 +133,21 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             normalized_name=state.normalized_name,
             org_type=state.type.value,
             source_organization_uids=state.source_organization_uids,
+            excluded_identifiers=[t.value for t in (state.excluded_identifiers or [])],
         )
 
+        await tx.run(load_query("delete_authority_organization_names"), uid=state.uid)
         await tx.run(
             load_query("create_authority_organization_names"),
             uid=state.uid,
             names=[n.model_dump() for n in state.names],
+        )
+
+        identifier_keys = [f"{i.type.value}:{i.value}" for i in state.identifiers]
+        await tx.run(
+            load_query("detach_authority_organization_identifier_rels"),
+            uid=state.uid,
+            identifier_keys=identifier_keys,
         )
 
         await tx.run(
@@ -166,6 +176,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             org_type=state.type.value,
             normalized_name=state.normalized_name,
             source_organization_uids=state.source_organization_uids,
+            excluded_identifiers=[t.value for t in (state.excluded_identifiers or [])],
         )
 
         await tx.run(load_query("delete_authority_organization_names"), uid=state.uid)
@@ -387,6 +398,13 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         names = [Literal(**n) for n in record["names"]]
         identifiers = [OrganizationIdentifier(**i) for i in record["identifiers"]]
 
+        raw_excluded_identifiers = o.get("excluded_identifiers") or []
+        excluded = []
+        for type_str in raw_excluded_identifiers:
+            enum_type = OrganizationIdentifierType.from_str(type_str)
+            if enum_type:
+                excluded.append(enum_type)
+
         org_type = o.get("type") or SourceOrganization.SourceOrganisationType.ORGANIZATION.value
         return AuthorityOrganizationState(
             uid=o["uid"],
@@ -395,4 +413,5 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             names=names,
             normalized_name=o.get("normalized_name"),
             identifiers=identifiers,
+            excluded_identifiers=excluded,
         )

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
@@ -152,6 +152,12 @@ class AuthorityOrganizationService:
         :param source_orgs: List of SourceOrganizations in the cluster.
         :return: AuthorityOrganizationRoot with its states.
         """
+
+        ambiguous_identifiers_by_uid: Dict[str, Set[str]] = {
+            so.uid: so.get_ambiguous_identifiers()
+            for so in source_orgs
+        }
+
         prepared = cls._prepare_source_orgs(source_orgs)
 
         identifiers_by_uid: Dict[str, Dict[str, str]] = {
@@ -159,10 +165,11 @@ class AuthorityOrganizationService:
             for so in prepared
         }
 
-        incompat = cls._build_incompatibility_adjacency(identifiers_by_uid)
+        incompatibilities = cls._build_incompatibility_adjacency(identifiers_by_uid,
+                                                                 ambiguous_identifiers_by_uid)
 
-        conflicting_uids = [uid for uid, neigh in incompat.items() if neigh]
-        conflicting_uids.sort(key=lambda uid: len(incompat[uid]), reverse=True)
+        conflicting_uids = [uid for uid, neigh in incompatibilities.items() if neigh]
+        conflicting_uids.sort(key=lambda uid: len(incompatibilities[uid]), reverse=True)
 
         states: List[AuthorityOrganizationState] = []
         assigned: Set[str] = set()
@@ -172,14 +179,20 @@ class AuthorityOrganizationService:
             if uid in assigned:
                 continue
             identifiers = identifiers_by_uid[uid]
-            compatible = [s for s in states if cls._is_compatible(identifiers, s)]
+            # check that none of the conflicting source org uid are already assigned
+            compatible = [state for state in states if cls._is_compatible(
+                state,
+                identifiers,
+                incompatibilities.get(uid, set()),
+                ambiguous_identifiers_by_uid[uid],
+            )]
 
             if len(compatible) == 1:
-                cls._attach(uid, identifiers, compatible[0])
+                cls._attach(uid, identifiers, compatible[0], ambiguous_identifiers_by_uid[uid])
                 assigned.add(uid)
             else:
                 new_state = AuthorityOrganizationState()
-                cls._attach(uid, identifiers, new_state)
+                cls._attach(uid, identifiers, new_state, ambiguous_identifiers_by_uid[uid])
                 states.append(new_state)
                 assigned.add(uid)
 
@@ -188,7 +201,8 @@ class AuthorityOrganizationService:
         if not states and prepared:
             first = prepared[0]
             new_state = AuthorityOrganizationState()
-            cls._attach(first.uid, identifiers_by_uid[first.uid], new_state)
+            cls._attach(first.uid, identifiers_by_uid[first.uid], new_state,
+                        ambiguous_identifiers_by_uid[first.uid])
             states.append(new_state)
             assigned.add(first.uid)
 
@@ -197,9 +211,14 @@ class AuthorityOrganizationService:
         for uid, identifiers in identifiers_by_uid.items():
             if uid in assigned:
                 continue
-            compatible = [s for s in states if cls._is_compatible(identifiers, s)]
+            compatible = [state for state in states if cls._is_compatible(
+                state,
+                identifiers,
+                incompatibilities.get(uid, set()),
+                ambiguous_identifiers_by_uid[uid],
+            )]
             if len(compatible) == 1:
-                cls._attach(uid, identifiers, compatible[0])
+                cls._attach(uid, identifiers, compatible[0], ambiguous_identifiers_by_uid[uid])
                 assigned.add(uid)
             else:
                 root_only.append(uid)
@@ -246,18 +265,32 @@ class AuthorityOrganizationService:
     def _build_incompatibility_adjacency(
             cls,
             identifiers_by_uid: Dict[str, Dict[str, str]],
+            ambiguous_identifiers_by_uid: Dict[str, Set[str]],
     ) -> Dict[str, Set[str]]:
         """
-        uid -> set(incompatible_uids)
-        incompatible if same type but different value.
+        Build incompatibility adjacency:
+
+        - Base rule: incompatible if same type but different value.
+        - Ambiguity rule: if uid has ambiguous type t (multiple values),
+          then uid is incompatible with ANY other uid that has type t at all
+          (regardless of value).
+
+        Returns: uid -> set(incompatible_uids)
         """
+
+        # type -> value -> set(uids)
         uids_by_type_value: Dict[str, Dict[str, Set[str]]] = {}
+        # type -> set(uids having this type)
+        uids_by_type: Dict[str, Set[str]] = {}
+
         for uid, sig in identifiers_by_uid.items():
             for t, v in sig.items():
                 uids_by_type_value.setdefault(t, {}).setdefault(v, set()).add(uid)
+                uids_by_type.setdefault(t, set()).add(uid)
 
         adjacency: Dict[str, Set[str]] = {uid: set() for uid in identifiers_by_uid.keys()}
 
+        # pylint: disable=too-many-nested-blocks
         for t, groups in uids_by_type_value.items():
             vals = list(groups.keys())
             if len(vals) <= 1:
@@ -265,39 +298,125 @@ class AuthorityOrganizationService:
             # pylint: disable=consider-using-enumerate
             for i in range(len(vals)):
                 for j in range(i + 1, len(vals)):
-                    for u in groups[vals[i]]:
-                        for v in groups[vals[j]]:
+                    left = groups[vals[i]]
+                    right = groups[vals[j]]
+                    for u in left:
+                        for v in right:
+                            if u == v:
+                                continue
                             adjacency[u].add(v)
                             adjacency[v].add(u)
+
+        # if uid is ambiguous for type t, it's incompatible with everyone who has type t
+        for uid, amb_types in ambiguous_identifiers_by_uid.items():
+            for t in amb_types:
+                others = uids_by_type.get(t, set())
+                for v in others:
+                    if v == uid:
+                        continue
+                    adjacency[uid].add(v)
+                    adjacency[v].add(uid)
 
         return adjacency
 
     @classmethod
-    def _is_compatible(cls, sig: Dict[str, str], state: AuthorityOrganizationState) -> bool:
-        state_sig = {i.type.value: i.value for i in state.identifiers}
-        for t, v in sig.items():
-            org_id_type = OrganizationIdentifierType.get_identifier_type_from_str(t)
-            if org_id_type and org_id_type.value in state_sig and state_sig[org_id_type.value] != v:
+    def _is_compatible(
+            cls,
+            state: AuthorityOrganizationState,
+            identifiers: dict[str, str],
+            incompatible_neighbors: set[str],
+            incoming_excluded_types: Optional[set[str]] = None,
+    ) -> bool:
+        """
+        Compatibility =
+
+        A) adjacency rule (computed from incompatibility graph): uid must not be incompatible
+           with any already-attached uid in the state
+
+        B) exclusion rule (bidirectional):
+           - if incoming excludes type t, state must not contain t (neither usable nor excluded)
+           - if state excludes type t, incoming must not contain t (neither usable nor excluded)
+
+        C) base rule: no contradictory type/value among usable identifiers
+        """
+
+        # --- A) adjacency rule ---
+        if incompatible_neighbors and any(
+                neigh in state.source_organization_uids for neigh in incompatible_neighbors
+        ):
+            return False
+
+        # --- B) exclusion rule (bidirectional) ---
+
+        # Incoming excluded as enum set
+        incoming_excluded: Set[OrganizationIdentifierType] = set()
+        for t in (incoming_excluded_types or set()):
+            tt = OrganizationIdentifierType.from_str(t)
+            if tt is not None:
+                incoming_excluded.add(tt)
+
+        # Incoming usable identifier types as enum set
+        incoming_types: Set[OrganizationIdentifierType] = set()
+        for t in identifiers.keys():
+            tt = OrganizationIdentifierType.from_str(t)
+            if tt is not None:
+                incoming_types.add(tt)
+
+        # State usable identifier types + state excluded types
+        state_types: Set[OrganizationIdentifierType] = {i.type for i in (state.identifiers or [])}
+        state_excluded: Set[OrganizationIdentifierType] = set(state.excluded_identifiers or [])
+
+        # If either side excludes type t,
+        # it must not cohabit with any presence of t on the other side
+        if incoming_excluded & state_types:
+            return False
+        if state_excluded & incoming_types:
+            return False
+
+        # --- C) classic type/value conflicts among usable identifiers ---
+        state_identifiers = {i.type.value: i.value for i in (state.identifiers or [])}
+        for t, v in identifiers.items():
+            org_id_type = OrganizationIdentifierType.from_str(t)
+            if org_id_type is None:
+                continue
+            key = org_id_type.value
+            if key in state_identifiers and state_identifiers[key] != v:
                 return False
+
         return True
 
     @classmethod
-    def _attach(cls, uid: str, identifiers: Dict[str, str],
-                state: AuthorityOrganizationState) -> None:
-
+    def _attach(
+            cls,
+            uid: str,
+            identifiers: dict[str, str],
+            state: AuthorityOrganizationState,
+            excluded_types: set[str] | None = None,
+    ) -> None:
         if uid not in state.source_organization_uids:
             state.source_organization_uids.append(uid)
 
+        # --- attach excluded identifiers ---
+        for t in (excluded_types or set()):
+            org_id_type = OrganizationIdentifierType.from_str(t)
+            if org_id_type is None:
+                continue
+            if org_id_type not in state.excluded_identifiers:
+                state.excluded_identifiers.append(org_id_type)
+
+        # --- attach usable identifiers (1 value per type in identifiers dict) ---
         existing = {(i.type.value, i.value) for i in state.identifiers}
         for t, v in identifiers.items():
-            if (t, v) in existing:
-                continue
-            org_id_type = OrganizationIdentifierType.get_identifier_type_from_str(t)
+            org_id_type = OrganizationIdentifierType.from_str(t)
             if org_id_type is None:
-                # unknown identifier type => ignore
                 continue
+
+            key = (org_id_type.value, v)
+            if key in existing:
+                continue
+
             state.identifiers.append(OrganizationIdentifier(type=org_id_type, value=v))
-            existing.add((t, v))
+            existing.add(key)
 
     @classmethod
     def _enrich_states_from_sources(
@@ -332,6 +451,7 @@ class AuthorityOrganizationService:
         Find compatible state in graph, or create new one.
         """
         candidates = await dao.get_states_with_compatible_identifiers(desired.identifiers)
+        candidates = [c for c in candidates if self._passes_excluded_identifiers(desired, c)]
 
         if len(candidates) == 0:
             return await dao.create_authority_organization_state(desired)
@@ -361,7 +481,35 @@ class AuthorityOrganizationService:
             selected.names = desired.names
         selected.normalize_name()
 
+        # Merge exclusions (only add, never remove)
+        selected_excluded_identifiers = set(selected.excluded_identifiers or [])
+        desired_excluded_identifier = set(desired.excluded_identifiers or [])
+        merged_excluded_identifiers = selected_excluded_identifiers | desired_excluded_identifier
+        if merged_excluded_identifiers != selected_excluded_identifiers:
+            selected.excluded_identifiers = list(merged_excluded_identifiers)
+
         return await dao.update_authority_organization_state(selected)
+
+    @staticmethod
+    def _passes_excluded_identifiers(
+            desired: AuthorityOrganizationState,
+            candidate: AuthorityOrganizationState,
+    ) -> bool:
+        desired_types = {i.type for i in desired.identifiers or []}
+        candidate_types = {i.type for i in candidate.identifiers or []}
+
+        desired_excl = set(desired.excluded_identifiers or [])
+        candidate_excl = set(candidate.excluded_identifiers or [])
+
+        # If candidate excludes T, desired must not contain T
+        if candidate_excl & desired_types:
+            return False
+
+        # If desired excludes T, candidate must not contain T
+        if desired_excl & candidate_types:
+            return False
+
+        return True
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:

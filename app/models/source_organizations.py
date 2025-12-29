@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, ClassVar
+from typing import List, ClassVar, Set
 
 from loguru import logger
 from pydantic import BaseModel, model_validator, field_validator
@@ -52,3 +52,23 @@ class SourceOrganization(BaseModel):
                          f"{SourceOrganization.IDENTIFIER_SEPARATOR}"
                          f"{source_identifier}")
         return values
+
+    def get_ambiguous_identifiers(self) -> Set[str]:
+        """
+        Return identifier types that appear more than once on this source organization.
+
+        Example:
+        - idhal x2 → {"idhal"}
+        - idref x1, viaf x2 → {"viaf"}
+        """
+        seen: set[str] = set()
+        ambiguous: set[str] = set()
+        for ident in self.identifiers or []:
+            if not ident.type:
+                continue
+            t = ident.type.lower()
+            if t in seen:
+                ambiguous.add(t)
+            else:
+                seen.add(t)
+        return ambiguous

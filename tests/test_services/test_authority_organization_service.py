@@ -36,6 +36,7 @@ async def test_get_or_create_authority_organization_single_state_no_root(
     assert root.states[0].uid is not None, "State must be persisted and have uid"
     assert root.source_organization_uids == []
 
+
 @pytest.mark.asyncio
 async def test_get_or_create_authority_organization_conflict_creates_root_and_two_states(
         persisted_conflict_seed_source_org: SourceOrganization,
@@ -153,6 +154,7 @@ async def test_get_or_create_authority_org_name_only_matches_existing_state_with
     assert root2.states[0].uid == existing_state_uid, \
         "Must reuse the existing state by normalized_name"
 
+
 @pytest.mark.asyncio
 async def test_get_or_create_authority_organization_name_only_homonyms_return_root():
     """
@@ -219,6 +221,136 @@ async def test_get_or_create_authority_organization_name_only_homonyms_return_ro
     assert resolved is not None
     assert resolved.uid == root_uid, \
         "Homonyms with a unique common root => service must return that root"
+
+
+@pytest.mark.asyncio
+async def test_split_cluster_idhal_1_and_idhal_2_must_be_separate_states(
+        hal_single_b_pydantic_model: SourceOrganization,
+        hal_single_c_pydantic_model: SourceOrganization,
+):
+    """
+    If two orgs share idref/ror but differ on idhal value,
+    they must be split into distinct states.
+    """
+    svc = AuthorityOrganizationService()
+
+    root = svc.split_cluster_into_root_and_states([
+        hal_single_b_pydantic_model,
+        hal_single_c_pydantic_model,
+    ])
+
+    assert len(root.states) >= 2
+
+    state_for_b = next(
+        s for s in root.states if hal_single_b_pydantic_model.uid in s.source_organization_uids
+    )
+    state_for_c = next(
+        s for s in root.states if hal_single_c_pydantic_model.uid in s.source_organization_uids
+    )
+
+    assert state_for_b is not state_for_c
+
+
+@pytest.mark.asyncio
+async def test_split_cluster_ambiguous_hal_creates_dedicated_state(
+        hal_ambiguous_a_pydantic_model: SourceOrganization,
+        hal_single_b_pydantic_model: SourceOrganization,
+        hal_single_c_pydantic_model: SourceOrganization,
+):
+    """
+    A has two HAL identifiers => excluded_identifiers = {HAL}.
+    B has hal=1, C has hal=2.
+    => B and C are incompatible with each other.
+    => A is incompatible with both B and C.
+    => Result: 3 distinct states, no root-only assignment.
+    """
+    auth_service = AuthorityOrganizationService()
+
+    root = auth_service.split_cluster_into_root_and_states([
+        hal_ambiguous_a_pydantic_model,
+        hal_single_b_pydantic_model,
+        hal_single_c_pydantic_model,
+    ])
+
+    # 3 states: A alone, B alone, C alone
+    assert len(root.states) == 3
+
+    # A must NOT be root-only anymore
+    assert hal_ambiguous_a_pydantic_model.uid not in root.source_organization_uids
+
+    state_for_a = next(
+        s for s in root.states
+        if hal_ambiguous_a_pydantic_model.uid in s.source_organization_uids
+    )
+
+    assert OrganizationIdentifierType.HAL in state_for_a.excluded_identifiers
+
+
+@pytest.mark.asyncio
+async def test_split_cluster_ambiguous_idhal_makes_org_incompatible_with_any_idhal(
+        hal_ambiguous_a_pydantic_model: SourceOrganization,
+        hal_single_b_pydantic_model: SourceOrganization,
+):
+    """
+    A has two idhal values (ambiguous type 'idhal').
+    B has idhal=1.
+    Even though they share other identifiers, A must be incompatible with B because
+    A is ambiguous on idhal and B carries idhal.
+    => should produce at least 2 states (A isolated from B).
+    """
+    svc = AuthorityOrganizationService()
+
+    root = svc.split_cluster_into_root_and_states([
+        hal_ambiguous_a_pydantic_model,
+        hal_single_b_pydantic_model,
+    ])
+
+    assert len(root.states) >= 2
+
+    # Find which state contains A / B by provenance
+    state_for_a = next(s for s in root.states if
+                       hal_ambiguous_a_pydantic_model.uid in s.source_organization_uids)
+    state_for_b = next(s for s in root.states if
+                       hal_single_b_pydantic_model.uid in s.source_organization_uids)
+
+    assert OrganizationIdentifierType.HAL in state_for_a.excluded_identifiers
+    assert len(state_for_b.excluded_identifiers) == 0
+
+    assert state_for_a is not state_for_b, \
+        "A (ambiguous idhal) must not be grouped with B (has idhal)"
+
+
+@pytest.mark.asyncio
+async def test_ambiguous_hal_is_incompatible_with_any_hal_state(
+        hal_ambiguous_a_pydantic_model: SourceOrganization,
+        hal_single_b_pydantic_model: SourceOrganization,
+):
+    """
+    A has ambiguous HAL => excluded_identifiers={HAL}.
+    B has a HAL.
+    => They must NOT be compatible.
+    """
+    auth_service = AuthorityOrganizationService()
+
+    root = auth_service.split_cluster_into_root_and_states([
+        hal_ambiguous_a_pydantic_model,
+        hal_single_b_pydantic_model,
+    ])
+
+    assert len(root.states) == 2
+
+    state_a = next(
+        s for s in root.states
+        if hal_ambiguous_a_pydantic_model.uid in s.source_organization_uids
+    )
+    state_b = next(
+        s for s in root.states
+        if hal_single_b_pydantic_model.uid in s.source_organization_uids
+    )
+
+    assert state_a is not state_b
+    assert OrganizationIdentifierType.HAL in state_a.excluded_identifiers
+
 
 def _get_authority_org_dao():
     factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)

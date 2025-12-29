@@ -2,6 +2,8 @@ import re
 from enum import Enum
 from typing import Optional
 
+from loguru import logger
+
 
 class AgentIdentifierType(Enum):
     """Base class for agent identifier types"""
@@ -16,7 +18,7 @@ class AgentIdentifierType(Enum):
         return re.sub(r"[^a-z]", "", s.lower())
 
     @classmethod
-    def get_identifier_type_from_str(
+    def from_str(
             cls,
             identifier_type_str: str,
     ) -> Optional["AgentIdentifierType"]:
@@ -29,7 +31,7 @@ class AgentIdentifierType(Enum):
         for identifier_type in cls:
             if cls._normalize(identifier_type.value) == normalized_input:
                 return identifier_type
-
+        logger.warning(f"Unknown identifier type: {identifier_type_str}")
         return None
 
 

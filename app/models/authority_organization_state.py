@@ -8,6 +8,7 @@ from pydantic import field_validator
 
 from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.authority_organization import AuthorityOrganization
+from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.source_organizations import SourceOrganization
 
@@ -25,6 +26,7 @@ class AuthorityOrganizationState(AuthorityOrganization):
     normalized_name: Optional[str] = None
 
     identifiers: List[OrganizationIdentifier] = []
+    excluded_identifiers: List[OrganizationIdentifierType] = []
 
     @classmethod
     def compute_normalized_name(cls, name: str) -> str:
