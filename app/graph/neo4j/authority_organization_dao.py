@@ -131,6 +131,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             identifier_signature=identifier_signature,
             uid=state.uid,
             normalized_name=state.normalized_name,
+            display_names=state.display_names,
             org_type=state.type.value,
             source_organization_uids=state.source_organization_uids,
             excluded_identifiers=[t.value for t in (state.excluded_identifiers or [])],
@@ -175,6 +176,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             identifier_signature=identifier_signature,
             org_type=state.type.value,
             normalized_name=state.normalized_name,
+            display_names=state.display_names,
             source_organization_uids=state.source_organization_uids,
             excluded_identifiers=[t.value for t in (state.excluded_identifiers or [])],
         )
@@ -356,22 +358,6 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             state_uids=state_uids,
         )
 
-    @classmethod
-    def _hydrate_authority_organization_root(cls, record) -> AuthorityOrganizationRoot:
-        r = record["r"]
-
-        hydrated_states: list[AuthorityOrganizationState] = []
-        for state_row in (record.get("states") or []):
-            if not state_row:
-                continue
-            hydrated_states.append(cls._hydrate_authority_organization_state(state_row))
-
-        return AuthorityOrganizationRoot(
-            uid=r["uid"],
-            states=hydrated_states,
-            source_organization_uids=[],
-        )
-
     @staticmethod
     def _norm_type(t: str) -> str:
         return re.sub(r"[^a-z]", "", t.lower())
@@ -392,6 +378,23 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         raw = "|".join(f"{t}:{v}" for t, v in items)
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
+    @classmethod
+    def _hydrate_authority_organization_root(cls, record) -> AuthorityOrganizationRoot:
+        r = record["r"]
+
+        hydrated_states: list[AuthorityOrganizationState] = []
+        for state_row in (record.get("states") or []):
+            if not state_row:
+                continue
+            hydrated_states.append(cls._hydrate_authority_organization_state(state_row))
+
+        return AuthorityOrganizationRoot(
+            uid=r["uid"],
+            display_names=r.get("display_names") or [],
+            states=hydrated_states,
+            source_organization_uids=r.get("source_organization_uids") or [],
+        )
+
     @staticmethod
     def _hydrate_authority_organization_state(record) -> AuthorityOrganizationState:
         o = record["o"]
@@ -411,6 +414,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             type=SourceOrganization.SourceOrganisationType(org_type),
             source_organization_uids=o.get("source_organization_uids") or [],
             names=names,
+            display_names=o.get("display_names") or [],
             normalized_name=o.get("normalized_name"),
             identifiers=identifiers,
             excluded_identifiers=excluded,

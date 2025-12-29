@@ -84,8 +84,7 @@ class AuthorityOrganizationService:
                 root_uid=new_root_uid,
                 state_uids=[s.uid for s in in_memory_root.states if s.uid],
             )
-            in_memory_root.uid = new_root_uid
-            return in_memory_root
+            return await dao.get_authority_organization_root_by_uid(new_root_uid)
         if len(roots) == 1:
             root_uid = roots[0]
             attached = await dao.get_organization_states_of_root(root_uid)
@@ -96,17 +95,16 @@ class AuthorityOrganizationService:
                     root_uid=new_root_uid,
                     state_uids=[s.uid for s in in_memory_root.states if s.uid],
                 )
-                in_memory_root.uid = new_root_uid
-                return in_memory_root
+                return await dao.get_authority_organization_root_by_uid(new_root_uid)
             # case where all attached states are in the cluster:
             # reuse existing root
-            in_memory_root.uid = root_uid
             await dao.attach_authority_organization_states_to_root(
                 root_uid=root_uid,
                 state_uids=[s.uid for s in in_memory_root.states if s.uid],
             )
-            await dao.update_authority_organization_root(in_memory_root)
-            return in_memory_root
+            # overwrite other root properties
+            in_memory_root.uid = root_uid
+            return await dao.update_authority_organization_root(in_memory_root)
         # case of multiple roots found for the same cluster
         states_by_root: Dict[str, List[str]] = {}
         for root_uid in roots:
@@ -127,17 +125,16 @@ class AuthorityOrganizationService:
                     root_uid=root_uid,
                     state_uids=[s.uid for s in in_memory_root.states if s.uid],
                 )
-                await dao.update_authority_organization_root(in_memory_root)
                 in_memory_root.uid = root_uid
-                return in_memory_root
+                await dao.update_authority_organization_root(in_memory_root)
+                return await dao.get_authority_organization_root_by_uid(root_uid)
         # no suitable root found, create a new one
         new_root_uid = await dao.create_authority_organization_root(in_memory_root)
         await dao.attach_authority_organization_states_to_root(
             root_uid=new_root_uid,
             state_uids=[s.uid for s in in_memory_root.states if s.uid],
         )
-        in_memory_root.uid = new_root_uid
-        return in_memory_root
+        return await dao.get_authority_organization_root_by_uid(new_root_uid)
 
     @classmethod
     def split_cluster_into_root_and_states(
@@ -427,20 +424,22 @@ class AuthorityOrganizationService:
         so_by_uid = {so.uid: so for so in source_orgs}
 
         for state in states:
-            members = [so_by_uid[uid] for uid in state.source_organization_uids if uid in so_by_uid]
-            if not members:
+            sources = [so_by_uid[uid] for uid in state.source_organization_uids if uid in so_by_uid]
+            if not sources:
                 continue
 
             # choose first non-generic type
             if state.type == SourceOrganization.SourceOrganisationType.ORGANIZATION:
-                for so in members:
-                    if so.type != SourceOrganization.SourceOrganisationType.ORGANIZATION:
-                        state.type = so.type
+                for source in sources:
+                    if source.type != SourceOrganization.SourceOrganisationType.ORGANIZATION:
+                        state.type = source.type
                         break
 
-            if not state.names and members[0].name:
-                state.names = [Literal(value=members[0].name)]
-            state.normalize_name()
+            names_set: Set[str] = set()
+            for source in sources:
+                if source.name and source.name.strip():
+                    names_set.add(source.name.strip())
+            state.set_names([Literal(value=n) for n in names_set])
 
     async def _get_or_create_state_in_graph_by_identifier(
             self,
@@ -477,9 +476,7 @@ class AuthorityOrganizationService:
         ):
             selected.type = desired.type
 
-        if desired.names and not selected.names:
-            selected.names = desired.names
-        selected.normalize_name()
+        selected.set_names(desired.names)
 
         # Merge exclusions (only add, never remove)
         selected_excluded_identifiers = set(selected.excluded_identifiers or [])

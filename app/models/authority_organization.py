@@ -15,6 +15,8 @@ class AuthorityOrganization(BaseModel):
     # List of source organization UIDs contributing to this authority organization
     source_organization_uids: List[str] = []
 
+    display_names: List[str] = []
+
     def random_uid(self):
         """
         assign a random uuid4 string to uid if not already set
