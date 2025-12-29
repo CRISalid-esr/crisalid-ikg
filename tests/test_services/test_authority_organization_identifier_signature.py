@@ -23,10 +23,9 @@ def _state_with_identifiers(
         items: list[tuple[OrganizationIdentifierType, str]]) -> AuthorityOrganizationState:
     s = AuthorityOrganizationState(
         type=SourceOrganization.SourceOrganisationType.INSTITUTION,
-        names=[Literal(value="Signature Test Org", language="fr")],
         identifiers=[OrganizationIdentifier(type=t, value=v) for t, v in items],
     )
-    s.normalize_name()
+    s.set_names([Literal(value="Signature Test Org", language="fr")])
     return s
 
 
@@ -113,7 +112,6 @@ async def test_update_state_recomputes_identifier_signature_stably():
     created.identifiers.append(
         OrganizationIdentifier(type=OrganizationIdentifierType.ISNI, value="0000000122039289")
     )
-    created.normalize_name()
     updated = await dao.update_authority_organization_state(created)
 
     assert updated.uid == created.uid

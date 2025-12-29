@@ -32,9 +32,12 @@ async def test_get_or_create_authority_organization_single_state_no_root(
 
     assert root is not None
     assert root.uid is None, "No contradictions => no root should be created"
+    assert len(root.display_names) == 0
     assert len(root.states) == 1
     assert root.states[0].uid is not None, "State must be persisted and have uid"
     assert root.source_organization_uids == []
+    assert root.states[0].display_names
+    assert persisted_cluster_seed_source_org.name in root.states[0].display_names
 
 
 @pytest.mark.asyncio
@@ -64,6 +67,23 @@ async def test_get_or_create_authority_organization_conflict_creates_root_and_tw
     state_sources = [set(s.source_organization_uids) for s in root.states]
     assert any(persisted_conflict_seed_source_org.uid in ss for ss in state_sources)
     assert any(persisted_conflict_peer_source_org_1.uid in ss for ss in state_sources)
+    for s in root.states:
+        assert s.display_names is not None
+        # if a source organisation contributed to this state, its name should be in display_names
+        for souid in s.source_organization_uids:
+            for source in [
+                persisted_conflict_seed_source_org,
+                persisted_conflict_peer_source_org_1,
+                persisted_conflict_peer_source_org_2,
+            ]:
+                if souid == source.uid:
+                    assert source.name in s.display_names
+    # overall root display names should include all source org names attached to states
+    for source in [
+        persisted_conflict_seed_source_org,
+        persisted_conflict_peer_source_org_1,
+    ]:
+        assert source.name in root.display_names
 
 
 @pytest.mark.asyncio
@@ -87,6 +107,7 @@ async def test_get_or_create_authority_organization_is_idempotent_on_roots(
     assert root1.uid is not None
     assert root2.uid is not None
     assert root1.uid == root2.uid, "Root should be reused for the same set of states"
+    assert len(root1.states) == len(root2.states), "Same cluster => same number of states"
 
 
 @pytest.mark.asyncio
@@ -138,11 +159,13 @@ async def test_get_or_create_authority_org_name_only_matches_existing_state_with
     existing_state_uid = root1.states[0].uid
 
     # 2) Second call: name-only source org (no identifiers)
+    # we select the longet of the  3 names as when source organization names differ,
+    # the normalized name is computed from the longest name.
     name_only = SourceOrganization(
         source="manual",
         source_identifier="name-only-1",
-        name=persisted_cluster_seed_source_org.name,
-        type=persisted_cluster_seed_source_org.type,
+        name=persisted_cluster_peer_source_org_1.name,
+        type=persisted_cluster_peer_source_org_1.type,
         identifiers=[],
     )
 
@@ -172,25 +195,23 @@ async def test_get_or_create_authority_organization_name_only_homonyms_return_ro
     homonym_label = "Homonym Org Nantes 2025 TEST"
     s1 = AuthorityOrganizationState(
         type=SourceOrganization.SourceOrganisationType.INSTITUTION,
-        names=[Literal(value=homonym_label, language="fr")],
         identifiers=[
             OrganizationIdentifier(type=OrganizationIdentifierType.ROR,
                                    value="https://ror.org/test-homonym-1"),
             OrganizationIdentifier(type=OrganizationIdentifierType.IDREF, value="TESTIDREF1"),
         ],
     )
-    s1.normalize_name()
+    s1.set_names([Literal(value=homonym_label, language="fr")])
 
     s2 = AuthorityOrganizationState(
         type=SourceOrganization.SourceOrganisationType.INSTITUTION,
-        names=[Literal(value=homonym_label, language="fr")],
         identifiers=[
             OrganizationIdentifier(type=OrganizationIdentifierType.ROR,
                                    value="https://ror.org/test-homonym-2"),
             OrganizationIdentifier(type=OrganizationIdentifierType.IDREF, value="TESTIDREF2"),
         ],
     )
-    s2.normalize_name()
+    s2.set_names([Literal(value=homonym_label, language="fr")])
 
     s1_p = await dao.create_authority_organization_state(s1)
     s2_p = await dao.create_authority_organization_state(s2)
@@ -350,6 +371,50 @@ async def test_ambiguous_hal_is_incompatible_with_any_hal_state(
 
     assert state_a is not state_b
     assert OrganizationIdentifierType.HAL in state_a.excluded_identifiers
+
+
+@pytest.mark.asyncio
+async def test_attach_states_to_root_sets_root_display_names_deduped():
+    """
+    When attaching states to a root, the root's display_names
+    must be computed as the deduplicated union of the states' display_names.
+    """
+    dao = _get_authority_org_dao()
+
+    # Two states with distinct display names
+    s1 = AuthorityOrganizationState(
+        type=SourceOrganization.SourceOrganisationType.INSTITUTION,
+        identifiers=[OrganizationIdentifier(type=OrganizationIdentifierType.ROR,
+                                            value="https://ror.org/dn-1")],
+    )
+    s1.set_names([Literal(value="Alpha Univ", language="fr")])
+
+    s2 = AuthorityOrganizationState(
+        type=SourceOrganization.SourceOrganisationType.INSTITUTION,
+        identifiers=[OrganizationIdentifier(
+            type=OrganizationIdentifierType.ROR, value="https://ror.org/dn-2"
+        )],
+    )
+    # include duplicate + whitespace to ensure set_names normalized it
+    s2.set_names([
+        Literal(value="  Beta Univ  ", language="fr"),
+        Literal(value="Beta Univ", language="fr")
+    ])
+
+    s1_p = await dao.create_authority_organization_state(s1)
+    s2_p = await dao.create_authority_organization_state(s2)
+
+    root = AuthorityOrganizationRoot(states=[s1_p, s2_p], source_organization_uids=[])
+    root_uid = await dao.create_authority_organization_root(root)
+
+    await dao.attach_authority_organization_states_to_root(
+        root_uid=root_uid, state_uids=[s1_p.uid, s2_p.uid]
+    )
+
+    # Re-read root so hydration includes computed display_names
+    persisted_root = await dao.get_authority_organization_root_by_uid(root_uid)
+
+    assert set(persisted_root.display_names) == {"Alpha Univ", "Beta Univ"}
 
 
 def _get_authority_org_dao():
