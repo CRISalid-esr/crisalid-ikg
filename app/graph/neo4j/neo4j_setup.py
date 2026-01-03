@@ -22,18 +22,28 @@ class Neo4jSetup(Setup[AsyncDriver]):
         settings = get_app_settings()
         await cls._create_person_uid_constraint(tx)
         await cls._create_agent_identifier_unique_type_value_constraint(tx)
+        await cls._create_journal_uid_constraint(tx)
         await cls._create_journal_identifier_uid_constraint(tx)
+        await cls._create_journal_identifier_type_value_constraint(tx)
         # Potential issue : https://github.com/CRISalid-esr/crisalid-ikg/issues/157
         await cls._create_source_journal_uid_constraint(tx)
         await cls._create_source_person_uid_constraint(tx)
+        await cls._create_source_person_identifier_unique_type_value_constraint(tx)
         await cls._create_source_organization_uid_constraint(tx)
         await cls._create_source_organization_identifier_unique_type_value_constraint(tx)
         # Idem https://github.com/CRISalid-esr/crisalid-ikg/issues/161
         await cls._create_concept_uid_constraint(tx)
         await cls._create_document_uid_constraint(tx)
         await cls._create_institution_uid_constraint(tx)
+        await cls._create_structured_physical_address_uid_constraint(tx)
+        await cls._create_research_structure_uid_unique_constraint(tx)
+        await cls._create_publication_identifier_unique_type_value_constraint(tx)
+        await cls._create_source_issue_unique_source_identifier_source_constraint(tx)
         await cls._create_authority_organization_state_signature_constraint(tx)
         await cls._create_authority_organization_uid_constraint(tx)
+        await cls._create_literal_value_language_type_constraint(tx)
+        await cls._create_source_record_uid_constraint(tx)
+        await cls._create_change_uid_constraint(tx)
 
         if settings.neo4j_edition == "community":
             return
@@ -127,6 +137,18 @@ class Neo4jSetup(Setup[AsyncDriver]):
             raise e
 
     @staticmethod
+    async def _create_journal_identifier_type_value_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT journal_identifier_type_value_unique IF NOT EXISTS
+        FOR (j:JournalIdentifier) REQUIRE (j.type, j.value) IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating journal identifier type/value unique constraint: {e}")
+            raise e
+
+    @staticmethod
     async def _create_source_journal_uid_constraint(tx: AsyncManagedTransaction):
         query = """
         CREATE CONSTRAINT source_journal_uid_unique IF NOT EXISTS
@@ -148,6 +170,20 @@ class Neo4jSetup(Setup[AsyncDriver]):
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating source person uid unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_source_person_identifier_unique_type_value_constraint(
+            tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT source_person_identifier_unique_type_value IF NOT EXISTS
+        FOR (i:SourcePersonIdentifier) REQUIRE (i.type, i.value) IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                f"Error creating source person identifier unique type/value constraint: {e}")
             raise e
 
     @staticmethod
@@ -201,6 +237,36 @@ class Neo4jSetup(Setup[AsyncDriver]):
             raise e
 
     @staticmethod
+    async def _create_structured_physical_address_uid_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT structured_physical_address_uid_unique IF NOT EXISTS
+        FOR (a:StructuredPhysicalAddress) REQUIRE a.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating StructuredPhysicalAddress uid unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_research_structure_uid_unique_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT research_structure_uid_unique IF NOT EXISTS
+        FOR (r:ResearchStructure)
+        REQUIRE r.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating ResearchStructure uid unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
     async def _create_source_record_represented_by_document_constraint(tx: AsyncManagedTransaction):
         query = """
         CREATE CONSTRAINT source_record_represented_by_document_unique IF NOT EXISTS
@@ -212,6 +278,38 @@ class Neo4jSetup(Setup[AsyncDriver]):
         except DatabaseError as e:
             logger.error("Error creating source record "
                          f"represented by document unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_source_record_uid_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT source_record_uid_unique IF NOT EXISTS
+        FOR (s:SourceRecord)
+        REQUIRE s.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating SourceRecord uid unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_change_uid_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT change_uid_unique IF NOT EXISTS
+        FOR (c:Change)
+        REQUIRE c.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating Change uid unique constraint: "
+                f"{e}"
+            )
             raise e
 
     @staticmethod
@@ -246,6 +344,74 @@ class Neo4jSetup(Setup[AsyncDriver]):
         except DatabaseError as e:
             logger.error(
                 "Error creating AuthorityOrganization uid unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_literal_value_language_type_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT literal_value_language_type_unique IF NOT EXISTS
+        FOR (l:Literal)
+        REQUIRE (l.value, l.language, l.type) IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating Literal value/language/type unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_publication_identifier_unique_type_value_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT publication_identifier_unique_type_value IF NOT EXISTS
+        FOR (p:PublicationIdentifier)
+        REQUIRE (p.type, p.value) IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating PublicationIdentifier type/value unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_source_issue_unique_source_identifier_source_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT source_issue_unique_source_identifier_source IF NOT EXISTS
+        FOR (i:SourceIssue)
+        REQUIRE (i.source_identifier, i.source) IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating SourceIssue source_identifier/source unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_journal_uid_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT journal_uid_unique IF NOT EXISTS
+        FOR (j:Journal)
+        REQUIRE j.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating Journal uid unique constraint: "
                 f"{e}"
             )
             raise e

@@ -1,7 +1,5 @@
-MERGE (s:Journal {
-  uid:               $journal_uid,
-  issn_l:            $issn_l
-})
+MERGE (s:Journal { uid: $journal_uid })
+ON CREATE SET s.issn_l = $issn_l
 SET s.publisher = CASE WHEN $publisher IS NOT NULL THEN $publisher
   ELSE s.publisher
   END

@@ -1,19 +1,16 @@
-MERGE (s:SourceJournal {
-  uid:               $source_journal_uid,
-  source:            $source,
-  source_identifier: $source_identifier
-})
-SET s.publisher = CASE WHEN $publisher IS NOT NULL THEN $publisher
-  ELSE s.publisher
-  END
-SET s.titles = CASE WHEN $titles IS NOT NULL THEN $titles
-  ELSE s.titles
-  END
+MERGE (s:SourceJournal { uid: $source_journal_uid })
+ON CREATE SET
+  s.source = $source,
+  s.source_identifier = $source_identifier
+ON MATCH SET
+  s.source = coalesce(s.source, $source),
+  s.source_identifier = coalesce(s.source_identifier, $source_identifier)
+
+SET s.publisher = coalesce($publisher, s.publisher)
+SET s.titles    = coalesce($titles, s.titles)
+
 WITH s
 FOREACH (identifier IN $identifiers |
-  MERGE (j:JournalIdentifier {
-    type:  identifier.type,
-    value: identifier.value
-  })
+  MERGE (j:JournalIdentifier { type: identifier.type, value: identifier.value })
   MERGE (s)-[:HAS_IDENTIFIER]->(j)
 )

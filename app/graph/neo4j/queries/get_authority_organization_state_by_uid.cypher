@@ -1,6 +1,6 @@
 MATCH (o:AuthorityOrganizationState {uid: $state_uid})
 
-OPTIONAL MATCH (o)-[:HAS_NAME]->(n:Literal)
+OPTIONAL MATCH (o)-[:HAS_NAME]->(n:Literal {type: 'authority_organization_state_name'})
 OPTIONAL MATCH (o)-[:HAS_IDENTIFIER]->(i:AgentIdentifier)
 
 RETURN

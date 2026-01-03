@@ -1,15 +1,13 @@
-// update_authority_organization_root.cypher
 MATCH (r:AuthorityOrganizationRoot {uid: $uid})
 SET r.source_organization_uids = $source_organization_uids
 
-// --- hydrate exactly like get_authority_organization_root_by_uid ---
 WITH r
 
-OPTIONAL MATCH (r)-[:HAS_NAME]->(rn:Literal)
+OPTIONAL MATCH (r)-[:HAS_NAME]->(rn:Literal {type: 'authority_organization_root_name'})
 OPTIONAL MATCH (r)-[:HAS_IDENTIFIER]->(ri:AgentIdentifier)
 
 OPTIONAL MATCH (r)-[:HAS_STATES]->(s:AuthorityOrganizationState)
-OPTIONAL MATCH (s)-[:HAS_NAME]->(sn:Literal)
+OPTIONAL MATCH (s)-[:HAS_NAME]->(sn:Literal {type: 'authority_organization_state_name'})
 OPTIONAL MATCH (s)-[:HAS_IDENTIFIER]->(si:AgentIdentifier)
 
 WITH

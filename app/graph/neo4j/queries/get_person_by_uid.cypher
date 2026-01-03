@@ -1,7 +1,7 @@
 MATCH (person:Person {uid: $person_uid})
 OPTIONAL MATCH (person)-[:HAS_NAME]->(pn:PersonName)
-OPTIONAL MATCH (pn)-[:HAS_FIRST_NAME]->(fn:Literal)
-OPTIONAL MATCH (pn)-[:HAS_LAST_NAME]->(ln:Literal)
+OPTIONAL MATCH (pn)-[:HAS_FIRST_NAME]->(fn:Literal {type: 'person_first_name'})
+OPTIONAL MATCH (pn)-[:HAS_LAST_NAME]->(ln:Literal {type: 'person_last_name'})
 OPTIONAL MATCH (person)-[mb:MEMBER_OF]->(rs:ResearchStructure)
 OPTIONAL MATCH (person)-[emp:EMPLOYED_AT]->(inst:Institution)
 WITH person, pn, fn, ln, mb, rs, emp, inst

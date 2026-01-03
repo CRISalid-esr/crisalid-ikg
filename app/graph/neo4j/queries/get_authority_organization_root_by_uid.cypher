@@ -1,10 +1,10 @@
 MATCH (r:AuthorityOrganizationRoot {uid: $root_uid})
 
-OPTIONAL MATCH (r)-[:HAS_NAME]->(rn:Literal)
+OPTIONAL MATCH (r)-[:HAS_NAME]->(rn:Literal {type: 'authority_organization_root_name'})
 OPTIONAL MATCH (r)-[:HAS_IDENTIFIER]->(ri:AgentIdentifier)
 
 OPTIONAL MATCH (r)-[:HAS_STATES]->(s:AuthorityOrganizationState)
-OPTIONAL MATCH (s)-[:HAS_NAME]->(sn:Literal)
+OPTIONAL MATCH (s)-[:HAS_NAME]->(sn:Literal {type: 'authority_organization_state_name'})
 OPTIONAL MATCH (s)-[:HAS_IDENTIFIER]->(si:AgentIdentifier)
 
 WITH
