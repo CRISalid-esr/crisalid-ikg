@@ -1,6 +1,6 @@
 MATCH (concept:Concept {uri: $uri})
-OPTIONAL MATCH (concept)-[:HAS_PREF_LABEL]->(pref_label:Literal)
-OPTIONAL MATCH (concept)-[:HAS_ALT_LABEL]->(alt_label:Literal)
+OPTIONAL MATCH (concept)-[:HAS_PREF_LABEL]->(pref_label:Literal {type: 'concept_pref_label'})
+OPTIONAL MATCH (concept)-[:HAS_ALT_LABEL]->(alt_label:Literal {type: 'concept_alt_label'})
 RETURN concept,
        collect(DISTINCT CASE
          WHEN pref_label IS NOT NULL

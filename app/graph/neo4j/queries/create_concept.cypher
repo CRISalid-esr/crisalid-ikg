@@ -1,7 +1,20 @@
 CREATE (c:Concept {uid: $uid, uri: $uri})
 WITH c
+
 UNWIND $pref_labels AS pref_label
-CREATE (c)-[:HAS_PREF_LABEL]->(:Literal {value: pref_label.value, language: pref_label.language})
-WITH c, count(pref_label) AS pref_label_count
+MERGE (pl:Literal {
+  value:    trim(pref_label.value),
+  language: coalesce(nullif(trim(pref_label.language), ''), 'und'),
+  type:     'concept_pref_label'
+})
+MERGE (c)-[:HAS_PREF_LABEL]->(pl)
+
+WITH c
+
 UNWIND $alt_labels AS alt_label
-CREATE (c)-[:HAS_ALT_LABEL]->(:Literal {value: alt_label.value, language: alt_label.language})
+MERGE (al:Literal {
+  value:    trim(alt_label.value),
+  language: coalesce(nullif(trim(alt_label.language), ''), 'und'),
+  type:     'concept_alt_label'
+})
+MERGE (c)-[:HAS_ALT_LABEL]->(al);

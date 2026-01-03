@@ -1,5 +1,5 @@
 MATCH (document:Document)-[:RECORDED_BY]->(:SourceRecord {uid: $source_record_uid})
-OPTIONAL MATCH (document)-[:HAS_TITLE]->(title:Literal)
+OPTIONAL MATCH (document)-[:HAS_TITLE]->(title:Literal {type: 'document_title'})
 OPTIONAL MATCH (document)-[:HAS_CONTRIBUTION]->(contribution:Contribution)<-[:HAS_CONTRIBUTION]-(contributor:Person)
 OPTIONAL MATCH (contributor:Person)-[:RECORDED_BY]->(sp:SourcePerson)
 MATCH (document)-[:RECORDED_BY]->(sr:SourceRecord)

@@ -1,28 +1,40 @@
 MERGE (s:SourceRecord {uid: $source_record_uid})
   ON MATCH SET
-    s.url = $source_record_url,
-    s.harvester = $harvester,
-    s.source_identifier = $source_identifier,
-    s.document_types = $document_types,
-    s.issued = CASE WHEN $issued IS NOT NULL THEN datetime($issued) ELSE NULL END,
-    s.raw_issued = $raw_issued,
-    s.hal_collection_codes = $hal_collection_codes,
-    s.hal_submit_type = $hal_submit_type
+  s.url = $source_record_url,
+  s.harvester = $harvester,
+  s.source_identifier = $source_identifier,
+  s.document_types = $document_types,
+  s.issued = CASE WHEN $issued IS NOT NULL THEN datetime($issued)
+    ELSE null
+    END,
+  s.raw_issued = $raw_issued,
+  s.hal_collection_codes = $hal_collection_codes,
+  s.hal_submit_type = $hal_submit_type
 
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_TITLE]->(t:Literal)
-DELETE r, t
+OPTIONAL MATCH (s)-[r:HAS_TITLE]->(:Literal {type: 'source_record_title'})
+DELETE r
 WITH DISTINCT s
 FOREACH (title IN $titles |
-  CREATE (s)-[:HAS_TITLE]->(t:Literal {value: title.value, language: title.language})
+  MERGE (t:Literal {
+    value:    trim(title.value),
+    language: coalesce(nullif(trim(title.language), ''), 'und'),
+    type:     'source_record_title'
+  })
+  MERGE (s)-[:HAS_TITLE]->(t)
 )
 
 WITH s
-OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(a:Literal)
-DELETE r, a
+OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(:Literal {type: 'source_record_abstract'})
+DELETE r
 WITH DISTINCT s
 FOREACH (abstract IN $abstracts |
-  CREATE (s)-[:HAS_ABSTRACT]->(a:Literal {value: abstract.value, language: abstract.language})
+  MERGE (a:Literal {
+    value:    trim(abstract.value),
+    language: coalesce(nullif(trim(abstract.language), ''), 'und'),
+    type:     'source_record_abstract'
+  })
+  MERGE (s)-[:HAS_ABSTRACT]->(a)
 )
 
 WITH s
@@ -31,8 +43,9 @@ DELETE r
 WITH DISTINCT s
 FOREACH (identifier IN $identifiers |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
-  CREATE (s)-[:HAS_IDENTIFIER]->(i)
+  MERGE (s)-[:HAS_IDENTIFIER]->(i)
 )
+
 
 WITH s
 OPTIONAL MATCH (s)-[p:PUBLISHED_IN]->(i:SourceIssue)
@@ -65,7 +78,6 @@ MERGE (s)- [:HARVESTED_FOR] - >(p)
 WITH DISTINCT s
 OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)
 WHERE NOT c.uid IN $subject_uids
-OPTIONAL MATCH (c)- [:HAS_PREF_LABEL|:HAS_ALT_LABEL] - >(l:Literal)
 DELETE r
 
 WITH DISTINCT s

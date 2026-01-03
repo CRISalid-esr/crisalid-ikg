@@ -2,6 +2,7 @@ import json
 
 from app.config import get_app_settings
 from app.models.document import Document
+from app.models.literal import Literal
 from app.services.documents.document_service import DocumentService
 
 
@@ -123,7 +124,9 @@ async def test_signal_document_created(
     local_contributor = [contrib for contrib in message_payload['fields']['contributions'] if
                          contrib['contributor']['uid'] == 'hal-3478654'][0]
     assert local_contributor['contributor']['names'][0]['last_names'][0]['value'] == 'Garcia'
-    assert local_contributor['contributor']['names'][0]['last_names'][0]['language'] is None
+    assert local_contributor['contributor']['names'][0]['last_names'][0][
+               'language'] == Literal.UNDETERMINED_LANGUAGE
     assert local_contributor['contributor']['names'][0]['first_names'][0]['value'] == 'Raymond'
-    assert local_contributor['contributor']['names'][0]['first_names'][0]['language'] is None
+    assert local_contributor['contributor']['names'][0]['first_names'][0][
+               'language'] == Literal.UNDETERMINED_LANGUAGE
     assert local_contributor['roles'] == ['LocContributionRole.AUTHOR']

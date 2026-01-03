@@ -34,6 +34,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_institution_uid_constraint(tx)
         await cls._create_authority_organization_state_signature_constraint(tx)
         await cls._create_authority_organization_uid_constraint(tx)
+        await cls._create_literal_value_language_type_constraint(tx)
 
         if settings.neo4j_edition == "community":
             return
@@ -246,6 +247,22 @@ class Neo4jSetup(Setup[AsyncDriver]):
         except DatabaseError as e:
             logger.error(
                 "Error creating AuthorityOrganization uid unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_literal_value_language_type_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT literal_value_language_type_unique IF NOT EXISTS
+        FOR (l:Literal)
+        REQUIRE (l.value, l.language, l.type) IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating Literal value/language/type unique constraint: "
                 f"{e}"
             )
             raise e

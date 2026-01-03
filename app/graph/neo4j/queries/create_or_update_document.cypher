@@ -38,20 +38,32 @@ FOREACH (_ IN CASE WHEN doc_to_merge_into IS NOT NULL THEN [1] ELSE [] END |
 )
 
 WITH doc
-OPTIONAL MATCH (doc)-[r:HAS_TITLE]->(t:Literal)
+OPTIONAL MATCH (doc)-[r:HAS_TITLE]->(t:Literal {type: "document_title"})
 DELETE r, t
 WITH DISTINCT doc
 FOREACH (title IN $titles |
-  CREATE (doc)-[:HAS_TITLE]->(t:Literal {value: title.value, language: title.language})
+  MERGE (t:Literal {
+    value: trim(title.value),
+    language: coalesce(nullif(trim(title.language), ''), 'und'),
+    type: "document_title"
+  })
+  MERGE (doc)-[:HAS_TITLE]->(t)
 )
 
+
 WITH doc
-OPTIONAL MATCH (doc)-[r:HAS_ABSTRACT]->(a:Literal)
+OPTIONAL MATCH (doc)-[r:HAS_ABSTRACT]->(a:Literal {type: "document_abstract"})
 DELETE r, a
 WITH DISTINCT doc
 FOREACH (abstract IN $abstracts |
-  CREATE (doc)-[:HAS_ABSTRACT]->(a:Literal {value: abstract.value, language: abstract.language})
+  MERGE (a:Literal {
+    value: trim(abstract.value),
+    language: coalesce(nullif(trim(abstract.language), ''), 'und'),
+    type: "document_abstract"
+  })
+  MERGE (doc)-[:HAS_ABSTRACT]->(a)
 )
+
 
 WITH doc
 OPTIONAL MATCH (doc)-[r:RECORDED_BY]->(s:SourceRecord)

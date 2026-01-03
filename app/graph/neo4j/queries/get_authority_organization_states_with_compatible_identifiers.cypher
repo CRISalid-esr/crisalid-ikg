@@ -11,7 +11,7 @@ WHERE NOT EXISTS {
   WHERE ci.value <> w.value
 }
 
-OPTIONAL MATCH (o)-[:HAS_NAME]->(n:Literal)
+OPTIONAL MATCH (o)-[:HAS_NAME]->(n:Literal {type: 'authority_organization_state_name'})
 OPTIONAL MATCH (o)-[:HAS_IDENTIFIER]->(allI:AgentIdentifier)
 
 RETURN

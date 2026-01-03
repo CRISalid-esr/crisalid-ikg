@@ -9,19 +9,29 @@ CREATE (s:SourceRecord {
     hal_collection_codes: $hal_collection_codes,
     hal_submit_type: $hal_submit_type
 })
+
 WITH s
 FOREACH (title IN $titles |
-  CREATE (t:Literal {value: title.value, language: title.language})
-  CREATE (s)-[:HAS_TITLE]->(t)
+  MERGE (t:Literal {
+    value: trim(title.value),
+    language: coalesce(nullif(trim(title.language), ''), 'und'),
+    type: "source_record_title"
+  })
+  MERGE (s)-[:HAS_TITLE]->(t)
 )
 FOREACH (abstract IN $abstracts |
-  CREATE (a:Literal {value: abstract.value, language: abstract.language})
-  CREATE (s)-[:HAS_ABSTRACT]->(a)
+  MERGE (a:Literal {
+    value: trim(abstract.value),
+    language: coalesce(nullif(trim(abstract.language), ''), 'und'),
+    type: "source_record_abstract"
+  })
+  MERGE (s)-[:HAS_ABSTRACT]->(a)
 )
 FOREACH (identifier IN $identifiers |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
-  CREATE (s)-[:HAS_IDENTIFIER]->(i)
+  MERGE (s)-[:HAS_IDENTIFIER]->(i)
 )
+
 WITH s
 FOREACH (_ IN CASE WHEN $issue IS NOT NULL THEN [1] ELSE [] END |
   MERGE (i:SourceIssue {source_identifier: $issue.source_identifier})
