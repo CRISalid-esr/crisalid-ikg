@@ -34,9 +34,9 @@ FOREACH (identifier IN $identifiers |
 
 WITH s
 FOREACH (_ IN CASE WHEN $issue IS NOT NULL THEN [1] ELSE [] END |
-  MERGE (i:SourceIssue {source_identifier: $issue.source_identifier})
-  ON CREATE SET i.source = $issue.source, i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
-  ON MATCH SET  i.source = $issue.source, i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
+  MERGE (i:SourceIssue {source_identifier: $issue.source_identifier, source: $issue.source})
+  ON CREATE SET i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
+  ON MATCH SET  i.volume = $issue.volume, i.number = $issue.number, i.rights = $issue.rights, i.date = $issue.date, i.titles = $issue.titles
   MERGE (s)-[:PUBLISHED_IN]->(i)
 
   FOREACH (_ IN CASE WHEN $journal_uid IS NOT NULL THEN [1] ELSE [] END |
