@@ -32,9 +32,13 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_concept_uid_constraint(tx)
         await cls._create_document_uid_constraint(tx)
         await cls._create_institution_uid_constraint(tx)
+        await cls._create_research_structure_uid_unique_constraint(tx)
+        await cls._create_publication_identifier_unique_type_value_constraint(tx)
+        await cls._create_source_issue_unique_source_identifier_source_constraint(tx)
         await cls._create_authority_organization_state_signature_constraint(tx)
         await cls._create_authority_organization_uid_constraint(tx)
         await cls._create_literal_value_language_type_constraint(tx)
+        await cls._create_source_record_uid_constraint(tx)
 
         if settings.neo4j_edition == "community":
             return
@@ -202,6 +206,24 @@ class Neo4jSetup(Setup[AsyncDriver]):
             raise e
 
     @staticmethod
+    async def _create_research_structure_uid_unique_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT research_structure_uid_unique IF NOT EXISTS
+        FOR (r:ResearchStructure)
+        REQUIRE r.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating ResearchStructure uid unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
     async def _create_source_record_represented_by_document_constraint(tx: AsyncManagedTransaction):
         query = """
         CREATE CONSTRAINT source_record_represented_by_document_unique IF NOT EXISTS
@@ -213,6 +235,22 @@ class Neo4jSetup(Setup[AsyncDriver]):
         except DatabaseError as e:
             logger.error("Error creating source record "
                          f"represented by document unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_source_record_uid_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT source_record_uid_unique IF NOT EXISTS
+        FOR (s:SourceRecord)
+        REQUIRE s.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating SourceRecord uid unique constraint: "
+                f"{e}"
+            )
             raise e
 
     @staticmethod
@@ -263,6 +301,42 @@ class Neo4jSetup(Setup[AsyncDriver]):
         except DatabaseError as e:
             logger.error(
                 "Error creating Literal value/language/type unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_publication_identifier_unique_type_value_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT publication_identifier_unique_type_value IF NOT EXISTS
+        FOR (p:PublicationIdentifier)
+        REQUIRE (p.type, p.value) IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating PublicationIdentifier type/value unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_source_issue_unique_source_identifier_source_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT source_issue_unique_source_identifier_source IF NOT EXISTS
+        FOR (i:SourceIssue)
+        REQUIRE (i.source_identifier, i.source) IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating SourceIssue source_identifier/source unique constraint: "
                 f"{e}"
             )
             raise e
