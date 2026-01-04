@@ -39,7 +39,7 @@ FOREACH (_ IN CASE WHEN doc_to_merge_into IS NOT NULL THEN [1] ELSE [] END |
 
 WITH doc
 OPTIONAL MATCH (doc)-[r:HAS_TITLE]->(t:Literal {type: "document_title"})
-DELETE r, t
+DELETE r
 WITH DISTINCT doc
 FOREACH (title IN $titles |
   MERGE (t:Literal {
@@ -53,7 +53,7 @@ FOREACH (title IN $titles |
 
 WITH doc
 OPTIONAL MATCH (doc)-[r:HAS_ABSTRACT]->(a:Literal {type: "document_abstract"})
-DELETE r, a
+DELETE r
 WITH DISTINCT doc
 FOREACH (abstract IN $abstracts |
   MERGE (a:Literal {
