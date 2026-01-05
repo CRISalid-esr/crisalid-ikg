@@ -1,9 +1,13 @@
+import copy
+
 import pytest
 
 from app.models.document_type import DocumentTypeEnum
 from app.models.identifier_types import PublicationIdentifierType, JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifierFormat
+from app.models.literal import Literal
 from app.models.source_records import SourceRecord
+from app.models.text_literal import TextLiteral
 
 
 def test_create_thesis_source_record_from_scanr_data(
@@ -396,3 +400,53 @@ def test_create_source_record_with_unknown_identifier(
         and identifier.value == "not_known_source"
     )
     assert "Unknown publication identifier type submitted" in caplog.text
+
+
+def test_source_record_truncates_literal_values(scanr_thesis_source_record_json_data):
+    """
+    Given a source record model recording a thesis harvested from ScanR
+    When the title and abstract values exceed the maximum length
+    Then the values should be truncated to Literal.MAX_VALUE_LENGTH
+    :param scanr_thesis_source_record_json_data:
+    :return:
+    """
+    data = copy.deepcopy(scanr_thesis_source_record_json_data)
+
+    # Make title and first abstract exceed Literal.MAX_VALUE_LENGTH
+    data["titles"][0]["value"] = "T" * (Literal.MAX_VALUE_LENGTH + 50)
+    data["abstracts"][0]["value"] = "A" * (Literal.MAX_VALUE_LENGTH + 200)
+
+    sr = SourceRecord(**data)
+
+    assert len(sr.titles[0].value) == Literal.MAX_VALUE_LENGTH
+    assert sr.titles[0].value == "T" * Literal.MAX_VALUE_LENGTH
+
+    assert len(sr.abstracts[0].value) == Literal.MAX_VALUE_LENGTH
+    assert sr.abstracts[0].value == "A" * Literal.MAX_VALUE_LENGTH
+
+
+def test_two_source_records_with_same_text_literal_have_same_key():
+    """
+    Given two source records with the same text literal value and language
+    When creating the source record objects
+    Then the text literals should have the same key
+    :return:
+    """
+    abstract_value = "This is a sample abstract for testing."
+    language = "en"
+
+    sr1 = SourceRecord(
+        source_identifier="source1",
+        harvester="TestHarvester",
+        titles=[Literal(value="Sample Title")],
+        abstracts=[TextLiteral(value=abstract_value, language=language)]
+    )
+
+    sr2 = SourceRecord(
+        source_identifier="source2",
+        harvester="TestHarvester",
+        titles=[Literal(value="Sample Title")],
+        abstracts=[TextLiteral(value=abstract_value, language=language)]
+    )
+
+    assert sr1.abstracts[0].key == sr2.abstracts[0].key

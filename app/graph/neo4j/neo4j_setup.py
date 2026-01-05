@@ -42,6 +42,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_authority_organization_state_signature_constraint(tx)
         await cls._create_authority_organization_uid_constraint(tx)
         await cls._create_literal_value_language_type_constraint(tx)
+        await cls._create_text_literal_key_constraint(tx)
         await cls._create_source_record_uid_constraint(tx)
         await cls._create_change_uid_constraint(tx)
 
@@ -360,6 +361,22 @@ class Neo4jSetup(Setup[AsyncDriver]):
         except DatabaseError as e:
             logger.error(
                 "Error creating Literal value/language/type unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_text_literal_key_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT textliteral_key_unique IF NOT EXISTS
+        FOR (t:TextLiteral)
+        REQUIRE t.key IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating TextLiteral key unique constraint: "
                 f"{e}"
             )
             raise e

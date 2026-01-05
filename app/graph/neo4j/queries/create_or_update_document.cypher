@@ -50,20 +50,18 @@ FOREACH (title IN $titles |
   MERGE (doc)-[:HAS_TITLE]->(t)
 )
 
-
 WITH doc
-OPTIONAL MATCH (doc)-[r:HAS_ABSTRACT]->(a:Literal {type: "document_abstract"})
+OPTIONAL MATCH (doc)-[r:HAS_ABSTRACT]->(:TextLiteral {type: "document_abstract"})
 DELETE r
 WITH DISTINCT doc
 FOREACH (abstract IN $abstracts |
-  MERGE (a:Literal {
-    value: trim(abstract.value),
-    language: coalesce(nullif(trim(abstract.language), ''), 'und'),
-    type: "document_abstract"
-  })
+  MERGE (a:TextLiteral {key: abstract.key})
+  ON CREATE SET
+    a.value    = abstract.value,
+    a.language = coalesce(nullif(trim(abstract.language), ''), 'und'),
+    a.type     = "document_abstract"
   MERGE (doc)-[:HAS_ABSTRACT]->(a)
 )
-
 
 WITH doc
 OPTIONAL MATCH (doc)-[r:RECORDED_BY]->(s:SourceRecord)
