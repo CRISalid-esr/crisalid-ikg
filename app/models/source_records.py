@@ -14,6 +14,7 @@ from app.models.literal import Literal
 from app.models.publication_identifiers import PublicationIdentifier
 from app.models.source_contributions import SourceContribution
 from app.models.source_issue import SourceIssue
+from app.models.text_literal import TextLiteral
 from app.models.void_custom_metadata import VoidCustomMetadata
 from app.services.source_records.source_record_url_service import SourceRecordUrlService
 from app.utils.date.partial_iso_8601 import parse_partial_iso8601
@@ -37,7 +38,7 @@ class SourceRecord(BaseModel):
 
     identifiers: List[PublicationIdentifier] = []
 
-    abstracts: List[Literal] = []
+    abstracts: List[TextLiteral] = []
 
     subjects: List[Concept] = []
 

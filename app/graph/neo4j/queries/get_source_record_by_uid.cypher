@@ -1,6 +1,6 @@
 MATCH (s:SourceRecord {uid: $source_record_uid})
 OPTIONAL MATCH (s)-[:HAS_TITLE]->(title:Literal {type: 'source_record_title'})
-OPTIONAL MATCH (s)-[:HAS_ABSTRACT]->(abstract:Literal {type: 'source_record_abstract'})
+OPTIONAL MATCH (s)-[:HAS_ABSTRACT]->(abstract:TextLiteral {type: 'source_record_abstract'})
 OPTIONAL MATCH (s)-[:HAS_IDENTIFIER]->(pub_identifier:PublicationIdentifier)
 OPTIONAL MATCH (s)-[:HARVESTED_FOR]->(person:Person)
 OPTIONAL MATCH (s)-[:HAS_SUBJECT]->(concept:Concept)

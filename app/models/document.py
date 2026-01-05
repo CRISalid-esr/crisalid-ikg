@@ -9,6 +9,7 @@ from app.models.contributions import Contribution
 from app.models.document_publication_channel import DocumentPublicationChannel
 from app.models.literal import Literal
 from app.models.open_access_status import OpenAccessStatus
+from app.models.text_literal import TextLiteral
 from app.utils.date.partial_iso_8601 import partial_iso8601_interval
 
 
@@ -19,7 +20,7 @@ class Document(BaseModel):
 
     uid: Optional[str] = None
     titles: List[Literal] = []
-    abstracts: List[Literal] = []
+    abstracts: List[TextLiteral] = []
     subjects: List[Concept] = []
     to_be_recomputed: bool = False
     to_be_deleted: bool = False

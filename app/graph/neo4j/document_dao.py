@@ -29,6 +29,7 @@ from app.models.preface import Preface
 from app.models.presentation import Presentation
 from app.models.proceedings import Proceedings
 from app.models.scholarly_publication import ScholarlyPublication
+from app.models.text_literal import TextLiteral
 
 
 class DocumentDAO(Neo4jDAO):
@@ -139,14 +140,14 @@ class DocumentDAO(Neo4jDAO):
             oa_computation_timestamp=(
                 document.open_access_status.oa_computation_timestamp.isoformat()
                 if (document.open_access_status
-                and document.open_access_status.oa_computation_timestamp)
+                    and document.open_access_status.oa_computation_timestamp)
                 else None
             ),
             oa_computed_status=document.open_access_status.oa_computed_status,
             oa_upw_success_status=document.open_access_status.oa_upw_success_status,
             oa_doaj_success_status=document.open_access_status.oa_doaj_success_status,
             oa_status=document.open_access_status.oa_status,
-            upw_oa_status=document.open_access_status.upw_oa_status ,
+            upw_oa_status=document.open_access_status.upw_oa_status,
             coar_oa_status=document.open_access_status.coar_oa_status,
         )
         update_document_subjects_query = load_query(
@@ -366,6 +367,8 @@ class DocumentDAO(Neo4jDAO):
         ]
         for title in record['titles']:
             document.titles.append(Literal(**title))
+        for abstract in record['abstracts']:
+            document.abstracts.append(TextLiteral(**abstract))
         for subject in record['subjects']:
             document.subjects.append(Concept(**subject))
         for contribution in record['contributions']:
@@ -505,7 +508,6 @@ class DocumentDAO(Neo4jDAO):
 
         if new_type not in self.DOCUMENT_CLASS_MAP:
             raise ValueError(f"Invalid new document type: {new_type}")
-
 
         labels = self.get_labels(new_type)
 

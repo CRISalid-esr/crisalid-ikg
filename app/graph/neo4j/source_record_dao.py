@@ -24,6 +24,7 @@ from app.models.source_organizations import SourceOrganization
 from app.models.source_people import SourcePerson
 from app.models.source_person_identifiers import SourcePersonIdentifier
 from app.models.source_records import SourceRecord
+from app.models.text_literal import TextLiteral
 
 
 class SourceRecordDAO(Neo4jDAO):
@@ -461,7 +462,7 @@ class SourceRecordDAO(Neo4jDAO):
             raw_issued=record["s"].get("raw_issued")
         )
         for abstract in record["abstracts"]:
-            source_record.abstracts.append(Literal(**abstract))
+            source_record.abstracts.append(TextLiteral(**abstract))
         for identifier in record["identifiers"]:
             source_record.identifiers.append(PublicationIdentifier(**identifier))
         for subject in record["subjects"]:
