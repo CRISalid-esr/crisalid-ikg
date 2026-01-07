@@ -106,6 +106,7 @@ class PublicationIdentifierType(Enum):
     SCIENCESPO = "sciencespo"
     URI = "uri"
     WOS = "wos"
+    SUDOC_PPN = "sudoc_ppn"
     UNKNOWN = "unknown"
 
 
