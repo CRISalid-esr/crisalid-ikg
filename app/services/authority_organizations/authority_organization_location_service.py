@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
-from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.authority_organization_dao import AuthorityOrganizationDAO
 from app.graph.neo4j.source_organization_dao import SourceOrganizationDAO
 from app.models.authority_organization_state import AuthorityOrganizationState
@@ -72,17 +71,13 @@ class AuthorityOrganizationLocationService:
                                                                    address_list)
         return True
 
-    @staticmethod
-    def _get_dao_factory() -> DAOFactory:
-        settings = get_app_settings()
-        return AbstractDAOFactory().get_dao_factory(settings.graph_db)
 
     def _get_authority_org_dao(self) -> AuthorityOrganizationDAO:
-        factory = self._get_dao_factory()
+        factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
         # Your DAO factory likely ignores the model type, but keep consistent with your pattern:
         return factory.get_dao(AuthorityOrganizationState)
 
     def _get_source_org_dao(self) -> SourceOrganizationDAO:
-        factory = self._get_dao_factory()
+        factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)
         # Your DAO factory likely ignores the model type, but keep consistent with your pattern:
         return factory.get_dao(SourceOrganization)

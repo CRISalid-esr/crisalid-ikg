@@ -374,8 +374,8 @@ class AuthorityOrganizationDAO(Neo4jDAO):
         :param addresses:
         :return:
         """
+        addresses = []
         if address_list:
-            addresses = []
             for address in address_list:
                 address_dict = {
                     "uid": address.uid,
@@ -398,7 +398,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             {"latitude": place.latitude, "longitude": place.longitude}
             for place in place_list
             if place.latitude is not None and place.longitude is not None
-        ] if place_list else None
+        ] if place_list else []
 
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
