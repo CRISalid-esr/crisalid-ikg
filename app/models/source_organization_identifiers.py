@@ -1,7 +1,8 @@
+import json
 from typing import Dict, Any, Optional, List
 
 from loguru import logger
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, field_serializer, field_validator
 
 
 class RorGeoNamesLocation(BaseModel):
@@ -43,11 +44,34 @@ class SourceOrganizationIdentifier(BaseModel):
     @model_validator(mode="after")
     def _handle_extra_information(self):
         if self.type == "ror":
-            ror = RORExtraInformation.model_validate(self.extra_information)
-            self.extra_information = ror.model_dump()
+            if self.extra_information == {}:
+                logger.warning(f"Extra information for {self.type} identifier is empty.")
+            else:
+                ror = RORExtraInformation.model_validate(self.extra_information)
+                self.extra_information = ror.model_dump()
         else:
             # Explicitly drop any extra_information for non-ROR types
             logger.warning(f"Extra information for {self.type} identifier dropped.")
             self.extra_information = {}
 
         return self
+
+    @field_serializer('extra_information')
+    def serialize_extra_information(self, value: Dict[str, Any]):
+        """
+        Allow the storage of extra information as string inside the nodes
+        """
+        return json.dumps(value)
+
+    @field_validator("extra_information", mode="before")
+    @classmethod
+    def parse_payload(cls, v):
+        """
+        Ensure that the extra information can be read from string at hydration time
+        """
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError as e:
+                raise ValueError("payload must be valid JSON") from e
+        return v

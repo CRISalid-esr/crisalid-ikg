@@ -65,8 +65,29 @@ async def fixture_hal_source_institution_json_data() -> dict[str, str]:
             },
             {
                 "type": "ror",
-                "value": "https://ror.org/000000000"
-                # TODO add extra information
+                "value": "https://ror.org/000000000",
+                "extra_information": {
+                    "types": [
+                        "facility",
+                    ],
+                    "status": "active",
+                    "established": 2006,
+                    "geonames_locations": [
+                        {
+                            "lat": 48.85341,
+                            "lng": 2.3488,
+                            "name": "Paris",
+                            "geonames_id": 2988507,
+                            "country_code": "FR",
+                            "country_name": "France",
+                            "continent_code": "EU",
+                            "continent_name": "Europe",
+                            "country_subdivision_code": "IDF",
+                            "country_subdivision_name": "Île-de-France",
+                        },
+                    ],
+
+                }
             }
         ]
     }
