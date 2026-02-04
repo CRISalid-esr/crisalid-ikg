@@ -57,6 +57,7 @@ async def test_create_source_record(persisted_person_a_pydantic_model: Person,
 
 async def test_create_hal_source_record_with_custom_metadata(
         persisted_person_a_pydantic_model: Person,
+        # TODO add and handle extra information to the Ror identifier
         hal_article_source_record_with_custom_metadata_pydantic_model: SourceRecord
 ) -> None:
     """

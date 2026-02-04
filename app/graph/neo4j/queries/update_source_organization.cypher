@@ -13,5 +13,6 @@ FOREACH (identifier IN $identifiers |
     type: identifier.type,
     value: identifier.value
   })
+  SET i.extra_information = identifier.extra_information
   MERGE (s)-[:HAS_IDENTIFIER]->(i)
 )
