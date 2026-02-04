@@ -66,6 +66,7 @@ async def fixture_hal_source_institution_json_data() -> dict[str, str]:
             {
                 "type": "ror",
                 "value": "https://ror.org/000000000"
+                # TODO add extra information
             }
         ]
     }

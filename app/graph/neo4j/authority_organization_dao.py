@@ -156,6 +156,8 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             uid=state.uid,
             identifiers=[{"type": i.type.value, "value": i.value} for i in state.identifiers],
         )
+        # TODO get extra information from source organization "ror" identifiers
+        # TODO create locations of the authority organization state
         state_record = await state_from_graph.single()
         return state_record["o"]["uid"]
 
@@ -200,6 +202,8 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             uid=state.uid,
             identifiers=[{"type": i.type.value, "value": i.value} for i in state.identifiers],
         )
+        # TODO get extra information from source organization "ror" identifiers
+        # TODO update locations of the authority organization state
 
     @handle_database_errors
     async def get_authority_organization_state_by_uid(

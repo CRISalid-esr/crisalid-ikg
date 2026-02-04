@@ -15,7 +15,7 @@ from app.services.source_contributors.source_organization_service import SourceO
 
 @pytest.mark.asyncio
 async def test_get_or_create_authority_organization_single_state_no_root(
-        persisted_cluster_seed_source_org: SourceOrganization,
+        persisted_cluster_seed_source_org: SourceOrganization, # TODO use it in test for locations
         persisted_cluster_peer_source_org_1: SourceOrganization,  # pylint: disable=unused-argument
         persisted_cluster_peer_source_org_2: SourceOrganization,  # pylint: disable=unused-argument
 ):
