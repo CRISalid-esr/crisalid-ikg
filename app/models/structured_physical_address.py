@@ -19,6 +19,7 @@ class StructuredPhysicalAddress(BaseModel):
     zip_code: List[Literal] = []
     state_or_province: List[Literal] = []
     country: List[Literal] = []
+    continent: Optional[List[Literal]] = []
 
     @model_validator(mode="before")
     @classmethod
