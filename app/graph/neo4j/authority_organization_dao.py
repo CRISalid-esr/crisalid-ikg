@@ -16,7 +16,9 @@ from app.models.authority_organization_root import AuthorityOrganizationRoot
 from app.models.authority_organization_state import AuthorityOrganizationState
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
+from app.models.places import Place
 from app.models.source_organizations import SourceOrganization  # for enum
+from app.models.structured_physical_address import StructuredPhysicalAddress
 
 
 class AuthorityOrganizationDAO(Neo4jDAO):
@@ -156,8 +158,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             uid=state.uid,
             identifiers=[{"type": i.type.value, "value": i.value} for i in state.identifiers],
         )
-        # TODO get extra information from source organization "ror" identifiers
-        # TODO create locations of the authority organization state
+
         state_record = await state_from_graph.single()
         return state_record["o"]["uid"]
 
@@ -202,8 +203,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             uid=state.uid,
             identifiers=[{"type": i.type.value, "value": i.value} for i in state.identifiers],
         )
-        # TODO get extra information from source organization "ror" identifiers
-        # TODO update locations of the authority organization state
+
 
     @handle_database_errors
     async def get_authority_organization_state_by_uid(
@@ -361,6 +361,74 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             root_uid=root_uid,
             state_uids=state_uids,
         )
+
+
+    @handle_database_errors
+    async def attach_place_and_address_nodes_to_state(self, state_uid: str,
+                                            place_list: list(Place),
+                                            address_list: list(StructuredPhysicalAddress)) -> None:
+        """
+        Create location information and link them to an AuthorityOrganizationState.
+        :param state_uid:
+        :param places:
+        :param addresses:
+        :return:
+        """
+        if address_list:
+            addresses = []
+            for address in address_list:
+                address_dict = {
+                    "uid": address.uid,
+                    "street": [{"value": c.value, "language": c.language} for c in address.street if
+                             c.value] or None,
+                    "city": [{"value": c.value, "language": c.language} for c in address.city if
+                             c.value] or None,
+                    "zip_code": [{"value": c.value, "language": c.language} for c in
+                                 address.zip_code if c.value] or None,
+                    "state_or_province": [{"value": s.value, "language": s.language} for s in
+                                          address.state_or_province if s.value] or None,
+                    "country": [{"value": c.value, "language": c.language} for c in
+                                address.country if c.value] or None,
+                    "continent": [{"value": c.value, "language": c.language} for c in
+                                address.country if c.value] or None
+                }
+                addresses.append(address_dict)
+
+        places = [
+            {"latitude": place.latitude, "longitude": place.longitude}
+            for place in place_list
+            if place.latitude is not None and place.longitude is not None
+        ] if place_list else None
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._attach_place_and_address_nodes_to_state,
+                    state_uid,
+                    places,
+                    addresses
+                )
+
+    @staticmethod
+    async def _attach_place_and_address_nodes_to_state(
+            tx: AsyncManagedTransaction,
+            state_uid: str,
+            places: list,
+            addresses: list
+    ) -> None:
+
+        await tx.run(
+            load_query("update_authority_organization_state_addresses"),
+            state_uid=state_uid,
+            addresses=addresses
+        )
+
+        await tx.run(
+            load_query("update_authority_organization_state_places"),
+            state_uid=state_uid,
+            places=places
+        )
+
 
     @staticmethod
     def _norm_type(t: str) -> str:
