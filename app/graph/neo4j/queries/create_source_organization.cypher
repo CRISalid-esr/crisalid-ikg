@@ -16,6 +16,15 @@ FOREACH (identifier IN $identifiers |
     type:  identifier.type,
     value: identifier.value
   })
-  SET i.extra_information = identifier.extra_information
+  FOREACH (_ IN CASE
+    WHEN identifier.extra_information IS NOT NULL
+         AND identifier.extra_information <> '{}'
+         AND identifier.extra_information <> 'null'
+    THEN [1]
+    ELSE []
+  END |
+    SET i.extra_information = identifier.extra_information
+  )
+
   MERGE (s)-[:HAS_IDENTIFIER]->(i)
 )

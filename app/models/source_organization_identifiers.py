@@ -39,11 +39,11 @@ class SourceOrganizationIdentifier(BaseModel):
     type: str
     value: str
 
-    extra_information: Dict[str, Any] = {}  # New field for additional data
+    extra_information: Optional[Dict[str, Any]] = None # New field for additional data
 
     @model_validator(mode="after")
     def _handle_extra_information(self):
-        if self.type == "ror":
+        if self.type == "ror" and self.extra_information is not None:
             if self.extra_information == {}:
                 logger.warning(f"Extra information for {self.type} identifier is empty.")
             else:
@@ -52,7 +52,7 @@ class SourceOrganizationIdentifier(BaseModel):
         else:
             # Explicitly drop any extra_information for non-ROR types
             logger.warning(f"Extra information for {self.type} identifier dropped.")
-            self.extra_information = {}
+            self.extra_information = None
 
         return self
 
