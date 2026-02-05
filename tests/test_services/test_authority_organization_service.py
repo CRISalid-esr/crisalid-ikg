@@ -8,6 +8,8 @@ from app.models.authority_organization_state import AuthorityOrganizationState
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.source_organizations import SourceOrganization
+from app.services.authority_organizations.authority_organization_location_service import \
+    AuthorityOrganizationLocationService
 from app.services.authority_organizations.authority_organization_service import \
     AuthorityOrganizationService
 from app.services.source_contributors.source_organization_service import SourceOrganizationService
@@ -15,7 +17,8 @@ from app.services.source_contributors.source_organization_service import SourceO
 
 @pytest.mark.asyncio
 async def test_get_or_create_authority_organization_single_state_no_root(
-        persisted_cluster_seed_source_org: SourceOrganization, # TODO use it in test for locations
+        test_app,  # pylint: disable=unused-argument
+        persisted_cluster_seed_source_org: SourceOrganization,
         persisted_cluster_peer_source_org_1: SourceOrganization,  # pylint: disable=unused-argument
         persisted_cluster_peer_source_org_2: SourceOrganization,  # pylint: disable=unused-argument
 ):
@@ -26,6 +29,7 @@ async def test_get_or_create_authority_organization_single_state_no_root(
     """
     source_service = SourceOrganizationService()
     auth_service = AuthorityOrganizationService()
+    auth_loc_service = AuthorityOrganizationLocationService()
 
     cluster = await source_service.get_cluster(persisted_cluster_seed_source_org.uid)
     root = await auth_service.get_or_create_authority_organization(cluster)
@@ -38,6 +42,13 @@ async def test_get_or_create_authority_organization_single_state_no_root(
     assert root.source_organization_uids == []
     assert root.states[0].display_names
     assert persisted_cluster_seed_source_org.name in root.states[0].display_names
+
+    state_uid = root.states[0].uid
+    addresses, places = await auth_loc_service.get_location_from_state(state_uid)
+    assert len(addresses) == 1
+    assert addresses[0].city[0].value == 'Paris'
+    assert len(places) == 1
+    assert places[0].latitude == 48.85341
 
 
 @pytest.mark.asyncio
