@@ -28,14 +28,7 @@ class StructuredPhysicalAddress(BaseModel):
         return self
 
     def _generate_uid(self) -> str:
-        # Combine all literal lists
         literals = self.street + self.city + self.zip_code + self.state_or_province + self.country
-
-        # Filter out any None values
         literals = [lit for lit in literals if lit.value]
-
-        # Sort by language for deterministic UID
         literals.sort(key=lambda lit: lit.language or '')
-
-        # Build UID string
         return "-".join(f"{lit.language}-{lit.value}" for lit in literals)
