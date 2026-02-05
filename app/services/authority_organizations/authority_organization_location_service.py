@@ -71,6 +71,16 @@ class AuthorityOrganizationLocationService:
                                                                    address_list)
         return True
 
+    async def get_location_from_state(self, state_uid: str):
+        """
+        Get location information for an AuthorityOrganizationState
+        :param _: unused (for compatibility with signal handlers)
+        :param state_uid: the AuthorityOrganizationState uid
+        :return:
+        """
+        auth_org_dao = self._get_authority_org_dao()
+        addresses, places = await auth_org_dao.get_location_of_state_by_uid(state_uid)
+        return addresses, places
 
     def _get_authority_org_dao(self) -> AuthorityOrganizationDAO:
         factory = AbstractDAOFactory().get_dao_factory(get_app_settings().graph_db)

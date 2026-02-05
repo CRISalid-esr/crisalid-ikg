@@ -332,6 +332,47 @@ class AuthorityOrganizationDAO(Neo4jDAO):
                     return self._hydrate_authority_organization_root(record)
 
     @handle_database_errors
+    async def get_location_of_state_by_uid(
+            self,
+            state_uid: str,
+    ) -> dict:
+        """
+        Retrieve all places and structured physical addresses linked to a state.
+        """
+
+        if not state_uid:
+            raise ValueError("state_uid is required")
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        load_query("get_places_and_addresses_by_state_uid"),
+                        state_uid=state_uid,
+                    )
+
+                    record = await result.single()
+
+                    if not record:
+                        raise NotFoundError(
+                            f"AuthorityOrganizationState with uid {state_uid} not found"
+                        )
+
+                    places = [
+                        Place(**p)
+                        for p in (record["places"] or [])
+                        if p is not None
+                    ]
+
+                    addresses = [
+                        StructuredPhysicalAddress(**a)
+                        for a in (record["addresses"] or [])
+                        if a is not None
+                    ]
+
+                    return addresses, places
+
+    @handle_database_errors
     async def attach_authority_organization_states_to_root(self, root_uid: str,
                                                            state_uids: list[str]) -> None:
         """
