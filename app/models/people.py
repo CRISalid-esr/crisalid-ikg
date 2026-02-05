@@ -182,3 +182,13 @@ class Person(Agent[PersonIdentifierType]):
              id.type.value == "orcid"),
             (None, None)
         )
+
+    def has_id_hal_s(self):
+        """
+        Get the id_hal_s identifier of the person and if it is authenticated
+        """
+        return next(
+            ((id.value, bool(getattr(id, "authenticated", None))) for id in self.identifiers if
+             id.type.value == "id_hal_s"),
+            (None, None)
+        )

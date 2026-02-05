@@ -82,13 +82,21 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
                                  "ADD action type and should be a string.")
 
 
-            received_orcid = ((json_payload.get("parameters", {}).get("identifier") or {}).
-                              get("value")) if (json_payload.get("parameters", {}).
-                                                get("identifier", {}).
-                                                get("type") == "ORCID") else None
+            received_identifier = ((json_payload.get("parameters", {}).get("identifier") or {})
+                                   .get("value", None))
+            identifier_type = ((json_payload.get("parameters", {}).get("identifier") or {})
+                               .get("type", None))
 
-            service = PeopleService()
-            await service.authenticate_orcid(json_payload["targetUid"],
-                                             received_orcid, json_payload["timestamp"])
+            if received_identifier and identifier_type:
+                service = PeopleService()
+                await service.authenticate_identifier(json_payload["targetUid"],
+                                                      identifier_type.lower(),
+                                                      received_identifier,
+                                                      json_payload["timestamp"])
 
+            else:
+                raise ValueError(
+                    f"No identifier or identifier type given by message "
+                    f"for person {json_payload["targetUid"]}. No authentication possible"
+                )
             return

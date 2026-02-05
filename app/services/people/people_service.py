@@ -150,7 +150,54 @@ class PeopleService:
         dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.get_all_uids(external=external)
 
-    async def authenticate_orcid(self, person_uid: str, received_orcid: str, timestamp: str):
+    async def authenticate_identifier(self, person_uid: str,
+                                      identifier_type:str, received_identifier: str,
+                                      timestamp: str):
+        """
+        Authenticate a person's identifier
+        """
+        if identifier_type == "id_hal_s":
+            await self._authenticate_id_hal_s(person_uid, received_identifier, timestamp)
+
+        elif identifier_type == "orcid":
+            await self._authenticate_orcid(person_uid, received_identifier, timestamp)
+
+        return
+
+    async def _authenticate_id_hal_s(self, person_uid: str, received_id_hal_s: str, timestamp: str):
+        """
+        Authenticate a person's id_hal_s if necessary
+        """
+        person = await self.get_person(person_uid)
+        existing_hal, authenticated_existing_hal = person.has_id_hal_s()
+
+        if existing_hal is None:
+            new_orcid_identifier = PersonIdentifier(
+                type="id_hal_s",
+                value=received_id_hal_s,
+                authenticated=True,
+                authentication_date=timestamp
+            )
+            person.identifiers.append(new_orcid_identifier)
+
+        elif existing_hal == received_id_hal_s and authenticated_existing_hal:
+            logger.debug(f"Id_hal_s already authenticated for person {person_uid}.")
+            raise ValueError(f"ORCID {existing_hal} is already authenticated "
+                             f"for person {person_uid}.")
+
+        else:
+            hal_identifier = next(
+                (id for id in person.identifiers if id.type.value == "id_hal_s"), None
+            )
+            hal_identifier.value = received_id_hal_s
+            hal_identifier.authenticated = True
+            hal_identifier.authentication_date = timestamp
+
+        await self.update_person(person)
+        logger.debug(f"Id_hal_s authenticated for person {person_uid}.")
+        return
+
+    async def _authenticate_orcid(self, person_uid: str, received_orcid: str, timestamp: str):
         """
         Authenticate a person's Orcid if necessary
         """
