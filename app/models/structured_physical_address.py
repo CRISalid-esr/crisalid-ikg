@@ -21,28 +21,21 @@ class StructuredPhysicalAddress(BaseModel):
     country: List[Literal] = []
     continent: Optional[List[Literal]] = []
 
-    @model_validator(mode="before")
-    @classmethod
-    def _build_uid(cls, values):
-        """
-        Build a unique identifier for the structured address by concatenating its fields.
-        :param values:
-        :return:
-        """
-        values['uid'] = cls._generate_uid(values)
-        return values
+    @model_validator(mode="after")
+    def _build_uid(self):
+        if not self.uid:
+            self.uid = self._generate_uid()
+        return self
 
-    @staticmethod
-    def _generate_uid(values):
-        """
-        Generate a unique identifier for the structured address by concatenating its fields
-        Sort literals by language to ensure consistency
-        :param values:
-        :return:
-        """
-        return "-".join(
-            [f"{literal.language}-{literal.value}" for literal in sorted(
-                values['street'] + values['city'] + values['zip_code'] + values[
-                    'state_or_province'] + values['country'],
-                key=lambda literal: literal.language)]
-        )
+    def _generate_uid(self) -> str:
+        # Combine all literal lists
+        literals = self.street + self.city + self.zip_code + self.state_or_province + self.country
+
+        # Filter out any None values
+        literals = [lit for lit in literals if lit.value]
+
+        # Sort by language for deterministic UID
+        literals.sort(key=lambda lit: lit.language or '')
+
+        # Build UID string
+        return "-".join(f"{lit.language}-{lit.value}" for lit in literals)
