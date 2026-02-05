@@ -95,8 +95,9 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
                                                       json_payload["timestamp"])
 
             else:
+                target_uid = json_payload["targetUid"]
                 raise ValueError(
                     f"No identifier or identifier type given by message "
-                    f"for person {json_payload["targetUid"]}. No authentication possible"
+                    f"for person {target_uid}. No authentication possible"
                 )
             return
