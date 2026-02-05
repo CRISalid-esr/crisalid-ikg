@@ -56,7 +56,7 @@ FOREACH (address_data IN CASE WHEN size($addresses) > 0 THEN $addresses ELSE [] 
       language: coalesce(nullif(trim(continent_data.language), ''), 'und'),
       type: 'institution_continent_name'
     })
-    MERGE (address)-[:HAS_CONTINENT]->(country)
+    MERGE (address)-[:HAS_CONTINENT]->(continent)
   )
 )
 
