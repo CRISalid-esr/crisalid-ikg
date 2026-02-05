@@ -431,7 +431,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
                     "country": [{"value": c.value, "language": c.language} for c in
                                 address.country if c.value] or None,
                     "continent": [{"value": c.value, "language": c.language} for c in
-                                address.country if c.value] or None
+                                address.continent if c.value] or None
                 }
                 addresses.append(address_dict)
 
