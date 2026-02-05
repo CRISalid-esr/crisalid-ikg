@@ -15,27 +15,38 @@ async def fixture_persisted_person_a_pydantic_model(person_a_pydantic_model) -> 
     await people_service.create_person(person_a_pydantic_model)
     return person_a_pydantic_model
 
-@pytest_asyncio.fixture(name="persisted_person_a_no_orcid_pydantic_model")
-async def fixture_persisted_person_a_no_orcid_pydantic_model(
-        person_a_no_orcid_pydantic_model) -> Person:
+@pytest_asyncio.fixture(name="persisted_person_a_with_hal_pydantic_model")
+async def fixture_persisted_person_a_with_hal_pydantic_model(
+        person_a_with_hal_pydantic_model) -> Person:
+    """
+    Create a basic persisted person pydantic model
+    :return: basic persisted person pydantic model
+    """
+    people_service: PeopleService = PeopleService()
+    await people_service.create_person(person_a_with_hal_pydantic_model)
+    return person_a_with_hal_pydantic_model
+
+@pytest_asyncio.fixture(name="persisted_person_a_no_orcid_no_hal_pydantic_model")
+async def fixture_persisted_person_a_no_orcid_no_hal_pydantic_model(
+        person_a_no_orcid_no_hal_pydantic_model) -> Person:
     """
     Create a basic persisted person pydantic model with no orcid identifier
     :return: basic persisted person pydantic model with no orcid identifier
     """
     people_service: PeopleService = PeopleService()
-    await people_service.create_person(person_a_no_orcid_pydantic_model)
-    return person_a_no_orcid_pydantic_model
+    await people_service.create_person(person_a_no_orcid_no_hal_pydantic_model)
+    return person_a_no_orcid_no_hal_pydantic_model
 
-@pytest_asyncio.fixture(name="persisted_person_a_orcid_authenticated_pydantic_model")
-async def fixture_persisted_person_a_orcid_authenticated_pydantic_model(
-        person_a_orcid_authenticated_pydantic_model) -> Person:
+@pytest_asyncio.fixture(name="persisted_person_a_orcid_hal_authenticated_pydantic_model")
+async def fixture_persisted_person_a_orcid_hal_authenticated_pydantic_model(
+        person_a_orcid_hal_authenticated_pydantic_model) -> Person:
     """
     Create a basic persisted person pydantic model with an already authenticated orcid
     :return: basic persisted person pydantic model with an already authenticated orcid
     """
     people_service: PeopleService = PeopleService()
-    await people_service.create_person(person_a_orcid_authenticated_pydantic_model)
-    return person_a_orcid_authenticated_pydantic_model
+    await people_service.create_person(person_a_orcid_hal_authenticated_pydantic_model)
+    return person_a_orcid_hal_authenticated_pydantic_model
 
 @pytest_asyncio.fixture(name="person_a_pydantic_model")
 async def fixture_person_a_pydantic_model(person_a_json_data) -> Person:
@@ -45,22 +56,38 @@ async def fixture_person_a_pydantic_model(person_a_json_data) -> Person:
     """
     return _person_from_json_data(person_a_json_data)
 
-@pytest_asyncio.fixture(name="person_a_no_orcid_pydantic_model")
-async def fixture_person_a_no_orcid_pydantic_model(person_a_no_orcid_json_data) -> Person:
+@pytest_asyncio.fixture(name="person_a_with_hal_pydantic_model")
+async def fixture_person_a_with_hal_pydantic_model(person_a_json_data) -> Person:
     """
     Create a basic person pydantic model
     :return: basic person pydantic model
     """
-    return _person_from_json_data(person_a_no_orcid_json_data)
+    person_a_with_hal_json_data = person_a_json_data.copy()
+    new_identifier_list = [
+        {"type": "id_hal_s", "value": "john-doe"},
+        {"type": "orcid", "value": "0000-0001-2345-6789"},
+        {"type": "local","value": "jdoe_with_hal@univ-domain.edu"}
+    ]
+    person_a_with_hal_json_data["identifiers"] = new_identifier_list
+    return _person_from_json_data(person_a_with_hal_json_data)
 
-@pytest_asyncio.fixture(name="person_a_orcid_authenticated_pydantic_model")
-async def fixture_person_a_orcid_authenticated_pydantic_model(
-        person_a_orcid_authenticated_json_data) -> Person:
+@pytest_asyncio.fixture(name="person_a_no_orcid_no_hal_pydantic_model")
+async def fixture_person_a_no_orcid_no_hal_pydantic_model(
+        person_a_no_orcid_no_hal_json_data) -> Person:
     """
     Create a basic person pydantic model
     :return: basic person pydantic model
     """
-    return _person_from_json_data(person_a_orcid_authenticated_json_data)
+    return _person_from_json_data(person_a_no_orcid_no_hal_json_data)
+
+@pytest_asyncio.fixture(name="person_a_orcid_hal_authenticated_pydantic_model")
+async def fixture_person_a_orcid_hal_authenticated_pydantic_model(
+        person_a_orcid_hal_authenticated_json_data) -> Person:
+    """
+    Create a basic person pydantic model
+    :return: basic person pydantic model
+    """
+    return _person_from_json_data(person_a_orcid_hal_authenticated_json_data)
 
 
 @pytest_asyncio.fixture(name="person_a_json_data")
@@ -71,21 +98,21 @@ async def fixture_person_a_json_data(_base_path) -> dict:
     """
     return _person_json_data_from_file(_base_path, "person_a")
 
-@pytest_asyncio.fixture(name="person_a_no_orcid_json_data")
-async def fixture_person_a_no_orcid_json_data(_base_path) -> dict:
+@pytest_asyncio.fixture(name="person_a_no_orcid_no_hal_json_data")
+async def fixture_person_a_no_orcid_no_hal_json_data(_base_path) -> dict:
     """
     Create a basic person json data
     :return: basic person json data
     """
-    return _person_json_data_from_file(_base_path, "person_a_no_orcid")
+    return _person_json_data_from_file(_base_path, "person_a_no_orcid_no_hal")
 
-@pytest_asyncio.fixture(name="person_a_orcid_authenticated_json_data")
-async def fixture_person_a_orcid_authenticated_json_data(_base_path) -> dict:
+@pytest_asyncio.fixture(name="person_a_orcid_hal_authenticated_json_data")
+async def fixture_person_a_orcid_hal_authenticated_json_data(_base_path) -> dict:
     """
     Create a basic person json data
     :return: basic person json data
     """
-    return _person_json_data_from_file(_base_path, "person_a_orcid_authenticated")
+    return _person_json_data_from_file(_base_path, "person_a_orcid_hal_authenticated")
 
 
 # keep raw json as person_a_json_data is modifier by "before" pydantic validators

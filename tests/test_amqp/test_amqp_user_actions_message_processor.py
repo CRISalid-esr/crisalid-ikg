@@ -118,19 +118,19 @@ async def test_amqp_user_actions_processor_fetch_triggers_signal(
     assert kwargs["payload"]["harvesters"] == ["hal", "scanr", "idref"]
 
 
-@pytest.fixture(name="mocked_authenticate_orcid")
-def mocked_authenticate_orcid_fixture():
+@pytest.fixture(name="mocked_authenticate_identifier")
+def mocked_authenticate_identifier_fixture():
     """
     Fixture to mock the `amqp_interface.fetch_publications` signal receiver.
     """
-    with patch("app.services.people.people_service.PeopleService.authenticate_orcid",
+    with patch("app.services.people.people_service.PeopleService.authenticate_identifier",
                new_callable=AsyncMock) as mocked:
         yield mocked
 
 
 @pytest.mark.asyncio
-async def test_amqp_user_actions_processor_authenticate_orcid(
-        mocked_authenticate_orcid,
+async def test_amqp_user_actions_processor_authenticate_identifier(
+        mocked_authenticate_identifier,
         test_app,  # pylint: disable=unused-argument
 ):
     """
@@ -160,9 +160,10 @@ async def test_amqp_user_actions_processor_authenticate_orcid(
     # pylint: disable=protected-access
     await processor._process_message("task.people.person.*", payload_bytes)
 
-    mocked_authenticate_orcid.assert_awaited_once()
-    args, _ = mocked_authenticate_orcid.call_args
-    assert args == ('local-jdoe@univ-domain.edu', '0000-0001-2345-6789', '2025-08-26T06:17:28.243Z')
+    mocked_authenticate_identifier.assert_awaited_once()
+    args, _ = mocked_authenticate_identifier.call_args
+    assert args == ('local-jdoe@univ-domain.edu', 'orcid',
+                    '0000-0001-2345-6789', '2025-08-26T06:17:28.243Z')
 
 
 @pytest.mark.asyncio

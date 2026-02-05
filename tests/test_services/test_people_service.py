@@ -323,7 +323,7 @@ async def test_update_person_employment_position(
 
 
 async def test_authenticate_orcid_same(
-        persisted_person_a_pydantic_model: Person,
+        persisted_person_a_pydantic_model: Person # pylint: disable=unused-argument
 ) -> None:
     """
     Given an existing person with a non authenticated orcid
@@ -331,7 +331,8 @@ async def test_authenticate_orcid_same(
     Check that authenticating updates the orcid identifier
     """
     person_uid = "local-jdoe@univ-domain.edu"
-    received_orcid = "0000-0001-2345-6789"
+    identifier_type = "orcid"
+    received_identifier = "0000-0001-2345-6789"
     timestamp = "2025-08-26T06:17:28.243Z"
 
 
@@ -341,31 +342,33 @@ async def test_authenticate_orcid_same(
     orcid_identifier = next(
         (id for id in person_before_auth.identifiers if id.type.value == "orcid"), None
     )
-    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.value == received_identifier
     assert orcid_identifier.authentication_date is None
     assert orcid_identifier.authenticated is None
 
-    await service.authenticate_orcid(person_uid, received_orcid, timestamp)
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
 
     person_after_auth = await service.get_person(person_uid)
     orcid_identifier = next(
         (id for id in person_after_auth.identifiers if id.type.value == "orcid"), None
     )
-    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.value == received_identifier
     assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
     assert orcid_identifier.authenticated
 
 
 async def test_authenticate_orcid_same_authenticated(
-        persisted_person_a_orcid_authenticated_pydantic_model: Person,
+        persisted_person_a_orcid_hal_authenticated_pydantic_model: Person # pylint: disable=unused-argument
 ) -> None:
     """
     Given an existing person with an authenticated orcid
     Check that authenticating returns a value error because it is already authenticated
     """
     person_uid = "local-jdoe_auth_orcid@univ-domain.edu"
-    received_orcid = "0000-0001-2345-6789"
+    identifier_type = "orcid"
+    received_identifier = "0000-0001-2345-6789"
     timestamp = "2025-08-26T06:17:28.243Z"
 
     actual_authentication_date = "2025-08-25T06:17:28.243Z"
@@ -375,34 +378,37 @@ async def test_authenticate_orcid_same_authenticated(
     orcid_identifier = next(
         (id for id in person_before_auth.identifiers if id.type.value == "orcid"), None
     )
-    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.value == received_identifier
     assert orcid_identifier.authenticated is True
     assert (orcid_identifier.authentication_date ==
             datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
 
     with pytest.raises(ValueError):
-        await service.authenticate_orcid(person_uid, received_orcid, timestamp)
+        await service.authenticate_identifier(person_uid, identifier_type,
+                                              received_identifier, timestamp)
 
     person_after_auth = await service.get_person(person_uid)
     orcid_identifier = next(
         (id for id in person_after_auth.identifiers if id.type.value == "orcid"), None
     )
-    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.value == received_identifier
     assert orcid_identifier.authenticated is True
     assert (orcid_identifier.authentication_date ==
             datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
 
 
 async def test_authenticate_orcid_different(
-        persisted_person_a_pydantic_model: Person,
+        persisted_person_a_pydantic_model: Person # pylint: disable=unused-argument
 ) -> None:
     """
     Given an existing person with a non authenticated orcid
-    Check that authenticating updates the orcid identifier if they are similar
+    Check that authenticating does not update the orcid
+        if it is different from the one already present
     """
     person_uid = "local-jdoe@univ-domain.edu"
     actual_orcid = "0000-0001-2345-6789"
-    received_orcid = "0000-0001-2345-1234"
+    identifier_type = "orcid"
+    received_identifier = "0000-0001-2345-4321"
     timestamp = "2025-08-26T06:17:28.243Z"
 
 
@@ -416,7 +422,8 @@ async def test_authenticate_orcid_different(
     assert orcid_identifier.authenticated is None
 
     with pytest.raises(ValueError):
-        await service.authenticate_orcid(person_uid, received_orcid, timestamp)
+        await service.authenticate_identifier(person_uid, identifier_type,
+                                              received_identifier, timestamp)
 
     person_after_auth = await service.get_person(person_uid)
     orcid_identifier = next(
@@ -425,15 +432,17 @@ async def test_authenticate_orcid_different(
     assert orcid_identifier.value == actual_orcid
     assert orcid_identifier.authenticated is None
 
+
 async def test_authenticate_orcid_new(
-        persisted_person_a_no_orcid_pydantic_model: Person,
+        persisted_person_a_no_orcid_no_hal_pydantic_model: Person # pylint: disable=unused-argument
 ) -> None:
     """
     Given an existing person with no orcid identifier
     Check that the identifier is added, directly authenticated
     """
     person_uid = "local-jdoe_no_orcid@univ-domain.edu"
-    received_orcid = "0000-0001-2345-6789"
+    identifier_type = "orcid"
+    received_identifier = "0000-0001-2345-6789"
     timestamp = "2025-08-26T06:17:28.243Z"
 
 
@@ -444,13 +453,154 @@ async def test_authenticate_orcid_new(
     )
     assert orcid_identifier is None
 
-    await service.authenticate_orcid(person_uid, received_orcid, timestamp)
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
 
     person_after_auth = await service.get_person(person_uid)
     orcid_identifier = next(
         (id for id in person_after_auth.identifiers if id.type.value == "orcid"), None
     )
-    assert orcid_identifier.value == received_orcid
+    assert orcid_identifier.value == received_identifier
     assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
     assert orcid_identifier.authenticated
+
+async def test_authenticate_id_hal_s_new(
+        persisted_person_a_no_orcid_no_hal_pydantic_model: Person # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with no id_hal_s identifier
+    Check that the identifier is added, directly authenticated
+    """
+    person_uid = "local-jdoe_no_orcid@univ-domain.edu"
+    identifier_type = "id_hal_s"
+    received_identifier = "john-doe"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+
+    service = PeopleService()
+    person_before_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_before_auth.identifiers if id.type.value == "id_hal_s"), None
+    )
+    assert hal_identifier is None
+
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
+
+    person_after_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_after_auth.identifiers if id.type.value == "id_hal_s"), None
+    )
+    assert hal_identifier.value == received_identifier
+    assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00"))
+    assert hal_identifier.authenticated
+
+async def test_authenticate_id_hal_s_same_authenticated(
+        persisted_person_a_orcid_hal_authenticated_pydantic_model: Person # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with an authenticated id_hal_s
+    Check that authenticating returns a value error because it is already authenticated
+    """
+    person_uid = "local-jdoe_auth_orcid@univ-domain.edu"
+    identifier_type = "id_hal_s"
+    received_identifier = "john-doe"
+    timestamp = "2025-08-26T06:17:28.245Z"
+
+    actual_authentication_date = "2025-08-25T06:17:28.243Z"
+
+    service = PeopleService()
+    person_before_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_before_auth.identifiers if id.type.value == "id_hal_s"), None
+    )
+    assert hal_identifier.value == received_identifier
+    assert hal_identifier.authenticated is True
+    assert (hal_identifier.authentication_date ==
+            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
+
+    with pytest.raises(ValueError):
+        await service.authenticate_identifier(person_uid, identifier_type,
+                                              received_identifier, timestamp)
+
+    person_after_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_after_auth.identifiers if id.type.value == "id_hal_s"), None
+    )
+    assert hal_identifier.value == received_identifier
+    assert hal_identifier.authenticated is True
+    assert (hal_identifier.authentication_date ==
+            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
+
+async def test_authenticate_id_hal_s_same(
+        persisted_person_a_with_hal_pydantic_model: Person # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with a non authenticated id_hal_s
+    Given an authentication with the same id_hal_s
+    Check that authenticating updates the id_hal_s identifier
+    """
+    person_uid = "local-jdoe_with_hal@univ-domain.edu"
+    identifier_type = "id_hal_s"
+    received_identifier = "john-doe"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+
+    service = PeopleService()
+
+    person_before_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_before_auth.identifiers if id.type.value == "id_hal_s"), None
+    )
+    assert hal_identifier.value == received_identifier
+    assert hal_identifier.authentication_date is None
+    assert hal_identifier.authenticated is None
+
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
+
+    person_after_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_after_auth.identifiers if id.type.value == "id_hal_s"), None
+    )
+    assert hal_identifier.value == received_identifier
+    assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00"))
+    assert hal_identifier.authenticated
+
+async def test_authenticate_id_hal_s_different(
+        persisted_person_a_with_hal_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with a non authenticated id_hal_s
+    Check that authenticating with a different id_hal_s
+        overrides the id_hal_s value and authenticate
+    """
+    person_uid = "local-jdoe_with_hal@univ-domain.edu"
+    actual_hal = "john-doe"
+    identifier_type = "id_hal_s"
+    received_identifier = "jdoe"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+    service = PeopleService()
+    person_before_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_before_auth.identifiers if id.type.value == "id_hal_s"), None
+    )
+    assert hal_identifier.value == actual_hal
+    assert hal_identifier.authentication_date is None
+    assert hal_identifier.authenticated is None
+
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
+
+    person_after_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_after_auth.identifiers if id.type.value == "id_hal_s"), None
+    )
+    assert hal_identifier.value == received_identifier
+    assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00"))
+    assert hal_identifier.authenticated
