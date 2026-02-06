@@ -17,7 +17,7 @@ from app.models.authority_organization_state import AuthorityOrganizationState
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.places import Place
-from app.models.source_organizations import SourceOrganization  # for enum
+from app.models.source_organizations import SourceOrganization
 from app.models.structured_physical_address import StructuredPhysicalAddress
 
 

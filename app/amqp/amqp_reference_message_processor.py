@@ -46,8 +46,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
             logger.error(f"Error processing person data associated with incoming reference"
                          f" {person_data} : {e}")
             raise e
-        try: # Incomine source record with contributions → affiliations → identifiers →
-            # extra_information
+        try:
             source_record = SourceRecord(**reference_data)
         except (ValueError, AttributeError) as e:
             logger.error(f"Error processing source record data {reference_data} : {e}")
