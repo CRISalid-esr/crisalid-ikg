@@ -36,6 +36,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_document_uid_constraint(tx)
         await cls._create_institution_uid_constraint(tx)
         await cls._create_structured_physical_address_uid_constraint(tx)
+        await cls._create_place_lat_lon_unique_constraint(tx)
         await cls._create_research_structure_uid_unique_constraint(tx)
         await cls._create_publication_identifier_unique_type_value_constraint(tx)
         await cls._create_source_issue_unique_source_identifier_source_constraint(tx)
@@ -247,6 +248,18 @@ class Neo4jSetup(Setup[AsyncDriver]):
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating StructuredPhysicalAddress uid unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_place_lat_lon_unique_constraint(tx: AsyncManagedTransaction):
+        query = """
+            CREATE CONSTRAINT place_latitude_longitude_unique IF NOT EXISTS
+            FOR (p:Place) REQUIRE (p.latitude, p.longitude) IS UNIQUE;
+            """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating Place (latitude, longitude) unique constraint: {e}")
             raise e
 
     @staticmethod
