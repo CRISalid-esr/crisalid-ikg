@@ -65,6 +65,7 @@ async def fixture_person_a_with_hal_pydantic_model(person_a_json_data) -> Person
     person_a_with_hal_json_data = person_a_json_data.copy()
     new_identifier_list = [
         {"type": "id_hal_s", "value": "john-doe"},
+        {"type": "id_hal_i", "value": "012345"},
         {"type": "orcid", "value": "0000-0001-2345-6789"},
         {"type": "local","value": "jdoe_with_hal@univ-domain.edu"}
     ]

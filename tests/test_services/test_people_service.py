@@ -604,3 +604,39 @@ async def test_authenticate_id_hal_s_different(
     assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
     assert hal_identifier.authenticated
+
+
+async def test_authenticate_id_hal_i_different(
+        persisted_person_a_with_hal_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with a non authenticated id_hal_i
+    Check that authenticating with a different id_hal_i
+        overrides the id_hal_i value and authenticate
+    """
+    person_uid = "local-jdoe_with_hal@univ-domain.edu"
+    actual_hal = "012345"
+    identifier_type = "id_hal_i"
+    received_identifier = "543210"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+    service = PeopleService()
+    person_before_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_before_auth.identifiers if id.type.value == "id_hal_i"), None
+    )
+    assert hal_identifier.value == actual_hal
+    assert hal_identifier.authentication_date is None
+    assert hal_identifier.authenticated is None
+
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
+
+    person_after_auth = await service.get_person(person_uid)
+    hal_identifier = next(
+        (id for id in person_after_auth.identifiers if id.type.value == "id_hal_i"), None
+    )
+    assert hal_identifier.value == received_identifier
+    assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00"))
+    assert hal_identifier.authenticated

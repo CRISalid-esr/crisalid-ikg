@@ -62,6 +62,7 @@ class Person(Agent[PersonIdentifierType]):
                     f"Invalid identifier with type {identifier.type} and value {identifier.value}"
                 )
                 continue
+
             if not PersonIdentifierType.validate_identifier(identifier.type, identifier.value):
                 logger.warning(
                     "Invalid identifier with type "
@@ -172,23 +173,3 @@ class Person(Agent[PersonIdentifierType]):
         if not last_name:
             return ""
         return last_name[0].value
-
-    def has_orcid(self):
-        """
-        Get the orcid identifier of the person and if it is authenticated
-        """
-        return next(
-            ((id.value, bool(getattr(id, "authenticated", None))) for id in self.identifiers if
-             id.type.value == "orcid"),
-            (None, None)
-        )
-
-    def has_id_hal_s(self):
-        """
-        Get the id_hal_s identifier of the person and if it is authenticated
-        """
-        return next(
-            ((id.value, bool(getattr(id, "authenticated", None))) for id in self.identifiers if
-             id.type.value == "id_hal_s"),
-            (None, None)
-        )

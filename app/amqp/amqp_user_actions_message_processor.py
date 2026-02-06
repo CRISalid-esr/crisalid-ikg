@@ -85,19 +85,26 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
             received_identifier = ((json_payload.get("parameters", {}).get("identifier") or {})
                                    .get("value", None))
             identifier_type = ((json_payload.get("parameters", {}).get("identifier") or {})
-                               .get("type", None))
+                               .get("type", ''))
 
-            if received_identifier and identifier_type:
-                service = PeopleService()
-                await service.authenticate_identifier(json_payload["targetUid"],
-                                                      identifier_type.lower(),
-                                                      received_identifier,
-                                                      json_payload["timestamp"])
+            allowed_id_types = ["orcid", "id_hal_s"]
+            target_uid = json_payload.get("targetUid", None)
 
+            if target_uid :
+                if received_identifier and identifier_type.lower() in allowed_id_types :
+                    service = PeopleService()
+                    await service.authenticate_identifier(json_payload["targetUid"],
+                                                          identifier_type.lower(),
+                                                          received_identifier,
+                                                          json_payload["timestamp"])
+
+                else:
+                    raise ValueError(
+                        f"No identifier or identifier type given by message "
+                        f"for person {target_uid}. No authentication possible"
+                    )
             else:
-                target_uid = json_payload["targetUid"]
                 raise ValueError(
-                    f"No identifier or identifier type given by message "
-                    f"for person {target_uid}. No authentication possible"
+                    "No target UID given. No authentication possible."
                 )
             return

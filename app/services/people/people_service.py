@@ -8,6 +8,7 @@ from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.person_dao import PersonDAO
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.employments import Employment
+from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.services.organizations.institution_service import InstitutionService
 from app.signals import person_created, person_identifiers_updated, person_unchanged, \
@@ -156,45 +157,47 @@ class PeopleService:
         """
         Authenticate a person's identifier
         """
-        if identifier_type == "id_hal_s":
-            await self._authenticate_id_hal_s(person_uid, received_identifier, timestamp)
+        if identifier_type in ["id_hal_s", "id_hal_i"]:
+            await self._authenticate_id_hal(person_uid, received_identifier,
+                                            identifier_type, timestamp)
 
         elif identifier_type == "orcid":
             await self._authenticate_orcid(person_uid, received_identifier, timestamp)
 
         return
 
-    async def _authenticate_id_hal_s(self, person_uid: str, received_id_hal_s: str, timestamp: str):
+    async def _authenticate_id_hal(self, person_uid: str, received_id_hal: str,
+                                   identifier_type: str, timestamp: str):
         """
-        Authenticate a person's id_hal_s if necessary
+        Authenticate a person's id_hal if necessary
         """
         person = await self.get_person(person_uid)
-        existing_hal, authenticated_existing_hal = person.has_id_hal_s()
+        hal_identifier = person.get_identifier(PersonIdentifierType.from_str(identifier_type))
 
-        if existing_hal is None:
-            new_orcid_identifier = PersonIdentifier(
-                type="id_hal_s",
-                value=received_id_hal_s,
+        if hal_identifier is None:
+            new_hal_identifier = PersonIdentifier(
+                type=identifier_type,
+                value=received_id_hal,
                 authenticated=True,
                 authentication_date=timestamp
             )
-            person.identifiers.append(new_orcid_identifier)
+            person.identifiers.append(new_hal_identifier)
 
-        elif existing_hal == received_id_hal_s and authenticated_existing_hal:
-            logger.debug(f"Id_hal_s already authenticated for person {person_uid}.")
-            raise ValueError(f"ORCID {existing_hal} is already authenticated "
+        elif hal_identifier.value == received_id_hal and hal_identifier.authenticated:
+            logger.debug(f"{identifier_type} already authenticated for person {person_uid}.")
+            raise ValueError(f"{identifier_type} {hal_identifier.value} is already authenticated "
                              f"for person {person_uid}.")
 
         else:
             hal_identifier = next(
-                (id for id in person.identifiers if id.type.value == "id_hal_s"), None
+                (id for id in person.identifiers if id.type.value == identifier_type), None
             )
-            hal_identifier.value = received_id_hal_s
+            hal_identifier.value = received_id_hal
             hal_identifier.authenticated = True
             hal_identifier.authentication_date = timestamp
 
         await self.update_person(person)
-        logger.debug(f"Id_hal_s authenticated for person {person_uid}.")
+        logger.debug(f"{identifier_type} authenticated for person {person_uid}.")
         return
 
     async def _authenticate_orcid(self, person_uid: str, received_orcid: str, timestamp: str):
@@ -202,30 +205,30 @@ class PeopleService:
         Authenticate a person's Orcid if necessary
         """
         person = await self.get_person(person_uid)
-        existing_orcid, authenticated_existing_orcid = person.has_orcid()
+        orcid_identifier = person.get_identifier(PersonIdentifierType.ORCID)
 
-        if existing_orcid is None:
+        if orcid_identifier is None:
             new_orcid_identifier = PersonIdentifier(
-                type="orcid",
+                type=PersonIdentifierType.ORCID,
                 value=received_orcid,
                 authenticated=True,
                 authentication_date=timestamp
             )
             person.identifiers.append(new_orcid_identifier)
 
-        elif existing_orcid != received_orcid:
+        elif orcid_identifier.value != received_orcid:
             logger.debug(
                 f"Existing and received ORCID are different for person "
                 f"{person_uid}. No authentication possible"
             )
             raise ValueError(
-                f"Existing ORCID ({existing_orcid}) and received ORCID ({received_orcid})"
+                f"Existing ORCID ({orcid_identifier.value}) and received ORCID ({received_orcid})"
                 f" do not match for person {person_uid}. Authentication aborted."
             )
 
-        elif existing_orcid == received_orcid and authenticated_existing_orcid:
+        elif orcid_identifier.value == received_orcid and orcid_identifier.authenticated:
             logger.debug(f"ORCID already authenticated for person {person_uid}.")
-            raise ValueError(f"ORCID {existing_orcid} is already authenticated "
+            raise ValueError(f"ORCID {orcid_identifier.value} is already authenticated "
                              f"for person {person_uid}.")
 
         else:
