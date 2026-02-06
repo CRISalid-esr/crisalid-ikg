@@ -49,19 +49,21 @@ class AuthorityOrganizationLocationService:
                         place_list.append(Place(latitude=latitude,longitude=longitude))
 
                         address = StructuredPhysicalAddress(
-                            street=[Literal(value=geolocation["street"], language="fr")]
+                            street=[Literal(value=geolocation["street"].strip(), language="fr")]
                                 if "street" in geolocation else [],
-                            city=[Literal(value=geolocation["name"], language="fr")]
+                            city=[Literal(value=geolocation["name"].strip(), language="fr")]
                                 if "name" in geolocation else [],
-                            zip_code=[Literal(value=geolocation["zip_code"], language="fr")]
+                            zip_code=[Literal(value=geolocation["zip_code"].strip(), language="fr")]
                                 if "zip_code" in geolocation else [],
                             state_or_province=[
-                                Literal(value=geolocation["country_subdivision_name"],
+                                Literal(value=geolocation["country_subdivision_name"].strip(),
                                         language="fr")]
                                     if "country_subdivision_name" in geolocation else [],
-                            country=[Literal(value=geolocation["country_name"], language="fr")]
+                            country=[Literal(value=geolocation["country_name"].strip(),
+                                             language="fr")]
                                 if "country_name" in geolocation else [],
-                            continent=[Literal(value=geolocation["continent_name"], language="fr")]
+                            continent=[Literal(value=geolocation["continent_name"].strip(),
+                                               language="fr")]
                                 if "continent_name" in geolocation else [],
                         )
                         address_list.append(address)
