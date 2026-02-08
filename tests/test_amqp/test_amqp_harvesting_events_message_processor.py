@@ -117,7 +117,7 @@ async def test_amqp_harvesting_result_event_is_forwarded(test_app: CrisalidIKG):
                 ],
                 "document_type": [{"label": "Work"}],
                 "issued": "2013-01-01",
-                "harvester": "TestHarvester",
+                "harvester": "hal",
                 "harvester_version": "0.1.0",
                 "identifiers": [
                     {"type": "uri", "value": "http://example.org/doc/123"}

@@ -1,6 +1,6 @@
 {
   "source_identifier": "https://openalex.org/W2081413706",
-  "harvester": "OpenAlex",
+  "harvester": "openalex",
   "harvester_version": "1.7.0",
   "identifiers": [
     {
@@ -63,7 +63,7 @@
     {
       "rank": 1,
       "contributor": {
-        "source": "open_alex",
+        "source": "openalex",
         "source_identifier": "https://openalex.org/A5063392350",
         "name": "Fateh Bendahmane",
         "first_name": null,
@@ -72,12 +72,12 @@
         "structured_name_variants": [],
         "identifiers": [
           {
-            "source": "open_alex",
+            "source": "openalex",
             "type": "orcid",
             "value": "https://orcid.org/0000-0003-1874-4780"
           },
           {
-            "source": "open_alex",
+            "source": "openalex",
             "type": "open_alex",
             "value": "https://openalex.org/A5063392350"
           }

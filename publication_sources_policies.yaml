@@ -4,15 +4,24 @@ harvesters:
   # each platform is listed separately for authors disambiguation step.
   # The order of harvesters matters: it will be used to determine the document type and hence
   # the policy to apply in case of unclear document types (conflicts between sources).
-  - Hal
-  - Idref
-  - Sudoc
-  - OpenEdition
-  - Persee
-  - Science_Plus
-  - ScanR
-  - Scopus
-  - OpenAlex
+  - hal
+  - idref
+  - scanr
+  - scopus
+  - openalex
+harvesting_sources:
+  # The list of harvested sources : they are the same as harvestes,
+  # except for idref which is split into its secondary sources
+  # the order of harvesting sources matters for the same reasons as for harvesters.
+  - hal
+  - idref
+  - scanr
+  - scopus
+  - openalex
+  - sudoc
+  - openedition
+  - persee
+  - scienceplus
 strategies:
   # Example policy 1: strategy for articles, documents of unknown type, and default documents.
   # "global_richest" prioritizes sources based on the richness of metadata for a source record taken as a whole.

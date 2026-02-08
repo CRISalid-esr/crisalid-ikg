@@ -3,6 +3,7 @@ import pytest_asyncio
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.source_journal_dao import SourceJournalDAO
+from app.models.harvesting_sources import HarvestingSource
 from app.models.source_journal import SourceJournal
 
 
@@ -12,7 +13,7 @@ async def fixture_open_alex_source_journal_pydantic_model() -> SourceJournal:
     Source journal pydantic model for OpenAlex
     """
     return SourceJournal(
-        source="OpenAlex",
+        source=HarvestingSource.OPENALEX.value,
         source_identifier="https://openalex.org/S113942516",
         issn=[
             "0007-4217",  # Shared with HAL
@@ -33,7 +34,7 @@ async def fixture_hal_source_journal_pydantic_model() -> SourceJournal:
     Source journal pydantic model for HAL, sharing ISSN with OpenAlex
     """
     return SourceJournal(
-        source="HAL",
+        source=HarvestingSource.HAL.value,
         source_identifier="hal-0123456",
         issn=["0007-4217"],  # Shared
         titles=["Another Sample Journal Title"],
@@ -47,7 +48,7 @@ async def fixture_scanr_source_journal_pydantic_model() -> SourceJournal:
     Source journal pydantic model for ScanR, sharing ISSN with OpenAlex
     """
     return SourceJournal(
-        source="HAL",
+        source=HarvestingSource.HAL.value,
         source_identifier="scanr-0123456",
         issn=["1234-5678"],  # Shared
         titles=["Another Sample Journal Title"],

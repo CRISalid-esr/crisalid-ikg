@@ -3,6 +3,8 @@ import copy
 import pytest
 
 from app.models.document_type import DocumentTypeEnum
+from app.models.harvesters import Harvester
+from app.models.harvesting_sources import HarvestingSource
 from app.models.identifier_types import PublicationIdentifierType, JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifierFormat
 from app.models.literal import Literal
@@ -144,7 +146,7 @@ def test_create_article_source_record_from_hal_data(
     """
     source_record = SourceRecord(**hal_article_source_record_with_custom_metadata_json_data)
     assert source_record
-    assert source_record.harvester == "HAL"
+    assert source_record.harvester == Harvester.HAL.value
     assert source_record.source_identifier == "hal-02732648"
     assert len(source_record.titles) == 1
     assert len(source_record.identifiers) == 2
@@ -176,14 +178,14 @@ def test_create_article_source_record_from_hal_data(
         contribution.rank == 0 and contribution.contributor.name == "Jane Doe"
     )
     assert source_record.issue
-    assert source_record.issue.source == "HAL"
+    assert source_record.issue.source == HarvestingSource.HAL
     assert source_record.issue.source_identifier == "journal-issue-identifier"
     assert len(source_record.issue.titles) == 0
     assert source_record.issue.volume == "164"
     assert source_record.issue.number == ["4"]
     assert source_record.issue.rights is None
     assert source_record.issue.date is None
-    assert source_record.issue.journal.source == "HAL"
+    assert source_record.issue.journal.source == HarvestingSource.HAL
     assert source_record.issue.journal.source_identifier == "2871"
     assert source_record.issue.journal.publisher == "Example Publisher"
     assert source_record.issue.journal.titles == ["Sample Journal Title"]
@@ -194,7 +196,6 @@ def test_create_article_source_record_from_hal_data(
 
 
 def test_create_article_source_record_from_hal_inconsistent_data(
-        # TODO add and handle extra information in ror source organization identifier
         hal_article_source_record_with_inconsistent_custom_metadata_json_data: dict
 ):
     """
@@ -207,7 +208,7 @@ def test_create_article_source_record_from_hal_inconsistent_data(
     source_record = SourceRecord(
         **hal_article_source_record_with_inconsistent_custom_metadata_json_data)
     assert source_record
-    assert source_record.harvester == "HAL"
+    assert source_record.harvester == Harvester.HAL.value
     assert source_record.source_identifier == "hal-02732648"
     assert len(source_record.titles) == 1
     assert len(source_record.identifiers) == 2
@@ -239,14 +240,14 @@ def test_create_article_source_record_from_hal_inconsistent_data(
         contribution.rank == 0 and contribution.contributor.name == "Jane Doe"
     )
     assert source_record.issue
-    assert source_record.issue.source == "HAL"
+    assert source_record.issue.source == HarvestingSource.HAL.value
     assert source_record.issue.source_identifier == "journal-issue-identifier"
     assert len(source_record.issue.titles) == 0
     assert source_record.issue.volume == "164"
     assert source_record.issue.number == ["4"]
     assert source_record.issue.rights is None
     assert source_record.issue.date is None
-    assert source_record.issue.journal.source == "HAL"
+    assert source_record.issue.journal.source == HarvestingSource.HAL
     assert source_record.issue.journal.source_identifier == "2871"
     assert source_record.issue.journal.publisher == "Example Publisher"
     assert source_record.issue.journal.titles == ["Sample Journal Title"]
@@ -268,7 +269,7 @@ async def test_create_article_source_record_from_open_alex_data(
     """
     source_record = SourceRecord(**open_alex_article_source_record_json_data)
     assert source_record
-    assert source_record.harvester == "OpenAlex"
+    assert source_record.harvester == Harvester.OPENALEX.value
     assert source_record.source_identifier == "https://openalex.org/W123456789"
     assert len(source_record.titles) == 1
     assert len(source_record.identifiers) == 2
@@ -304,14 +305,14 @@ async def test_create_article_source_record_from_open_alex_data(
         contribution.rank == 1 and contribution.contributor.name == "John Doe"
     )
     assert source_record.issue
-    assert source_record.issue.source == "ExampleSource"
+    assert source_record.issue.source == HarvestingSource.HAL.value
     assert source_record.issue.source_identifier == "journal-issue-identifier"
     assert len(source_record.issue.titles) == 0
     assert source_record.issue.volume == "105"
     assert source_record.issue.number == ["2"]
     assert source_record.issue.rights is None
     assert source_record.issue.date is None
-    assert source_record.issue.journal.source == "OpenAlex"
+    assert source_record.issue.journal.source == HarvestingSource.OPENALEX
     assert source_record.issue.journal.source_identifier == "https://openalex.org/S113942516"
     assert source_record.issue.journal.publisher == "Example Publisher"
     assert source_record.issue.journal.titles == ["Sample Journal Title"]
@@ -374,9 +375,9 @@ async def test_create_article_source_record_from_open_alex_data_with_issue_title
     """
     source_record = SourceRecord(**open_alex_article_source_record_with_issue_title_json_data)
     assert source_record
-    assert source_record.harvester == "OpenAlex"
+    assert source_record.harvester == Harvester.OPENALEX.value
     assert source_record.issue
-    assert source_record.issue.source == "ExampleSource"
+    assert source_record.issue.source == HarvestingSource.HAL.value
     assert len(source_record.issue.titles) > 0
     expected_issue_titles = ['Some title', 'Some other title']
     assert sorted(source_record.issue.titles) == sorted(expected_issue_titles)
@@ -438,14 +439,14 @@ def test_two_source_records_with_same_text_literal_have_same_key():
 
     sr1 = SourceRecord(
         source_identifier="source1",
-        harvester="TestHarvester",
+        harvester=Harvester.SCOPUS.value,
         titles=[Literal(value="Sample Title")],
         abstracts=[TextLiteral(value=abstract_value, language=language)]
     )
 
     sr2 = SourceRecord(
         source_identifier="source2",
-        harvester="TestHarvester",
+        harvester=Harvester.SCOPUS.value,
         titles=[Literal(value="Sample Title")],
         abstracts=[TextLiteral(value=abstract_value, language=language)]
     )

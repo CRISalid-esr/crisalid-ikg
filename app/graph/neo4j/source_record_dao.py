@@ -313,7 +313,7 @@ class SourceRecordDAO(Neo4jDAO):
             source_record_uid=source_record.uid,
             source_record_url=str(source_record.url) if source_record.url else None,
             source_identifier=source_record.source_identifier,
-            harvester=source_record.harvester,
+            harvester=source_record.harvester.value,
             person_uid=harvested_for.uid,
             issue=issue,
             journal_uid=source_record.issue.journal.uid if source_record.issue and
@@ -361,7 +361,7 @@ class SourceRecordDAO(Neo4jDAO):
             source_record_uid=source_record.uid,
             source_record_url=str(source_record.url) if source_record.url else None,
             source_identifier=source_record.source_identifier,
-            harvester=source_record.harvester,
+            harvester=source_record.harvester.value,
             person_uid=harvested_for.uid,
             issue=issue,
             journal_uid=source_record.issue.journal.uid if source_record.issue and

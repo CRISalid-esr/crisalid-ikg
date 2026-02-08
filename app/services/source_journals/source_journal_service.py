@@ -20,8 +20,9 @@ class SourceJournalService:
         """
         factory = self._get_dao_factory()
         source_journal_dao: SourceJournalDAO = factory.get_dao(SourceJournal)
-        assert source_journal.uid, "Source journal uid should have been computed before from" \
-                                   f"{source_journal.source} and {source_journal.source_identifier}"
+        assert source_journal.uid, (
+            "Source journal uid should have been computed before from" \
+            f"{source_journal.source.value} and {source_journal.source_identifier}")
         existing_source_journal = await source_journal_dao.get_by_uid(source_journal.uid)
         if existing_source_journal:
             journal = await source_journal_dao.update(source_journal)

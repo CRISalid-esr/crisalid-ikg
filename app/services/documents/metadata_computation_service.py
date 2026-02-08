@@ -46,8 +46,8 @@ class MetadataComputationService:
 
     def _sort_source_records(self):
         self.source_records = sorted(self.source_records, key=lambda
-            x: self._get_lowered_harvesters().index(
-            x.harvester.lower()) if x.harvester.lower() in self._get_lowered_harvesters() else len(
+            x: self._get_harvesters().index(
+            x.harvester.value) if x.harvester.lower() in self._get_harvesters() else len(
             self._get_harvesters()))
 
     def _elect_document_type(self) -> List[DocumentTypeEnum]:
@@ -99,9 +99,6 @@ class MetadataComputationService:
 
     def _get_harvesters(self):
         return self._get_policies()['harvesters']
-
-    def _get_lowered_harvesters(self):
-        return [harvester.lower() for harvester in self._get_harvesters()]
 
     def get_elected_strategy(self) -> MergeStrategy:
         """

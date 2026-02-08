@@ -1,3 +1,4 @@
+from app.models.harvesting_sources import HarvestingSource
 from app.models.source_organizations import SourceOrganization
 from app.services.source_contributors.source_organization_service import SourceOrganizationService
 
@@ -35,7 +36,7 @@ async def test_create_source_institution(hal_source_institution_pydantic_model: 
         identifier.type == 'ror' and identifier.value == 'https://ror.org/000000000' for
         identifier in
         source_institution.identifiers)
-    assert source_institution.source == 'hal'
+    assert source_institution.source == HarvestingSource.HAL
     assert source_institution.source_identifier == '2001'
     assert source_institution.name == 'Université Anonyme'
     assert source_institution.type == SourceOrganization.SourceOrganisationType.INSTITUTION
@@ -66,7 +67,7 @@ async def test_create_source_laboratory(hal_source_laboratory_pydantic_model: So
         identifier.type == 'ror' and identifier.value == 'https://ror.org/000000001' for
         identifier in
         source_laboratory.identifiers)
-    assert source_laboratory.source == 'hal'
+    assert source_laboratory.source == HarvestingSource.HAL
     assert source_laboratory.source_identifier == '3002'
     assert source_laboratory.name == 'Laboratoire Interdisciplinaire'
     assert source_laboratory.type == SourceOrganization.SourceOrganisationType.LABORATORY

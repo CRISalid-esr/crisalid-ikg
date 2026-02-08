@@ -1,6 +1,6 @@
 {
   "source_identifier": "https://openalex.org/OpenAlex_doi10.1234/5678xyz",
-  "harvester": "OpenAlex",
+  "harvester": "openalex",
   "harvester_version": "1.2.0",
   "identifiers": [
     {
@@ -102,7 +102,7 @@
     {
       "rank": 0,
       "contributor": {
-        "source": "open_alex",
+        "source": "openalex",
         "source_identifier": "https://openalex.org/A5065084602",
         "name": "John Doe",
         "name_variants": [],
@@ -115,7 +115,7 @@
     {
       "rank": 1,
       "contributor": {
-        "source": "open_alex",
+        "source": "openalex",
         "source_identifier": "https://openalex.org/A5088876922",
         "name": "Jane Smith",
         "name_variants": [],
@@ -128,7 +128,7 @@
     {
       "rank": 2,
       "contributor": {
-        "source": "open_alex",
+        "source": "openalex",
         "source_identifier": "https://openalex.org/A5019602694",
         "name": "Michael Garcia",
         "name_variants": [],

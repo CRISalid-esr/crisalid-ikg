@@ -1,6 +1,6 @@
 {
   "source_identifier": "source_record_id_doi_1_hal_1",
-  "harvester": "ScanR",
+  "harvester": "scanr",
   "issued": "2019-02-01T00:00:00Z",
   "raw_issued": "2019-02",
   "identifiers": [

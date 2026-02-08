@@ -2,12 +2,13 @@ from enum import Enum
 from typing import List, ClassVar, Set
 
 from loguru import logger
-from pydantic import BaseModel, model_validator, field_validator
+from pydantic import model_validator, field_validator
 
 from app.models.source_organization_identifiers import SourceOrganizationIdentifier
+from app.models.sourced_model import SourcedModel
 
 
-class SourceOrganization(BaseModel):
+class SourceOrganization(SourcedModel):
     """
     Source Organization API model
     """
@@ -27,7 +28,6 @@ class SourceOrganization(BaseModel):
     IDENTIFIER_SEPARATOR: ClassVar[str] = "-"
 
     uid: str
-    source: str
     source_identifier: str
     name: str
     type: SourceOrganisationType = SourceOrganisationType.ORGANIZATION
@@ -48,7 +48,7 @@ class SourceOrganization(BaseModel):
         if not source or not source_identifier:
             logger.warning(f"SourceOrganization {values} missing source or source_identifier")
             return values
-        values["uid"] = (f"{source.lower()}"
+        values["uid"] = (f"{source}"
                          f"{SourceOrganization.IDENTIFIER_SEPARATOR}"
                          f"{source_identifier}")
         return values

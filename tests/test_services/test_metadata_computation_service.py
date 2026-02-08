@@ -46,22 +46,22 @@ async def test_recompute_document_from_three_documents(
     "expected_document_class,"
     "expected_strategy",
     [
-        (["Hal", "ScanR", "OpenAlex"],
+        (["hal", "scanr", "openalex"],
          [DocumentTypeEnum.UNKNOWN, DocumentTypeEnum.ARTICLE, DocumentTypeEnum.BOOK],
          DocumentTypeEnum.ARTICLE, JournalArticle, GlobalRichestMergeStrategy),
-        (["Scopus", "ScanR", "OpenAlex"], [DocumentTypeEnum.BOOK, DocumentTypeEnum.UNKNOWN,
+        (["scopus", "scanr", "openalex"], [DocumentTypeEnum.BOOK, DocumentTypeEnum.UNKNOWN,
                                            DocumentTypeEnum.ARTICLE],
          DocumentTypeEnum.BOOK, Book, SourceOrderMergeStrategy),
-        (["Idref", "Hal", "ScanR"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.UNKNOWN,
+        (["Idref", "hal", "scanr"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.UNKNOWN,
                                      DocumentTypeEnum.BOOK],
          DocumentTypeEnum.ARTICLE, JournalArticle, GlobalRichestMergeStrategy),
-        (["Scopus", "OpenAlex", "Hal"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.BOOK,
+        (["scopus", "openalex", "hal"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.BOOK,
                                          DocumentTypeEnum.UNKNOWN],
          DocumentTypeEnum.ARTICLE, JournalArticle, GlobalRichestMergeStrategy),
-        (["Idref", "Hal", "ScanR"], [DocumentTypeEnum.PROCEEDINGS, DocumentTypeEnum.UNKNOWN,
+        (["Idref", "hal", "scanr"], [DocumentTypeEnum.PROCEEDINGS, DocumentTypeEnum.UNKNOWN,
                                      DocumentTypeEnum.ARTICLE],
          DocumentTypeEnum.PROCEEDINGS, Proceedings, RichestByFieldMergeStrategy),
-        (["ScanR", "Scopus", "Hal"], [DocumentTypeEnum.CHAPTER, DocumentTypeEnum.ARTICLE,
+        (["scanr", "scopus", "hal"], [DocumentTypeEnum.CHAPTER, DocumentTypeEnum.ARTICLE,
                                       DocumentTypeEnum.UNKNOWN],
          DocumentTypeEnum.CHAPTER, BookChapter, GlobalRichestMergeStrategy)
     ])

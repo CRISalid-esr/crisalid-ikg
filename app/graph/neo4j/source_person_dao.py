@@ -285,7 +285,7 @@ class SourcePersonDAO(Neo4jDAO):
         await tx.run(
             create_source_person_query,
             source_person_uid=source_person.uid,
-            source=source_person.source,
+            source=source_person.source.value,
             source_identifier=source_person.source_identifier,
             name=source_person.name,
             first_name=source_person.first_name,
@@ -306,7 +306,7 @@ class SourcePersonDAO(Neo4jDAO):
         await tx.run(
             update_source_person_query,
             source_person_uid=source_person.uid,
-            source=source_person.source,
+            source=source_person.source.value,
             source_identifier=source_person.source_identifier,
             name=source_person.name,
             first_name=source_person.first_name,

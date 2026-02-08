@@ -1,6 +1,6 @@
 {
   "source_identifier": "doi10.3847/1538-4357/ad0cc1",
-  "harvester": "Hal",
+  "harvester": "hal",
   "harvester_version": "1.2.0",
   "identifiers": [
     {
@@ -210,7 +210,7 @@
     }
   ],
   "issue": {
-    "source": "ScanR",
+    "source": "scanr",
     "source_identifier": "the_astrophysical_journal-ScanR",
     "titles": [],
     "volume": null,
@@ -218,7 +218,7 @@
     "rights": null,
     "date": null,
     "journal": {
-      "source": "ScanR",
+      "source": "scanr",
       "source_identifier": "0004-637X-1538-4357-the_astrophysical_journal-american_astronomical_society-ScanR",
       "issn": [
         "0004-637X",

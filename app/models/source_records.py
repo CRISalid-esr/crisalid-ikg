@@ -10,6 +10,7 @@ from app.models.agents import Agent
 from app.models.concepts import Concept
 from app.models.document_type import DocumentType, DocumentTypeEnum
 from app.models.hal_custom_metadata import HalCustomMetadata
+from app.models.harvesters import Harvester
 from app.models.literal import Literal
 from app.models.publication_identifiers import PublicationIdentifier
 from app.models.source_contributions import SourceContribution
@@ -32,7 +33,7 @@ class SourceRecord(BaseModel):
 
     source_identifier: str
 
-    harvester: str
+    harvester: Harvester
 
     titles: List[Literal]
 
@@ -60,6 +61,17 @@ class SourceRecord(BaseModel):
 
     custom_metadata: Optional[Union[HalCustomMetadata, VoidCustomMetadata]] = None
 
+    @field_validator("harvester", mode="before")
+    @classmethod
+    def _validate_harvester(cls, value):
+        try:
+            return Harvester(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid harvester '{value}'. "
+                f"Allowed values: {[h.value for h in Harvester]}"
+            ) from exc
+
     @model_validator(mode="before")
     @classmethod
     def _convert_custom_metadata(cls, values):
@@ -69,10 +81,17 @@ class SourceRecord(BaseModel):
         if not isinstance(metadata, dict):
             metadata = {}
 
-        if harvester == "HAL":
+        # harvester may still be a raw string at this stage
+        try:
+            harvester_enum = Harvester(harvester)
+        except ValueError:
+            harvester_enum = None
+
+        if harvester_enum == Harvester.HAL:
             values["custom_metadata"] = HalCustomMetadata(**metadata)
         else:
             values["custom_metadata"] = VoidCustomMetadata(**metadata)
+
         return values
 
     @field_validator("document_type", mode="before")
@@ -115,12 +134,22 @@ class SourceRecord(BaseModel):
     def _build_uid(cls, values):
         harvester = values.get("harvester")
         source_identifier = values.get("source_identifier")
-        if not harvester or not source_identifier:
+
+        try:
+            harvester_enum = Harvester(harvester)
+        except ValueError:
             logger.warning(
-                f"Source record {values} must have "
-                "a source identifier and a harvester to have its uid computed")
+                f"Invalid or missing harvester for source record: {values}"
+            )
             return values
-        values["uid"] = f"{harvester.lower()}{cls.IDENTIFIER_SEPARATOR}{source_identifier}"
+
+        if not source_identifier:
+            logger.warning(
+                f"Source record {values} must have a source identifier to compute uid"
+            )
+            return values
+
+        values["uid"] = f"{harvester_enum.value}{cls.IDENTIFIER_SEPARATOR}{source_identifier}"
         return values
 
     @model_validator(mode="before")

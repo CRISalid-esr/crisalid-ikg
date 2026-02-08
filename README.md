@@ -258,7 +258,7 @@ Here is an exemple of the payload of an incoming AMQP message for a people event
     "reference": 
     {
       "source_identifier": "doi10.0000/1234-5678/ad0cc0",
-      "harvester": "ScanR",
+      "harvester": "scanr",
       "harvester_version": "1.2.0",
       "identifiers": [
         {
@@ -339,7 +339,7 @@ Here is an exemple of the payload of an incoming AMQP message for a people event
         }
       ],
       "issue": {
-        "source": "ScanR",
+        "source": "scanr",
         "source_identifier": "the_astrophysical_journal-ScanR",
         "titles": [],
         "volume": null,
@@ -347,7 +347,7 @@ Here is an exemple of the payload of an incoming AMQP message for a people event
         "rights": null,
         "date": null,
         "journal": {
-          "source": "ScanR",
+          "source": "scanr",
           "source_identifier": "0000-1111-2222-3333-the_astronomical_journal-american_astronomical_society-ScanR",
           "issn": [
             "0000-1111"

@@ -1,19 +1,16 @@
 from typing import Optional, List
 
-from pydantic import BaseModel
-
 from app.models.source_journal import SourceJournal
+from app.models.sourced_model import SourcedModel
 
 
-class SourceIssue(BaseModel):
+class SourceIssue(SourcedModel):
     """
     Source Journal Issue API model
     """
     uid: Optional[str] = None
 
     source_identifier: str
-
-    source: str
 
     titles: List[str] = []
 

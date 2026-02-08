@@ -1,3 +1,4 @@
+from app.models.harvesting_sources import HarvestingSource
 from app.models.loc_contribution_role import LocContributionRole
 from app.models.source_organizations import SourceOrganization
 from app.models.source_records import SourceRecord
@@ -23,7 +24,7 @@ def test_hal_chapter_source_record(
     assert contribution_0.role == LocContributionRole.AUTHOR
     assert contribution_0.contributor.name == 'Alice Dupont'
     organisation_0 = contribution_0.affiliations[0]
-    assert organisation_0.source == 'hal'
+    assert organisation_0.source == HarvestingSource.HAL
     assert organisation_0.source_identifier == '2001'
     assert organisation_0.name == 'Université Anonyme'
     assert organisation_0.type == SourceOrganization.SourceOrganisationType.INSTITUTION

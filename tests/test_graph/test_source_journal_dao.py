@@ -18,7 +18,8 @@ async def test_create_source_journal(open_alex_source_journal_pydantic_model: So
     await dao.create(open_alex_source_journal_pydantic_model)
     source_journal_from_db = await dao.get_by_uid(open_alex_source_journal_pydantic_model.uid)
     assert source_journal_from_db
-    assert source_journal_from_db.source == open_alex_source_journal_pydantic_model.source
+    assert (source_journal_from_db.source.value ==
+            open_alex_source_journal_pydantic_model.source.value)
     assert source_journal_from_db.source_identifier == \
            open_alex_source_journal_pydantic_model.source_identifier
     assert "Sample Journal Title" in source_journal_from_db.titles

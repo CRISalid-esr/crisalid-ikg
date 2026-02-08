@@ -1,6 +1,6 @@
 {
   "source_identifier": "http://www.idref.fr/247889784/id",
-  "harvester": "Idref",
+  "harvester": "idref",
   "harvester_version": "1.2.0",
   "identifiers": [
     {
@@ -81,7 +81,7 @@
     }
   ],
   "issue": {
-    "source": "ExampleSource",
+    "source": "hal",
     "source_identifier": "journal-issue-identifier",
     "titles": [],
     "volume": "105",
@@ -91,7 +91,7 @@
     "rights": null,
     "date": null,
     "journal": {
-      "source": "ScanR",
+      "source": "scanr",
       "source_identifier": "0004-637X-1538-4357-the_astrophysical_journal-american_astronomical_society-ScanR",
       "issn": [
         "0004-637X",

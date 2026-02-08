@@ -1,6 +1,6 @@
 {
   "source_identifier": "http://www.example.fr/123456789/id",
-  "harvester": "Idref",
+  "harvester": "idref",
   "harvester_version": "1.0.0",
   "identifiers": [
     {
