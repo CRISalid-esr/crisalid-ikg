@@ -248,9 +248,9 @@ class AMQPInterface:
         """
         payload = extra["payload"]
         assert isinstance(payload, dict)
-        assert "person_uid" in payload, "Payload must contain 'person_uid'"
+        assert "person_uid" in payload, "Payload must contain 'person_uid' key"
         person_uid = payload["person_uid"]
-        assert "harvesters" in payload, "Payload must contain 'harvesters'"
+        assert "harvesters" in payload, "Payload must contain 'harvesters' key"
         harvesters = payload["harvesters"]
         exchange = self.pika_exchanges.get(self.settings.amqp_publications_exchange_name, None)
         if not exchange:

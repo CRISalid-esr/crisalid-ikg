@@ -102,6 +102,8 @@ class AppSettings(BaseSettings):
         "deleted"
     ]
 
+    harvesters: List[str] = ["idref", "scanr", "hal", "openalex", "scopus"]
+
     org_registry_url: str = "http://localhost:3000"
 
     institution_name: str = "XYZ University"

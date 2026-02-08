@@ -1,5 +1,6 @@
-import os
 from typing import Any
+
+from loguru import logger
 
 from app.amqp.abstract_amqp_message_factory import AbstractAMQPMessageFactory
 from app.models.identifier_types import PersonIdentifierType
@@ -13,7 +14,7 @@ class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
         return self.settings.amqp_harvester_publication_retrieval_routing_key
 
     async def _build_payload(self) -> dict[str, Any] | None:
-        allowed_harvesters = os.getenv("HARVESTERS", "idref,scanr,hal,openalex,scopus").split(",")
+        allowed_harvesters = self.settings.harvesters
         harvesters = self.content.get("harvesters")
         if harvesters is None:
             harvesters = allowed_harvesters
@@ -23,7 +24,7 @@ class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
             # filter out not allowed harvesters
             harvesters = [h for h in harvesters if h in allowed_harvesters]
             if len(harvesters) != len(self.content.get("harvesters", [])):
-                print(
+                logger.warning(
                     "Some harvesters were not allowed: "
                     f"{set(self.content.get('harvesters', [])) - set(allowed_harvesters)}"
                 )
