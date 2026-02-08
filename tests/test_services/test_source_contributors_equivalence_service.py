@@ -20,7 +20,7 @@ async def test_create_source_records_with_shared_contributors(
         persisted_person_e_pydantic_model: Person,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
         hal_article_a_source_record_pydantic_model: SourceRecord,
-        openalex_article_a_source_record_pydantic_model: SourceRecord
+        open_alex_article_a_source_record_pydantic_model: SourceRecord
 ) -> None:
     """
     Given 3 source records with common hal identifier and created for different persons,
@@ -39,7 +39,7 @@ async def test_create_source_records_with_shared_contributors(
         harvested_for=persisted_person_d_pydantic_model)
 
     await source_record_service.create_source_record(
-        source_record=openalex_article_a_source_record_pydantic_model,
+        source_record=open_alex_article_a_source_record_pydantic_model,
         harvested_for=persisted_person_d_pydantic_model)
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
