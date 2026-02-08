@@ -18,6 +18,8 @@ from app.routes.api import router as api_router
 from app.routes.healthness import router as healthness_router
 from app.search.search_engine import SearchEngine
 from app.search.source_record_index import SourceRecordIndex
+from app.services.authority_organizations.authority_organization_location_service import \
+    AuthorityOrganizationLocationService
 from app.services.documents.document_service import DocumentService
 from app.services.journals.journal_service import JournalService
 from app.services.source_records.equivalence_service import EquivalenceService
@@ -28,7 +30,7 @@ from app.signals import person_created, person_identifiers_updated, source_recor
     document_unchanged, document_deleted, structure_unchanged, structure_deleted, \
     person_deleted, person_updated, publications_to_be_updated, source_journal_created, \
     source_journal_updated, harvesting_state_event_received, harvesting_result_event_received, \
-    document_created_from_sources
+    document_created_from_sources, authority_organisation_state_updated
 
 
 class CrisalidIKG(FastAPI):
@@ -78,6 +80,7 @@ class CrisalidIKG(FastAPI):
         self._register_document_events()
         self._register_harvesting_events()
         self._register_person_events()
+        self._register_authority_organization_state_events()
 
     @logger.catch(reraise=True)
     async def setup_graph(self) -> None:  # pragma: no cover
@@ -129,6 +132,11 @@ class CrisalidIKG(FastAPI):
         harvesting_state_event_received.connect(self.amqp_interface.dispatch_harvesting_state_event)
         harvesting_result_event_received.connect(
             self.amqp_interface.dispatch_harvesting_result_event)
+
+    def _register_authority_organization_state_events(self):
+        self.authority_organization_location_service = AuthorityOrganizationLocationService()
+        authority_organisation_state_updated.connect(
+            self.authority_organization_location_service.add_location_from_source_organizations)
 
     @logger.catch(reraise=True)
     async def close_elasticsearch(self) -> None:  # pragma: no cover

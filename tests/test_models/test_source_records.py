@@ -194,6 +194,7 @@ def test_create_article_source_record_from_hal_data(
 
 
 def test_create_article_source_record_from_hal_inconsistent_data(
+        # TODO add and handle extra information in ror source organization identifier
         hal_article_source_record_with_inconsistent_custom_metadata_json_data: dict
 ):
     """

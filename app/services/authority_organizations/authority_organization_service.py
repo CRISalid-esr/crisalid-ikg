@@ -14,6 +14,7 @@ from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
 from app.models.source_organization_identifiers import SourceOrganizationIdentifier
 from app.models.source_organizations import SourceOrganization
+from app.signals import authority_organisation_state_updated
 
 
 class AuthorityOrganizationService:
@@ -40,11 +41,13 @@ class AuthorityOrganizationService:
             if state.identifiers:
                 persisted_states.append(
                     await self._get_or_create_state_in_graph_by_identifier(dao, state))
+                await self._signal_state_updated(persisted_states[-1].uid)
             elif state.normalized_name:
                 # handle case of state without identifiers
                 matching_states = await dao.get_states_by_normalized_name(state.normalized_name)
                 if len(matching_states) == 0:
                     new_state = await dao.create_authority_organization_state(state)
+                    await self._signal_state_updated(new_state.uid)
                     persisted_states.append(new_state)
                 elif len(matching_states) == 1:  # an homonym was either found, either created
                     persisted_states.append(matching_states[0])
@@ -63,6 +66,7 @@ class AuthorityOrganizationService:
                             return await dao.get_authority_organization_root_by_uid(roots[0])
                         # as we cannot choose among homonyms, create a new state without identifiers
                         new_state = await dao.create_authority_organization_state(state)
+                        await self._signal_state_updated(new_state.uid)
                         persisted_states.append(new_state)
 
         in_memory_root.states = persisted_states
@@ -486,6 +490,14 @@ class AuthorityOrganizationService:
             selected.excluded_identifiers = list(merged_excluded_identifiers)
 
         return await dao.update_authority_organization_state(selected)
+
+    async def _signal_state_updated(self, state_uid):
+        """
+        Signal that a document has been updated for all listeners to be notified
+        :param document_uid:
+        :return:
+        """
+        await authority_organisation_state_updated.send_async(self, state_uid=state_uid)
 
     @staticmethod
     def _passes_excluded_identifiers(
