@@ -5,6 +5,7 @@ class Harvester(str, Enum):
     """
     Enum for harvesters.
     """
+    # pylint: disable=duplicate-code
     HAL = "hal"
     SCANR = "scanr"
     IDREF = "idref"
