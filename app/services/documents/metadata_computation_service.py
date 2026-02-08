@@ -45,10 +45,11 @@ class MetadataComputationService:
         return self._elected_strategy.merge()
 
     def _sort_source_records(self):
-        self.source_records = sorted(self.source_records, key=lambda
-            x: self._get_harvesters().index(
-            x.harvester.value) if x.harvester.lower() in self._get_harvesters() else len(
-            self._get_harvesters()))
+        self.source_records = sorted(
+            self.source_records,
+            key=lambda x: self._get_harvesters().index(x.harvester.value)
+            if x.harvester.value in self._get_harvesters()
+            else len(self._get_harvesters()))
 
     def _elect_document_type(self) -> List[DocumentTypeEnum]:
         return next(
