@@ -23,6 +23,12 @@
       "authentication_date": "2025-08-25T06:17:28.243Z"
     },
     {
+      "type": "id_hal_s",
+      "value": "john-doe",
+      "authenticated": "True",
+      "authentication_date": "2025-08-25T06:17:28.243Z"
+    },
+    {
       "type": "local",
       "value": "jdoe_auth_orcid@univ-domain.edu"
     }
