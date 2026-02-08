@@ -243,7 +243,7 @@
       }
    ],
    "issue": {
-      "source": "HAL",
+      "source": "hal",
       "source_identifier": "journal-issue-identifier",
       "titles": [],
       "volume": "164",
@@ -253,7 +253,7 @@
       "rights": null,
       "date": null,
       "journal": {
-         "source": "HAL",
+         "source": "hal",
          "source_identifier": "2871",
          "issn": [
             "0002-9483"

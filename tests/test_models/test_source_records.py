@@ -74,7 +74,7 @@ def test_create_thesis_source_record_from_scanr_data(
         "https://scanr.enseignementsup-recherche.gouv.fr/publications/")
 
 
-async def test_create_thesis_source_record_from_idref_data(
+def test_create_thesis_source_record_from_idref_data(
         idref_thesis_source_record_json_data: dict
 ):
     """
@@ -257,7 +257,7 @@ def test_create_article_source_record_from_hal_inconsistent_data(
     assert source_record.custom_metadata.hal_submit_type is None
 
 
-async def test_create_article_source_record_from_open_alex_data(
+def test_create_article_source_record_from_open_alex_data(
         open_alex_article_source_record_json_data: dict
 ):
     """
@@ -305,7 +305,7 @@ async def test_create_article_source_record_from_open_alex_data(
         contribution.rank == 1 and contribution.contributor.name == "John Doe"
     )
     assert source_record.issue
-    assert source_record.issue.source == HarvestingSource.HAL.value
+    assert source_record.issue.source == HarvestingSource.OPENALEX.value
     assert source_record.issue.source_identifier == "journal-issue-identifier"
     assert len(source_record.issue.titles) == 0
     assert source_record.issue.volume == "105"
@@ -322,7 +322,7 @@ async def test_create_article_source_record_from_open_alex_data(
     assert str(source_record.url) == "https://openalex.org/W123456789"
 
 
-async def test_article_identifiers_from_open_alex_data(
+def test_article_identifiers_from_open_alex_data(
         open_alex_article_source_record_json_data: dict
 ):
     """
@@ -363,7 +363,7 @@ def test_create_invalid_source_record(source_record_without_title_json_data):
         SourceRecord(**source_record_without_title_json_data)
 
 
-async def test_create_article_source_record_from_open_alex_data_with_issue_title(
+def test_create_article_source_record_from_open_alex_data_with_issue_title(
         open_alex_article_source_record_with_issue_title_json_data: dict
 ):
     """

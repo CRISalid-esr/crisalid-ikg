@@ -88,7 +88,7 @@
     }
   ],
   "issue": {
-    "source": "OpenAlex",
+    "source": "openalex",
     "source_identifier": "journal_of_geotechnical_and_geoenvironmental_engineering-134-1-OpenAlex",
     "titles": [],
     "volume": null,
@@ -98,7 +98,7 @@
     "rights": null,
     "date": null,
     "journal": {
-      "source": "OpenAlex",
+      "source": "openalex",
       "source_identifier": "https://openalex.org/S1239876543",
       "issn": [
         "0007-4217"

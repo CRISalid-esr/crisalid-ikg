@@ -6,10 +6,10 @@ from app.services.source_records.source_record_url_service import SourceRecordUr
 @pytest.mark.parametrize(
     "harvester, source_identifier, expected_url",
     [
-        ("OpenAlex", "https://openalex.org/W4292200111", "https://openalex.org/W4292200111"),
-        ("Idref", "http://www.sudoc.fr/232572542/id", "http://www.sudoc.fr/232572542/id"),
-        ("HAL", "hal-00717561", "https://hal.science/hal-00717561"),
-        ("ScanR", "doi10.1016/j.jmateco.2023.102886",
+        ("openalex", "https://openalex.org/W4292200111", "https://openalex.org/W4292200111"),
+        ("idref", "http://www.sudoc.fr/232572542/id", "http://www.sudoc.fr/232572542/id"),
+        ("hal", "hal-00717561", "https://hal.science/hal-00717561"),
+        ("scanr", "doi10.1016/j.jmateco.2023.102886",
          # pylint: disable=line-too-long
          "https://scanr.enseignementsup-recherche.gouv.fr/publications/doi10.1016%2Fj.jmateco.2023.102886"),
     ]
@@ -30,8 +30,8 @@ def test_compute_url_valid(harvester, source_identifier, expected_url):
     "harvester, source_identifier",
     [
         ("UnknownHarvester", "some_identifier"),
-        ("HAL", "   "),
-        ("ScanR", ""),
+        ("hal", "   "),
+        ("scanr", ""),
         ("", "https://valid.url"),
     ]
 )

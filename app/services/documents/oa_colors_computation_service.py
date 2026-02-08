@@ -40,7 +40,7 @@ class OAColorsComputationService:
 
         # Add green open access status if file is available in Hal
         document_oa_status.oa_status = next(
-            (OAStatus.GREEN for sr in self.source_records if sr.harvester == Harvester.HAL.value
+            (OAStatus.GREEN for sr in self.source_records if sr.harvester == Harvester.HAL
                   and getattr(sr.custom_metadata, 'hal_submit_type', None) == 'file'),
             None)
 

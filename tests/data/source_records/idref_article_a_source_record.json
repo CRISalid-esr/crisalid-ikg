@@ -69,7 +69,7 @@
     {
       "rank": 1,
       "contributor": {
-        "source": "example_source",
+        "source": "sudoc",
         "source_identifier": "https://example.org/1234567",
         "name": "J. L. West",
         "name_variants": [
@@ -81,7 +81,7 @@
     }
   ],
   "issue": {
-    "source": "hal",
+    "source": "sudoc",
     "source_identifier": "journal-issue-identifier",
     "titles": [],
     "volume": "105",

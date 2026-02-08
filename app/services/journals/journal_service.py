@@ -213,7 +213,7 @@ class JournalService:
         return self.settings.publication_source_policies
 
     def _get_harvesters(self):
-        return list(self._get_policies()['harvesters'].keys())
+        return list(self._get_policies()['harvesters'])
 
     def _get_dao_factory(self) -> DAOFactory:
         return AbstractDAOFactory().get_dao_factory(self.settings.graph_db)

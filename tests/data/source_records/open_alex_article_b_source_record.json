@@ -60,7 +60,7 @@
     {
       "rank": 1,
       "contributor": {
-        "source": "example_source",
+        "source": "openalex",
         "source_identifier": "https://example.org/1234567",
         "name": "J. L. West",
         "name_variants": [

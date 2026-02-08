@@ -11,6 +11,7 @@ from app.graph.neo4j.utils import load_query
 from app.models.concepts import Concept
 from app.models.document_type import DocumentTypeEnum
 from app.models.hal_custom_metadata import HalCustomMetadata
+from app.models.harvesters import Harvester
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.literal import Literal
 from app.models.loc_contribution_role import LocContributionRole
@@ -478,7 +479,7 @@ class SourceRecordDAO(Neo4jDAO):
             if record["issue"]:
                 issue = dict(record["issue"]) | {"journal": journal}
                 source_record.issue = SourceIssue(**issue)
-        if record["s"]["harvester"] == "HAL":
+        if record["s"]["harvester"] == Harvester.HAL.value:
             source_record.custom_metadata = HalCustomMetadata(
                 hal_collection_codes=record["s"].get("hal_collection_codes", None),
                 hal_submit_type=record["s"].get("hal_submit_type", None)

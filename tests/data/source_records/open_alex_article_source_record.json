@@ -64,7 +64,7 @@
     {
       "rank": 1,
       "contributor": {
-        "source": "example_source",
+        "source": "openalex",
         "source_identifier": "https://example.org/1234567",
         "name": "John Doe",
         "name_variants": [
@@ -77,7 +77,7 @@
     }
   ],
   "issue": {
-    "source": "hal",
+    "source": "openalex",
     "source_identifier": "journal-issue-identifier",
     "titles": [],
     "volume": "105",
@@ -87,7 +87,7 @@
     "rights": null,
     "date": null,
     "journal": {
-      "source": "OpenAlex",
+      "source": "openalex",
       "source_identifier": "https://openalex.org/S113942516",
       "issn": [
         "0007-4217",

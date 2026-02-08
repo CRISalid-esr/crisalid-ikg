@@ -593,4 +593,4 @@ class SourceContributorMappingService:
         return settings.publication_source_policies
 
     def _get_harvesting_sources(self):
-        return list(self._get_policies()['harvesting_sources'].keys())
+        return list(self._get_policies()['harvesting_sources'])
