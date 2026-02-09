@@ -89,25 +89,36 @@ class OrganizationIdentifierType(AgentIdentifierType):
 
 class PublicationIdentifierType(Enum):
     """Publication identifier types"""
+    # --PUBLICATION IDENTIFIERS--
     ARXIV = "arxiv"
+    BIBCODE = "bibcode"
+    BIORXIV = "biorxiv"
+    CERN = "cern"
+    CHEMRXIV = "chemrxiv"
     DOI = "doi"
+    ENSAM = "ensam"
     HAL = "hal"
     INERIS = "ineris"
+    INSPIRE = "inspire"
     IRD = "ird"
+    IRSTEA = "irstea"
+    IRTHESAURUS = "irthesaurus"
+    MEDITAGRI = "meditagri"
     NNT = "nnt"
-    OPENALEX = "open_alex"
+    OKINA = "okina"
+    OATAO = "oatao"
+    OPENALEX = "openalex"
     PII = "pii"
     PMID = "pmid"
-    PMC = "pmcid"
-    PUBMED = "pubmed"
-    PUBMEDCENTRAL = "pubmedcentral"
     PPN = "ppn"
     PRODINRA = "prodinra"
+    PUBMEDCENTRAL = "pubmedcentral"
     SCIENCESPO = "sciencespo"
+    SWHID = "swhid"
     URI = "uri"
-    WOS = "wos"
-    SUDOC_PPN = "sudoc_ppn"
     UNKNOWN = "unknown"
+    WOS = "wos"
+
 
 
 class JournalIdentifierType(Enum):
