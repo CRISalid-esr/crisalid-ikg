@@ -36,14 +36,14 @@
         "title": "Enseignant-chercheur associé (MC, PR à temps partiel ou temps plein)",
         "code": "PAST"
       },
-      "entity_uid": "UAI-0751818J"
+      "entity_uid": "uai-0751818J"
     },
     {
       "position": {
         "title": "Attaché temporaire d'enseignement et de recherche",
         "code": "ATER"
       },
-      "entity_uid": "UAI-1234567A"
+      "entity_uid": "uai-1234567A"
     }
   ]
 }

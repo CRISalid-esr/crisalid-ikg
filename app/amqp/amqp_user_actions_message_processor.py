@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.models.change import Change
+from app.models.identifier_types import PersonIdentifierType
 from app.services.changes.change_service import ChangeService
 from app.services.people.people_service import PeopleService
 
@@ -23,7 +24,7 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
         logger.debug(f"Processing user action message: {json_payload}")
 
         self._check_keys(json_payload, {
-            #"id": None,
+            # "id": None,
             "actionType": None,
             "parameters": None,
             "path": None,
@@ -81,17 +82,17 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
                 raise ValueError("Target UID is required for person-related"
                                  "ADD action type and should be a string.")
 
-
             received_identifier = ((json_payload.get("parameters", {}).get("identifier") or {})
                                    .get("value", None))
             identifier_type = ((json_payload.get("parameters", {}).get("identifier") or {})
                                .get("type", ''))
 
-            allowed_id_types = ["orcid", "id_hal_s"]
+            allowed_id_types = [PersonIdentifierType.ORCID.value,
+                                PersonIdentifierType.IDHALS.value]
             target_uid = json_payload.get("targetUid", None)
 
-            if target_uid :
-                if received_identifier and identifier_type.lower() in allowed_id_types :
+            if target_uid:
+                if received_identifier and identifier_type.lower() in allowed_id_types:
                     service = PeopleService()
                     await service.authenticate_identifier(json_payload["targetUid"],
                                                           identifier_type.lower(),

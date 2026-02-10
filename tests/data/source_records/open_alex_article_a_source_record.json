@@ -53,7 +53,7 @@
         "name_variants": [],
         "identifiers": [
           {
-            "type": "open_alex",
+            "type": "openalex",
             "value": "https://openalex.org/A5065084602"
           },
           {
@@ -84,7 +84,7 @@
             "value": "https://orcid.org/0000-0001-8777-7135"
           },
           {
-            "type": "open_alex",
+            "type": "openalex",
             "value": "https://openalex.org/A5019602694"
           }
         ]
@@ -103,7 +103,7 @@
         "name_variants": [],
         "identifiers": [
           {
-            "type": "open_alex",
+            "type": "openalex",
             "value": "https://openalex.org/A5088876922"
           }
         ]

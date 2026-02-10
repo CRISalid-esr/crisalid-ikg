@@ -7,6 +7,7 @@ import pytest
 from app.amqp.amqp_harvesting_events_message_processor import AMQPHarvestingEventsMessageProcessor
 from app.config import get_app_settings
 from app.crisalid_ikg import CrisalidIKG
+from app.models.identifier_types import PersonIdentifierType
 
 
 @pytest.mark.asyncio
@@ -17,10 +18,10 @@ async def test_amqp_harvesting_state_event_is_forwarded(test_app: CrisalidIKG):
     person_uid = "carin-e"
     name = "CARIN Emmanuel"
     identifiers = [
-        {"type": "idref", "value": "068825511"},
-        {"type": "local", "value": person_uid},
-        {"type": "eppn", "value": f"{person_uid}@univ-example.fr"},
-        {"type": "scopus_eid", "value": "2213765400"},
+        {"type": PersonIdentifierType.IDREF.value, "value": "068825511"},
+        {"type": PersonIdentifierType.LOCAL.value, "value": person_uid},
+        {"type": PersonIdentifierType.EPPN.value, "value": f"{person_uid}@univ-example.fr"},
+        {"type": PersonIdentifierType.SCOPUS.value, "value": "2213765400"},
     ]
 
     harvesting_state_message = {
@@ -72,7 +73,7 @@ async def test_amqp_harvesting_result_event_is_forwarded(test_app: CrisalidIKG):
     harvesting_result_message = {
         "entity": {
             "identifiers": [
-                {"type": "local", "value": "user-123"}
+                {"type": PersonIdentifierType.LOCAL.value, "value": "user-123"}
             ],
             "name": "Anonymous User"
         },

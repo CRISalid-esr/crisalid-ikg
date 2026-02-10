@@ -23,7 +23,7 @@
       "authentication_date": "2025-08-25T06:17:28.243Z"
     },
     {
-      "type": "id_hal_s",
+      "type": "idhals",
       "value": "john-doe",
       "authenticated": "True",
       "authentication_date": "2025-08-25T06:17:28.243Z"
@@ -44,7 +44,7 @@
         "title": "Technicien de recherche",
         "code": "TECH"
       },
-      "entity_uid": "UAI-0751818J"
+      "entity_uid": "uai-0751818J"
     }
   ]
 }
