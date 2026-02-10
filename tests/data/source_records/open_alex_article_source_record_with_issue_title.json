@@ -8,7 +8,7 @@
       "value": "https://doi.org/10.12345/bch.0000.00000"
     },
     {
-      "type": "open_alex",
+      "type": "openalex",
       "value": "https://openalex.org/W123456789"
     }
   ],
