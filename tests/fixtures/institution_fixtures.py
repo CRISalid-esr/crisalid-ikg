@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.services.organizations.insititution_registry_service import InstitutionRegistryService
+from app.services.organizations.institution_registry_service import InstitutionRegistryService
 from tests.fixtures.common import _json_data_from_file
 
 

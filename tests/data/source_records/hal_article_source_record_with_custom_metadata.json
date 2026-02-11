@@ -63,12 +63,12 @@
                },
                {
                   "source": "hal",
-                  "type": "idhal_s",
+                  "type": "idhals",
                   "value": "jane-doe"
                },
                {
                   "source": "hal",
-                  "type": "idhal_i",
+                  "type": "idhali",
                   "value": "18274"
                }
             ]

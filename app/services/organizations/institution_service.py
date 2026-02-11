@@ -5,7 +5,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao import DAO
 from app.graph.neo4j.institution_dao import InstitutionDAO
 from app.models.institution import Institution
-from app.services.organizations.insititution_registry_service import InstitutionRegistryService
+from app.services.organizations.institution_registry_service import InstitutionRegistryService
 from app.signals import institution_created, institution_updated, institution_unchanged, \
     institution_deleted
 

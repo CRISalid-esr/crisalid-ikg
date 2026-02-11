@@ -3,12 +3,16 @@ from app.models.identifier_types import PersonIdentifierType, OrganizationIdenti
 from app.models.people import Person
 from app.models.research_structures import ResearchStructure
 
+
+# pylint: disable=too-many-locals
 async def test_update_people_and_structure(
         persisted_research_structure_a_pydantic_model: ResearchStructure,
+        # pylint: disable=unused-argument
         persisted_research_structure_b_pydantic_model: ResearchStructure,
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model: Person,
-        research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model: ResearchStructure
+        research_str_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model:
+        ResearchStructure
 ):
     """
     Given a basic person Pydantic model
@@ -73,7 +77,7 @@ async def test_update_people_and_structure(
 
     assert sum(len(name.first_names) for name in person_from_db.names) == 1
     assert not any(
-        identifier.type == PersonIdentifierType.ID_HAL_S
+        identifier.type == PersonIdentifierType.IDHALS
         for identifier in person_from_db.identifiers
     )
     # Update persisted person a
@@ -100,16 +104,16 @@ async def test_update_people_and_structure(
 
     # update structure a
     await structure_dao.update(
-        research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model)
+        research_str_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model)
     updated_structure_from_db = await structure_dao.find_by_identifier(
         structure_local_identifier.type, structure_local_identifier.value
     )
     assert updated_structure_from_db
     await assert_identifiers_match(
         updated_structure_from_db,
-        research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model
+        research_str_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model
     )
     await assert_names_match(
         updated_structure_from_db,
-        research_structure_a_with_name_acronym_description_street_ror_added_italian_description_name_added_pydantic_model
+        research_str_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model
     )
