@@ -2,7 +2,7 @@
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
+from starlette.status import HTTP_422_UNPROCESSABLE_CONTENT
 
 
 class ReferenceOwnerNotFoundError(ValueError):
@@ -22,5 +22,5 @@ async def not_found_reference_owner_error_handler(
     """
     return JSONResponse(
         {"error": str(exc)},
-        status_code=HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=HTTP_422_UNPROCESSABLE_CONTENT,
     )
