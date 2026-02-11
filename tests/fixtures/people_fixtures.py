@@ -1,5 +1,6 @@
 import pytest_asyncio
 
+from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.services.people.people_service import PeopleService
 from tests.fixtures.common import _person_from_json_data, _person_json_data_from_file
@@ -64,10 +65,10 @@ async def fixture_person_a_with_hal_pydantic_model(person_a_json_data) -> Person
     """
     person_a_with_hal_json_data = person_a_json_data.copy()
     new_identifier_list = [
-        {"type": "id_hal_s", "value": "john-doe"},
-        {"type": "id_hal_i", "value": "012345"},
-        {"type": "orcid", "value": "0000-0001-2345-6789"},
-        {"type": "local","value": "jdoe_with_hal@univ-domain.edu"}
+        {"type": PersonIdentifierType.IDHALS.value, "value": "john-doe"},
+        {"type": PersonIdentifierType.IDHALI.value, "value": "012345"},
+        {"type": PersonIdentifierType.ORCID.value, "value": "0000-0001-2345-6789"},
+        {"type": PersonIdentifierType.LOCAL.value,"value": "jdoe_with_hal@univ-domain.edu"}
     ]
     person_a_with_hal_json_data["identifiers"] = new_identifier_list
     return _person_from_json_data(person_a_with_hal_json_data)
@@ -404,8 +405,8 @@ async def fixture_person_a_with_invalid_idref_json_data(_base_path) -> dict:
 @pytest_asyncio.fixture(name="person_a_with_invalid_idhal_s_json_data")
 async def fixture_person_a_with_invalid_idhal_s_json_data(_base_path) -> dict:
     """
-    Create a person with invalid id_hal_s json data
-    :return: person with invalid id_hal_s json data
+    Create a person with invalid idhals json data
+    :return: person with invalid idhals json data
     """
     return _person_json_data_from_file(_base_path, "person_a_with_invalid_idhal_s")
 
@@ -413,8 +414,8 @@ async def fixture_person_a_with_invalid_idhal_s_json_data(_base_path) -> dict:
 @pytest_asyncio.fixture(name="person_a_with_invalid_idhal_i_json_data")
 async def fixture_person_a_with_invalid_idhal_i_json_data(_base_path) -> dict:
     """
-    Create a person with invalid id_hal_i json data
-    :return: person with invalid id_hal_i json data
+    Create a person with invalid idhali json data
+    :return: person with invalid idhali json data
     """
     return _person_json_data_from_file(_base_path, "person_a_with_invalid_idhal_i")
 

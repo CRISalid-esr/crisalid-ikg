@@ -152,16 +152,17 @@ class PeopleService:
         return await dao.get_all_uids(external=external)
 
     async def authenticate_identifier(self, person_uid: str,
-                                      identifier_type:str, received_identifier: str,
+                                      identifier_type: str, received_identifier: str,
                                       timestamp: str):
         """
         Authenticate a person's identifier
         """
-        if identifier_type in ["id_hal_s", "id_hal_i"]:
+        if identifier_type in [PersonIdentifierType.IDHALI.value,
+                               PersonIdentifierType.IDHALS.value]:
             await self._authenticate_id_hal(person_uid, received_identifier,
                                             identifier_type, timestamp)
 
-        elif identifier_type == "orcid":
+        elif identifier_type == PersonIdentifierType.ORCID.value:
             await self._authenticate_orcid(person_uid, received_identifier, timestamp)
 
         return
@@ -233,7 +234,8 @@ class PeopleService:
 
         else:
             orcid_identifier = next(
-                (id for id in person.identifiers if id.type.value == "orcid"), None
+                (id for id in person.identifiers if
+                 id.type.value == PersonIdentifierType.ORCID.value), None
             )
             orcid_identifier.authenticated = True
             orcid_identifier.authentication_date = timestamp

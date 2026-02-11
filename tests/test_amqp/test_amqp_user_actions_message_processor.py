@@ -11,6 +11,7 @@ from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.change import Change, ChangeStatus
 from app.models.document import Document
+from app.models.identifier_types import PersonIdentifierType
 
 
 @pytest.mark.asyncio
@@ -143,7 +144,7 @@ async def test_amqp_user_actions_processor_authenticate_identifier(
         "path": "identifiers",
         "parameters": {
             "identifier": {
-                "type": "ORCID",
+                "type": PersonIdentifierType.ORCID.value,
                 "value": "0000-0001-2345-6789"
             }
         },

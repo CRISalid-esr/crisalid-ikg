@@ -4,7 +4,7 @@
   "harvester_version": "1.7.0",
   "identifiers": [
     {
-      "type": "open_alex",
+      "type": "openalex",
       "value": "https://openalex.org/W2081413706"
     },
     {
@@ -78,7 +78,7 @@
           },
           {
             "source": "openalex",
-            "type": "open_alex",
+            "type": "openalex",
             "value": "https://openalex.org/A5063392350"
           }
         ]
