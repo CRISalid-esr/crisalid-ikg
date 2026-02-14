@@ -123,8 +123,8 @@ class JournalService:
         selected_number = None
 
         def record_priority(record: SourceRecord):
-            return harvester_priority.index(record.harvester.lower()) \
-                if record.harvester.lower() in harvester_priority \
+            return harvester_priority.index(record.harvester.value) \
+                if record.harvester.value in harvester_priority \
                 else float('inf')
 
         sorted_records = sorted(source_records, key=record_priority)
@@ -213,8 +213,7 @@ class JournalService:
         return self.settings.publication_source_policies
 
     def _get_harvesters(self):
-        return [harvester.lower().replace('_', '')
-                for harvester in self._get_policies()['harvesters']]
+        return list(self._get_policies()['harvesters'])
 
     def _get_dao_factory(self) -> DAOFactory:
         return AbstractDAOFactory().get_dao_factory(self.settings.graph_db)

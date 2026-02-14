@@ -1,6 +1,6 @@
 {
   "source_identifier": "http://www.example.fr/123456789/id",
-  "harvester": "Idref",
+  "harvester": "idref",
   "harvester_version": "1.0.0",
   "identifiers": [
     {
@@ -54,7 +54,7 @@
     {
       "rank": null,
       "contributor": {
-        "source": "example_source",
+        "source": "persee",
         "source_identifier": "http://www.example.fr/creator/987654321/id",
         "name": "Doe, John (1980-.... ; astrophysicist)",
         "name_variants": []
@@ -65,7 +65,7 @@
     {
       "rank": null,
       "contributor": {
-        "source": "example_source",
+        "source": "persee",
         "source_identifier": "http://www.example.fr/creator/654321987/id",
         "name": "Smith, Jane (1990-....)",
         "name_variants": []
@@ -76,7 +76,7 @@
     {
       "rank": null,
       "contributor": {
-        "source": "example_source",
+        "source": "persee",
         "source_identifier": "http://www.example.fr/creator/321987654/id",
         "name": "Brown, Alex (1975-....)",
         "name_variants": []
@@ -88,7 +88,7 @@
   "issue": null,
   "page": null,
   "book": {
-    "source": "example_source",
+    "source": "persee",
     "title": "Études sur les nuages galactiques : turbulence et poussières / Jane Smith ; sous la dir. de John Doe et Alex Brown",
     "title_variants": [],
     "isbn10": null,

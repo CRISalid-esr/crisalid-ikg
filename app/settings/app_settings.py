@@ -101,6 +101,8 @@ class AppSettings(BaseSettings):
         "unchanged",
         "deleted"
     ]
+    # --HARVESTER PLATFORM IDENTIFIERS--
+    harvesters: List[str] = ["idref", "scanr", "hal", "openalex", "scopus"]
 
     org_registry_url: str = "http://localhost:3000"
 

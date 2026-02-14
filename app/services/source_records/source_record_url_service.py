@@ -1,7 +1,9 @@
 import urllib.parse
 
 from loguru import logger
-from pydantic import HttpUrl, ValidationError
+from pydantic import HttpUrl
+
+from app.models.harvesters import Harvester
 
 
 class SourceRecordUrlService:
@@ -10,7 +12,7 @@ class SourceRecordUrlService:
     based on harvester and source identifier.
     """
 
-    OPENALEX_IDREF_HARVESTERS = {"openalex", "idref"}
+    OPENALEX_IDREF_HARVESTERS = {Harvester.OPENALEX.value, Harvester.IDREF.value}
     HAL_PREFIX = "https://hal.science/"
     SCANR_PREFIX = "https://scanr.enseignementsup-recherche.gouv.fr/publications/"
 
@@ -27,11 +29,11 @@ class SourceRecordUrlService:
         try:
             if not source_identifier or not source_identifier.strip():
                 raise ValueError("Source identifier cannot be blank or whitespace")
-            if harvester.lower() in SourceRecordUrlService.OPENALEX_IDREF_HARVESTERS:
+            if harvester in SourceRecordUrlService.OPENALEX_IDREF_HARVESTERS:
                 url = source_identifier  # Directly use the source identifier
-            elif harvester.lower() == "hal":
+            elif harvester == Harvester.HAL.value:
                 url = f"{SourceRecordUrlService.HAL_PREFIX}{source_identifier}"
-            elif harvester.lower() == "scanr":
+            elif harvester == Harvester.SCANR.value:
                 encoded_identifier = urllib.parse.quote(source_identifier, safe='')
                 url = f"{SourceRecordUrlService.SCANR_PREFIX}{encoded_identifier}"
             else:
@@ -39,7 +41,7 @@ class SourceRecordUrlService:
 
             # Validate the URL
             return HttpUrl(url)
-        except (ValueError, ValidationError) as e:
+        except ValueError as e:
             logger.error(
                 f"Error computing URL for harvester='{harvester}', "
                 f"source_identifier='{source_identifier}': {e}")

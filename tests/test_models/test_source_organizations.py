@@ -1,3 +1,4 @@
+from app.models.harvesting_sources import HarvestingSource
 from app.models.source_organizations import SourceOrganization
 
 
@@ -11,7 +12,7 @@ def test_create_valid_source_institution(hal_source_institution_json_data):
     """
     source_institution = SourceOrganization(**hal_source_institution_json_data)
     assert source_institution
-    assert source_institution.source == 'hal'
+    assert source_institution.source == HarvestingSource.HAL
     assert source_institution.source_identifier == '2001'
     assert source_institution.name == 'Université Anonyme'
     assert source_institution.type == SourceOrganization.SourceOrganisationType.INSTITUTION
@@ -44,7 +45,7 @@ def test_create_valid_source_laboratory(hal_source_laboratory_json_data):
     """
     source_laboratory = SourceOrganization(**hal_source_laboratory_json_data)
     assert source_laboratory
-    assert source_laboratory.source == 'hal'
+    assert source_laboratory.source == HarvestingSource.HAL
     assert source_laboratory.source_identifier == '3002'
     assert source_laboratory.name == 'Laboratoire Interdisciplinaire'
     assert source_laboratory.type == SourceOrganization.SourceOrganisationType.LABORATORY

@@ -1,6 +1,6 @@
 {
   "source_identifier": "hal-01006849",
-  "harvester": "HAL",
+  "harvester": "hal",
   "harvester_version": "1.2.0",
   "identifiers": [
     {
@@ -63,7 +63,7 @@
     }
   ],
   "issue": {
-    "source": "Hal",
+    "source": "hal",
     "source_identifier": "journal_of_geotechnical_and_geoenvironmental_engineering-134-1-Hal",
     "titles": [],
     "volume": "134",
@@ -71,7 +71,7 @@
     "rights": null,
     "date": null,
     "journal": {
-      "source": "Hal",
+      "source": "hal",
       "source_identifier": "0000-0000",
       "issn": [
         "0007-4217",

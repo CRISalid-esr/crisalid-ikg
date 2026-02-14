@@ -3,6 +3,7 @@ from typing import List
 
 from app.config import get_app_settings
 from app.models.document import Document
+from app.models.harvesters import Harvester
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.open_access_status import OpenAccessStatus, UnpaywallOAStatus, OAStatus
 from app.models.source_records import SourceRecord
@@ -39,7 +40,7 @@ class OAColorsComputationService:
 
         # Add green open access status if file is available in Hal
         document_oa_status.oa_status = next(
-            (OAStatus.GREEN for sr in self.source_records if sr.harvester.lower() == 'hal'
+            (OAStatus.GREEN for sr in self.source_records if sr.harvester == Harvester.HAL
                   and getattr(sr.custom_metadata, 'hal_submit_type', None) == 'file'),
             None)
 

@@ -33,7 +33,7 @@ class SourceOrganizationService:
 
         assert source_organization.uid, (
             "Source organization uid should have been computed before from "
-            f"{source_organization.source} and {source_organization.source_identifier}"
+            f"{source_organization.source.value} and {source_organization.source_identifier}"
         )
 
         if await dao.source_organization_exists(source_organization.uid):

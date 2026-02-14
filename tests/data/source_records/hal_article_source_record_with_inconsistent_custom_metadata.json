@@ -1,6 +1,6 @@
 {
    "source_identifier": "hal-02732648",
-   "harvester": "HAL",
+   "harvester": "hal",
    "harvester_version": "1.9.2",
    "identifiers": [
       {
@@ -63,12 +63,12 @@
                },
                {
                   "source": "hal",
-                  "type": "idhal_s",
+                  "type": "idhals",
                   "value": "jane-doe"
                },
                {
                   "source": "hal",
-                  "type": "idhal_i",
+                  "type": "idhali",
                   "value": "18274"
                }
             ]
@@ -243,7 +243,7 @@
       }
    ],
    "issue": {
-      "source": "HAL",
+      "source": "hal",
       "source_identifier": "journal-issue-identifier",
       "titles": [],
       "volume": "164",
@@ -253,7 +253,7 @@
       "rights": null,
       "date": null,
       "journal": {
-         "source": "HAL",
+         "source": "hal",
          "source_identifier": "2871",
          "issn": [
             "0002-9483"

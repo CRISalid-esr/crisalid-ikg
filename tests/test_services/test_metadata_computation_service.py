@@ -5,6 +5,7 @@ import pytest
 from app.models.book import Book
 from app.models.book_chapter import BookChapter
 from app.models.document_type import DocumentTypeEnum
+from app.models.harvesters import Harvester
 from app.models.journal_article import JournalArticle
 from app.models.proceedings import Proceedings
 from app.models.source_records import SourceRecord
@@ -46,25 +47,27 @@ async def test_recompute_document_from_three_documents(
     "expected_document_class,"
     "expected_strategy",
     [
-        (["Hal", "ScanR", "OpenAlex"],
+        (["hal", "scanr", "openalex"],
          [DocumentTypeEnum.UNKNOWN, DocumentTypeEnum.ARTICLE, DocumentTypeEnum.BOOK],
          DocumentTypeEnum.ARTICLE, JournalArticle, GlobalRichestMergeStrategy),
-        (["Scopus", "ScanR", "OpenAlex"], [DocumentTypeEnum.BOOK, DocumentTypeEnum.UNKNOWN,
+        (["scopus", "scanr", "openalex"], [DocumentTypeEnum.BOOK, DocumentTypeEnum.UNKNOWN,
                                            DocumentTypeEnum.ARTICLE],
          DocumentTypeEnum.BOOK, Book, SourceOrderMergeStrategy),
-        (["Idref", "Hal", "ScanR"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.UNKNOWN,
+        (["idref", "hal", "scanr"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.UNKNOWN,
                                      DocumentTypeEnum.BOOK],
          DocumentTypeEnum.ARTICLE, JournalArticle, GlobalRichestMergeStrategy),
-        (["Scopus", "OpenAlex", "Hal"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.BOOK,
+        (["scopus", "openalex", "hal"], [DocumentTypeEnum.ARTICLE, DocumentTypeEnum.BOOK,
                                          DocumentTypeEnum.UNKNOWN],
          DocumentTypeEnum.ARTICLE, JournalArticle, GlobalRichestMergeStrategy),
-        (["Idref", "Hal", "ScanR"], [DocumentTypeEnum.PROCEEDINGS, DocumentTypeEnum.UNKNOWN,
+        (["idref", "hal", "scanr"], [DocumentTypeEnum.PROCEEDINGS, DocumentTypeEnum.UNKNOWN,
                                      DocumentTypeEnum.ARTICLE],
          DocumentTypeEnum.PROCEEDINGS, Proceedings, RichestByFieldMergeStrategy),
-        (["ScanR", "Scopus", "Hal"], [DocumentTypeEnum.CHAPTER, DocumentTypeEnum.ARTICLE,
+        (["scanr", "scopus", "hal"], [DocumentTypeEnum.CHAPTER, DocumentTypeEnum.ARTICLE,
                                       DocumentTypeEnum.UNKNOWN],
          DocumentTypeEnum.CHAPTER, BookChapter, GlobalRichestMergeStrategy)
     ])
+
+
 # pylint: disable=too-many-arguments
 async def test_merge_document_with_inconsistent_types(
         source_record_id_doi_1_pydantic_model: SourceRecord,
@@ -88,15 +91,15 @@ async def test_merge_document_with_inconsistent_types(
     :param expected_document_class: The expected elected document class
     """
     # Hal is the first harvester in the priority order, but the document type is unknown
-    source_record_id_hal_1_pydantic_model.harvester = harvester_order[0]
+    source_record_id_hal_1_pydantic_model.harvester = Harvester(harvester_order[0])
     source_record_id_hal_1_pydantic_model.document_type = [source_document_types[0]]
     # Scanr is the second harvester in the priority order, and the document type
     # is set, so it should be elected
-    source_record_id_doi_1_pydantic_model.harvester = harvester_order[1]
+    source_record_id_doi_1_pydantic_model.harvester = Harvester(harvester_order[1])
     # OpenAlex is the last harvester in the priority order, so its document type
     # should be ignored
     source_record_id_doi_1_pydantic_model.document_type = [source_document_types[1]]
-    source_record_id_doi_1_hal_1_pydantic_model.harvester = harvester_order[2]
+    source_record_id_doi_1_hal_1_pydantic_model.harvester = Harvester(harvester_order[2])
     source_record_id_doi_1_hal_1_pydantic_model.document_type = [source_document_types[2]]
     # merge the source records
     service_under_test = MetadataComputationService([

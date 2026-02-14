@@ -1,3 +1,4 @@
+from app.models.harvesters import Harvester
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -24,7 +25,7 @@ async def test_update_scanr_article_source_record(
         scanr_article_a_v2_source_record_pydantic_model.uid)
     assert fetched_source_record.source_identifier == "doi10.3847/1538-4357/ad0cc0"
     assert fetched_source_record.source_identifier == "doi10.3847/1538-4357/ad0cc0"
-    assert fetched_source_record.harvester == "ScanR"
+    assert fetched_source_record.harvester == Harvester.SCANR.value
     assert any(
         title.value == "All We Are Is Dust in the WIM: "
                        "Constraints on Dust Properties "
@@ -75,7 +76,7 @@ async def test_update_hal_article_source_record_with_custom_metadata(
     fetched_source_record = await service.get_source_record(
         hal_article_source_record_with_custom_metadata_v2_pydantic_model.uid)
     assert fetched_source_record.source_identifier == "hal-02732648"
-    assert fetched_source_record.harvester == "HAL"
+    assert fetched_source_record.harvester == Harvester.HAL.value
     assert any(
         title.value == "NEW Sample Title: Insights from oral conditions"
         and title.language == "en" for title in fetched_source_record.titles)

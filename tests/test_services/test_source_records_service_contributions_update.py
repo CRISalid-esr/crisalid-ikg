@@ -1,4 +1,4 @@
-
+from app.models.harvesting_sources import HarvestingSource
 from app.models.loc_contribution_role import LocContributionRole
 from app.models.people import Person
 from app.models.source_organizations import SourceOrganization
@@ -42,7 +42,7 @@ async def test_create_source_record_with_contributions(
     assert contribution_0.role == LocContributionRole.EDITOR
     assert contribution_0.contributor.name == 'Alice Dupont'
     assert len(contribution_0.affiliations) == 1
-    assert contribution_0.affiliations[0].source == 'hal'
+    assert contribution_0.affiliations[0].source == HarvestingSource.HAL
     assert contribution_0.affiliations[0].source_identifier == '2001'
     assert contribution_0.affiliations[0].name == 'Université Anonyme'
     assert contribution_0.affiliations[
@@ -83,17 +83,17 @@ async def test_create_source_record_with_contributions(
     assert contribution_2.contributor.name == 'Charlie Bernard'
     assert len(contribution_2.affiliations) == 3
     assert any(
-        a.source == 'hal' and a.source_identifier == '3002'
+        a.source == HarvestingSource.HAL and a.source_identifier == '3002'
         and a.name == 'Laboratoire Interdisciplinaire'
         for a in contribution_2.affiliations
     )
     assert any(
-        a.source == 'hal' and a.source_identifier == '3003'
+        a.source == HarvestingSource.HAL and a.source_identifier == '3003'
         and a.name == 'Groupe de Recherche Anonyme'
         for a in contribution_2.affiliations
     )
     assert any(
-        a.source == 'hal' and a.source_identifier == '4001'
+        a.source == HarvestingSource.HAL and a.source_identifier == '4001'
         and a.name == 'Centre de Recherche Avancée'
         for a in contribution_2.affiliations
     )

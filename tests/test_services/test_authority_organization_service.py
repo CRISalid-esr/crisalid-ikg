@@ -173,7 +173,7 @@ async def test_get_or_create_authority_org_name_only_matches_existing_state_with
     # we select the longet of the  3 names as when source organization names differ,
     # the normalized name is computed from the longest name.
     name_only = SourceOrganization(
-        source="manual",
+        source="hal",
         source_identifier="name-only-1",
         name=persisted_cluster_peer_source_org_1.name,
         type=persisted_cluster_peer_source_org_1.type,
@@ -241,7 +241,7 @@ async def test_get_or_create_authority_organization_name_only_homonyms_return_ro
 
     # 3) Now resolve a name-only source org using service
     name_only = SourceOrganization(
-        source="manual",
+        source="hal",
         source_identifier="name-only-homonym",
         name=homonym_label,
         type=SourceOrganization.SourceOrganisationType.INSTITUTION,

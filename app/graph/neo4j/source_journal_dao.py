@@ -128,7 +128,7 @@ class SourceJournalDAO(Neo4jDAO):
         await tx.run(
             create_source_journal_query,
             source_journal_uid=source_journal.uid,
-            source=source_journal.source,
+            source=source_journal.source.value,
             source_identifier=source_journal.source_identifier,
             publisher=source_journal.publisher,
             titles=source_journal.titles,
@@ -146,7 +146,7 @@ class SourceJournalDAO(Neo4jDAO):
         await tx.run(
             update_source_journal_query,
             source_journal_uid=source_journal.uid,
-            source=source_journal.source,
+            source=source_journal.source.value,
             source_identifier=source_journal.source_identifier,
             publisher=source_journal.publisher,
             titles=source_journal.titles,

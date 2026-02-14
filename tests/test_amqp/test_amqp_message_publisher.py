@@ -37,8 +37,8 @@ async def test_publish_fetch_publications_taks(
         "fields": {
             "name": "John Doe",
             "identifiers": [
-                {"type": "local", "value": "jdoe@univ-domain.edu"},
-                {"type": "orcid", "value": "0000-0001-2345-6789"}
+                {"type": PersonIdentifierType.LOCAL.value, "value": "jdoe@univ-domain.edu"},
+                {"type": PersonIdentifierType.ORCID.value, "value": "0000-0001-2345-6789"}
             ]
         }
     }

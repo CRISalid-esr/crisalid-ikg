@@ -8,15 +8,6 @@ from loguru import logger
 class AgentIdentifierType(Enum):
     """Base class for agent identifier types"""
 
-    @staticmethod
-    def _normalize(s: str) -> str:
-        """
-        Normalize identifier type:
-        - lowercase
-        - keep letters only (a–z)
-        """
-        return re.sub(r"[^a-z]", "", s.lower())
-
     @classmethod
     def from_str(
             cls,
@@ -25,11 +16,8 @@ class AgentIdentifierType(Enum):
         """Get the identifier type enum member from a string representation"""
         if not identifier_type_str:
             return None
-
-        normalized_input = cls._normalize(identifier_type_str)
-
         for identifier_type in cls:
-            if cls._normalize(identifier_type.value) == normalized_input:
+            if identifier_type.value == identifier_type_str:
                 return identifier_type
         logger.warning(f"Unknown identifier type: {identifier_type_str}")
         return None
@@ -40,9 +28,9 @@ class PersonIdentifierType(AgentIdentifierType):
     """Person identifier types"""
     ORCID = "orcid"
     IDREF = "idref"
-    ID_HAL_S = "id_hal_s"
-    ID_HAL_I = "id_hal_i"
-    SCOPUS_EID = "scopus_eid"
+    IDHALS = "idhals"
+    IDHALI = "idhali"
+    SCOPUS = "scopus"
     LOCAL = "local"
     EPPN = "eppn"
 
@@ -64,23 +52,23 @@ class PersonIdentifierType(AgentIdentifierType):
 PERSON_IDENTIFIER_PATTERNS = {
     PersonIdentifierType.ORCID: "^([0-9]{4}-){3}[0-9]{3}[0-9X]$",
     PersonIdentifierType.IDREF: "^[0-9]{1,9}[A-Z]?$",
-    PersonIdentifierType.ID_HAL_S: "^([a-z]+-)*[a-z]+$",
-    PersonIdentifierType.ID_HAL_I: "^[0-9]{1,9}$",
-    PersonIdentifierType.SCOPUS_EID: "^[0-9]+$",
+    PersonIdentifierType.IDHALS: "^([a-z]+-)*[a-z]+$",
+    PersonIdentifierType.IDHALI: "^[0-9]{1,9}$",
+    PersonIdentifierType.SCOPUS: "^[0-9]+$",
 }
 
 
 class OrganizationIdentifierType(AgentIdentifierType):
     """Organization identifier types"""
-    IDREF = "IdRef"
+    IDREF = "idref"
     ROR = "ror"
     RNSR = "nns"
     LOCAL = "local"
-    UAI = "UAI"
-    SIREN = "SIREN"
-    SIRET = "SIRET"
-    WIKIDATA = "Wikidata"
-    SCOPUS_ID = "scopus_id"
+    UAI = "uai"
+    SIREN = "siren"
+    SIRET = "siret"
+    WIKIDATA = "wikidata"
+    SCOPUS_ID = "scopus"
     HAL = "hal"
     OPEN_ALEX = "openalex"
     ISNI = "isni"
@@ -89,25 +77,35 @@ class OrganizationIdentifierType(AgentIdentifierType):
 
 class PublicationIdentifierType(Enum):
     """Publication identifier types"""
+    # --PUBLICATION IDENTIFIERS--
     ARXIV = "arxiv"
+    BIBCODE = "bibcode"
+    BIORXIV = "biorxiv"
+    CERN = "cern"
+    CHEMRXIV = "chemrxiv"
     DOI = "doi"
+    ENSAM = "ensam"
     HAL = "hal"
     INERIS = "ineris"
+    INSPIRE = "inspire"
     IRD = "ird"
+    IRSTEA = "irstea"
+    IRTHESAURUS = "irthesaurus"
+    MEDITAGRI = "meditagri"
     NNT = "nnt"
-    OPENALEX = "open_alex"
+    OKINA = "okina"
+    OATAO = "oatao"
+    OPENALEX = "openalex"
     PII = "pii"
-    PMID = "pmid"
-    PMC = "pmcid"
-    PUBMED = "pubmed"
-    PUBMEDCENTRAL = "pubmedcentral"
     PPN = "ppn"
     PRODINRA = "prodinra"
+    PUBMED = "pubmed"
+    PUBMEDCENTRAL = "pubmedcentral"
     SCIENCESPO = "sciencespo"
+    SWHID = "swhid"
     URI = "uri"
-    WOS = "wos"
-    SUDOC_PPN = "sudoc_ppn"
     UNKNOWN = "unknown"
+    WOS = "wos"
 
 
 class JournalIdentifierType(Enum):

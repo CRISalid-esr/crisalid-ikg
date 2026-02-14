@@ -177,8 +177,8 @@ class SourceContributorMappingService:
         }
         source_people_cluster = sorted(
             source_people_cluster,
-            key=lambda person: self._get_harvesters().index(person.source)
-            if person.source in self._get_harvesters() else float('inf')
+            key=lambda person: self._get_harvesting_sources().index(person.source.value)
+            if person.source.value in self._get_harvesting_sources() else float('inf')
         )
         for source_person in source_people_cluster:
             if external_person_data['uid'] is None:
@@ -264,7 +264,7 @@ class SourceContributorMappingService:
         )
 
     def _elect_authority_organizations_for_affiliation_statements(self, root_objects,
-                                                                        source_organisations):
+                                                                  source_organisations):
         # elect one target per root: either a state (unique match) or the root (0 or multiple
         # matches)
         elected_target_uids = []
@@ -332,11 +332,11 @@ class SourceContributorMappingService:
         :return: the first encountered role
         """
         # Sort source_people by harvester order
-        harvester_order = {harvester: index for index, harvester in
-                           enumerate(self._get_harvesters())}
+        harvesting_sources_order = {source: index for index, source in
+                                    enumerate(self._get_harvesting_sources())}
         sorted_people = sorted(
             source_people,
-            key=lambda person: harvester_order.get(person.source, float('inf'))
+            key=lambda person: harvesting_sources_order.get(person.source, float('inf'))
         )
 
         roles = []
@@ -446,7 +446,7 @@ class SourceContributorMappingService:
         for source_person in source_people:
             # append the contributor to the list of contributors with the same harvester
             # except if the contributor is already in the list (by uid)
-            source = source_person.source.lower().replace('_', '')
+            source = source_person.source.value
             if not any(
                     source_person.uid == sp.uid
                     for sp in source_people_by_source_platform.get(
@@ -462,12 +462,12 @@ class SourceContributorMappingService:
         :param source_people: Dictionary of contributors by source platform
         :return: Dictionary of distances between contributors
         """
-        harvesters = self._get_harvesters()  # ['Hal', 'Idref', 'ScanR', 'Scopus', 'OpenAlex']
+        sources = self._get_harvesting_sources()
         source_people_by_source_platform = source_people
         distances = {}
         existing_sources = list(source_people_by_source_platform.keys())
         # Order the sources by the order of the harvesters
-        sources = [source for source in harvesters if source in existing_sources]
+        sources = [source for source in sources if source in existing_sources]
 
         # Compute distances between each layer and all subsequent layers
         for i, source in enumerate(sources):
@@ -592,6 +592,5 @@ class SourceContributorMappingService:
         settings = get_app_settings()
         return settings.publication_source_policies
 
-    def _get_harvesters(self):
-        return [harvester.lower().replace('_', '')
-                for harvester in self._get_policies()['harvesters']]
+    def _get_harvesting_sources(self):
+        return list(self._get_policies()['harvesting_sources'])

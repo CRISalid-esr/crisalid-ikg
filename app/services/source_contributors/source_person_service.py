@@ -19,8 +19,9 @@ class SourcePersonService:
         """
         factory = self._get_dao_factory()
         source_person_dao: SourcePersonDAO = factory.get_dao(SourcePerson)
-        assert source_person.uid, "Source person uid should have been computed before from" \
-                                  f"{source_person.source} and {source_person.source_identifier}"
+        assert source_person.uid, \
+            "Source person uid should have been computed before from" \
+            f"{source_person.source.value} and {source_person.source_identifier}"
         source_person_exists = await source_person_dao.source_person_exists(source_person.uid)
         if source_person_exists:
             return await source_person_dao.update(source_person)

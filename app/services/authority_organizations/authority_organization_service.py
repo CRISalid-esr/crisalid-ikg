@@ -253,7 +253,7 @@ class AuthorityOrganizationService:
             prepared.append(
                 SourceOrganization(
                     uid=so.uid,
-                    source=so.source,
+                    source=so.source.value,
                     source_identifier=so.source_identifier,
                     name=so.name,
                     type=so.type,

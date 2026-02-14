@@ -1,13 +1,14 @@
 from typing import Optional, List, ClassVar
 
 from loguru import logger
-from pydantic import BaseModel, model_validator, Field
+from pydantic import model_validator, Field
 
 from app.models.identifier_types import JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifier, JournalIdentifierFormat
+from app.models.sourced_model import SourcedModel
 
 
-class SourceJournal(BaseModel):
+class SourceJournal(SourcedModel):
     """
     Source Journal API model
     """
@@ -16,8 +17,6 @@ class SourceJournal(BaseModel):
     uid: Optional[str] = None
 
     source_identifier: str
-
-    source: str
 
     publisher: Optional[str] = None
 

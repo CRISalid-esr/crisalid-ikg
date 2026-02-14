@@ -1,5 +1,7 @@
 from typing import List
 
+from app.models.harvesters import Harvester
+from app.models.harvesting_sources import HarvestingSource
 from app.models.identifier_types import JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.people import Person
@@ -181,12 +183,12 @@ async def test_journal_from_scanr_article(
     fetched_source_record = await service.get_source_record(
         scanr_article_a_source_record_pydantic_model.uid)
     assert fetched_source_record.source_identifier == "doi10.3847/1538-4357/ad0cc0"
-    assert fetched_source_record.harvester == "ScanR"
+    assert fetched_source_record.harvester == Harvester.SCANR.value
     issue = fetched_source_record.issue
-    assert issue.source == "ScanR"
+    assert issue.source == HarvestingSource.SCANR
     assert issue.source_identifier == "the_astrophysical_journal-ScanR"
     journal = issue.journal
-    assert journal.source == "ScanR"
+    assert journal.source == HarvestingSource.SCANR
     assert journal.source_identifier == \
            "0004-637X-1538-4357-the_astrophysical_journal-american_astronomical_society-ScanR"
     assert journal.publisher == "American Astronomical Society"

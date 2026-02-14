@@ -2,12 +2,13 @@ import hashlib
 from typing import List, ClassVar, Optional
 
 from loguru import logger
-from pydantic import BaseModel, model_validator
+from pydantic import model_validator
 
 from app.models.source_person_identifiers import SourcePersonIdentifier
+from app.models.sourced_model import SourcedModel
 
 
-class SourcePerson(BaseModel):
+class SourcePerson(SourcedModel):
     """
     Source Contributor model
     """
@@ -15,7 +16,6 @@ class SourcePerson(BaseModel):
     IDENTIFIER_SEPARATOR: ClassVar[str] = "-"
 
     uid: str
-    source: str
     source_identifier: Optional[str] = None
     name: str
     first_name: Optional[str] = None

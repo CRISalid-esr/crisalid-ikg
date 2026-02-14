@@ -125,7 +125,7 @@ class SourceOrganizationDAO(Neo4jDAO):
         await tx.run(
             create_source_organization_query,
             source_organization_uid=source_organization.uid,
-            source=source_organization.source,
+            source=source_organization.source.value,
             source_identifier=source_organization.source_identifier,
             name=source_organization.name,
             type=source_organization.type.value,
@@ -154,7 +154,7 @@ class SourceOrganizationDAO(Neo4jDAO):
         await tx.run(
             update_source_organization_query,
             source_organization_uid=source_organization.uid,
-            source=source_organization.source,
+            source=source_organization.source.value,
             source_identifier=source_organization.source_identifier,
             name=source_organization.name,
             type=source_organization.type.value,
