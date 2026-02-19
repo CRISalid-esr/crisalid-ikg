@@ -6,6 +6,8 @@ from app.services.changes.processors.document_merge_change_processor import \
 from app.services.changes.processors.document_subjects_change_processor import (
     DocumentSubjectsChangeProcessor,
 )
+from app.services.changes.processors.document_title_change_processor import \
+    (DocumentTitleChangeProcessor)
 from app.services.changes.processors.document_type_change_processor import \
     DocumentTypeChangeProcessor
 
@@ -30,6 +32,9 @@ class ChangeProcessorFactory:
 
             if change.path == "documentType":
                 return DocumentTypeChangeProcessor(change)
+
+            if change.path == "titles":
+                return DocumentTitleChangeProcessor(change)
 
         raise ValueError(
             f"Unsupported change routing (target_type={change.target_type}, "

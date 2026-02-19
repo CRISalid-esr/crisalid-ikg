@@ -500,10 +500,10 @@ class DocumentDAO(Neo4jDAO):
     @handle_database_errors
     async def update_type(self, document_uid: str, new_type: str) -> None:
         """
-        Update a document type and associated labels
+        Update a document type
 
         :param document_uid: UID of the document
-        :param subject_uids: New type of the document
+        :param new_type: New type of the document
         """
 
         if new_type not in self.DOCUMENT_CLASS_MAP:
@@ -530,6 +530,67 @@ class DocumentDAO(Neo4jDAO):
         query = load_query("update_document_type")
         await tx.run(query, document_uid=document_uid,
                      document_labels=new_labels, document_type=new_type)
+
+    @handle_database_errors
+    async def add_title(self, document_uid: str, title: str, language:str) -> None:
+        """
+        Adds a document title
+
+        :param document_uid: UID of the document
+        :param title: New title of the document
+        :param language: Language of the new title
+        """
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._add_title_transaction,
+                    document_uid=document_uid,
+                    title=title,
+                    language=language
+                )
+
+    @staticmethod
+    async def _add_title_transaction(
+            tx: AsyncManagedTransaction,
+            document_uid: str,
+            title: str,
+            language: str
+    ) -> None:
+        query = load_query("add_document_title")
+        await tx.run(query, document_uid=document_uid,
+                     document_title=title, title_language=language)
+
+    @handle_database_errors
+    async def remove_title(self, document_uid: str, title: str, language: str) -> None:
+        """
+        Remmoves a document title
+
+        :param document_uid: UID of the document
+        :param title: Title of the document to remove
+        :param language: Language of the title
+        """
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._remove_title_transaction,
+                    document_uid=document_uid,
+                    title=title,
+                    language=language
+                )
+
+    @staticmethod
+    async def _remove_title_transaction(
+            tx: AsyncManagedTransaction,
+            document_uid: str,
+            title: str,
+            language: str
+    ) -> None:
+        query = load_query("remove_document_title")
+        await tx.run(query, document_uid=document_uid,
+                     document_title=title, title_language=language)
+
 
     @handle_database_errors
     async def update_contribution_affiliation_statements(
