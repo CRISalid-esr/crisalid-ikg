@@ -591,6 +591,60 @@ class DocumentDAO(Neo4jDAO):
         await tx.run(query, document_uid=document_uid,
                      document_title=title, title_language=language)
 
+    @handle_database_errors
+    async def add_abstract(self, document_uid: str, abstract: TextLiteral) -> None:
+        """
+        Adds a document abstract
+
+        :param document_uid: UID of the document
+        :param abstract: TextLiteral, new abstract of the document
+        """
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._add_abstract_transaction,
+                    document_uid=document_uid,
+                    abstract=abstract.model_dump()
+                )
+
+    @staticmethod
+    async def _add_abstract_transaction(
+            tx: AsyncManagedTransaction,
+            document_uid: str,
+            abstract: TextLiteral
+    ) -> None:
+        query = load_query("add_document_abstract")
+        await tx.run(query, document_uid=document_uid,
+                     document_abstract=abstract)
+
+    @handle_database_errors
+    async def remove_abstract(self, document_uid: str, abstract: TextLiteral) -> None:
+        """
+        Removes a document abstract
+
+        :param document_uid: UID of the document
+        :param abstract: TextLiteral, abstract of the document to remove
+        """
+
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._remove_abstract_transaction,
+                    document_uid=document_uid,
+                    abstract=abstract.model_dump()
+                )
+
+    @staticmethod
+    async def _remove_abstract_transaction(
+            tx: AsyncManagedTransaction,
+            document_uid: str,
+            abstract: str,
+    ) -> None:
+        query = load_query("remove_document_abstract")
+        await tx.run(query, document_uid=document_uid,
+                     document_abstract=abstract)
+
 
     @handle_database_errors
     async def update_contribution_affiliation_statements(
