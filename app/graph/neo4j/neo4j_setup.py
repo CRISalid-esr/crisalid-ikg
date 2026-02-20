@@ -43,7 +43,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_authority_organization_state_signature_constraint(tx)
         await cls._create_authority_organization_uid_constraint(tx)
         await cls._create_literal_value_language_type_constraint(tx)
-        await cls._create_text_literal_key_constraint(tx)
+        await cls._create_text_literal_type_key_constraint(tx)
         await cls._create_source_record_uid_constraint(tx)
         await cls._create_change_uid_constraint(tx)
 
@@ -379,11 +379,11 @@ class Neo4jSetup(Setup[AsyncDriver]):
             raise e
 
     @staticmethod
-    async def _create_text_literal_key_constraint(tx: AsyncManagedTransaction):
+    async def _create_text_literal_type_key_constraint(tx: AsyncManagedTransaction):
         query = """
-        CREATE CONSTRAINT textliteral_key_unique IF NOT EXISTS
+        CREATE CONSTRAINT textliteral_type_key_unique IF NOT EXISTS
         FOR (t:TextLiteral)
-        REQUIRE t.key IS UNIQUE;
+        REQUIRE (t.key, t.type) IS UNIQUE;
         """
         try:
             await tx.run(query=query)
