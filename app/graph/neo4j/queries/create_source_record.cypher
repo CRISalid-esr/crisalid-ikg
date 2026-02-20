@@ -22,7 +22,7 @@ FOREACH (title IN $titles |
   MERGE (s)-[:HAS_TITLE]->(t)
 )
 FOREACH (abstract IN $abstracts |
-  MERGE (a:TextLiteral {key: abstract.key})
+  MERGE (a:TextLiteral {key: abstract.key, type: 'source_record_abstract'})
     ON CREATE SET
     a.value = abstract.value,
     a.language = coalesce(nullif(trim(abstract.language), ''), 'und'),
