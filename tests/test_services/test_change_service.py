@@ -258,6 +258,118 @@ async def test_change_service_remove_title_to_document(
     assert stored.status == ChangeStatus.APPLIED
 
 @pytest.mark.asyncio
+async def test_change_service_add_abstract_to_document(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document,
+        mocked_document_updated_signal) -> None:
+    """
+    Given a Document with abstracts
+    When a Change is submitted to ChangeService to add an abstract
+    Then the document node has a new abstract added
+    """
+    document = document_hal_article_a_persisted_model
+    change = Change(
+        uid="change-service-test-abstractAdd",
+        target_uid=document.uid,
+        target_type=TargetType.DOCUMENT,
+        person_uid="person:test",
+        application="pytest",
+        id="abstractAdd",
+        action_type="ADD",
+        path="abstracts",
+        parameters={"value": "Test abstract", "language": "an"},
+        timestamp="2023-10-01T12:00:00Z",
+    )
+
+    service = ChangeService()
+    await service.create_and_apply_change(change)
+
+    document_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Document)
+    updated = await document_dao.get_document_by_uid(document.uid)
+    assert updated is not None
+    assert len(updated.abstracts) == 1
+    assert updated.abstracts[0].value == "Test abstract"
+    assert updated.abstracts[0].language == "an"
+
+    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid)
+
+    change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
+    stored = await change_dao.get_by_uid(change.uid)
+    assert stored is not None
+    assert stored.status == ChangeStatus.APPLIED
+
+@pytest.mark.asyncio
+async def test_change_service_remove_abstract_to_document(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document) -> None:
+    """
+    Given a Document with titles
+    When a Change is submitted to ChangeService to remove a title
+    Then the document node has one title less
+    """
+    document = document_hal_article_a_persisted_model
+
+    #First add
+    change_add = Change(
+        uid="change-service-test-abstractAdd",
+        target_uid=document.uid,
+        target_type=TargetType.DOCUMENT,
+        person_uid="person:test",
+        application="pytest",
+        id="abstractAdd",
+        action_type="ADD",
+        path="abstracts",
+        parameters={"value": "Test abstract", "language": "an"},
+        timestamp="2023-10-01T12:00:00Z",
+    )
+
+    service = ChangeService()
+    await service.create_and_apply_change(change_add)
+
+    document_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Document)
+    updated = await document_dao.get_document_by_uid(document.uid)
+    assert updated is not None
+    assert len(updated.abstracts) == 1
+    assert updated.abstracts[0].value == "Test abstract"
+    assert updated.abstracts[0].language == "an"
+
+    change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
+    stored = await change_dao.get_by_uid(change_add.uid)
+    assert stored is not None
+    assert stored.status == ChangeStatus.APPLIED
+
+
+    # Then remove the same title
+    change_remove = Change(
+        uid="change-service-test-abstractRemove",
+        target_uid=document.uid,
+        target_type=TargetType.DOCUMENT,
+        person_uid="person:test",
+        application="pytest",
+        id="abstractRemove",
+        action_type="REMOVE",
+        path="abstracts",
+        parameters={"value": "Test abstract", "language": "an"},
+        timestamp="2023-10-01T12:00:00Z",
+    )
+
+    service = ChangeService()
+    await service.create_and_apply_change(change_remove)
+
+    document_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Document)
+    updated = await document_dao.get_document_by_uid(document.uid)
+    assert updated is not None
+    assert len(updated.abstracts) == 0
+    assert all(
+        not (t.value == "Test abstract" and t.language == "an")
+        for t in updated.abstracts
+    )
+    change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
+    stored = await change_dao.get_by_uid(change_remove.uid)
+    assert stored is not None
+    assert stored.status == ChangeStatus.APPLIED
+
+@pytest.mark.asyncio
 async def test_change_service_update_invalid_type_of_document(
         test_app,  # pylint: disable=unused-argument
         document_hal_article_a_persisted_model: Document) -> None:

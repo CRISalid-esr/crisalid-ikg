@@ -55,7 +55,7 @@ OPTIONAL MATCH (doc)-[r:HAS_ABSTRACT]->(:TextLiteral {type: "document_abstract"}
 DELETE r
 WITH DISTINCT doc
 FOREACH (abstract IN $abstracts |
-  MERGE (a:TextLiteral {key: abstract.key})
+  MERGE (a:TextLiteral {key: abstract.key, type: "document_abstract"})
   ON CREATE SET
     a.value    = abstract.value,
     a.language = coalesce(nullif(trim(abstract.language), ''), 'und'),

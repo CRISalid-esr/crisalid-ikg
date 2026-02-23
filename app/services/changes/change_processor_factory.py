@@ -1,6 +1,8 @@
 # file: app/services/changes/change_processor_factory.py
 from app.models.change import Change, TargetType
 from app.services.changes.processors.abstract_change_processor import AbstractChangeProcessor
+from app.services.changes.processors.document_abstract_change_processor import \
+    DocumentAbstractChangeProcessor
 from app.services.changes.processors.document_merge_change_processor import \
     DocumentMergeChangeProcessor
 from app.services.changes.processors.document_subjects_change_processor import (
@@ -35,6 +37,9 @@ class ChangeProcessorFactory:
 
             if change.path == "titles":
                 return DocumentTitleChangeProcessor(change)
+
+            if change.path == "abstracts":
+                return DocumentAbstractChangeProcessor(change)
 
         raise ValueError(
             f"Unsupported change routing (target_type={change.target_type}, "

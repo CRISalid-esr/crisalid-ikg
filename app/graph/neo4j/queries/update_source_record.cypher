@@ -29,7 +29,7 @@ OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(:TextLiteral {type: 'source_record_abstrac
 DELETE r
 WITH DISTINCT s
 FOREACH (abstract IN $abstracts |
-  MERGE (a:TextLiteral {key: abstract.key})
+  MERGE (a:TextLiteral {key: abstract.key, type:'source_record_abstract'})
   ON CREATE SET
     a.value    = abstract.value,
     a.language = coalesce(nullif(trim(abstract.language), ''), 'und'),
