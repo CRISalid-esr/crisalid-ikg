@@ -1,0 +1,145 @@
+{
+  "source_identifier": "https://openalex.org/doi10.1016/j.astron.2024.05.018",
+  "harvester": "openalex",
+  "harvester_version": "1.2.0",
+  "identifiers": [
+    {
+      "type": "hal",
+      "value": "hal-00000000"
+    }
+  ],
+  "manifestations": [],
+  "titles": [
+    {
+      "value": "Tracing Dust Dynamics in Galactic Halos: Observational Constraints and Modeling Approaches",
+      "language": "en"
+    }
+  ],
+  "subtitles": [],
+  "abstracts": [],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/027818055/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Matière interstellaire",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Milieu interstellaire",
+          "language": null
+        }
+      ]
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 0,
+      "contributor": {
+        "source": "openalex",
+        "source_identifier": "https://openalex.org/A5065084602",
+        "name": "A. C. Smith",
+        "first_name": null,
+        "last_name": null,
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "openalex",
+            "value": "https://openalex.org/A5065084602"
+          },
+          {
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0002-1825-0097"
+          },
+          {
+            "type": "isni",
+            "value": "0000-0002-1825-12345"
+          }
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 2,
+      "contributor": {
+        "source": "openalex",
+        "source_identifier": "https://openalex.org/A5019602694",
+        "name": "L. F. Johnson",
+        "first_name": null,
+        "last_name": null,
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0001-8777-7135"
+          },
+          {
+            "type": "openalex",
+            "value": "https://openalex.org/A5019602694"
+          }
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "openalex",
+        "source_identifier": "https://openalex.org/A5088876922",
+        "name": "Raymond Garcia",
+        "first_name": null,
+        "last_name": null,
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "openalex",
+            "value": "https://openalex.org/A5088876922"
+          }
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "scanr",
+    "source_identifier": "astronomy_and_astrophysics_scanr",
+    "titles": [],
+    "volume": "29",
+    "number": [
+      "5"
+    ],
+    "rights": null,
+    "date": "2024-05-15",
+    "journal": {
+      "source": "scanr",
+      "source_identifier": "0004-6361-1432-0746-astronomy_and_astrophysics-ScanR",
+      "issn": [
+        "0004-6361",
+        "1432-0746"
+      ],
+      "eissn": [],
+      "issn_l": null,
+      "publisher": "European Southern Observatory",
+      "titles": [
+        "Astronomy and Astrophysics"
+      ]
+    }
+  },
+  "page": "230-245",
+  "book": null,
+  "issued": "2024-05-15 00:00:00",
+  "created": null,
+  "version": 0
+}

@@ -1,0 +1,265 @@
+{
+  "source_identifier": "doi10.3847/1538-4357/ad0cc0",
+  "harvester": "scanr",
+  "harvester_version": "1.2.0",
+  "identifiers": [
+    {
+      "type": "doi",
+      "value": "10.3847/1538-4357/ad0cc0"
+    },
+    {
+      "type": "hal",
+      "value": "hal-00000000"
+    }
+  ],
+  "manifestations": [],
+  "titles": [
+    {
+      "value": "All We Are Is Dust in the WIM: Constraints on Dust Properties in the Milky Way\u2019s Warm Ionized Medium",
+      "language": "en"
+    },
+    {
+      "value": "Tout ce que nous sommes est de la poussi\u00e8re dans le WIM : contraintes sur les propri\u00e9t\u00e9s de la poussi\u00e8re dans le milieu ionis\u00e9 chaud de la Voie lact\u00e9e",
+      "language": "fr"
+    }
+  ],
+  "subtitles": [
+    {
+      "value": "New subtitle in English",
+      "language": "en"
+    },
+    {
+      "value": "Nouveau sous-titre en français",
+      "language": "fr"
+    }
+  ],
+  "abstracts": [
+    {
+      "value": "New abstract in English",
+      "language": "en"
+    },
+    {
+      "value": "Nouveau résumé en français",
+      "language": "fr"
+    }
+  ],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/123456789y/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Mon preflabel a changé",
+          "language": null
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.idref.fr/027818055/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Mati\u00e8re interstellaire",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Milieu interstellaire",
+          "language": null
+        }
+      ]
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q1111111",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "je suis nouveau",
+          "language": "fr"
+        },
+        {
+          "value": "I am new",
+          "language": "en"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "je suis neuf",
+          "language": "fr"
+        },
+        {
+          "value": "I am nine",
+          "language": "en"
+        }
+      ]
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 0,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "idref999999999",
+        "name": "Johnson L. F.",
+        "first_name": null,
+        "last_name": null,
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "idhal",
+            "value": "0123456789"
+          },
+          {
+            "type": "idref",
+            "value": "999999999"
+          }
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 3,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "MivilleDeschenes###N",
+        "name": "N. Miville Deschenes",
+        "first_name": "Nathalie",
+        "last_name": "Miville Deschenes",
+        "name_variants": [
+          "Nathalie Miville Deschenes"
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 2,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "idref078115361",
+        "name": "Noel Mahajan Dechant",
+        "first_name": "Noel",
+        "last_name": "Mahajan Dechant",
+        "name_variants": [
+          "N. Mahajan Dechant"
+        ],
+        "identifiers": [
+          {
+            "type": "orcid",
+            "value": "https://orcid.org/0000-0001-6528-2446"
+          },
+          {
+            "type": "idref",
+            "value": "078115361"
+          }
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "Fevrier###J",
+        "name": "Fevrier J.",
+        "first_name": "Jérôme",
+        "last_name": "Fevrier",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 6,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "Raymond###Garcia",
+        "name": "Garcia, Raymond",
+        "first_name": "Raymond",
+        "last_name": "Garcia",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 5,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "Smith###A",
+        "name": "A. Smith",
+        "first_name": null,
+        "last_name": null,
+        "name_variants": [],
+        "identifiers": [
+          {
+            "type": "isni",
+            "value": "0000-0002-1825-12345"
+          }
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 4,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "idref123456789",
+        "name": "I. A. Zelko",
+        "first_name": "Ivan",
+        "last_name": "Zelko",
+        "name_variants": [
+          "Ivan Zelko"
+        ],
+        "identifiers": [
+          {
+            "type": "idref",
+            "value": "123456789"
+          }
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "scanr",
+    "source_identifier": "the_astrophysical_journal-ScanR",
+    "titles": [],
+    "volume": null,
+    "number": [],
+    "rights": null,
+    "date": null,
+    "journal": {
+      "source": "scanr",
+      "source_identifier": "0004-637X-1538-4357-the_astrophysical_journal-american_astronomical_society-ScanR",
+      "issn": [
+        "0004-637X",
+        "1538-4357"
+      ],
+      "eissn": [],
+      "issn_l": null,
+      "publisher": "American Astronomical Society",
+      "titles": [
+        "The Astrophysical Journal"
+      ]
+    }
+  },
+  "page": null,
+  "book": null,
+  "raw_issued": "2023",
+  "issued": "2023-01-01 00:00:00",
+  "created": null,
+  "version": 0
+}

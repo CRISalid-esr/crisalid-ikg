@@ -1,0 +1,104 @@
+{
+  "source_identifier": "https://openalex.org/W123456789",
+  "harvester": "openalex",
+  "harvester_version": "1.3.1",
+  "identifiers": [
+    {
+      "type": "doi",
+      "value": "10.3847/1538-4357/ad0cc0"
+    },
+    {
+      "type": "hal",
+      "value": "hal-00000000"
+    }
+  ],
+  "manifestations": [
+    {
+      "page": "https://doi.org/10.12345/bch.0000.00000",
+      "download_url": null,
+      "additional_files": []
+    }
+  ],
+  "titles": [
+    {
+      "value": "All We Are Is Dust in the WIM",
+      "language": "en"
+    }
+  ],
+  "subtitles": [
+    {
+      "value": "Constraints on Dust Properties in the Milky Way\u2019s Warm Ionized Medium",
+      "language": "en"
+    }
+  ],
+  "abstracts": [
+    {
+      "value": "This is an abstract of the article.",
+      "language": "en"
+    }
+  ],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/02734004x/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Analyse des donn\u00e9es",
+          "language": null
+        }
+      ],
+      "alt_labels": []
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "openalex",
+        "source_identifier": "https://example.org/1234567",
+        "name": "J. L. West",
+        "name_variants": [
+          "J. West"
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "hal",
+    "source_identifier": "journal-issue-identifier",
+    "titles": [],
+    "volume": "105",
+    "number": [
+      "2"
+    ],
+    "rights": null,
+    "date": null,
+    "journal": {
+      "source": "scanr",
+      "source_identifier": "0004-637X-1538-4357-the_astrophysical_journal-american_astronomical_society-ScanR",
+      "issn": [
+        "0004-637X",
+        "1538-4357"
+      ],
+      "eissn": [],
+      "issn_l": null,
+      "publisher": "American Astronomical Society",
+      "titles": [
+        "The Astrophysical Journal"
+      ]
+    }
+  },
+  "page": "1-10",
+  "book": null,
+  "issued": "2023-12-01 00:00:00",
+  "created": "2023-12-01 00:00:00",
+  "version": 2
+}

@@ -1,0 +1,28 @@
+[
+  {
+    "id": 333051,
+    "name": "Institut Européen des Études Avancées",
+    "address": "14 avenue des Lumières",
+    "city": "Strasbourg",
+    "postal_code": "67000",
+    "latitude": 48.5734,
+    "longitude": 7.7521,
+    "country": "France",
+    "identifiers": {
+      "idref": [
+        "059873215"
+      ],
+      "siren": [
+        "318762459"
+      ],
+      "siret": [
+        "31876245900022"
+      ],
+      "wikidata": [
+        "Q2229876"
+      ]
+    },
+    "uo_lib_en": "European Institute of Advanced Studies",
+    "uo_lib_officiel": "Institut Européen des Études Avancées"
+  }
+]

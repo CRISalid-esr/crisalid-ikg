@@ -1,0 +1,162 @@
+{
+  "source_identifier": "hal-00000001",
+  "harvester": "hal",
+  "harvester_version": "1.3.0",
+  "identifiers": [
+    {
+      "type": "hal",
+      "value": "hal-00000001"
+    }
+  ],
+  "manifestations": [
+    {
+      "page": "https://anonymous-repository.hal.science/hal-00000001v1",
+      "download_url": null,
+      "additional_files": []
+    }
+  ],
+  "titles": [
+    {
+      "value": "Un aperçu de la législation sur le CLOUD",
+      "language": "fr"
+    }
+  ],
+  "subtitles": [],
+  "abstracts": [],
+  "subjects": [],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Chapter",
+      "label": "Chapter"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 0,
+      "contributor": {
+        "source": "hal",
+        "source_identifier": "100001",
+        "name": "Alice Dupont",
+        "first_name": "Alice",
+        "last_name": "Dupont",
+        "name_variants": [
+          "A. Dupont"
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": [
+        {
+          "source": "hal",
+          "source_identifier": "2001",
+          "name": "Université Anonyme",
+          "type": "institution",
+          "identifiers": [
+            {
+              "type": "hal",
+              "value": "2001"
+            },
+            {
+              "type": "idref",
+              "value": "123456789"
+            },
+            {
+              "type": "isni",
+              "value": "000000012345678X"
+            },
+            {
+              "type": "ror",
+              "value": "https://ror.org/000000000"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "hal",
+        "source_identifier": "100002",
+        "name": "Jean Martin",
+        "first_name": null,
+        "last_name": null,
+        "name_variants": [
+          "Jean M.",
+          "J. Martin"
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/win.html",
+      "affiliations": []
+    },
+    {
+      "rank": 2,
+      "contributor": {
+        "source": "hal",
+        "source_identifier": "100003",
+        "name": "Charlie Bernard",
+        "first_name": "Charlie",
+        "last_name": "Bernard",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": [
+        {
+          "source": "hal",
+          "source_identifier": "3001",
+          "name": "Institut de Technologie Anonyme",
+          "type": "institution",
+          "identifiers": []
+        },
+        {
+          "source": "hal",
+          "source_identifier": "3002",
+          "name": "Laboratoire Interdisciplinaire",
+          "type": "laboratory_group",
+          "identifiers": [
+            {
+              "type": "hal",
+              "value": "3002"
+            }
+          ]
+        },
+        {
+          "source": "hal",
+          "source_identifier": "3003",
+          "name": "Groupe de Recherche Anonyme",
+          "type": "institution",
+          "identifiers": [
+            {
+              "type": "hal",
+              "value": "3003"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "contributor": {
+        "source": "hal",
+        "source_identifier": "100004",
+        "name": "Marie Lefèvre",
+        "name_variants": [
+          "M. Lefèvre"
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/trl.html",
+      "affiliations": []
+    }
+  ],
+  "issue": null,
+  "page": null,
+  "book": {
+    "source": "hal",
+    "title": "Introduction au droit des données personnelles",
+    "title_variants": [],
+    "isbn10": null,
+    "isbn13": null,
+    "publisher": null
+  },
+  "issued": "2019-11-01T00:00:00",
+  "created": "2019-11-01T00:00:00",
+  "version": 2
+}

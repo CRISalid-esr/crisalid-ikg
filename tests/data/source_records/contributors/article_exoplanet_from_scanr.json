@@ -1,0 +1,176 @@
+{
+  "source_identifier": "doi10.1234/5678xyz",
+  "harvester": "scanr",
+  "harvester_version": "1.2.0",
+  "identifiers": [
+    {
+      "type": "doi",
+      "value": "10.1234/5678xyz"
+    },
+    {
+      "type": "hal",
+      "value": "hal-11111111"
+    }
+  ],
+  "manifestations": [],
+  "titles": [
+    {
+      "value": "Exploring Exoplanetary Atmospheres: New Insights from Advanced Observations",
+      "language": "en"
+    },
+    {
+      "value": "Explorer les atmosphères des exoplanètes : nouvelles perspectives grâce aux observations avancées",
+      "language": "fr"
+    }
+  ],
+  "subtitles": [
+    {
+      "value": "Detailed Analysis and Modeling Techniques",
+      "language": "en"
+    },
+    {
+      "value": "Analyse détaillée et techniques de modélisation",
+      "language": "fr"
+    }
+  ],
+  "abstracts": [
+    {
+      "value": "This study presents a comprehensive analysis of exoplanetary atmospheres using the latest observational data.",
+      "language": "en"
+    },
+    {
+      "value": "Cette étude présente une analyse complète des atmosphères exoplanétaires en utilisant les dernières données d'observation.",
+      "language": "fr"
+    }
+  ],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/987654321/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Exoplanetary Science",
+          "language": "en"
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.idref.fr/012345678/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Astrophysique",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Astrophysics",
+          "language": "en"
+        }
+      ]
+    },
+    {
+      "uri": "http://www.wikidata.org/entity/Q2222222",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Atmospheric Analysis",
+          "language": "en"
+        },
+        {
+          "value": "Analyse atmosphérique",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Study of atmospheres",
+          "language": "en"
+        },
+        {
+          "value": "Étude des atmosphères",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://purl.org/ontology/bibo/Article",
+      "label": "Article"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": 0,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "idref888888888",
+        "name": "John Doe",
+        "name_variants": [],
+        "identifiers": [
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 1,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "Smith###J",
+        "name": "Jane Smith",
+        "name_variants": [],
+        "identifiers": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    },
+    {
+      "rank": 2,
+      "contributor": {
+        "source": "scanr",
+        "source_identifier": "idref999999999",
+        "name": "Michael Garcia",
+        "name_variants": [],
+        "identifiers": [
+        ]
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/aut.html",
+      "affiliations": []
+    }
+  ],
+  "issue": {
+    "source": "scanr",
+    "source_identifier": "the_astronomy_journal-ScanR",
+    "titles": [],
+    "volume": "15",
+    "number": [
+      "3"
+    ],
+    "rights": null,
+    "date": null,
+    "journal": {
+      "source": "scanr",
+      "source_identifier": "1234-5678-the_astronomy_journal-universal_astronomical_society-ScanR",
+      "issn": [
+        "1234-5678"
+      ],
+      "eissn": [
+        "8765-4321"
+      ],
+      "issn_l": "1234-5678",
+      "publisher": "Universal Astronomical Society",
+      "titles": [
+        "The Astronomy Journal"
+      ]
+    }
+  },
+  "page": "123-145",
+  "book": null,
+  "issued": "2024-03-15 00:00:00",
+  "created": null,
+  "version": 0
+}

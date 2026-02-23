@@ -1,0 +1,38 @@
+{
+  "names": [
+    {
+      "last_names": [
+        {
+          "value": "Doe",
+          "language": "fr"
+        }
+      ],
+      "first_names": [
+        {
+          "value": "John",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "identifiers": [
+    {
+      "type": "local",
+      "value": "jdoe_no_orcid@univ-domain.edu"
+    }
+  ],
+  "memberships": [
+    {
+      "entity_uid": "local-U123"
+    }
+  ],
+  "employments": [
+    {
+      "position": {
+        "title": "Technicien de recherche",
+        "code": "TECH"
+      },
+      "entity_uid": "uai-0751818J"
+    }
+  ]
+}

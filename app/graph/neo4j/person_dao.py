@@ -1,0 +1,517 @@
+from typing import Tuple, NamedTuple
+
+from loguru import logger
+from neo4j import AsyncSession, AsyncManagedTransaction
+from neo4j.exceptions import ConstraintError, ClientError, Neo4jError, DatabaseError
+
+from app.config import get_app_settings
+from app.errors.conflict_error import ConflictError
+from app.errors.database_error import handle_database_errors
+from app.errors.not_found_error import NotFoundError
+from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
+from app.graph.neo4j.neo4j_dao import Neo4jDAO
+from app.graph.neo4j.utils import load_query
+from app.models.agent_identifiers import PersonIdentifier
+from app.models.employments import Employment
+from app.models.identifier_types import PersonIdentifierType
+from app.models.memberships import Membership
+from app.models.people import Person
+from app.models.people_names import PersonName
+from app.models.positions import Position
+from app.services.identifiers.identifier_service import AgentIdentifierService
+
+
+class PersonDAO(Neo4jDAO):
+    """
+    Data access object for people and the neo4j database
+    """
+
+    class UpdateStatus(NamedTuple):
+        """
+        Update status details
+        """
+        identifiers_changed: bool
+        names_changed: bool
+        memberships_changed: bool
+
+    @handle_database_errors
+    async def get(self, person_uid: str) -> Person | None:
+        """
+        Get a person from the graph database
+
+        :param person_uid: person uid
+        :return: person object
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.read_transaction(self._get_person_by_uid, person_uid)
+
+    @handle_database_errors
+    async def create(self, person: Person) -> Tuple[str, Neo4jDAO.Status, UpdateStatus | None]:
+        """
+        Create  a person in the graph database
+
+        :param person: person object
+        :return: person uid and operation status
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(self._create_person_transaction, person)
+        return person.uid, PersonDAO.Status.CREATED, None
+
+    @handle_database_errors
+    async def update(self, person: Person) -> Tuple[str, Neo4jDAO.Status, UpdateStatus | None]:
+        """
+        Update a person in the graph database
+
+        :param person: person object
+        :return: person uid, operation status and update status details
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                update_status = await session.write_transaction(self._update_person_transaction,
+                                                                person)
+        return person.uid, PersonDAO.Status.UPDATED, update_status
+
+    @handle_database_errors
+    async def create_or_update(self, person: Person) -> Tuple[
+        str, Neo4jDAO.Status, UpdateStatus | None]:
+        """
+        Create or update a person in the graph database
+
+        :param person: person object
+        :return: person uid, operation status and update status details
+        """
+        status = None
+        update_status = None
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                try:
+                    await session.write_transaction(self._create_person_transaction, person)
+                    status = self.Status.CREATED
+                except ConflictError:
+                    update_status = await session.write_transaction(self._update_person_transaction,
+                                                                    person)
+                    status = self.Status.UPDATED
+        return person.uid, status, update_status
+
+    @handle_database_errors
+    async def find(self, person: Person) -> Person | None:
+        """
+        Find a person by one of its identifiers
+        taking identifiers in the order defined in the settings
+        :param person: person object
+        :return: person object
+        """
+        settings = get_app_settings()
+        identifier_order = settings.person_identifier_order
+        for identifier_type in identifier_order:
+            identifier = next((identifier for identifier in person.identifiers
+                               if identifier.type == identifier_type), None)
+            if identifier:
+                found_person = await self.find_by_identifier(identifier.type, identifier.value)
+                if found_person:
+                    return found_person
+        return None
+
+    @handle_database_errors
+    async def find_by_identifier(self, identifier_type: PersonIdentifierType,
+                                 identifier_value: str) -> Person | None:
+        """
+        Find a person by an identifier
+
+        :param identifier_type: identifier type
+        :param identifier_value: identifier value
+        :return: person object or None
+        """
+        # pylint: disable=duplicate-code
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        load_query("find_person_by_identifier"),
+                        identifier_type=identifier_type.value,
+                        identifier_value=identifier_value
+                    )
+                    record = await result.single()
+                    if record is not None:
+                        return PersonDAO._hydrate(record)
+                    return None
+
+    @handle_database_errors
+    async def get_person_uid_by_source_person_uid(self, source_person_uid: str,
+                                                  external: bool = True) -> str | None:
+        """
+        Fetch the UID of a person linked to a given SourcePerson.
+
+        :param source_person_uid: UID of the SourcePerson.
+        :param external: Whether to search for an external person (default: True).
+        :return: UID of the Person or None if no match is found.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.read_transaction(
+                    self._get_person_uid_by_source_person_uid_transaction, source_person_uid,
+                    external)
+                return result
+
+    async def get_all_uids(self, external: bool | None = None) -> list[str]:
+        """
+        Fetch all UIDs of people from the database.
+
+        :return: A list of all person UIDs.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    return await self._get_all_uids_transaction(tx, external)
+
+    @staticmethod
+    async def _get_all_uids_transaction(tx: AsyncManagedTransaction,
+                                        external: bool | None = None) -> list[
+        str]:
+        if external is None:
+            external_str = "all"
+        else:
+            external_str = "true" if external else "false"
+        result = await tx.run(load_query("get_all_person_uids"), external=external_str)
+        return [record["uid"] async for record in result]
+
+    @staticmethod
+    async def _get_person_uid_by_source_person_uid_transaction(tx: AsyncManagedTransaction,
+                                                               source_person_uid: str,
+                                                               external: bool) -> str | None:
+        """
+        Transaction to fetch the UID of a person linked to a given SourcePerson.
+
+        :param tx: Neo4j transaction object.
+        :param source_person_uid: UID of the SourcePerson.
+        :param external: Whether to search for an external person.
+        :return: UID of the Person or None if no match is found.
+        """
+        query = load_query("get_person_uid_by_source_person_uid")
+        result = await tx.run(query, source_person_uid=source_person_uid, external=external)
+        record = await result.single()
+        return record["person_uid"] if record else None
+
+    @classmethod
+    async def _get_person_by_uid(cls, tx, person_uid: str) -> Person | None:
+        result = await tx.run(
+            load_query("get_person_by_uid"),
+            person_uid=person_uid
+        )
+        record = await result.single()
+        if record:
+            return cls._hydrate(record)
+        return None
+
+    @staticmethod
+    async def _person_exists(tx: AsyncManagedTransaction, person_uid: str) -> bool:
+        result = await tx.run(
+            load_query("person_exists"),
+            person_uid=person_uid
+        )
+        record = await result.single()
+        return record is not None
+
+    @classmethod
+    async def _create_person_transaction(cls, tx: AsyncManagedTransaction, person: Person) -> None:
+        person.uid = person.uid or AgentIdentifierService.compute_uid_for(person)
+        if not person.uid:
+            raise ValueError(f"Unable to compute primary key for person {person}")
+        person_exists = await PersonDAO._person_exists(tx, person.uid)
+        if person_exists:
+            raise ConflictError(f"Person with uid {person.uid} already exists")
+        create_person_query = load_query("create_person")
+        try:
+            await tx.run(
+                create_person_query,
+                person_uid=person.uid,
+                display_name=person.display_name,
+                display_name_variants=person.display_name_variants,
+                names=[name.model_dump() for name in person.names],
+                identifiers=[identifier.dict() for identifier in person.identifiers],
+                external=person.external
+            )
+        except ConstraintError as constraint_error:
+            raise ConflictError(
+                f"Schema constraint violation while creating person {person}") from constraint_error
+        except ClientError as client_error:
+            raise ValueError(
+                f"Bad request error while creating person {person}") from client_error
+        except Neo4jError as neo4j_error:
+            raise DatabaseError(f"Database error while creating person {person}") from neo4j_error
+        await cls._create_employments(person, tx)
+        await cls._create_memberships(person, tx)
+
+    @classmethod
+    async def _update_person_transaction(cls, tx: AsyncSession,
+                                         person: Person) -> UpdateStatus:
+        person.uid = person.uid or AgentIdentifierService.compute_uid_for(
+            person)
+        if not person.uid:
+            raise ValueError(f"Unable to compute primary key for person {person}")
+        existing_person = await cls._get_person_by_uid(tx, person.uid)
+
+        if existing_person is None:
+            raise NotFoundError(f"Person with uid {person.uid} does not exist")
+        update_person_query = load_query("update_person")
+        await tx.run(
+            update_person_query,
+            person_uid=person.uid,
+            display_name=person.display_name,
+            display_name_variants=person.display_name_variants,
+            external=person.external
+        )
+        await tx.run(load_query("delete_person_names"),
+                     person_uid=person.uid)
+        await tx.run(
+            load_query("create_person_names"),
+            person_uid=person.uid,
+            names=[name.model_dump() for name in person.names]
+        )
+        existing_identifiers = existing_person.identifiers
+        identifier_types = [identifier.type.value for identifier in person.identifiers]
+        identifier_values = [identifier.value for identifier in person.identifiers]
+        await tx.run(
+            load_query("delete_person_identifiers"),
+            person_uid=person.uid,
+            identifier_types=identifier_types,
+            identifier_values=identifier_values
+        )
+        await tx.run(
+            load_query("create_person_identifiers"),
+            person_uid=person.uid,
+            identifiers=[identifier.dict() for identifier in person.identifiers]
+        )
+        identifiers_changed = AgentIdentifierService.identifiers_are_identical(
+            existing_identifiers,
+            person.identifiers
+        )
+        # update person memberships
+        existing_memberships = existing_person.memberships
+        incoming_memberships = person.memberships
+        memberships_changed = not cls._memberships_are_identical(
+            existing_memberships,
+            incoming_memberships
+        )
+        if memberships_changed:
+            await tx.run(
+                load_query("delete_person_memberships"),
+                person_uid=person.uid
+            )
+            await cls._create_memberships(person, tx)
+        # update employments
+        existing_employments = existing_person.employments
+        incoming_employments = person.employments
+        employments_changed = not cls._employments_are_identical(
+            existing_employments,
+            incoming_employments
+        )
+        if employments_changed:
+            await tx.run(
+                load_query("delete_person_employments"),
+                person_uid=person.uid
+            )
+            await cls._create_employments(person, tx)
+        return PersonDAO.UpdateStatus(
+            identifiers_changed=identifiers_changed,
+            names_changed=None,
+            memberships_changed=memberships_changed
+        )
+
+    @classmethod
+    async def _create_employments(cls, incoming_person: Person, tx):
+        try:
+            for employment in incoming_person.employments:
+                # employments have been filtered at service level
+                # to only include existing institutions
+                create_employment_query = load_query("create_employment")
+                try:
+                    await tx.run(create_employment_query,
+                                 person_uid=incoming_person.uid,
+                                 institution_uid=employment.institution.uid,
+                                 position=employment.position.code if employment.position else None)
+                except ConstraintError as constraint_error:
+                    raise ConflictError(
+                        f"Schema constraint violation while creating employment "
+                        f"for person {incoming_person} and institution {employment.institution_uid}"
+                    ) from constraint_error
+                except ClientError as client_error:
+                    raise ValueError(
+                        f"Bad request error while creating employment "
+                        f"for person {incoming_person} and institution {employment.institution_uid}"
+                    ) from client_error
+
+        except Exception as e:
+            logger.error(f"Error while creating employment for person {incoming_person}: {e}")
+            raise e
+
+    @classmethod
+    async def _create_memberships(cls, incoming_person: Person, tx):
+        for membership in incoming_person.memberships:
+            try:
+                research_structure_uid = AgentIdentifierService.compute_uid_for(
+                    membership.research_structure
+                )
+            except ValueError:
+                logger.error(
+                    "Unable to compute primary key for research structure "
+                    f"{membership.research_structure}"
+                )
+                continue
+            find_structure_query = load_query("find_research_structure_by_uid")
+            result = await tx.run(find_structure_query,
+                                  research_structure_uid=research_structure_uid)
+            structure = await result.single()
+            if not structure:
+                logger.error(f"Research structure with uid {research_structure_uid} not found")
+                continue
+            create_membership_query = load_query("create_membership")
+            try:
+                await tx.run(create_membership_query,
+                             person_uid=incoming_person.uid,
+                             structure_uid=research_structure_uid)
+            except ConstraintError as constraint_error:
+                raise ConflictError(
+                    f"Schema constraint violation while creating membership "
+                    f"for person {incoming_person} and structure {research_structure_uid}"
+                ) from constraint_error
+            except ClientError as client_error:
+                raise ValueError(
+                    f"Bad request error while creating membership "
+                    f"for person {incoming_person} and structure {research_structure_uid}"
+                ) from client_error
+            except Neo4jError as neo4j_error:
+                raise DatabaseError(
+                    f"Database error while creating membership "
+                    f"for person {incoming_person} and structure {research_structure_uid}"
+                ) from neo4j_error
+
+    @staticmethod
+    def _memberships_are_identical(existing_memberships: list[Membership],
+                                   incoming_memberships: list[Membership]) -> bool:
+        """
+        Compare two lists of memberships to check identity
+        :param existing_memberships:
+        :param incoming_memberships:
+        :return:
+        """
+        return sorted(existing_memberships, key=lambda x: str(x.entity_uid)) == sorted(
+            incoming_memberships, key=lambda x: str(x.entity_uid))
+
+    @staticmethod
+    def _employments_are_identical(existing_employments: list[Employment],
+                                   incoming_employments: list[Employment]) -> bool:
+        """
+        Compare two lists of employments to check identity
+        :param existing_employments:
+        :param incoming_employments:
+        :return:
+        """
+        return (sorted(
+            existing_employments,
+            key=lambda x: (
+                str(x.institution.uid), x.position.code if x.position else None)) ==
+                sorted(
+                    incoming_employments,
+                    key=lambda x: (
+                        str(x.institution.uid), x.position.code if x.position else None)))
+
+    @handle_database_errors
+    async def find_by_identifiers(self, identifiers: list[dict]) -> str | None:
+        """
+        Find the UID of the first Person with one of the provided identifiers.
+
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        :return: UID of the first matched Person or None if no match is found.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.read_transaction(self._find_by_identifiers_transaction,
+                                                      identifiers)
+
+    @staticmethod
+    async def _find_by_identifiers_transaction(
+            tx: AsyncManagedTransaction, identifiers: list[dict]
+    ) -> str | None:
+        """
+        Transaction to find the UID of the first Person matching any identifier.
+
+        :param tx: Neo4j transaction object.
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        :return: UID of the first matched Person or None.
+        """
+        query = load_query("find_person_by_identifiers")
+        result = await tx.run(query, identifiers=identifiers)
+        record = await result.single()
+        return record["uid"] if record else None
+
+    @staticmethod
+    def _hydrate(record) -> Person:
+        person_data = record["person"]
+        names_data = record["names"]
+        identifiers_data = record["identifiers"]
+        memberships_data = record["memberships"]
+        employments_data = record["employments"]
+        names = [PersonName(**name) for name in names_data]
+        identifiers = [PersonIdentifier(**identifier)
+                       for identifier in identifiers_data]
+        memberships = []
+        for membership_data in memberships_data:
+            research_structure = membership_data["research_structure"]
+            if research_structure is None:
+                continue
+            memberships.append(
+                Membership(
+                    entity_uid=membership_data["research_structure"]['uid']
+                )
+            )
+        employments = []
+        for employment_data in employments_data:
+            employments.append(
+                Employment(
+                    entity_uid=employment_data["institution"]['uid'],
+                    position=Position(
+                        code=employment_data['position']['position_code'],
+                    ) if employment_data['position'] else None
+                )
+            )
+        person = Person(
+            uid=person_data["uid"],
+            identifiers=identifiers,
+            names=names,
+            memberships=memberships,
+            employments=employments
+        )
+        return person
+
+    @handle_database_errors
+    async def merge_people(self, person_to_keep_uid: str, person_to_merge_uid: str) -> None:
+        """
+        Merge one person into another, transferring relationships and deleting the redundant person.
+
+        :param person_to_keep_uid: UID of the person to keep.
+        :param person_to_merge_uid: UID of the person to delete.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._merge_people_transaction,
+                    person_to_keep_uid,
+                    person_to_merge_uid
+                )
+
+    @staticmethod
+    async def _merge_people_transaction(tx: AsyncManagedTransaction, person_to_keep_uid: str,
+                                        person_to_merge_uid: str) -> None:
+        """
+        Transaction to merge one person into another.
+
+        :param tx: Neo4j transaction object.
+        :param person_to_keep_uid: UID of the person to keep.
+        :param person_to_merge_uid: UID of the person to delete.
+        """
+        query = load_query("merge_external_people")
+        await tx.run(query, person_to_keep_uid=person_to_keep_uid,
+                     person_to_merge_uid=person_to_merge_uid)

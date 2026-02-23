@@ -1,0 +1,57 @@
+harvesters:
+  # The list of enabled harvesters at institution level.
+  # Note that for harvesters fetching data from several platforms, like Idref,
+  # each platform is listed separately for authors disambiguation step.
+  # The order of harvesters matters: it will be used to determine the document type and hence
+  # the policy to apply in case of unclear document types (conflicts between sources).
+  - hal
+  - idref
+  - scanr
+  - scopus
+  - openalex
+harvesting_sources:
+  # The list of harvested sources : they are the same as harvestes,
+  # except for idref which is split into its secondary sources
+  # the order of harvesting sources matters for the same reasons as for harvesters.
+  - hal
+  - idref
+  - scanr
+  - scopus
+  - openalex
+  - sudoc
+  - openedition
+  - persee
+  - scienceplus
+strategies:
+  # Example policy 1: strategy for articles, documents of unknown type, and default documents.
+  # "global_richest" prioritizes sources based on the richness of metadata for a source record taken as a whole.
+  - types:
+      - default     # Used as a fallback for documents with no specific type.
+      - Unknown     # Used for documents whose type is unknown.
+      - Article     # Applied to articles.
+    type: "global_richest"
+    parameters:
+      # Scoring weights for metadata fields.
+      titles: 10       # Each character in the title is worth 10 points.
+      abstracts: 1     # Each character in the abstract is worth 1 point.
+      contributions: 40     # Each contributor is worth 40 points.
+      subjects: 30    # Each keyword is worth 30 points.
+  # Example policy 2: Strategy for books and theses.
+  # "source_order" retrieves information in the order of specified harvesters.
+  # Harvesters not listed here will be ignored for this type of document.
+  - types:
+      - Book          # Applied to books.
+      - Thesis        # Applied to theses.
+    type: "source_order"
+    harvesters:
+      - idref
+      - hal
+      - openalex
+  # Example policy 3: Strategy for proceedings.
+  # "richest_by_field" prioritizes metadata field by field based on their richness.
+  # Excludes harvester will be ignored for this type of document.
+  - types:
+      - Proceedings     # Applied to proceedings.
+    type: "richest_by_field"
+    excluded_harvesters:
+      - scanr

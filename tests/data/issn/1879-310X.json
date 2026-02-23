@@ -1,0 +1,238 @@
+{
+  "@graph" : [ {
+    "@id" : "_:b0",
+    "issn" : "1879-310X",
+    "name" : "Transport policy",
+    "publisher" : "Elsevier"
+  }, {
+    "@id" : "_:b1",
+    "@type" : "http://schema.org/ArchiveComponent",
+    "abstract" : "Preserved : 1993/1994: 1, 1995: 2, 1996: 3, 1997: 4, 1998: 5, 1999: 6, 2000: 7, 2001: 8, 2002: 9, 2003: 10, 2004: 11, 2005: 12, 2006: 13, 2007: 14, 2008: 15, 2009: 16, 2010: 17, 2011: 18, 2012: 19, 2012: 24, 2013: 25, 2013: 26, 2013: 29, 2013: 30, 2014: 31, 2014: 32, 2014: 33, 2014: 34, 2014: 35, 2014: 36, 2015: 37, 2015: 38, 2015: 39, 2015: 40, 2015: 41, 2015: 42, 2015: 43, 2015: 44, 2016: 45, 2016: 46, 2016: 47, 2016: 48, 2016: 49, 2016: 50, 2016: 51, 2016: 52, 2017: 53, 2017: 54, 2017: 55, 2017: 56, 2017: 57, 2017: 58, 2017: 59, 2017: 60, 2018: 61, 2018: 62, 2018: 63, 2018: 64, 2018: 65, 2018: 66, 2018: 67, 2018: 68, 2018: 69, 2018: 70, 2018: 71, 2018: 72, 2019: 73, 2019: 74, 2019: 75, 2019: 76, 2019: 77, 2019: 78, 2019: 79, 2019: 80, 2019: 81, 2019: 82, 2019: 83, 2019: 84, 2020: 85, 2020: 86, 2020: 87, 2020: 88, 2020: 89, 2020: 90, 2020: 91, 2020: 92, 2020: 93, 2020: 94, 2020: 95, 2020: 96, 2020: 97, 2020: 99, 2021: 100, 2021: 101, 2021: 102, 2021: 103, 2021: 104, 2021: 105, 2021: 106, 2021: 107, 2021: 108, 2021: 109, 2021: 110, 2021: 111, 2021: 112, 2021: 113, 2021: 114, 2022: 115, 2022: 116, 2022: 117, 2022: 118, 2022: 119, 2022: 120, 2022: 121, 2022: 122, 2022: 123, 2022: 124, 2022: 125, 2022: 126, 2022: 127, 2022: 128, 2022: 129, 2023: 130, 2023: 131, 2023: 132, 2023: 133, 2023: 134, 2023: 135, 2023: 136, 2023: 137, 2023: 138, 2023: 139, 2023: 140, 2023: 141, 2023: 142, 2023: 143, 2023: 144, 2024: 145, 2024: 146, 2024: 147, 2024: 148, 2024: 149, 2024: 150, 2024: 151, 2024: 152, 2024: 153, 2024: 154, 2024: 155, 2024: 156, 2024: 157, 2024: 158, 2024: 159, 2025: 160, 2025: 161, 2025: 162, 2025: 164, 2025: 165, 2025: 166, 2025: 167",
+    "creativeWorkStatus" : "Preserved",
+    "dateModified" : "2024-04-28",
+    "description" : "Preserved : 1993/1994: 1(1-4), 1995: 2(1-4), 1996: 3(1-4), 1997: 4(1-4), 1998: 5(1-4), 1999: 6(1-4), 2000: 7(1-4), 2001: 8(1-4), 2002: 9(1-4), 2003: 10(1-4), 2004: 11(1-4), 2005: 12(1-6), 2006: 13(1-6), 2007: 14(1-6), 2008: 15(1-6), 2009: 16(1-6), 2010: 17(1-6), 2011: 18(1-6), 2012: 19(1), 2012: 24(C), 2013: 25(C), 2013: 26(C), 2013: 29(C), 2013: 30(C), 2014: 31(C), 2014: 32(C), 2014: 33(C), 2014: 34(C), 2014: 35(C), 2014: 36(C), 2015: 37(C), 2015: 38(C), 2015: 39(C), 2015: 40(C), 2015: 41(C), 2015: 42(C), 2015: 43(C), 2015: 44(C), 2016: 45(C), 2016: 46(C), 2016: 47, 2016: 48(C), 2016: 49, 2016: 50(C), 2016: 51(C), 2016: 52(C), 2017: 53, 2017: 54, 2017: 55, 2017: 56, 2017: 57, 2017: 58, 2017: 59, 2017: 60, 2018: 61, 2018: 62, 2018: 63, 2018: 64, 2018: 65, 2018: 66, 2018: 67, 2018: 68, 2018: 69, 2018: 70, 2018: 71, 2018: 72, 2019: 73, 2019: 74, 2019: 75, 2019: 76, 2019: 77, 2019: 78, 2019: 79, 2019: 80, 2019: 81, 2019: 82, 2019: 83, 2019: 84, 2020: 85, 2020: 86, 2020: 87, 2020: 88, 2020: 89, 2020: 90, 2020: 91, 2020: 92, 2020: 93, 2020: 94, 2020: 95, 2020: 96, 2020: 97, 2020: 99, 2021: 100, 2021: 101, 2021: 102, 2021: 103, 2021: 104, 2021: 105, 2021: 106, 2021: 107, 2021: 108, 2021: 109, 2021: 110, 2021: 111, 2021: 112, 2021: 113, 2021: 114, 2022: 115, 2022: 116, 2022: 117, 2022: 118, 2022: 119, 2022: 120, 2022: 121, 2022: 122, 2022: 123, 2022: 124, 2022: 125, 2022: 126, 2022: 127, 2022: 128, 2022: 129, 2023: 130, 2023: 131, 2023: 132, 2023: 133, 2023: 134, 2023: 135, 2023: 136, 2023: 137, 2023: 138, 2023: 139, 2023: 140, 2023: 141, 2023: 142, 2023: 143, 2023: 144, 2024: 145, 2024: 146, 2024: 147, 2024: 148, 2024: 149, 2024: 150, 2024: 151, 2024: 152, 2024: 153, 2024: 154, 2024: 155, 2024: 156, 2024: 157, 2024: 158, 2024: 159, 2025: 160, 2025: 161, 2025: 162, 2025: 164, 2025: 165, 2025: 166, 2025: 167",
+    "holdingArchive" : "organization/keepers#portico",
+    "mainEntity" : "_:b2",
+    "temporalCoverage" : "1993/2025",
+    "url" : "https://portico.org/stable?cs=ISSN_0967070X"
+  }, {
+    "@id" : "_:b2",
+    "issn" : "0967-070X",
+    "name" : "Transport Policy",
+    "publisher" : "Elsevier"
+  }, {
+    "@id" : "_:b3",
+    "@type" : "http://schema.org/ArchiveComponent",
+    "abstract" : "1 to 147, 149 to 167",
+    "creativeWorkStatus" : "Preserved",
+    "dateModified" : "2025-05-05",
+    "description" : "1 to 147, 149 to 167",
+    "holdingArchive" : "organization/keepers#clockss",
+    "mainEntity" : "_:b4",
+    "temporalCoverage" : "1993/2025"
+  }, {
+    "@id" : "_:b4",
+    "issn" : "0967-070X",
+    "name" : "Transport Policy",
+    "publisher" : "Elsevier"
+  }, {
+    "@id" : "_:b5",
+    "@type" : "http://schema.org/ArchiveComponent",
+    "abstract" : "Preserved : 1 to 28, 30 to 47, 55 to 61, 64 to 90, 95, 96, 98 to 148",
+    "creativeWorkStatus" : "Preserved",
+    "dateModified" : "2024-04-02",
+    "description" : "Preserved : 1 (1, 3, 4); 2 (1 to 4); 3 (1-2, 3, 4); 4 (1 to 4); 5 (1 to 4); 6 (1 to 4); 7 (1 to 4); 8 (1 to 4); 9 (1 to 4); 10 (1 to 4); 11 (1 to 4); 12 (1 to 6); 13 (1 to 6); 14 (1 to 6); 15 (1 to 6); 16 (1 to 6); 17 (1 to 6); 18 (1 to 6); 19 (1); 20 (Complete); 21; 22; 23; 24; 25; 26; 27; 28; 30; 31; 32; 33; 34; 35; 36; 37; 38; 39; 40; 41; 42; 43; 44; 45; 46; 47; 55; 56; 57; 58; 59; 60; 61; 64; 65; 66; 67; 68; 69; 70; 71; 72; 73; 74; 75; 76; 77; 78; 79; 80; 81; 82; 83; 84; 85; 86; 87; 88; 89; 90; 95; 96; 98; 99; 100; 101; 102; 103; 104; 105; 106; 107; 108; 109; 110; 111; 112; 113; 114; 115; 116; 117; 118; 119; 120; 121; 122; 123; 124; 125; 126; 127; 128; 129; 130; 131; 132; 133; 134; 135; 136; 137; 138; 139; 140; 141; 142; 143; 144; 145; 146; 147; 148",
+    "holdingArchive" : "organization/keepers#scholarsportal",
+    "mainEntity" : "_:b6",
+    "temporalCoverage" : "1993/2024"
+  }, {
+    "@id" : "_:b6",
+    "issn" : "0967-070X",
+    "name" : "Transport Policy",
+    "publisher" : "Elsevier"
+  }, {
+    "@id" : "_:b7",
+    "@type" : "http://schema.org/ArchiveComponent",
+    "abstract" : "Preserved : 1-24, 26-61, 63, 65, 66, 68-81, 84",
+    "creativeWorkStatus" : "Preserved",
+    "dateModified" : "2024-12-15",
+    "description" : "Preserved : 1 (1-4); 2 (1-4); 3 (1-2, 3, 4); 4 (1-4); 5 (1-4); 6 (1-4); 7 (1-4); 8 (1-4); 9 (1-4); 10 (1-4); 11 (2-4); 12 (1-6); 13 (1-6); 14 (1-6); 15 (1-6); 16 (1-6); 17 (1-6); 18 (1-6); 19 (1); 20 (C); 21; 22; 23; 24; 26; 27; 28; 29; 30; 31; 32; 33; 34; 35; 36; 37; 38; 39; 40; 41; 42; 43; 44; 45; 46; 47; 48; 49; 50; 51; 52; 53; 54; 55; 56; 57; 58; 59; 60; 61; 63; 65; 66; 68; 69; 70; 71; 72; 73; 74; 75; 76; 77; 78; 79; 80; 81; 84",
+    "holdingArchive" : "organization/keepers#edepot",
+    "mainEntity" : "_:b0",
+    "temporalCoverage" : "1993/2019"
+  }, {
+    "@id" : "http://id.loc.gov/vocabulary/countries/xxk",
+    "label" : "United Kingdom"
+  }, {
+    "@id" : "organization/ISSNCenter#_j",
+    "@type" : "http://schema.org/Organization"
+  }, {
+    "@id" : "organization/keepers#clockss",
+    "@type" : "http://schema.org/ArchiveOrganization",
+    "identifier" : "clockss",
+    "name" : "CLOCKSS Archive"
+  }, {
+    "@id" : "organization/keepers#edepot",
+    "@type" : "http://schema.org/ArchiveOrganization",
+    "identifier" : "edepot",
+    "name" : "National Library of the Netherlands"
+  }, {
+    "@id" : "organization/keepers#portico",
+    "@type" : "http://schema.org/ArchiveOrganization",
+    "identifier" : "portico",
+    "name" : "Portico"
+  }, {
+    "@id" : "organization/keepers#scholarsportal",
+    "@type" : "http://schema.org/ArchiveOrganization",
+    "identifier" : "scholarsportal",
+    "name" : "Scholars Portal"
+  }, {
+    "@id" : "resource/ISSN-L/0967-070X",
+    "identifiedBy" : "resource/ISSN/1879-310X#ISSN-L"
+  }, {
+    "@id" : "resource/ISSN/1879-310X",
+    "@type" : [ "http://schema.org/Periodical", "http://id.loc.gov/ontologies/bibframe/Work", "http://id.loc.gov/ontologies/bibframe/Instance" ],
+    "identifiedBy" : [ "resource/ISSN/1879-310X#ISSN-L", "resource/ISSN/1879-310X#KeyTitle", "resource/ISSN/1879-310X#ISSN" ],
+    "mainTitle" : "Transport policy.",
+    "otherPhysicalFormat" : "resource/ISSN/0967-070X",
+    "title" : "resource/ISSN/1879-310X#KeyTitle",
+    "format" : "vocabularies/medium#Online",
+    "http://purl.org/dc/elements/1.1/identifier" : "1879-310X",
+    "isFormatOf" : "resource/ISSN/0967-070X",
+    "type" : "http://marc21rdf.info/terms/formofmaterial#a",
+    "http://purl.org/ontology/bibo/issn" : "1879-310X",
+    "isPartOf" : "resource/ISSN-L/0967-070X",
+    "issn" : "1879-310X",
+    "name" : [ "Transport policy (Online)", "Transport policy." ],
+    "publication" : "resource/ISSN/1879-310X#ReferencePublicationEvent",
+    "subjectOf" : [ "_:b1", "_:b7", "_:b3", "_:b5" ],
+    "url" : "http://www.sciencedirect.com/science/journal/0967070X"
+  }, {
+    "@id" : "resource/ISSN/1879-310X#ISSN",
+    "@type" : "http://id.loc.gov/ontologies/bibframe/Issn",
+    "status" : "vocabularies/IdentifierStatus#Valid",
+    "value" : "1879-310X"
+  }, {
+    "@id" : "resource/ISSN/1879-310X#ISSN-L",
+    "@type" : "http://id.loc.gov/ontologies/bibframe/IssnL",
+    "status" : "vocabularies/IdentifierStatus#Valid",
+    "value" : "0967-070X"
+  }, {
+    "@id" : "resource/ISSN/1879-310X#KeyTitle",
+    "@type" : [ "http://id.loc.gov/ontologies/bibframe/Identifier", "http://id.loc.gov/ontologies/bibframe/KeyTitle" ],
+    "value" : "Transport policy (Online)"
+  }, {
+    "@id" : "resource/ISSN/1879-310X#Record",
+    "@type" : "http://schema.org/CreativeWork",
+    "status" : "vocabularies/RecordStatus#Register",
+    "modified" : "20210207003600.0",
+    "mainEntity" : "resource/ISSN/1879-310X",
+    "wasAttributedTo" : "organization/ISSNCenter#_j"
+  }, {
+    "@id" : "resource/ISSN/1879-310X#ReferencePublicationEvent",
+    "@type" : "http://schema.org/PublicationEvent",
+    "location" : "http://id.loc.gov/vocabulary/countries/xxk"
+  } ],
+  "@context" : {
+    "identifier" : {
+      "@id" : "http://schema.org/identifier"
+    },
+    "name" : {
+      "@id" : "http://schema.org/name"
+    },
+    "publisher" : {
+      "@id" : "http://schema.org/publisher"
+    },
+    "issn" : {
+      "@id" : "http://schema.org/issn"
+    },
+    "status" : {
+      "@id" : "http://id.loc.gov/ontologies/bibframe/status",
+      "@type" : "@id"
+    },
+    "value" : {
+      "@id" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#value"
+    },
+    "holdingArchive" : {
+      "@id" : "http://schema.org/holdingArchive",
+      "@type" : "@id"
+    },
+    "url" : {
+      "@id" : "http://schema.org/url"
+    },
+    "temporalCoverage" : {
+      "@id" : "http://schema.org/temporalCoverage"
+    },
+    "dateModified" : {
+      "@id" : "http://schema.org/dateModified",
+      "@type" : "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "abstract" : {
+      "@id" : "http://schema.org/abstract"
+    },
+    "description" : {
+      "@id" : "http://schema.org/description"
+    },
+    "creativeWorkStatus" : {
+      "@id" : "http://schema.org/creativeWorkStatus"
+    },
+    "mainEntity" : {
+      "@id" : "http://schema.org/mainEntity",
+      "@type" : "@id"
+    },
+    "label" : {
+      "@id" : "http://www.w3.org/2000/01/rdf-schema#label"
+    },
+    "location" : {
+      "@id" : "http://schema.org/location",
+      "@type" : "@id"
+    },
+    "modified" : {
+      "@id" : "http://purl.org/dc/terms/modified",
+      "@type" : "http://www.w3.org/2001/XMLSchema#dateTime"
+    },
+    "wasAttributedTo" : {
+      "@id" : "http://www.w3.org/ns/prov#wasAttributedTo",
+      "@type" : "@id"
+    },
+    "isPartOf" : {
+      "@id" : "http://schema.org/isPartOf",
+      "@type" : "@id"
+    },
+    "subjectOf" : {
+      "@id" : "http://schema.org/subjectOf",
+      "@type" : "@id"
+    },
+    "mainTitle" : {
+      "@id" : "http://id.loc.gov/ontologies/bibframe/mainTitle"
+    },
+    "identifiedBy" : {
+      "@id" : "http://id.loc.gov/ontologies/bibframe/identifiedBy",
+      "@type" : "@id"
+    },
+    "format" : {
+      "@id" : "http://purl.org/dc/elements/1.1/format",
+      "@type" : "@id"
+    },
+    "isFormatOf" : {
+      "@id" : "http://purl.org/dc/terms/isFormatOf",
+      "@type" : "@id"
+    },
+    "title" : {
+      "@id" : "http://id.loc.gov/ontologies/bibframe/title",
+      "@type" : "@id"
+    },
+    "otherPhysicalFormat" : {
+      "@id" : "http://id.loc.gov/ontologies/bibframe/otherPhysicalFormat",
+      "@type" : "@id"
+    },
+    "publication" : {
+      "@id" : "http://schema.org/publication",
+      "@type" : "@id"
+    },
+    "type" : {
+      "@id" : "http://purl.org/dc/terms/type",
+      "@type" : "@id"
+    }
+  }
+}

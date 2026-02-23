@@ -1,0 +1,22 @@
+{
+  "analysis": {
+    "analyzer": {
+      "custom_analyzer": {
+        "tokenizer": "keyword",
+        "filter": [
+          "lowercase",
+          "asciifolding",
+          "remove_punctuation",
+          "trim"
+        ]
+      }
+    },
+    "filter": {
+      "remove_punctuation": {
+        "type": "pattern_replace",
+        "pattern": "[^\\p{L}\\p{Nd}]+",
+        "replacement": ""
+      }
+    }
+  }
+}

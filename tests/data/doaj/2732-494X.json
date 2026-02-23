@@ -1,0 +1,146 @@
+{
+  "total": 1,
+  "page": 1,
+  "pageSize": 10,
+  "timestamp": "2025-12-02T15:04:28.661415Z",
+  "query": "issn:2732-494X",
+  "results": [
+    {
+      "last_updated": "2025-05-15T12:23:36Z",
+      "bibjson": {
+        "editorial": {
+          "review_process": [
+            "Anonymous peer review"
+          ],
+          "review_url": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information/instructions-contributors",
+          "board_url": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information/editorial-board"
+        },
+        "pid_scheme": {
+          "scheme": [
+            "DOI"
+          ],
+          "has_pid_scheme": true
+        },
+        "copyright": {
+          "author_retains": false,
+          "url": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information/author-publishing-agreement"
+        },
+        "keywords": [
+          "antimicrobial stewardship",
+          "infection prevention",
+          "healthcare safety",
+          "healthcare epidemiology",
+          "public health policy"
+        ],
+        "plagiarism": {
+          "detection": true,
+          "url": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information/instructions-contributors"
+        },
+        "subject": [
+          {
+            "code": "RC109-216",
+            "scheme": "LCC",
+            "term": "Infectious and parasitic diseases"
+          },
+          {
+            "code": "RA1-1270",
+            "scheme": "LCC",
+            "term": "Public aspects of medicine"
+          }
+        ],
+        "eissn": "2732-494X",
+        "language": [
+          "EN"
+        ],
+        "title": "Antimicrobial Stewardship & Healthcare Epidemiology",
+        "article": {
+          "license_display_example_url": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/article/impact-of-biofire-filmarray-respiratory-panel-results-on-antibiotic-days-of-therapy-in-different-clinical-settings/2DBCBB02205C0F61AB1323F9A19E0531",
+          "license_display": [
+            "Embed"
+          ]
+        },
+        "institution": {
+          "country": "US",
+          "name": "The Society for Healthcare Epidemiology of America"
+        },
+        "preservation": {
+          "has_preservation": false
+        },
+        "license": [
+          {
+            "NC": false,
+            "ND": false,
+            "BY": true,
+            "type": "CC BY",
+            "SA": false,
+            "url": "https://creativecommons.org/licenses/by/4.0/"
+          },
+          {
+            "NC": true,
+            "ND": false,
+            "BY": true,
+            "type": "CC BY-NC-SA",
+            "SA": true,
+            "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+          },
+          {
+            "NC": true,
+            "ND": true,
+            "BY": true,
+            "type": "CC BY-NC-ND",
+            "SA": false,
+            "url": "https://creativecommons.org/licenses/by-nc-nd/4.0/"
+          }
+        ],
+        "ref": {
+          "aims_scope": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information",
+          "journal": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology",
+          "oa_statement": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information/open-access-publication",
+          "author_instructions": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information/instructions-contributors",
+          "license_terms": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information/instructions-contributors"
+        },
+        "oa_start": 2021,
+        "apc": {
+          "has_apc": true,
+          "max": [
+            {
+              "price": 2640,
+              "currency": "USD"
+            },
+            {
+              "price": 2112,
+              "currency": "GBP"
+            }
+          ],
+          "url": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information/author-instructions/fees-and-pricing"
+        },
+        "other_charges": {
+          "has_other_charges": false
+        },
+        "publication_time_weeks": 10,
+        "deposit_policy": {
+          "service": [
+            "Open Policy Finder"
+          ],
+          "url": "https://openpolicyfinder.jisc.ac.uk/id/publication/39407",
+          "has_policy": true
+        },
+        "publisher": {
+          "country": "GB",
+          "name": "Cambridge University Press"
+        },
+        "boai": true,
+        "waiver": {
+          "has_waiver": true,
+          "url": "https://www.cambridge.org/core/journals/antimicrobial-stewardship-and-healthcare-epidemiology/information/journal-policies/open-access-options"
+        }
+      },
+      "admin": {
+        "ticked": true
+      },
+      "id": "45632d1eb9694bb9bf25d9a1ddeb12b0",
+      "created_date": "2021-11-17T11:07:10Z"
+    }
+  ],
+  "last": "https://doaj.org/api/v4/search/journals/issn:2732-494X?page=1&pageSize=10"
+}

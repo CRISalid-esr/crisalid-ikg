@@ -1,0 +1,26 @@
+MATCH (s:SourceOrganization:${dynamicLabel} { uid: $source_organization_uid })
+SET s.source = $source,
+    s.source_identifier = $source_identifier,
+    s.name = $name,
+    s.type = $type
+WITH s
+OPTIONAL MATCH (s)-[rel:HAS_IDENTIFIER]->(i:SourceOrganizationIdentifier)
+WHERE NOT i.type + ':' + i.value IN $identifier_composite_keys
+DELETE rel, i
+WITH s
+FOREACH (identifier IN $identifiers |
+  MERGE (i:SourceOrganizationIdentifier {
+    type: identifier.type,
+    value: identifier.value
+  })
+  FOREACH (_ IN CASE
+    WHEN identifier.extra_information IS NOT NULL
+         AND identifier.extra_information <> '{}'
+         AND identifier.extra_information <> 'null'
+    THEN [1]
+    ELSE []
+  END |
+    SET i.extra_information = identifier.extra_information
+  )
+  MERGE (s)-[:HAS_IDENTIFIER]->(i)
+)

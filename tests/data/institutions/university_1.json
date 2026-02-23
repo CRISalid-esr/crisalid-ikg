@@ -1,0 +1,28 @@
+[
+  {
+    "id": 444068,
+    "name": "Université Internationale de la Côte d'Azur",
+    "address": "22 boulevard de la Méditerranée",
+    "city": "Nice",
+    "postal_code": "06000",
+    "latitude": 43.6955,
+    "longitude": 7.2656,
+    "country": "France",
+    "identifiers": {
+      "idref": [
+        "067431289"
+      ],
+      "siren": [
+        "285743916"
+      ],
+      "siret": [
+        "28574391600014"
+      ],
+      "wikidata": [
+        "Q3338765"
+      ]
+    },
+    "uo_lib_en": "International University of the Côte d'Azur",
+    "uo_lib_officiel": "Université Internationale de la Côte d'Azur"
+  }
+]

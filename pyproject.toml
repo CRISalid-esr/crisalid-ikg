@@ -9,19 +9,40 @@ packages = [{include = "crisalid_ikg"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = "^0.110.2"
+fastapi = {extras = ["all"], version = "^0.128.5"}
 pydantic-settings = "^2.2.1"
 pyparsing = "^3.1.2"
 loguru = "^0.7.2"
 aio-pika = "^9.4.1"
+pytest-asyncio = "^0.23.6"
+neo4j = "^5.21.0"
+coverage = "^7.5.3"
+blinker = "^1.8.2"
+elasticsearch = "^8.15.1"
+pyyaml = "^6.0.2"
+inflection = "^0.5.1"
+python-levenshtein = "^0.26.1"
+rapidfuzz = "^3.11.0"
+typer = "^0.15.1"
+isodate = "^0.7.2"
+aiohttp = "^3.13.3"
+rdflib = "^7.1.4"
 
+
+[tool.poetry.group.development]
+optional = true
 
 [tool.poetry.group.development.dependencies]
 black = {extras = ["d"], version = "^24.4.0"}
-uvicorn = "^0.29.0"
+uvicorn = "^0.40.0"
 pytest = "^8.1.1"
-httpx = "^0.27.0"
+pylint = "^3.2.3"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+testpaths = "tests"
+asyncio_mode = "auto"

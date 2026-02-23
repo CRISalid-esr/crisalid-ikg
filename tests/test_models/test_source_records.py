@@ -1,0 +1,454 @@
+import copy
+
+import pytest
+
+from app.models.document_type import DocumentTypeEnum
+from app.models.harvesters import Harvester
+from app.models.harvesting_sources import HarvestingSource
+from app.models.identifier_types import PublicationIdentifierType, JournalIdentifierType
+from app.models.journal_identifiers import JournalIdentifierFormat
+from app.models.literal import Literal
+from app.models.source_records import SourceRecord
+from app.models.text_literal import TextLiteral
+
+
+def test_create_thesis_source_record_from_scanr_data(
+        scanr_thesis_source_record_json_data: dict
+):
+    """
+    Given a source record model recording a thesis harvested from ScanR
+    When asked for different field values
+    Then the values should be returned correctly
+    :param scanr_thesis_source_record_json_data:
+    :return:
+    """
+    source_record = SourceRecord(**scanr_thesis_source_record_json_data)
+    assert source_record
+    assert len(source_record.titles) == 1
+    assert len(source_record.identifiers) == 1
+    assert any(
+        title for title in source_record.titles if
+        title.value == "Understanding Galactic Phenomena through New Data Models"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.NNT and identifier.value == "2023xyz135"
+    )
+    assert len(source_record.abstracts) == 2
+    assert any(
+        abstract for abstract in source_record.abstracts if
+        abstract.value == "In this research, we investigate the dynamics of galactic structures "
+                          "using high-resolution data models. The study focuses on analyzing "
+                          "the distribution of matter in the outer regions of galaxies."
+    )
+    assert any(
+        abstract for abstract in source_record.abstracts if
+        abstract.value == "Dans cette recherche, nous étudions la dynamique des structures "
+                          "galactiques à l'aide de modèles de données haute résolution. "
+                          "L'étude se concentre sur l'analyse de la distribution de la matière "
+                          "dans les régions externes des galaxies."
+    )
+    assert len(source_record.subjects) == 2
+    assert any(
+        subject for subject in source_record.subjects if
+        subject.uri == "http://example.org/subject/astronomy"
+    )
+    assert any(
+        subject for subject in source_record.subjects if
+        subject.uri == "http://example.org/subject/galactic_physics"
+    )
+    assert len(source_record.document_type) == 1
+    assert DocumentTypeEnum.THESIS in source_record.document_type
+    assert len(source_record.contributions) == 1
+    assert any(
+        contribution for contribution in source_record.contributions if
+        contribution.rank == 1 and contribution.contributor.name == "Doe, Jane"
+        and contribution.contributor.first_name == "Jane"
+        and contribution.contributor.last_name == "Doe"
+        and contribution.affiliations == []
+    )
+    assert DocumentTypeEnum.THESIS in source_record.document_type
+    assert source_record.issued.isoformat() == "2023-06-15T00:00:00+00:00"
+    assert source_record.raw_issued == "2023"
+    assert str(source_record.url).startswith(
+        "https://scanr.enseignementsup-recherche.gouv.fr/publications/")
+
+
+def test_create_thesis_source_record_from_idref_data(
+        idref_thesis_source_record_json_data: dict
+):
+    """
+    Given a valid source record model recording a thesis harvested from IdRef
+    When asked for different field values
+    Then the values should be returned correctly
+    :param idref_thesis_source_record_json_data:
+    :return:
+    """
+    source_record = SourceRecord(**idref_thesis_source_record_json_data)
+    assert source_record
+    assert len(source_record.titles) == 1
+    assert len(source_record.identifiers) == 1
+    assert any(
+        title for title in source_record.titles if
+        title.value == "Études sur les nuages galactiques : turbulence et poussières"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.URI
+        and identifier.value == "http://www.example.fr/123456789/id"
+    )
+    assert len(source_record.abstracts) == 2
+    assert any(
+        abstract for abstract in source_record.abstracts if
+        abstract.value == "English summary (similar)"
+    )
+    assert any(
+        abstract for abstract in source_record.abstracts if
+        abstract.value == "Résumé français (maximum 1000 caractères)"
+    )
+    assert len(source_record.subjects) == 1
+    assert any(
+        subject for subject in source_record.subjects if
+        subject.uri == "http://www.example.fr/subject/123456"
+    )
+    assert len(source_record.document_type) == 2
+
+    assert DocumentTypeEnum.THESIS in source_record.document_type
+
+    assert DocumentTypeEnum.THESIS in source_record.document_type
+    assert len(source_record.contributions) == 3
+    assert any(
+        contribution for contribution in source_record.contributions if
+        contribution.contributor.name == "Doe, John (1980-.... ; astrophysicist)"
+    )
+    assert any(
+        contribution for contribution in source_record.contributions if
+        contribution.contributor.name == "Smith, Jane (1990-....)"
+    )
+    assert any(
+        contribution for contribution in source_record.contributions if
+        contribution.contributor.name == "Brown, Alex (1975-....)"
+    )
+    assert source_record.issued.isoformat() == "2006-06-14T00:00:00"
+    assert source_record.raw_issued == "2006-06-14"
+    assert str(source_record.url) == "http://www.example.fr/123456789/id"
+
+
+def test_create_article_source_record_from_hal_data(
+        hal_article_source_record_with_custom_metadata_json_data: dict
+):
+    """
+    Given a source record model recording an article harvested from Hal
+    When asked for different field values
+    Then the values should be returned correctly
+    :param hal_article_source_record_with_custom_metadata_json_data: 
+    :return:
+    """
+    source_record = SourceRecord(**hal_article_source_record_with_custom_metadata_json_data)
+    assert source_record
+    assert source_record.harvester == Harvester.HAL.value
+    assert source_record.source_identifier == "hal-02732648"
+    assert len(source_record.titles) == 1
+    assert len(source_record.identifiers) == 2
+    assert any(
+        title for title in source_record.titles if
+        title.value == "Sample Title: Insights from oral conditions"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.DOI
+        and identifier.value == "https://doi.org/10.12345/bch.0000.00000"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.HAL
+        and identifier.value == "hal-02732648"
+    )
+    assert len(source_record.abstracts) == 1
+    assert any(
+        abstract for abstract in source_record.abstracts if
+        abstract.value == "This is an abstract of the article."
+    )
+    assert len(source_record.subjects) == 0
+    assert len(source_record.document_type) == 1
+    assert DocumentTypeEnum.ARTICLE in source_record.document_type
+    assert len(source_record.contributions) == 1
+    assert any(
+        contribution for contribution in source_record.contributions if
+        contribution.rank == 0 and contribution.contributor.name == "Jane Doe"
+    )
+    assert source_record.issue
+    assert source_record.issue.source == HarvestingSource.HAL
+    assert source_record.issue.source_identifier == "journal-issue-identifier"
+    assert len(source_record.issue.titles) == 0
+    assert source_record.issue.volume == "164"
+    assert source_record.issue.number == ["4"]
+    assert source_record.issue.rights is None
+    assert source_record.issue.date is None
+    assert source_record.issue.journal.source == HarvestingSource.HAL
+    assert source_record.issue.journal.source_identifier == "2871"
+    assert source_record.issue.journal.publisher == "Example Publisher"
+    assert source_record.issue.journal.titles == ["Sample Journal Title"]
+    assert source_record.issued.isoformat() == "2017-01-01T00:00:00+00:00"
+    assert source_record.raw_issued == "2017"
+    assert len(source_record.custom_metadata.hal_collection_codes) == 17
+    assert source_record.custom_metadata.hal_submit_type == "notice"
+
+
+def test_create_article_source_record_from_hal_inconsistent_data(
+        hal_article_source_record_with_inconsistent_custom_metadata_json_data: dict
+):
+    """
+    Given a source record model recording an article harvested from Hal
+    When asked for different field values
+    Then the values should be returned correctly
+    :param hal_article_source_record_with_custom_metadata_json_data:
+    :return:
+    """
+    source_record = SourceRecord(
+        **hal_article_source_record_with_inconsistent_custom_metadata_json_data)
+    assert source_record
+    assert source_record.harvester == Harvester.HAL.value
+    assert source_record.source_identifier == "hal-02732648"
+    assert len(source_record.titles) == 1
+    assert len(source_record.identifiers) == 2
+    assert any(
+        title for title in source_record.titles if
+        title.value == "Sample Title: Insights from oral conditions"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.DOI
+        and identifier.value == "https://doi.org/10.12345/bch.0000.00000"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.HAL
+        and identifier.value == "hal-02732648"
+    )
+    assert len(source_record.abstracts) == 1
+    assert any(
+        abstract for abstract in source_record.abstracts if
+        abstract.value == "This is an abstract of the article."
+    )
+    assert len(source_record.subjects) == 0
+    assert len(source_record.document_type) == 1
+    assert DocumentTypeEnum.ARTICLE in source_record.document_type
+    assert len(source_record.contributions) == 1
+    assert any(
+        contribution for contribution in source_record.contributions if
+        contribution.rank == 0 and contribution.contributor.name == "Jane Doe"
+    )
+    assert source_record.issue
+    assert source_record.issue.source == HarvestingSource.HAL.value
+    assert source_record.issue.source_identifier == "journal-issue-identifier"
+    assert len(source_record.issue.titles) == 0
+    assert source_record.issue.volume == "164"
+    assert source_record.issue.number == ["4"]
+    assert source_record.issue.rights is None
+    assert source_record.issue.date is None
+    assert source_record.issue.journal.source == HarvestingSource.HAL
+    assert source_record.issue.journal.source_identifier == "2871"
+    assert source_record.issue.journal.publisher == "Example Publisher"
+    assert source_record.issue.journal.titles == ["Sample Journal Title"]
+    assert source_record.issued.isoformat() == "2017-01-01T00:00:00+00:00"
+    assert source_record.raw_issued == "2017"
+    assert source_record.custom_metadata.hal_collection_codes is None
+    assert source_record.custom_metadata.hal_submit_type is None
+
+
+def test_create_article_source_record_from_open_alex_data(
+        open_alex_article_source_record_json_data: dict
+):
+    """
+    Given a valid source record model recording an article harvested from OpenAlex
+    When asked for different field values
+    Then the values should be returned correctly
+    :param open_alex_article_source_record_json_data:
+    :return:
+    """
+    source_record = SourceRecord(**open_alex_article_source_record_json_data)
+    assert source_record
+    assert source_record.harvester == Harvester.OPENALEX.value
+    assert source_record.source_identifier == "https://openalex.org/W123456789"
+    assert len(source_record.titles) == 1
+    assert len(source_record.identifiers) == 2
+    assert any(
+        title for title in source_record.titles if
+        title.value == "Sample Title: Anonymized Study on Historical Artifacts"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.DOI
+        and identifier.value == "https://doi.org/10.12345/bch.0000.00000"
+    )
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.OPENALEX
+        and identifier.value == "https://openalex.org/W123456789"
+    )
+    assert len(source_record.abstracts) == 1
+    assert any(
+        abstract for abstract in source_record.abstracts if
+        abstract.value == "This is an abstract of the article."
+    )
+    assert len(source_record.subjects) == 1
+    assert any(
+        subject for subject in source_record.subjects if
+        subject.uri == "http://www.example.org/entity/123"
+    )
+    assert len(source_record.document_type) == 1
+    assert DocumentTypeEnum.ARTICLE in source_record.document_type
+    assert len(source_record.contributions) == 1
+    assert any(
+        contribution for contribution in source_record.contributions if
+        contribution.rank == 1 and contribution.contributor.name == "John Doe"
+    )
+    assert source_record.issue
+    assert source_record.issue.source == HarvestingSource.OPENALEX.value
+    assert source_record.issue.source_identifier == "journal-issue-identifier"
+    assert len(source_record.issue.titles) == 0
+    assert source_record.issue.volume == "105"
+    assert source_record.issue.number == ["2"]
+    assert source_record.issue.rights is None
+    assert source_record.issue.date is None
+    assert source_record.issue.journal.source == HarvestingSource.OPENALEX
+    assert source_record.issue.journal.source_identifier == "https://openalex.org/S113942516"
+    assert source_record.issue.journal.publisher == "Example Publisher"
+    assert source_record.issue.journal.titles == ["Sample Journal Title"]
+    assert source_record.issue.journal.uid == "openalex-https://openalex.org/S113942516"
+    assert source_record.issued.isoformat() == "2000-01-01T00:00:00"
+    assert source_record.raw_issued == "2000"
+    assert str(source_record.url) == "https://openalex.org/W123456789"
+
+
+def test_article_identifiers_from_open_alex_data(
+        open_alex_article_source_record_json_data: dict
+):
+    """
+    Given a valid source record model recording an article harvested from OpenAlex
+    When asked for identifiers
+    Then the values should be returned correctly
+    :param open_alex_article_source_record_json_data:
+    :return:
+    """
+    source_record = SourceRecord(**open_alex_article_source_record_json_data)
+    assert source_record
+    assert len(source_record.issue.journal.identifiers) == 3
+    assert any(
+        identifier for identifier in source_record.issue.journal.identifiers if
+        identifier.type == JournalIdentifierType.ISSN and identifier.value == "0007-4217"
+    )
+    assert any(
+        identifier for identifier in source_record.issue.journal.identifiers if
+        identifier.type == JournalIdentifierType.ISSN and identifier.value == "2241-0104"
+    )
+    assert any(
+        identifier for identifier in source_record.issue.journal.identifiers if
+        identifier.type == JournalIdentifierType.ISSN and identifier.value == "1234-5678" and
+        identifier.format == JournalIdentifierFormat.ONLINE
+    )
+
+
+def test_create_invalid_source_record(source_record_without_title_json_data):
+    """
+    Given json source record data with no titles
+    When creating a source record object
+    Then a ValueError should be raised
+
+    :param source_record_without_title_json_data: json data with invalid identifier type
+    :return:
+    """
+    with pytest.raises(ValueError):
+        SourceRecord(**source_record_without_title_json_data)
+
+
+def test_create_article_source_record_from_open_alex_data_with_issue_title(
+        open_alex_article_source_record_with_issue_title_json_data: dict
+):
+    """
+    Given a valid source record model recording an article harvested from OpenAlex
+    When asked for different field values
+    Then the values should be returned correctly
+    :param open_alex_article_source_record_with_issue_title_json_data:
+    :return:
+    """
+    source_record = SourceRecord(**open_alex_article_source_record_with_issue_title_json_data)
+    assert source_record
+    assert source_record.harvester == Harvester.OPENALEX.value
+    assert source_record.issue
+    assert source_record.issue.source == HarvestingSource.HAL.value
+    assert len(source_record.issue.titles) > 0
+    expected_issue_titles = ['Some title', 'Some other title']
+    assert sorted(source_record.issue.titles) == sorted(expected_issue_titles)
+
+
+def test_create_source_record_with_unknown_identifier(
+        source_record_with_unknown_source_json_data, caplog):
+    """
+    Given json source record data with an unknown identifier
+    When creating a source record object
+    Then the value should be returned correctly
+
+    :param source_record_with_unknown_source_json_data: json data with invalid identifier type
+    :return:
+    """
+    source_record = SourceRecord(**source_record_with_unknown_source_json_data)
+    assert source_record
+    assert len(source_record.identifiers) == 1
+    assert any(
+        identifier for identifier in source_record.identifiers if
+        identifier.type == PublicationIdentifierType.UNKNOWN
+        and identifier.value == "not_known_source"
+    )
+    assert "Unknown publication identifier type submitted" in caplog.text
+
+
+def test_source_record_truncates_literal_values(scanr_thesis_source_record_json_data):
+    """
+    Given a source record model recording a thesis harvested from ScanR
+    When the title and abstract values exceed the maximum length
+    Then the values should be truncated to Literal.MAX_VALUE_LENGTH
+    :param scanr_thesis_source_record_json_data:
+    :return:
+    """
+    data = copy.deepcopy(scanr_thesis_source_record_json_data)
+
+    # Make title and first abstract exceed Literal.MAX_VALUE_LENGTH
+    data["titles"][0]["value"] = "T" * (Literal.MAX_VALUE_LENGTH + 50)
+    data["abstracts"][0]["value"] = "A" * (Literal.MAX_VALUE_LENGTH + 200)
+
+    sr = SourceRecord(**data)
+
+    assert len(sr.titles[0].value) == Literal.MAX_VALUE_LENGTH
+    assert sr.titles[0].value == "T" * Literal.MAX_VALUE_LENGTH
+
+    assert len(sr.abstracts[0].value) == Literal.MAX_VALUE_LENGTH
+    assert sr.abstracts[0].value == "A" * Literal.MAX_VALUE_LENGTH
+
+
+def test_two_source_records_with_same_text_literal_have_same_key():
+    """
+    Given two source records with the same text literal value and language
+    When creating the source record objects
+    Then the text literals should have the same key
+    :return:
+    """
+    abstract_value = "This is a sample abstract for testing."
+    language = "en"
+
+    sr1 = SourceRecord(
+        source_identifier="source1",
+        harvester=Harvester.SCOPUS.value,
+        titles=[Literal(value="Sample Title")],
+        abstracts=[TextLiteral(value=abstract_value, language=language)]
+    )
+
+    sr2 = SourceRecord(
+        source_identifier="source2",
+        harvester=Harvester.SCOPUS.value,
+        titles=[Literal(value="Sample Title")],
+        abstracts=[TextLiteral(value=abstract_value, language=language)]
+    )
+
+    assert sr1.abstracts[0].key == sr2.abstracts[0].key

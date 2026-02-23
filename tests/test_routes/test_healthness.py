@@ -1,6 +1,3 @@
-"""Test the references API."""
-
-import pytest
 from fastapi.testclient import TestClient
 
 

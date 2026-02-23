@@ -1,0 +1,59 @@
+from typing import Any
+
+from loguru import logger
+
+from app.amqp.abstract_amqp_message_factory import AbstractAMQPMessageFactory
+from app.models.identifier_types import PersonIdentifierType
+from app.services.people.people_service import PeopleService
+
+
+class AMQPPublicationRetrievalMessageFactory(AbstractAMQPMessageFactory):
+    """Factory for building AMQP messages related to harvesting states."""
+
+    def _build_routing_key(self) -> str:
+        return self.settings.amqp_harvester_publication_retrieval_routing_key
+
+    async def _build_payload(self) -> dict[str, Any] | None:
+        allowed_harvesters = self.settings.harvesters
+        harvesters = self.content.get("harvesters")
+        if harvesters is None:
+            harvesters = allowed_harvesters
+        elif not isinstance(harvesters, list):
+            raise ValueError("harvesters must be a list")
+        else:
+            # filter out not allowed harvesters
+            harvesters = [h for h in harvesters if h in allowed_harvesters]
+            if len(harvesters) != len(self.content.get("harvesters", [])):
+                logger.warning(
+                    "Some harvesters were not allowed: "
+                    f"{set(self.content.get('harvesters', [])) - set(allowed_harvesters)}"
+                )
+        person_uid = self.content.get("person_uid")
+        print(f"Fetching publications for {person_uid}")
+        people_service = PeopleService()
+        person = await people_service.get_person(person_uid)
+        identifiers = [
+            {"type": id.type.value, "value": id.value}
+            for id in person.identifiers
+        ]
+        useful_identifiers = filter(
+            lambda id: id.type not in {PersonIdentifierType.LOCAL, PersonIdentifierType.EPPN},
+            person.identifiers,
+        )
+        # abort if identifiers are empty ; no useful identifiers to harvest publications
+        if not useful_identifiers:
+            print(
+                f"No useful identifiers found for person {person_uid}, "
+                "aborting publication retrieval")
+            return None
+        return {
+            "type": "person",
+            "reply": True,
+            "identifiers_safe_mode": False,
+            "events": ["created", "updated", "deleted", "unchanged"],
+            "harvesters": harvesters,
+            "fields": {
+                "name": person.display_name if person.display_name else "n/c",
+                "identifiers": identifiers,
+            },
+        }
