@@ -7,7 +7,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -23,5 +23,11 @@ jobs:
         with:
           push: true
           tags: |
-            crisalidesr/crisalid-ikg:v0.25-dev
-            crisalidesr/crisalid-ikg:latest
+            crisalidesr/crisalid-ikg:0.25-dev
+            crisalidesr/crisalid-ikg:dev
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.ref.name=${{ github.ref_name }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            GIT_BRANCH=${{ github.ref_name }}
