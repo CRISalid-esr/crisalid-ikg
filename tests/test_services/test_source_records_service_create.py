@@ -285,6 +285,29 @@ async def test_create_two_source_records_with_same_concepts(
          fetched_idref_source_record.subjects)
     )
 
+async def test_create_source_record_with_empty_uri_identifier(
+        persisted_person_a_pydantic_model: Person,
+        idref_record_with_person_a_as_contributor_empty_uri_pydantic_model: SourceRecord,
+) -> None:
+    """
+    Given a persisted person Pydantic model,
+    When a source record identifier has an empty URI, then this URI is not added
+
+    :param persisted_person_a_pydantic_model:
+    :param idref_record_with_person_a_as_contributor_empty_uri_pydantic_model:
+    :return:
+    """
+    service = SourceRecordService()
+    await service.create_source_record(
+        source_record=idref_record_with_person_a_as_contributor_empty_uri_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model)
+    fetched_idref_source_record = await service.get_source_record(
+        idref_record_with_person_a_as_contributor_empty_uri_pydantic_model.uid)
+    assert (
+            fetched_idref_source_record.uid ==
+            idref_record_with_person_a_as_contributor_empty_uri_pydantic_model.uid
+    )
+
 
 async def test_create_source_record_with_issue(
         persisted_person_a_pydantic_model: Person,

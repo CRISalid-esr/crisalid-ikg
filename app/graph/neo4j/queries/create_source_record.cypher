@@ -29,7 +29,9 @@ FOREACH (abstract IN $abstracts |
     a.type = 'source_record_abstract'
   MERGE (s)-[:HAS_ABSTRACT]->(a)
 )
-FOREACH (identifier IN $identifiers |
+FOREACH (identifier IN
+  [id IN $identifiers
+   WHERE id.value IS NOT NULL AND id.value <> ""] |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
   MERGE (s)-[:HAS_IDENTIFIER]->(i)
 )
