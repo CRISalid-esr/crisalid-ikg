@@ -41,9 +41,7 @@ WITH s
 OPTIONAL MATCH (s)-[r:HAS_IDENTIFIER]->(:PublicationIdentifier)
 DELETE r
 WITH DISTINCT s
-FOREACH (identifier IN
-  [id IN $identifiers
-   WHERE id.value IS NOT NULL AND id.value <> ""] |
+FOREACH (identifier IN $identifiers |
   MERGE (i:PublicationIdentifier {type: identifier.type, value: identifier.value})
   MERGE (s)-[:HAS_IDENTIFIER]->(i)
 )
