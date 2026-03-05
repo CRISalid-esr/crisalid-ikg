@@ -1,5 +1,7 @@
 from typing import List
 
+import pytest
+
 from app.models.harvesters import Harvester
 from app.models.harvesting_sources import HarvestingSource
 from app.models.identifier_types import JournalIdentifierType
@@ -285,8 +287,11 @@ async def test_create_two_source_records_with_same_concepts(
          fetched_idref_source_record.subjects)
     )
 
+
+@pytest.mark.current
 async def test_create_source_record_with_empty_uri_identifier(
         persisted_person_a_pydantic_model: Person,
+        idref_record_with_person_a_as_contributor_empty_uri_json_data,
         idref_record_with_person_a_as_contributor_empty_uri_pydantic_model: SourceRecord,
 ) -> None:
     """
@@ -298,6 +303,8 @@ async def test_create_source_record_with_empty_uri_identifier(
     :return:
     """
     service = SourceRecordService()
+    assert (len(idref_record_with_person_a_as_contributor_empty_uri_json_data.get("identifiers"))
+            == 4)
     await service.create_source_record(
         source_record=idref_record_with_person_a_as_contributor_empty_uri_pydantic_model,
         harvested_for=persisted_person_a_pydantic_model)
@@ -307,6 +314,7 @@ async def test_create_source_record_with_empty_uri_identifier(
             fetched_idref_source_record.uid ==
             idref_record_with_person_a_as_contributor_empty_uri_pydantic_model.uid
     )
+    assert len(fetched_idref_source_record.identifiers) == 3
 
 
 async def test_create_source_record_with_issue(
