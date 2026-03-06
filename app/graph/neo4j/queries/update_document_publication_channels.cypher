@@ -11,7 +11,7 @@ FOREACH (entry IN existing |
 
 WITH DISTINCT doc, pcs
 UNWIND pcs AS pc
-MATCH (journal:Journal {uid: pc.journal_uid})
+MERGE (journal:Journal {uid: pc.journal_uid})
 MERGE (doc)-[r:PUBLISHED_IN]->(journal)
 SET r.volume = pc.volume,
     r.issue = pc.issue,
