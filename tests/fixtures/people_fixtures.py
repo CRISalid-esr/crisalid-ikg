@@ -401,6 +401,14 @@ async def fixture_person_a_with_invalid_idref_json_data(_base_path) -> dict:
     """
     return _person_json_data_from_file(_base_path, "person_a_with_invalid_idref")
 
+@pytest_asyncio.fixture(name="person_a_with_almost_correct_idref_json_data")
+async def fixture_person_a_with_almost_correct_idref_json_data(_base_path) -> dict:
+    """
+    Create a person with almost correct idref json data
+    :return: person with almost correct idref json data
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_almost_correct_idref")
+
 
 @pytest_asyncio.fixture(name="person_a_with_invalid_idhal_s_json_data")
 async def fixture_person_a_with_invalid_idhal_s_json_data(_base_path) -> dict:
