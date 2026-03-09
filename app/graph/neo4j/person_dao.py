@@ -271,8 +271,10 @@ class PersonDAO(Neo4jDAO):
             names=[name.model_dump() for name in person.names]
         )
         existing_identifiers = existing_person.identifiers
-        identifier_types = [identifier.type.value for identifier in person.identifiers]
-        identifier_values = [identifier.value for identifier in person.identifiers]
+        identifier_types = [identifier.type.value for identifier in person.identifiers
+                            if not identifier.authenticated]
+        identifier_values = [identifier.value for identifier in person.identifiers
+                             if not identifier.authenticated]
         await tx.run(
             load_query("delete_person_identifiers"),
             person_uid=person.uid,
