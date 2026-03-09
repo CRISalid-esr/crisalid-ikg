@@ -20,7 +20,7 @@ class ISSNService(ApiService):
     """
     Service to check ISSN identifiers against the ISSN portal
     """
-    BASE_URL = "https://portal.issn.org/resource/ISSN"
+    BASE_URL = "https://publishers.issn.org/resource/ISSN"
 
     async def check_identifier(self, identifier: JournalIdentifier) -> IssnInfo:
         """

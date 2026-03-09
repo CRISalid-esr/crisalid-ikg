@@ -35,8 +35,8 @@ async def test_check_identifier_with_real_parsing(mock_issn_portal):
 
     # Assert URLs were fetched
     assert len(requested_urls) == 2
-    assert requested_urls[0] == "https://portal.issn.org/resource/ISSN/0967-070X?format=json"
-    assert requested_urls[1] == "https://portal.issn.org/resource/ISSN/1879-310X?format=json"
+    assert requested_urls[0] == "https://publishers.issn.org/resource/ISSN/0967-070X?format=json"
+    assert requested_urls[1] == "https://publishers.issn.org/resource/ISSN/1879-310X?format=json"
 
     # Assert returned object
     assert info.checked_issn == "0967-070X"
