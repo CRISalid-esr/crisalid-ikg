@@ -1,7 +1,5 @@
 from typing import List
 
-import pytest
-
 from app.models.harvesters import Harvester
 from app.models.harvesting_sources import HarvestingSource
 from app.models.identifier_types import JournalIdentifierType
@@ -288,7 +286,6 @@ async def test_create_two_source_records_with_same_concepts(
     )
 
 
-@pytest.mark.current
 async def test_create_source_record_with_empty_uri_identifier(
         persisted_person_a_pydantic_model: Person,
         idref_record_with_person_a_as_contributor_empty_uri_json_data,
