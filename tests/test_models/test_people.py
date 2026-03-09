@@ -152,6 +152,7 @@ def test_create_person_a_with_name_in_multiple_lng(
         "person_a_with_invalid_orcid_json_data",
         "person_a_with_invalid_scopus_json_data",
         "person_a_with_invalid_idref_json_data",
+        "person_a_with_almost_correct_idref_json_data",
         "person_a_with_invalid_idhal_s_json_data",
         "person_a_with_invalid_idhal_i_json_data"
     ],
@@ -159,6 +160,7 @@ def test_create_person_a_with_name_in_multiple_lng(
         "person_a_with_invalid_orcid_json_data",
         "person_a_with_invalid_scopus_json_data",
         "person_a_with_invalid_idref_json_data",
+        "person_a_with_almost_correct_idref_json_data",
         "person_a_with_invalid_idhal_s_json_data",
         "person_a_with_invalid_idhal_i_json_data"
     ]

@@ -1,0 +1,120 @@
+{
+  "source_identifier": "http://www.idref.fr/247889784/id",
+  "harvester": "idref",
+  "harvester_version": "1.2.0",
+  "identifiers": [
+    {
+      "type": "uri",
+      "value": "http://www.sudoc.fr/246737727/id"
+    },
+    {
+      "type": "uri",
+      "value": "http://www.sudoc.fr/078114675/id"
+    },
+    {
+      "type": "uri",
+      "value": "http://www.idref.fr/247889784/id"
+    },
+    {
+      "type": "uri",
+      "value": ""
+    }
+  ],
+  "manifestations": [],
+  "titles": [
+    {
+      "value": "Observations \u00e0 21 cm et dans l'infrarouge moyen de cirrus galactiques, turbulence et poussieres",
+      "language": "fr"
+    }
+  ],
+  "subtitles": [
+    {
+      "value": "Mid infrared and 21 cm observations of galactic cirrus : turbulence and dust",
+      "language": "fr"
+    }
+  ],
+  "abstracts": [
+    {
+      "value": "R\u00e9sum\u00e9 fran\u00e7ais (1000 caract\u00e8res maxi)",
+      "language": "fr"
+    },
+    {
+      "value": "R\u00e9sum\u00e9 anglais (idem)",
+      "language": "fr"
+    }
+  ],
+  "subjects": [
+    {
+      "uri": "http://www.idref.fr/02734004x/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Analyse des donn\u00e9es",
+          "language": null
+        }
+      ],
+      "alt_labels": []
+    },
+    {
+      "uri": "http://www.idref.fr/027818055/id",
+      "dereferenced": true,
+      "pref_labels": [
+        {
+          "value": "Mati\u00e8re interstellaire",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Milieu interstellaire",
+          "language": null
+        }
+      ]
+    },
+    {
+      "uri": "http://www.idref.fr/027259625/id",
+      "dereferenced": false,
+      "pref_labels": [
+        {
+          "value": "Archivistes",
+          "language": "fr"
+        }
+      ],
+      "alt_labels": [
+        {
+          "value": "Archivistes paléographes",
+          "language": "fr"
+        }
+      ]
+    }
+  ],
+  "document_type": [
+    {
+      "uri": "http://rdaregistry.info/Elements/c/C10001",
+      "label": "Work"
+    },
+    {
+      "uri": "http://purl.org/vocab/frbr/core#Work",
+      "label": "Work"
+    }
+  ],
+  "contributions": [
+    {
+      "rank": null,
+      "contributor": {
+        "source": "idref",
+        "source_identifier": "http://www.idref.fr/987654321/id",
+        "name": "John Doe",
+        "name_variants": []
+      },
+      "role": "https://id.loc.gov/vocabulary/relators/ths.html",
+      "affiliations": []
+    }
+  ],
+  "issue": null,
+  "page": null,
+  "book": null,
+  "issued": null,
+  "created": null,
+  "version": 0
+}

@@ -162,3 +162,19 @@ class SourceRecord(BaseModel):
         except (ValueError, KeyError):
             logger.error(f"Failed to compute source record URL for {values}")
             return values
+
+    @field_validator("identifiers", mode="before")
+    @classmethod
+    def _filter_invalid_identifiers(cls, v):
+        if not v:
+            return []
+
+        valid = []
+        for item in v:
+            value = item.get("value") if isinstance(item, dict) else getattr(item, "value", None)
+            if value is None or not str(value).strip():
+                logger.warning("Skipping identifier with empty value: %s", item)
+                continue
+            valid.append(item)
+
+        return valid

@@ -380,7 +380,6 @@ async def fixture_idref_record_with_person_a_as_contributor_pydantic_model(
     """
     return _source_record_from_json_data(idref_record_with_person_a_as_contributor_json_data)
 
-
 @pytest_asyncio.fixture(name="idref_record_with_person_a_as_contributor_json_data")
 async def fixture_idref_record_with_person_a_as_contributor_json_data(_base_path) -> dict:
     """
@@ -390,6 +389,28 @@ async def fixture_idref_record_with_person_a_as_contributor_json_data(_base_path
     return _source_record_json_data_from_file(
         _base_path,
         "idref_record_with_person_a_as_contributor"
+    )
+
+@pytest_asyncio.fixture(name="idref_record_with_person_a_as_contributor_empty_uri_pydantic_model")
+async def fixture_idref_record_with_person_a_as_contributor_empty_uri_pydantic_model(
+        idref_record_with_person_a_as_contributor_empty_uri_json_data) -> SourceRecord:
+    """
+    Create a basic source record pydantic model from IdRef data with an empty uri identifier
+    :return: basic source record pydantic model from IdRef data with an empty uri identifier
+    """
+    return _source_record_from_json_data(
+        idref_record_with_person_a_as_contributor_empty_uri_json_data)
+
+
+@pytest_asyncio.fixture(name="idref_record_with_person_a_as_contributor_empty_uri_json_data")
+async def fixture_idref_record_with_person_a_as_contributor_empty_uri_json_data(_base_path) -> dict:
+    """
+    Create a source record dict from IdRef data with an empty uri identifier
+    :return: source record dict from IdRef data with an empty uri identifier
+    """
+    return _source_record_json_data_from_file(
+        _base_path,
+        "idref_record_with_person_a_as_contributor_empty_uri"
     )
 
 

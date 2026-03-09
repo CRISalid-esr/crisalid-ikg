@@ -51,7 +51,7 @@ class PersonIdentifierType(AgentIdentifierType):
 
 PERSON_IDENTIFIER_PATTERNS = {
     PersonIdentifierType.ORCID: "^([0-9]{4}-){3}[0-9]{3}[0-9X]$",
-    PersonIdentifierType.IDREF: "^[0-9]{1,9}[A-Z]?$",
+    PersonIdentifierType.IDREF: "^[0-9]{8}[0-9A-Z]$",
     PersonIdentifierType.IDHALS: "^([a-z]+-)*[a-z]+$",
     PersonIdentifierType.IDHALI: "^[0-9]{1,9}$",
     PersonIdentifierType.SCOPUS: "^[0-9]+$",

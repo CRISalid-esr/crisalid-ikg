@@ -123,6 +123,53 @@ async def test_update_person_membership(
         == persisted_research_structure_b_pydantic_model.uid
     )
 
+async def test_update_person_identifiers_with_authentication(
+        persisted_person_a_orcid_hal_authenticated_pydantic_model: Person,
+        person_a_with_hal_pydantic_model:Person
+) -> None:
+    """
+    Given an existing person pydantic model
+    When the person membership is updated
+    Then the person can be read from the graph with updated membership
+    :param person_a_pydantic_model:
+    :return:
+    """
+    service = PeopleService()
+    fetched_person = await service.get_person(
+        persisted_person_a_orcid_hal_authenticated_pydantic_model.uid)
+    assert fetched_person.uid == persisted_person_a_orcid_hal_authenticated_pydantic_model.uid
+    assert all(
+        identifier.authenticated is True
+        for identifier in fetched_person.identifiers
+        if identifier.type.value in {"idhals", "orcid"}
+    )
+
+    new_person = person_a_with_hal_pydantic_model.copy()
+    new_person.uid = fetched_person.uid
+    assert all(
+        identifier.authenticated is None
+        for identifier in new_person.identifiers
+        if identifier.type.value in {"idhals", "orcid"}
+    )
+
+    await service.update_person(new_person)
+    updated_fetched_person = await service.get_person(
+        persisted_person_a_orcid_hal_authenticated_pydantic_model.uid
+    )
+    assert (updated_fetched_person.uid ==
+            persisted_person_a_orcid_hal_authenticated_pydantic_model.uid)
+    assert all(
+        identifier.authenticated is True
+        for identifier in updated_fetched_person.identifiers
+        if identifier.type.value in {"idhals", "orcid"}
+    )
+    actual_authentication_date = "2025-08-25T06:17:28.243Z"
+    assert all(identifier.authentication_date ==
+            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00"))
+            for identifier in updated_fetched_person.identifiers
+            if identifier.type.value in {"idhals", "orcid"}
+            )
+
 
 async def test_update_person_employment(
         persisted_research_structure_a_pydantic_model: ResearchStructure,
