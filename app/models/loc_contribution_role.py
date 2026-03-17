@@ -136,7 +136,7 @@ class LocContributionRole(Enum):
     STANDARDS_BODY = 'http://id.loc.gov/vocabulary/relators/stn'
     INTERVIEWEE = 'http://id.loc.gov/vocabulary/relators/ive'
     VISUAL_EFFECTS_PROVIDER = 'http://id.loc.gov/vocabulary/relators/vfx'
-    AUTHOR_OF_INTRODUCTION = 'http://id.loc.gov/vocabulary/relators/aui'
+    AUTHOR_OF_INTRODUCTION__ETC_ = 'http://id.loc.gov/vocabulary/relators/aui'
     LANDSCAPE_ARCHITECT = 'http://id.loc.gov/vocabulary/relators/lsa'
     AUCTIONEER = 'http://id.loc.gov/vocabulary/relators/auc'
     SIGNER = 'http://id.loc.gov/vocabulary/relators/sgn'
@@ -193,7 +193,7 @@ class LocContributionRole(Enum):
     PROOFREADER = 'http://id.loc.gov/vocabulary/relators/pfr'
     LIBELEE_APPELLANT = 'http://id.loc.gov/vocabulary/relators/let'
     COMMENTATOR_FOR_WRITTEN_TEXT = 'http://id.loc.gov/vocabulary/relators/cwt'
-    AUTHOR_OF_AFTERWORD = 'http://id.loc.gov/vocabulary/relators/aft'
+    AUTHOR_OF_AFTERWORD__COLOPHON__ETC_ = 'http://id.loc.gov/vocabulary/relators/aft'
     COLORIST = 'http://id.loc.gov/vocabulary/relators/clr'
     SECOND_PARTY = 'http://id.loc.gov/vocabulary/relators/spy'
     DEGREE_SUPERVISOR = 'http://id.loc.gov/vocabulary/relators/dgs'
@@ -308,6 +308,7 @@ class LocContributionRole(Enum):
     COURT_REPORTER = 'http://id.loc.gov/vocabulary/relators/crt'
     PRODUCTION_PERSONNEL = 'http://id.loc.gov/vocabulary/relators/prd'
     FILMMAKER = 'http://id.loc.gov/vocabulary/relators/fmk'
+
 
     @staticmethod
     def from_name(name: str) -> 'LocContributionRole':
