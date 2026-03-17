@@ -7,6 +7,7 @@ class LocContributionRole(Enum):
     Generated from https://id.loc.gov/vocabulary/relators.html
     with scripts/loc_contribution_role.py
     """
+    # pylint: disable=duplicate-code
     FORMER_OWNER = 'http://id.loc.gov/vocabulary/relators/fmo'
     AUDIO_ENGINEER = 'http://id.loc.gov/vocabulary/relators/aue'
     DESIGNER = 'http://id.loc.gov/vocabulary/relators/dsr'
