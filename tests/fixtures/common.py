@@ -5,7 +5,7 @@ import pytest
 
 from app.models.concepts import Concept
 from app.models.people import Person
-from app.models.research_structures import ResearchStructure
+from app.models.research_units import ResearchUnit
 from app.models.source_records import SourceRecord
 
 
@@ -36,8 +36,8 @@ def _organization_json_data_from_file(base_path, structure) -> dict:
     return _json_data_from_file(base_path, file_path)
 
 
-def _research_structure_from_json_data(input_data: dict) -> ResearchStructure:
-    return ResearchStructure(**input_data)
+def _research_unit_from_json_data(input_data: dict) -> ResearchUnit:
+    return ResearchUnit(**input_data)
 
 
 def _source_record_json_data_from_file(base_path, source_record) -> dict:

@@ -41,19 +41,19 @@ class AMQPPersonEventMessageFactory(AbstractAMQPMessageFactory):
             "memberships": [
                 {
                     "entity_uid": membership.entity_uid,
-                    "research_structure": {
+                    "research_unit": {
                         "names": [
                             {
                                 "value": name.value
                             }
-                            for name in membership.research_structure.names
+                            for name in membership.research_unit.names
                         ],
                         "identifiers": [
                             {
                                 "type": identifier.type.value,
                                 "value": identifier.value
                             }
-                            for identifier in membership.research_structure.identifiers
+                            for identifier in membership.research_unit.identifiers
                         ]
                     },
                     "start_date": membership.start_date,

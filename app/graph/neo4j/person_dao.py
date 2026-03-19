@@ -353,41 +353,41 @@ class PersonDAO(Neo4jDAO):
     async def _create_memberships(cls, incoming_person: Person, tx):
         for membership in incoming_person.memberships:
             try:
-                research_structure_uid = AgentIdentifierService.compute_uid_for(
-                    membership.research_structure
+                research_unit_uid = AgentIdentifierService.compute_uid_for(
+                    membership.research_unit
                 )
             except ValueError:
                 logger.error(
                     "Unable to compute primary key for research structure "
-                    f"{membership.research_structure}"
+                    f"{membership.research_unit}"
                 )
                 continue
-            find_structure_query = load_query("find_research_structure_by_uid")
+            find_structure_query = load_query("find_research_unit_by_uid")
             result = await tx.run(find_structure_query,
-                                  research_structure_uid=research_structure_uid)
+                                  research_unit_uid=research_unit_uid)
             structure = await result.single()
             if not structure:
-                logger.error(f"Research structure with uid {research_structure_uid} not found")
+                logger.error(f"Research structure with uid {research_unit_uid} not found")
                 continue
             create_membership_query = load_query("create_membership")
             try:
                 await tx.run(create_membership_query,
                              person_uid=incoming_person.uid,
-                             structure_uid=research_structure_uid)
+                             structure_uid=research_unit_uid)
             except ConstraintError as constraint_error:
                 raise ConflictError(
                     f"Schema constraint violation while creating membership "
-                    f"for person {incoming_person} and structure {research_structure_uid}"
+                    f"for person {incoming_person} and structure {research_unit_uid}"
                 ) from constraint_error
             except ClientError as client_error:
                 raise ValueError(
                     f"Bad request error while creating membership "
-                    f"for person {incoming_person} and structure {research_structure_uid}"
+                    f"for person {incoming_person} and structure {research_unit_uid}"
                 ) from client_error
             except Neo4jError as neo4j_error:
                 raise DatabaseError(
                     f"Database error while creating membership "
-                    f"for person {incoming_person} and structure {research_structure_uid}"
+                    f"for person {incoming_person} and structure {research_unit_uid}"
                 ) from neo4j_error
 
     @staticmethod
@@ -461,12 +461,12 @@ class PersonDAO(Neo4jDAO):
                        for identifier in identifiers_data]
         memberships = []
         for membership_data in memberships_data:
-            research_structure = membership_data["research_structure"]
-            if research_structure is None:
+            research_unit = membership_data["research_unit"]
+            if research_unit is None:
                 continue
             memberships.append(
                 Membership(
-                    entity_uid=membership_data["research_structure"]['uid']
+                    entity_uid=membership_data["research_unit"]['uid']
                 )
             )
         employments = []

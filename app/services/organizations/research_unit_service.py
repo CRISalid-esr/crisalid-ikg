@@ -3,13 +3,13 @@ from typing import cast
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao import DAO
-from app.graph.neo4j.research_structure_dao import ResearchStructureDAO
+from app.graph.neo4j.research_unit_dao import ResearchUnitDAO
 from app.models.identifier_types import OrganizationIdentifierType
-from app.models.research_structures import ResearchStructure
+from app.models.research_units import ResearchUnit
 from app.signals import structure_created, structure_updated, structure_unchanged, structure_deleted
 
 
-class ResearchStructureService:
+class ResearchUnitService:
     """
     Service to handle operations on structure data
     """
@@ -42,33 +42,33 @@ class ResearchStructureService:
         """
         await structure_deleted.send_async(self, payload=uid)
 
-    async def create_structure(self, structure: ResearchStructure) -> ResearchStructure:
+    async def create_structure(self, structure: ResearchUnit) -> ResearchUnit:
         """
-        Create a structure in the graph database from a Pydantic ResearchStructure object
-        :param structure: Pydantic ResearchStructure object
+        Create a structure in the graph database from a Pydantic ResearchUnit object
+        :param structure: Pydantic ResearchUnit object
         :return:
         """
-        structure = await self._get_research_structure_dao().create(structure)
+        structure = await self._get_research_unit_dao().create(structure)
         await self.signal_research_unit_created(structure.uid)
         return structure
 
-    async def update_structure(self, structure: ResearchStructure) -> ResearchStructure:
+    async def update_structure(self, structure: ResearchUnit) -> ResearchUnit:
         """
-        Update a structure in the graph database from a Pydantic ResearchStructure object
-        :param structure: Pydantic ResearchStructure object
+        Update a structure in the graph database from a Pydantic ResearchUnit object
+        :param structure: Pydantic ResearchUnit object
         :return:
         """
-        structure = await self._get_research_structure_dao().update(structure)
+        structure = await self._get_research_unit_dao().update(structure)
         await self.signal_research_unit_updated(structure.uid)
         return structure
 
-    async def create_or_update_structure(self, structure: ResearchStructure) -> ResearchStructure:
+    async def create_or_update_structure(self, structure: ResearchUnit) -> ResearchUnit:
         """
         Create a structure if not exists, update otherwise
-        :param structure: Pydantic ResearchStructure object
+        :param structure: Pydantic ResearchUnit object
         :return:
         """
-        uid, status = await self._get_research_structure_dao().create_or_update(structure)
+        uid, status = await self._get_research_unit_dao().create_or_update(structure)
         if status == DAO.Status.CREATED:
             await self.signal_research_unit_created(uid)
         elif status == DAO.Status.UPDATED:
@@ -79,23 +79,23 @@ class ResearchStructureService:
                                           identifier_value: str,
                                           identifier_type: OrganizationIdentifierType =
                                           OrganizationIdentifierType.LOCAL,
-                                          ) -> ResearchStructure:
+                                          ) -> ResearchUnit:
         """
         Get a structure from the graph database
         :param identifier_value: Researched identifier value
         :param identifier_type: OrgganizationIdentifierType corresponding to the researched value
-        :return: Pydantic ResearchStructure object
+        :return: Pydantic ResearchUnit object
         """
-        return await (self._get_research_structure_dao()
+        return await (self._get_research_unit_dao()
                       .find_by_identifier(identifier_type, identifier_value))
 
-    async def get_structure_by_uid(self, uid: str) -> ResearchStructure:
+    async def get_structure_by_uid(self, uid: str) -> ResearchUnit:
         """
         Get a structure from the graph database
         :param uid: Researched structure uid
-        :return: Pydantic ResearchStructure object
+        :return: Pydantic ResearchUnit object
         """
-        return await self._get_research_structure_dao().get(uid)
+        return await self._get_research_unit_dao().get(uid)
 
     async def get_all_structure_uids(self) -> list[str]:
         """
@@ -103,13 +103,13 @@ class ResearchStructureService:
 
         :return: A list of all research structure UIDs.
         """
-        dao = self._get_research_structure_dao()
+        dao = self._get_research_unit_dao()
         return await dao.get_all_uids()
 
     @staticmethod
-    def _get_research_structure_dao() -> ResearchStructureDAO:
+    def _get_research_unit_dao() -> ResearchUnitDAO:
         settings = get_app_settings()
         return cast(
-            ResearchStructureDAO,
-            AbstractDAOFactory().get_dao_factory(settings.graph_db).get_dao(ResearchStructure)
+            ResearchUnitDAO,
+            AbstractDAOFactory().get_dao_factory(settings.graph_db).get_dao(ResearchUnit)
         )

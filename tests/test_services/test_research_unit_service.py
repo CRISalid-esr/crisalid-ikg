@@ -3,8 +3,8 @@ from unittest.mock import patch, AsyncMock
 import pytest
 
 from app.models.identifier_types import OrganizationIdentifierType
-from app.models.research_structures import ResearchStructure
-from app.services.organizations.research_structure_service import ResearchStructureService
+from app.models.research_units import ResearchUnit
+from app.services.organizations.research_unit_service import ResearchUnitService
 
 
 @pytest.fixture(name="mocked_structure_created_signal")
@@ -18,7 +18,7 @@ def mocked_structure_created_signal_fixture():
 
 async def test_create_structure(
         test_app,  # pylint: disable=unused-argument
-        research_structure_a_pydantic_model: ResearchStructure,
+        research_unit_a_pydantic_model: ResearchUnit,
         mocked_structure_created_signal  # Use the mocked signal fixture
 ) -> None:
     """
@@ -26,25 +26,25 @@ async def test_create_structure(
     When the structure is added to the graph
     Then the structure can be read from the graph and signal is called
     """
-    service = ResearchStructureService()
-    await service.create_structure(research_structure_a_pydantic_model)
+    service = ResearchUnitService()
+    await service.create_structure(research_unit_a_pydantic_model)
 
     identifier_value = next(
-        identifier.value for identifier in research_structure_a_pydantic_model.identifiers
+        identifier.value for identifier in research_unit_a_pydantic_model.identifiers
         if identifier.type == OrganizationIdentifierType.LOCAL
     )
 
     fetched_structure = await service.get_structure_by_identifier(identifier_value)
     assert fetched_structure
     assert len(fetched_structure.descriptions) == len(
-        research_structure_a_pydantic_model.descriptions)
+        research_unit_a_pydantic_model.descriptions)
     assert all(
         description in fetched_structure.descriptions
-        for description in research_structure_a_pydantic_model.descriptions
+        for description in research_unit_a_pydantic_model.descriptions
     )
-    assert fetched_structure.acronym == research_structure_a_pydantic_model.acronym
+    assert fetched_structure.acronym == research_unit_a_pydantic_model.acronym
 
     # Assert that the signal was called with the correct parameters
     mocked_structure_created_signal.assert_called_once_with(
-        service, payload=research_structure_a_pydantic_model.uid
+        service, payload=research_unit_a_pydantic_model.uid
     )

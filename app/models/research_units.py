@@ -7,7 +7,7 @@ from app.models.literal import Literal
 from app.models.organizations import Organization
 
 
-class ResearchStructure(Organization):
+class ResearchUnit(Organization):
     """
     Research structure API model
     """
