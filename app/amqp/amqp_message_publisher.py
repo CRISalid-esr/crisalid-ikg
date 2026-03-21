@@ -24,14 +24,14 @@ from app.amqp.amqp_person_unchanged_event_message_factory import \
 from app.amqp.amqp_person_updated_event_message_factory import AMQPPersonUpdatedEventMessageFactory
 from app.amqp.amqp_publication_retrieval_message_factory import \
     AMQPPublicationRetrievalMessageFactory
-from app.amqp.amqp_research_structure_created_event_message_factory import \
-    AMQPResearchStructureCreatedEventMessageFactory
-from app.amqp.amqp_research_structure_deleted_event_message_factory import \
-    AMQPResearchStructureDeletedEventMessageFactory
-from app.amqp.amqp_research_structure_unchanged_event_message_factory import \
-    AMQPResearchStructureUnchangedEventMessageFactory
-from app.amqp.amqp_research_structure_updated_event_message_factory import \
-    AMQPResearchStructureUpdatedEventMessageFactory
+from app.amqp.amqp_research_unit_created_event_message_factory import \
+    AMQPResearchUnitCreatedEventMessageFactory
+from app.amqp.amqp_research_unit_deleted_event_message_factory import \
+    AMQPResearchUnitDeletedEventMessageFactory
+from app.amqp.amqp_research_unit_unchanged_event_message_factory import \
+    AMQPResearchUnitUnchangedEventMessageFactory
+from app.amqp.amqp_research_unit_updated_event_message_factory import \
+    AMQPResearchUnitUpdatedEventMessageFactory
 
 
 class AMQPMessagePublisher:
@@ -87,11 +87,11 @@ class AMQPMessagePublisher:
             EventMessageSubtype.PERSON_UPDATED: AMQPPersonUpdatedEventMessageFactory,
             EventMessageSubtype.PERSON_UNCHANGED: AMQPPersonUnchangedEventMessageFactory,
             EventMessageSubtype.PERSON_DELETED: AMQPPersonDeletedEventMessageFactory,
-            EventMessageSubtype.STRUCTURE_CREATED: AMQPResearchStructureCreatedEventMessageFactory,
-            EventMessageSubtype.STRUCTURE_UPDATED: AMQPResearchStructureUpdatedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_CREATED: AMQPResearchUnitCreatedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_UPDATED: AMQPResearchUnitUpdatedEventMessageFactory,
             EventMessageSubtype.STRUCTURE_UNCHANGED:
-                AMQPResearchStructureUnchangedEventMessageFactory,
-            EventMessageSubtype.STRUCTURE_DELETED: AMQPResearchStructureDeletedEventMessageFactory,
+                AMQPResearchUnitUnchangedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_DELETED: AMQPResearchUnitDeletedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_CREATED: AMQPDocumentCreatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_UPDATED: AMQPDocumentUpdatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_DELETED: AMQPDocumentDeletedEventMessageFactory,

@@ -37,7 +37,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_institution_uid_constraint(tx)
         await cls._create_structured_physical_address_uid_constraint(tx)
         await cls._create_place_lat_lon_unique_constraint(tx)
-        await cls._create_research_structure_uid_unique_constraint(tx)
+        await cls._create_research_unit_uid_unique_constraint(tx)
         await cls._create_publication_identifier_unique_type_value_constraint(tx)
         await cls._create_source_issue_unique_source_identifier_source_constraint(tx)
         await cls._create_authority_organization_state_signature_constraint(tx)
@@ -263,19 +263,19 @@ class Neo4jSetup(Setup[AsyncDriver]):
             raise e
 
     @staticmethod
-    async def _create_research_structure_uid_unique_constraint(
+    async def _create_research_unit_uid_unique_constraint(
             tx: AsyncManagedTransaction
     ):
         query = """
-        CREATE CONSTRAINT research_structure_uid_unique IF NOT EXISTS
-        FOR (r:ResearchStructure)
+        CREATE CONSTRAINT research_unit_uid_unique IF NOT EXISTS
+        FOR (r:ResearchUnit)
         REQUIRE r.uid IS UNIQUE;
         """
         try:
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error(
-                "Error creating ResearchStructure uid unique constraint: "
+                "Error creating ResearchUnit uid unique constraint: "
                 f"{e}"
             )
             raise e

@@ -1,4 +1,4 @@
-MATCH (s:ResearchStructure {uid: $research_structure_uid})
+MATCH (s:ResearchUnit {uid: $research_unit_uid})
 UNWIND $identifiers AS identifier
 MERGE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
   ON CREATE SET i = identifier

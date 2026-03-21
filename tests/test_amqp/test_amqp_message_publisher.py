@@ -7,7 +7,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.document import Document
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
-from app.models.research_structures import ResearchStructure
+from app.models.research_units import ResearchUnit
 from tests.test_utils.comparaison import force_dict_inner_list_ordering
 
 
@@ -98,13 +98,13 @@ async def test_publish_person_event(
 
 async def test_publish_structure_event(
         mocked_exchange: Exchange,
-        persisted_research_structure_a_pydantic_model: ResearchStructure,
+        persisted_research_unit_a_pydantic_model: ResearchUnit,
 ):
     """
     Test that an event message for a created structure is published to the AMQP queue
     when the publish method is called.
     :param mocked_exchange:
-    :param research_structure_a_pydantic_model:
+    :param research_unit_a_pydantic_model:
     :return:
     """
     # pylint: disable=duplicate-code
@@ -113,13 +113,13 @@ async def test_publish_structure_event(
     await publisher.publish(
         AMQPMessagePublisher.MessageType.EVENT,
         AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_CREATED,
-        {"research_structure_uid": persisted_research_structure_a_pydantic_model.uid})
+        {"research_unit_uid": persisted_research_unit_a_pydantic_model.uid})
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
     assert mocked_exchange.publish.call_args[1]["routing_key"] == expected_sent_message_routing_key
     message_body = json.loads(message.body)
     assert message_body['event'] == 'created'
-    assert message_body['type'] == 'research_structure'
+    assert message_body['type'] == 'research_unit'
     assert message_body['fields']['uid'] == 'local-U123'
     assert message_body['fields']['acronym'] == 'FL'
     expected_identifiers = [

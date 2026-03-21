@@ -2,7 +2,7 @@ MATCH (person:Person {uid: $person_uid})
 OPTIONAL MATCH (person)-[:HAS_NAME]->(pn:PersonName)
 OPTIONAL MATCH (pn)-[:HAS_FIRST_NAME]->(fn:Literal {type: 'person_first_name'})
 OPTIONAL MATCH (pn)-[:HAS_LAST_NAME]->(ln:Literal {type: 'person_last_name'})
-OPTIONAL MATCH (person)-[mb:MEMBER_OF]->(rs:ResearchStructure)
+OPTIONAL MATCH (person)-[mb:MEMBER_OF]->(rs:ResearchUnit)
 OPTIONAL MATCH (person)-[emp:EMPLOYED_AT]->(inst:Institution)
 WITH person, pn, fn, ln, mb, rs, emp, inst
 OPTIONAL MATCH (person)-[:HAS_IDENTIFIER]->(id:AgentIdentifier)
@@ -49,7 +49,7 @@ WITH
     END) AS names,
   collect(DISTINCT CASE
     WHEN rs IS NOT NULL AND mb IS NOT NULL
-  THEN {research_structure: rs, membership: mb}
+  THEN {research_unit: rs, membership: mb}
     END) AS memberships
 WITH
   person,
