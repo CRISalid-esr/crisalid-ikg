@@ -32,22 +32,42 @@ strategies:
     type: "global_richest"
     parameters:
       # Scoring weights for metadata fields.
-      titles: 10       # Each character in the title is worth 10 points.
+      titles: 0       # Each character in the title is worth 10 points.
       abstracts: 1     # Each character in the abstract is worth 1 point.
       contributions: 40     # Each contributor is worth 40 points.
       subjects: 30    # Each keyword is worth 30 points.
       issued: 20       # Having a publication date is worth 20 points.
-  # Example policy 2: Strategy for books and theses.
-  # "source_order" retrieves information in the order of specified harvesters.
-  # Harvesters not listed here will be ignored for this type of document.
+    harvesters:  # Default ordering of sources in case of equal scores.
+      #  idref > ScanR > OpenAlex > HAL
+      - idref
+      - scanr
+      - openalex
+      - hal
   - types:
+      - Chapter     # Applied to chapters.
       - Book          # Applied to books.
       - Thesis        # Applied to theses.
-#    type: "source_order"
     type: "global_richest"
-    harvesters:
+    parameters:
+      # Scoring weights for metadata fields.
+      titles: 0       # Each character in the title is worth 10 points.
+      abstracts: 1     # Each character in the abstract is worth 1 point.
+      contributions: 40     # Each contributor is worth 40 points.
+      subjects: 30    # Each keyword is worth 30 points.
+      issued: 20       # Having a publication date is worth 20 points.
+    harvesters: # Default ordering of sources in case of equal scores.
       - idref
       - hal
       - openalex
+      - scanr
+  # Example policy 2: Source order strategy
+  # "source_order" retrieves information in the order of specified harvesters.
+  # Harvesters not listed here will be ignored for this type of document.
+#  - types:
+#    type: "source_order"
+#    harvesters:
+#      - idref
+#      - hal
+#      - openalex
 # Another available strategy could be "richest_by_field"
 # which priorities the metadata field by field based on their richness.

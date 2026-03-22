@@ -1,5 +1,5 @@
-CREATE (research_struct:Organisation:ResearchStructure {
-  uid: $research_structure_uid,
+CREATE (research_struct:Organisation:ResearchUnit {
+  uid: $research_unit_uid,
   acronym: $acronym
 })
 WITH research_struct
@@ -8,7 +8,7 @@ FOREACH (name IN $names |
   MERGE (rs_name:Literal {
     value: trim(name.value),
     language: coalesce(nullif(trim(name.language), ''), 'und'),
-    type: "research_structure_name"
+    type: "research_unit_name"
   })
   MERGE (research_struct)-[:HAS_NAME]->(rs_name)
 )
@@ -27,7 +27,7 @@ FOREACH (description IN $descriptions |
   MERGE (rs_description:Literal {
     value: trim(description.value),
     language: coalesce(nullif(trim(description.language), ''), 'und'),
-    type: "research_structure_description"
+    type: "research_unit_description"
   })
   MERGE (research_struct)-[:HAS_DESCRIPTION]->(rs_description)
 );

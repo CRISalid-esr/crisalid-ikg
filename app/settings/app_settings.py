@@ -80,13 +80,13 @@ class AppSettings(BaseSettings):
     amqp_graph_document_task_routing_key: str = "task.documents.document.*"
     amqp_graph_person_documents_fetch_task_routing_key: str = "task.people.documents.fetch"
     amqp_graph_person_attribute_update_task_routing_key: str = "task.people.person.*"
-    amqp_graph_resarch_structure_event_created_routing_key: str = \
+    amqp_graph_research_unit_event_created_routing_key: str = \
         "event.structures.structure.created"
-    amqp_graph_resarch_structure_event_updated_routing_key: str = \
+    amqp_graph_research_unit_event_updated_routing_key: str = \
         "event.structures.structure.updated"
-    amqp_graph_resarch_structure_event_deleted_routing_key: str = \
+    amqp_graph_research_unit_event_deleted_routing_key: str = \
         "event.structures.structure.deleted"
-    amqp_graph_resarch_structure_event_unchanged_routing_key: str = \
+    amqp_graph_research_unit_event_unchanged_routing_key: str = \
         "event.structures.structure.unchanged"
     amqp_graph_document_event_created_routing_key: str = "event.documents.document.created"
     amqp_graph_document_event_updated_routing_key: str = "event.documents.document.updated"
@@ -140,7 +140,7 @@ class AppSettings(BaseSettings):
          PersonIdentifierType.ORCID,
          PersonIdentifierType.IDREF]
 
-    research_structure_identifier_order: list[OrganizationIdentifierType] = \
+    research_unit_identifier_order: list[OrganizationIdentifierType] = \
         [OrganizationIdentifierType.LOCAL,
          OrganizationIdentifierType.IDREF,
          OrganizationIdentifierType.ROR]

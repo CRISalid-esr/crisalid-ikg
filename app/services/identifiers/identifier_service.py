@@ -72,7 +72,7 @@ class AgentIdentifierService:
         if entity_cls.__name__ == "Person":
             return PersonIdentifier(type=PersonIdentifierType(identifier_type),
                                     value=identifier_value)
-        if entity_cls.__name__ == "ResearchStructure":
+        if entity_cls.__name__ == "ResearchUnit":
             return OrganizationIdentifier(type=OrganizationIdentifierType(identifier_type),
                                           value=identifier_value)
         if entity_cls.__name__ == "Institution":
@@ -103,8 +103,8 @@ class AgentIdentifierService:
         # check with string comparison to avoid circular imports
         if entity_cls.__name__ == "Person":
             return settings.person_identifier_order
-        if entity_cls.__name__ == "ResearchStructure":
-            return settings.research_structure_identifier_order
+        if entity_cls.__name__ == "ResearchUnit":
+            return settings.research_unit_identifier_order
         if entity_cls.__name__ == "Institution":
             return settings.institution_identifier_order
         raise ValueError(f"No identifier order defined for {entity_cls.__name__}.")

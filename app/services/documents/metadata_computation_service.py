@@ -89,7 +89,8 @@ class MetadataComputationService:
             strategy_type=MergeStrategyFactory.StrategyType(strategy['type']),
             source_records=self.source_records,
             parameters=strategy.get("parameters", {}),
-            document_class=expected_document_class
+            document_class=expected_document_class,
+            harvesters=strategy.get("harvesters", []),
         )
 
     def _get_policies(self):

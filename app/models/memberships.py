@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, model_validator
 
-from app.models.research_structures import ResearchStructure
+from app.models.research_units import ResearchUnit
 from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
@@ -12,7 +12,7 @@ class Membership(BaseModel):
     Membership API model
     """
     entity_uid: str
-    research_structure: Optional[ResearchStructure] = None
+    research_unit: Optional[ResearchUnit] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     past: bool = False
@@ -28,11 +28,11 @@ class Membership(BaseModel):
         return values
 
     @model_validator(mode='after')
-    def _set_research_structure(self) -> 'Membership':
-        if self.research_structure is None:
-            self.research_structure = ResearchStructure(
+    def _set_research_unit(self) -> 'Membership':
+        if self.research_unit is None:
+            self.research_unit = ResearchUnit(
                 names=[],
                 identifiers=[AgentIdentifierService.compute_identifier_from_uid(
-                    ResearchStructure, self.entity_uid)]
+                    ResearchUnit, self.entity_uid)]
             )
         return self

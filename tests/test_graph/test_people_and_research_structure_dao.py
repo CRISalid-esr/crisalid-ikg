@@ -1,18 +1,18 @@
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.identifier_types import PersonIdentifierType, OrganizationIdentifierType
 from app.models.people import Person
-from app.models.research_structures import ResearchStructure
+from app.models.research_units import ResearchUnit
 
 
 # pylint: disable=too-many-locals
 async def test_update_people_and_structure(
-        persisted_research_structure_a_pydantic_model: ResearchStructure,
+        persisted_research_unit_a_pydantic_model: ResearchUnit,
         # pylint: disable=unused-argument
-        persisted_research_structure_b_pydantic_model: ResearchStructure,
+        persisted_research_unit_b_pydantic_model: ResearchUnit,
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model: Person,
-        research_str_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model:
-        ResearchStructure
+        research_unit_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model:
+        ResearchUnit
 ):
     """
     Given a basic person Pydantic model
@@ -20,7 +20,7 @@ async def test_update_people_and_structure(
     Then the person should be created in the database
 
     :param person_d_with_two_memberships_pydantic_model:
-    :param persisted_research_structure_a_pydantic_model:
+    :param persisted_research_unit_a_pydantic_model:
     :return:
     """
 
@@ -63,8 +63,8 @@ async def test_update_people_and_structure(
         PersonIdentifierType.LOCAL
     )
 
-    structure_dao = factory.get_dao(ResearchStructure)
-    structure_local_identifier = persisted_research_structure_a_pydantic_model.get_identifier(
+    structure_dao = factory.get_dao(ResearchUnit)
+    structure_local_identifier = persisted_research_unit_a_pydantic_model.get_identifier(
         OrganizationIdentifierType.LOCAL
     )
 
@@ -104,16 +104,16 @@ async def test_update_people_and_structure(
 
     # update structure a
     await structure_dao.update(
-        research_str_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model)
+        research_unit_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model)
     updated_structure_from_db = await structure_dao.find_by_identifier(
         structure_local_identifier.type, structure_local_identifier.value
     )
     assert updated_structure_from_db
     await assert_identifiers_match(
         updated_structure_from_db,
-        research_str_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model
+        research_unit_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model
     )
     await assert_names_match(
         updated_structure_from_db,
-        research_str_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model
+        research_unit_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model
     )

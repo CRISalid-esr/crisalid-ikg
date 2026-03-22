@@ -1,11 +1,11 @@
 import asyncio
 import typer
 from app.commands import with_app_lifecycle
-from app.services.organizations.research_structure_service import ResearchStructureService
+from app.services.organizations.research_unit_service import ResearchUnitService
 
-research_structure_cli = typer.Typer()
+structure_cli = typer.Typer()
 
-@research_structure_cli.command()
+@structure_cli.command()
 def dispatch_event(
     event: str = typer.Argument(..., help="The event to dispatch: created, updated, or unchanged"),
     uid: str = typer.Argument(..., help="The UID of the research structure")
@@ -21,7 +21,7 @@ def dispatch_event(
 
     @with_app_lifecycle
     async def _dispatch_event(event: str, uid: str):
-        service = ResearchStructureService()
+        service = ResearchUnitService()
         if event == "created":
             await service.signal_research_unit_created(uid)
         elif event == "updated":
@@ -35,7 +35,7 @@ def dispatch_event(
     asyncio.run(_dispatch_event(event, uid))
 
 
-@research_structure_cli.command()
+@structure_cli.command()
 def dispatch_all(
     event: str = typer.Argument(..., help="The event to dispatch: created, updated, or unchanged")
 ):
@@ -49,7 +49,7 @@ def dispatch_all(
 
     @with_app_lifecycle
     async def _dispatch_all(event: str):
-        service = ResearchStructureService()
+        service = ResearchUnitService()
         try:
             uids = await service.get_all_structure_uids()
             for uid in uids:
