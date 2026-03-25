@@ -2,7 +2,6 @@ name: crisalid-ikg CI
 
 on:
   pull_request:
-    branches: [ "dev-main" ]
 
 permissions:
   contents: read
