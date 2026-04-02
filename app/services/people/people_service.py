@@ -141,16 +141,6 @@ class PeopleService:
         dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.get(person_uid)
 
-    async def get_document_uids_of_person(self, person_uid: str) -> list[str]|None:
-        """
-        Get the document uids linked to a person from the graph database
-        :param person_uid: person uid
-        :return: Pydantic Person object
-        """
-        factory = self._get_dao_factory()
-        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
-        return await dao.get_person_documents(person_uid)
-
     async def get_all_person_uids(self, external: bool | None = None) -> list[str]:
         """
         Retrieve all person UIDs from the graph database.

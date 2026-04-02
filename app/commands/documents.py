@@ -5,7 +5,6 @@ import typer
 
 from app.commands import with_app_lifecycle
 from app.services.documents.document_service import DocumentService
-from app.services.people.people_service import PeopleService
 
 document_cli = typer.Typer()
 
@@ -64,11 +63,10 @@ def recompute_metadata_person(uid: str = typer.Argument(...,
 
     @with_app_lifecycle
     async def _recompute_metadata_person(uid: str):
-        people_service = PeopleService()
-        doc_uids = await people_service.get_document_uids_of_person(uid)
+        doc_service = DocumentService()
+        doc_uids = await doc_service.get_document_uids_of_person(uid)
 
         if doc_uids:
-            doc_service = DocumentService()
             for doc_uid in doc_uids:
                 await doc_service.update_from_source_records(None, doc_uid)
                 typer.echo(f"Metadata recomputation for document {doc_uid} completed.")
