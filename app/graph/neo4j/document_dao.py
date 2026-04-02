@@ -111,6 +111,19 @@ class DocumentDAO(Neo4jDAO):
                     source_record_uids=source_record_uids
                 )
 
+    @handle_database_errors
+    async def get_person_documents(self, person_uid: str) -> list[str] | None:
+        """
+        Get all documents linked to a person from the graph database
+
+        :param person_uid: person uid
+        :return: person object
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.read_transaction(
+                    self._get_document_uids_by_person_uid, person_uid)
+
     @classmethod
     async def _create_or_update_document_transaction(
             cls, tx: AsyncManagedTransaction,
@@ -214,6 +227,17 @@ class DocumentDAO(Neo4jDAO):
             load_query("get_document_uids")
         )
         return [record['uid'] async for record in result]
+
+    @classmethod
+    async def _get_document_uids_by_person_uid(cls, tx, person_uid: str) -> list[str] | None:
+        result = await tx.run(
+            load_query("get_document_uids_by_person_uid"),
+            person_uid=person_uid
+        )
+        record = await result.single()
+        if record and len(record["document_uids"]) > 0:
+            return record["document_uids"]
+        return None
 
     @handle_database_errors
     async def get_document_by_source_record_uid(
