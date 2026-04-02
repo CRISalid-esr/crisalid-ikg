@@ -1,8 +1,6 @@
 from datetime import datetime
 from typing import cast
 
-import pytest
-
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
@@ -73,7 +71,6 @@ async def test_update_document(
                     "http://www.idref.fr/concept-e/id"
                 ] for subject in document.subjects)
 
-@pytest.mark.current
 async def test_get_document_uid_from_person_uid(
         hal_article_a_source_record_persisted_model: SourceRecord,
         # pylint: disable=unused-argument
