@@ -166,6 +166,19 @@ class PersonDAO(Neo4jDAO):
                 async with await session.begin_transaction() as tx:
                     return await self._get_all_uids_transaction(tx, external)
 
+    @handle_database_errors
+    async def get_person_documents(self, person_uid: str) -> list[str] | None:
+        """
+        Get all documents linked to a person from the graph database
+
+        :param person_uid: person uid
+        :return: person object
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.read_transaction(
+                    self._get_document_uids_by_person_uid, person_uid)
+
     @staticmethod
     async def _get_all_uids_transaction(tx: AsyncManagedTransaction,
                                         external: bool | None = None) -> list[
@@ -203,6 +216,17 @@ class PersonDAO(Neo4jDAO):
         record = await result.single()
         if record:
             return cls._hydrate(record)
+        return None
+
+    @classmethod
+    async def _get_document_uids_by_person_uid(cls, tx, person_uid: str) -> list[str] | None:
+        result = await tx.run(
+            load_query("get_document_uids_by_person_uid"),
+            person_uid=person_uid
+        )
+        record = await result.single()
+        if record and len(record["document_uids"]) > 0:
+            return record["document_uids"]
         return None
 
     @staticmethod
