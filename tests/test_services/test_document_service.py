@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import cast
 
+import pytest
+
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
@@ -70,6 +72,39 @@ async def test_update_document(
                     "http://www.idref.fr/concept-d/id",
                     "http://www.idref.fr/concept-e/id"
                 ] for subject in document.subjects)
+
+@pytest.mark.current
+async def test_get_document_uid_from_person_uid(
+        hal_article_a_source_record_persisted_model: SourceRecord,
+        # pylint: disable=unused-argument
+) -> None:
+    """
+    Test that from a person_uid, uids of linked documents are returned
+    :param source_record_id_doi_1_persisted_model: Pydantic SourceRecord object with DOI identifier
+    :param source_record_id_hal_1_persisted_model: Pydantic SourceRecord object with HAL identifier
+    :param source_record_id_doi_1_hal_1_persisted_model: Pydantic SourceRecord object with both
+    DOI and HAL identifiers (the same as the other two)
+    """
+    with source_record_updated.muted():
+        with source_record_created.muted():
+            with document_sources_changed.muted():
+                equivalence_service = EquivalenceService()
+                factory = AbstractDAOFactory().get_dao_factory("neo4j")
+                document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
+                # update any of the source records, does not matter which one
+                await equivalence_service.update_source_record(
+                    None,
+                    hal_article_a_source_record_persisted_model.uid)
+                document = await document_dao.get_document_by_source_record_uid(
+                    hal_article_a_source_record_persisted_model.uid)
+                await DocumentService().update_from_source_records(
+                    None,
+                    document_uid=document.uid)
+
+                document_service = DocumentService()
+                document_uids = await document_service.get_document_uids_of_person(
+                    person_uid='hal-43b38a7c4e694812ba4a2fe8c40ab09d')
+                assert len(document_uids) == 1
 
 
 async def test_oa_status_document_with_no_doi_and_no_hal(
