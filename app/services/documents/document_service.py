@@ -184,6 +184,15 @@ class DocumentService:
         dao: DocumentDAO = self._document_dao()
         return await dao.get_document_uids()
 
+    async def get_document_uids_of_person(self, person_uid: str) -> list[str]|None:
+        """
+        Get the document uids linked to a person from the graph database
+        :param person_uid: person uid
+        :return: Pydantic Person object
+        """
+        dao: DocumentDAO = self._document_dao()
+        return await dao.get_person_documents(person_uid)
+
     def _document_dao(self) -> DocumentDAO:
         factory = self._get_dao_factory()
         dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
