@@ -68,7 +68,6 @@ def recompute_person_metadata(uid: str = typer.Argument(...,
 
         if not doc_uids:
             typer.echo(f"No documents linked to person {uid} were found.")
-            return
         for doc_uid in doc_uids:
             await doc_service.update_from_source_records(None, doc_uid)
             typer.echo(f"Metadata recomputation for document {doc_uid} completed.")
