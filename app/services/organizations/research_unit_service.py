@@ -5,7 +5,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao import DAO
 from app.graph.neo4j.research_unit_dao import ResearchUnitDAO
 from app.models.identifier_types import OrganizationIdentifierType
-from app.models.research_units import ResearchUnit
+from app.models.research_unit import ResearchUnit
 from app.signals import structure_created, structure_updated, structure_unchanged, structure_deleted
 
 

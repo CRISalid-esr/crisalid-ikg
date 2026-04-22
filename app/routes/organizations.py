@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from starlette import status
 from starlette.responses import JSONResponse
 
-from app.models.research_units import ResearchUnit
+from app.models.research_unit import ResearchUnit
 from app.services.organizations.research_unit_service import ResearchUnitService
 
 router = APIRouter()

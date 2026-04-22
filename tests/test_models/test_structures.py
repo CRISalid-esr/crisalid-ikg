@@ -1,4 +1,4 @@
-from app.models.research_units import ResearchUnit
+from app.models.research_unit import ResearchUnit
 
 
 def test_create_valid_organization(research_unit_a_json_data):

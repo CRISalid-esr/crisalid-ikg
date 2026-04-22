@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, model_validator
 
-from app.models.research_units import ResearchUnit
+from app.models.research_unit import ResearchUnit
 from app.services.identifiers.identifier_service import AgentIdentifierService
 
 

@@ -1,11 +1,14 @@
 """
 Institution model
 """
+from app.models.agent_identifiers import OrganizationIdentifier
+from app.models.organisation_unit import OrganisationUnit
 
-from app.models.organizations import Organization
 
-
-class Institution(Organization):
+class Institution(OrganisationUnit):
     """
-    Institution API model
+    Institution model
     """
+    internal: bool
+    uai: OrganizationIdentifier
+    siren: OrganizationIdentifier

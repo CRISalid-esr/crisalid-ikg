@@ -3,7 +3,7 @@ from unittest.mock import patch, AsyncMock
 import pytest
 
 from app.models.identifier_types import OrganizationIdentifierType
-from app.models.research_units import ResearchUnit
+from app.models.research_unit import ResearchUnit
 from app.services.organizations.research_unit_service import ResearchUnitService
 
 
