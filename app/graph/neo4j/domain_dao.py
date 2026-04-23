@@ -7,9 +7,9 @@ from app.graph.neo4j.utils import load_query
 from app.models.concepts import Concept
 
 
-class OpenAlexConceptDAO(Neo4jDAO):
+class DomainDAO(Neo4jDAO):
     """
-    Data access object for OpenAlex domain/field/subfield/topic concepts
+    Data access object for domain/field/subfield/topic concepts
     """
 
     _TYPE_QUERIES = {
@@ -21,7 +21,7 @@ class OpenAlexConceptDAO(Neo4jDAO):
 
     @handle_database_errors
     async def upsert(self, concept: Concept, concept_type: str) -> None:
-        """Upsert an OpenAlex concept node with its labels and pref/alt labels."""
+        """Upsert a concept node with its labels and pref/alt labels."""
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(
@@ -51,7 +51,7 @@ class OpenAlexConceptDAO(Neo4jDAO):
     async def _upsert_transaction(
         tx: AsyncManagedTransaction, concept: Concept, concept_type: str
     ) -> None:
-        query_name = OpenAlexConceptDAO._TYPE_QUERIES[concept_type]
+        query_name = DomainDAO._TYPE_QUERIES[concept_type]
         display_name = concept.pref_labels[0].value if concept.pref_labels else ""
         await tx.run(load_query(query_name), uri=concept.uri, display_name=display_name)
         await tx.run(

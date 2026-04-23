@@ -7,7 +7,7 @@ from neo4j import AsyncDriver
 
 from app.config import get_app_settings
 from app.graph.generic.setup import Setup
-from app.graph.neo4j.openalex_concept_dao import OpenAlexConceptDAO
+from app.graph.neo4j.domain_dao import DomainDAO
 from app.models.concepts import Concept, Domain, Field, SubField, Topic
 from app.models.literal import Literal
 
@@ -43,12 +43,12 @@ class Neo4jDomainSetup(Setup[AsyncDriver]):
 
     async def import_from_path(self, path: str) -> None:
         """Import hierarchy from an explicit path without deleting source files."""
-        dao = OpenAlexConceptDAO(driver=self.driver)
+        dao = DomainDAO(driver=self.driver)
         for dir_name, type_label in self._ENTITY_TYPES:
             await self._import_entity_type(path, dir_name, type_label, dao)
 
     async def _import_entity_type(
-        self, base_path: str, dir_name: str, type_label: str, dao: OpenAlexConceptDAO
+        self, base_path: str, dir_name: str, type_label: str, dao: DomainDAO
     ) -> None:
         entity_dir = os.path.join(base_path, dir_name)
         if not os.path.exists(entity_dir):
@@ -65,7 +65,7 @@ class Neo4jDomainSetup(Setup[AsyncDriver]):
                 )
 
     async def _import_file(
-        self, file_path: str, type_label: str, dao: OpenAlexConceptDAO
+        self, file_path: str, type_label: str, dao: DomainDAO
     ) -> None:
         logger.debug("Processing OpenAlex file {}", file_path)
         with open(file_path, encoding="utf-8") as f:
