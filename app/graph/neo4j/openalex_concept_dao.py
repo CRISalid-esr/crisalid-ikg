@@ -21,6 +21,7 @@ class OpenAlexConceptDAO(Neo4jDAO):
 
     @handle_database_errors
     async def upsert(self, concept: Concept, concept_type: str) -> None:
+        """Upsert an OpenAlex concept node with its labels and pref/alt labels."""
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(
@@ -29,6 +30,7 @@ class OpenAlexConceptDAO(Neo4jDAO):
 
     @handle_database_errors
     async def set_broader(self, child_uri: str, parent_uri: str) -> None:
+        """Create a BROADER relationship from child to parent, verifying the parent exists."""
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
