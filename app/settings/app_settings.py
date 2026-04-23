@@ -3,7 +3,7 @@ App settings base class
 """
 import logging
 import os
-from typing import ClassVar, TextIO, List
+from typing import ClassVar, TextIO, List, Optional
 
 import yaml
 from pydantic_settings import BaseSettings
@@ -117,6 +117,8 @@ class AppSettings(BaseSettings):
     http_client_timeout_total: float = 7.0
 
     graph_db: str = "neo4j"
+
+    openalex_topics_tree_path: Optional[str] = "data/openalex"
 
     neo4j_edition: str = "community"
 

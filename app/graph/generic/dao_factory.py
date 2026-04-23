@@ -28,3 +28,11 @@ class DAOFactory(ABC):
 
         :return:
         """
+
+    @abstractmethod
+    def get_domain_setup(self) -> Setup:
+        """
+        Get the domain import Setup instance for the concrete backend
+
+        :return:
+        """

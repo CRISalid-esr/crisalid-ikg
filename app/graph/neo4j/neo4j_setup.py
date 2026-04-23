@@ -33,6 +33,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_source_organization_identifier_unique_type_value_constraint(tx)
         # Idem https://github.com/CRISalid-esr/crisalid-ikg/issues/161
         await cls._create_concept_uid_constraint(tx)
+        await cls._create_concept_uri_constraint(tx)
         await cls._create_document_uid_constraint(tx)
         await cls._create_institution_uid_constraint(tx)
         await cls._create_structured_physical_address_uid_constraint(tx)
@@ -65,6 +66,18 @@ class Neo4jSetup(Setup[AsyncDriver]):
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating concept uid unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_concept_uri_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT concept_uri_unique IF NOT EXISTS
+        FOR (c:Concept) REQUIRE c.uri IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error("Error creating concept uri unique constraint: {}", e)
             raise e
 
     @staticmethod

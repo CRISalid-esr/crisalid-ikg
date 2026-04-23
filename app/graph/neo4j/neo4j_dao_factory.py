@@ -67,3 +67,7 @@ class Neo4jDAOFactory(DAOFactory):
 
     def get_setup(self) -> Neo4jSetup:
         return Neo4jSetup(driver=self.driver)
+
+    def get_domain_setup(self) -> "Neo4jDomainSetup":
+        from app.graph.neo4j.neo4j_domain_setup import Neo4jDomainSetup  # pylint: disable=import-outside-toplevel
+        return Neo4jDomainSetup(driver=self.driver)

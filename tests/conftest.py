@@ -22,6 +22,7 @@ from tests.fixtures.institution_fixtures import *  # pylint: disable=unused-impo
 from tests.fixtures.issn_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.doaj_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 from tests.fixtures.unpaywall_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
+from tests.fixtures.openalex_domain_fixtures import *  # pylint: disable=unused-import, wildcard-import, unused-wildcard-import
 
 environ["APP_ENV"] = "TEST"
 

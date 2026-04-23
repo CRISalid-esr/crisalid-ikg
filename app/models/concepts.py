@@ -14,6 +14,8 @@ class Concept(BaseModel):
     uri: Optional[str] = None
     pref_labels: List[Literal] = []
     alt_labels: List[Literal] = []
+    definition: Optional[Literal] = None
+    broader: Optional[str] = None
 
     GENERATED_UID_PREFIX: ClassVar[str] = "generated-"
 
@@ -38,3 +40,19 @@ class Concept(BaseModel):
     def _uid_from_preflabel(cls, pref_label: str) -> str:
         uid = hashlib.md5(pref_label.encode('utf-8')).hexdigest()
         return f"{cls.GENERATED_UID_PREFIX}{uid}"
+
+
+class Domain(Concept):
+    """OpenAlex Domain — top-level SKOS concept"""
+
+
+class Field(Concept):
+    """OpenAlex Field — child of a Domain"""
+
+
+class SubField(Concept):
+    """OpenAlex SubField — child of a Field"""
+
+
+class Topic(Concept):
+    """OpenAlex Topic — child of a SubField"""

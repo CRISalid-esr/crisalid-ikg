@@ -66,6 +66,7 @@ class CrisalidIKG(FastAPI):
         )
 
         self.add_event_handler("startup", self.setup_graph)
+        self.add_event_handler("startup", self.import_openalex_domains)
 
         if settings.amqp_enabled:
             self.add_event_handler("startup", self.open_rabbitmq_connexion)
@@ -91,6 +92,16 @@ class CrisalidIKG(FastAPI):
         setup = factory.get_setup()
         await setup.run()
         logger.info("Graph connexion has been set up")
+
+    @logger.catch(reraise=True)
+    async def import_openalex_domains(self) -> None:  # pragma: no cover
+        """Import OpenAlex domains hierarchy at boot time"""
+        logger.info("Importing OpenAlex domains hierarchy")
+        settings = get_app_settings()
+        factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
+        setup = factory.get_domain_setup()
+        await setup.run()
+        logger.info("OpenAlex domains hierarchy import complete")
 
     @logger.catch(reraise=True)
     async def setup_elasticsearch(self) -> None:  # pragma: no cover
