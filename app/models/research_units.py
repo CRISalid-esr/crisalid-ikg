@@ -1,16 +1,13 @@
-"""
-Research structure model
-"""
 from typing import List, Optional
 
-from app.models.literal import Literal
-from app.models.organizations import Organization
+from app.models.unit import Unit
 
 
-class ResearchUnit(Organization):
+class ResearchUnit(Unit):
     """
-    Research structure API model
+    Research unit model
     """
-
-    acronym: Optional[str] = None
-    descriptions: List[Literal] = []
+    web: Optional[str]
+    signature: Optional[str]
+    hceres_research_areas: Optional[List[str]]
+    erc_research_fields: Optional[List[str]]
