@@ -7,7 +7,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.document import Document
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
-from app.models.research_unit import ResearchUnit
+from app.models.research_units import ResearchUnit
 from tests.test_utils.comparaison import force_dict_inner_list_ordering
 
 

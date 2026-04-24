@@ -2,7 +2,7 @@ import pytest_asyncio
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
-from app.models.research_unit import ResearchUnit
+from app.models.research_units import ResearchUnit
 from tests.fixtures.common import _research_unit_from_json_data, \
     _organization_json_data_from_file
 

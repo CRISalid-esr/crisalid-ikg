@@ -3,7 +3,7 @@ from loguru import logger
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.errors.conflict_error import ConflictError
 from app.errors.not_found_error import NotFoundError
-from app.models.research_unit import ResearchUnit
+from app.models.research_units import ResearchUnit
 from app.services.organizations.research_unit_service import ResearchUnitService
 
 

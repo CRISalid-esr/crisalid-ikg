@@ -5,7 +5,7 @@ import pytest
 
 from app.models.concepts import Concept
 from app.models.people import Person
-from app.models.research_unit import ResearchUnit
+from app.models.research_units import ResearchUnit
 from app.models.source_records import SourceRecord
 
 

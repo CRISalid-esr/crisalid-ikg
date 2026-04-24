@@ -9,7 +9,7 @@ from app.graph.neo4j.institution_dao import InstitutionDAO
 from app.models.identifier_types import OrganizationIdentifierType, PersonIdentifierType
 from app.models.institution import Institution
 from app.models.people import Person
-from app.models.research_unit import ResearchUnit
+from app.models.research_units import ResearchUnit
 from app.services.people.people_service import PeopleService
 
 

@@ -16,7 +16,7 @@ from app.models.document import Document
 from app.models.institution import Institution
 from app.models.journal import Journal
 from app.models.people import Person
-from app.models.research_unit import ResearchUnit
+from app.models.research_units import ResearchUnit
 from app.models.source_journal import SourceJournal
 from app.models.source_organizations import SourceOrganization
 from app.models.source_people import SourcePerson

@@ -9,7 +9,7 @@ from app.graph.neo4j.utils import load_query
 from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.literal import Literal
-from app.models.research_unit import ResearchUnit
+from app.models.research_units import ResearchUnit
 from app.services.identifiers.identifier_service import AgentIdentifierService
 
 

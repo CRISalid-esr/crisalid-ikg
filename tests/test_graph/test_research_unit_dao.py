@@ -4,7 +4,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.research_unit_dao import ResearchUnitDAO
 from app.models.agent_identifiers import AgentIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
-from app.models.research_unit import ResearchUnit
+from app.models.research_units import ResearchUnit
 
 
 async def test_create_research_unit(
