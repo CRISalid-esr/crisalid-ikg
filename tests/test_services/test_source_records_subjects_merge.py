@@ -2,6 +2,7 @@ from typing import cast
 
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.document import Document
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -15,7 +16,8 @@ async def test_create_multiple_source_records_with_a_common_subject(
         persisted_person_b_pydantic_model: Person,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
         hal_article_a_source_record_pydantic_model: SourceRecord,
-        open_alex_article_a_source_record_pydantic_model: SourceRecord
+        open_alex_article_a_source_record_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given 3 source records with common hal identifier that have a common subject,
@@ -25,15 +27,18 @@ async def test_create_multiple_source_records_with_a_common_subject(
     source_record_service = SourceRecordService()
     await source_record_service.create_source_record(
         source_record=hal_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
 
     await source_record_service.create_source_record(
         source_record=scanr_article_a_v2_source_record_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
 
     await source_record_service.create_source_record(
         source_record=open_alex_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
 
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))

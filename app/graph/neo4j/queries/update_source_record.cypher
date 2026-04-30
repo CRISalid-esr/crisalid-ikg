@@ -73,7 +73,9 @@ MERGE (i)- [:ISSUED_BY] - >(j)
 
 WITH DISTINCT s
 MATCH (p:Person {uid:$person_uid})
-MERGE (s)- [:HARVESTED_FOR] - >(p)
+MERGE (s)- [r:HARVESTED_FOR] - >(p)
+SET r.identifier_used_type = $identifier_used_type,
+    r.identifier_used_value = $identifier_used_value
 
 WITH DISTINCT s
 OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)

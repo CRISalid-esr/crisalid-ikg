@@ -4,6 +4,7 @@ from typing import cast
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.document import Document
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.journal_article import JournalArticle
@@ -108,6 +109,7 @@ async def test_oa_status_document_with_no_doi_and_no_hal(
         hal_article_with_journal_1_pydantic_model: SourceRecord,
         open_alex_article_with_journal_1_pydantic_model: SourceRecord,
         persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier,
 ) -> None:
     """
     Test that when a journal is created from source records with no doi and no file in hal,
@@ -131,11 +133,13 @@ async def test_oa_status_document_with_no_doi_and_no_hal(
     hal_article_with_journal_1_persisted_model = await (
         source_record_service.create_source_record(
             hal_article_with_journal_1_pydantic_model,
-            persisted_person_f_pydantic_model
+            persisted_person_f_pydantic_model,
+            identifier_used=default_identifier_used
         ))
     await source_record_service.create_source_record(
         open_alex_article_with_journal_1_pydantic_model,
-        persisted_person_f_pydantic_model
+        persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
@@ -164,6 +168,7 @@ async def test_oa_status_document_with_no_doi_but_hal(
         hal_article_with_journal_1_pydantic_model: SourceRecord,
         open_alex_article_with_journal_1_pydantic_model: SourceRecord,
         persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier,
 ) -> None:
     """
     Test that when a journal is created from source records with no doi but a file in hal,
@@ -190,11 +195,13 @@ async def test_oa_status_document_with_no_doi_but_hal(
     hal_article_with_journal_1_persisted_model = await (
         source_record_service.create_source_record(
             hal_article_with_journal_1_pydantic_model,
-            persisted_person_f_pydantic_model
+            persisted_person_f_pydantic_model,
+            identifier_used=default_identifier_used
         ))
     await source_record_service.create_source_record(
         open_alex_article_with_journal_1_pydantic_model,
-        persisted_person_f_pydantic_model
+        persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
@@ -224,6 +231,7 @@ async def test_oa_status_document_with_doi_but_no_hal(
         hal_article_with_journal_1_pydantic_model: SourceRecord,
         open_alex_article_with_journal_1_pydantic_model: SourceRecord,
         persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier,
 ) -> None:
     """
     Test that when a journal is created from source records with no doi and no file in
@@ -247,11 +255,13 @@ async def test_oa_status_document_with_doi_but_no_hal(
     hal_article_with_journal_1_persisted_model = await (
         source_record_service.create_source_record(
             hal_article_with_journal_1_pydantic_model,
-            persisted_person_f_pydantic_model
+            persisted_person_f_pydantic_model,
+            identifier_used=default_identifier_used
         ))
     await source_record_service.create_source_record(
         open_alex_article_with_journal_1_pydantic_model,
-        persisted_person_f_pydantic_model
+        persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
@@ -281,6 +291,7 @@ async def test_oa_status_document_with_doi_not_in_upw_and_no_hal(
         hal_article_with_journal_1_pydantic_model: SourceRecord,
         open_alex_article_with_journal_1_pydantic_model: SourceRecord,
         persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier,
 ) -> None:
     """
     Test that when a journal is created from source records with no file in hal and the doi
@@ -304,11 +315,13 @@ async def test_oa_status_document_with_doi_not_in_upw_and_no_hal(
     hal_article_with_journal_1_persisted_model = await (
         source_record_service.create_source_record(
             hal_article_with_journal_1_pydantic_model,
-            persisted_person_f_pydantic_model
+            persisted_person_f_pydantic_model,
+            identifier_used=default_identifier_used
         ))
     await source_record_service.create_source_record(
         open_alex_article_with_journal_1_pydantic_model,
-        persisted_person_f_pydantic_model
+        persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
