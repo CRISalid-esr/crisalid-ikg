@@ -6,6 +6,7 @@ from fastapi.encoders import jsonable_encoder
 from starlette import status
 from starlette.responses import JSONResponse
 
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
@@ -28,6 +29,7 @@ async def create_source_record(
         source_record_service: Annotated[SourceRecordService, Depends(SourceRecordService)],
         source_record: SourceRecord,
         person: Person,
+        identifier_used: PersonIdentifier,
 ) -> JSONResponse:
     """
     Creates a source record and attaches it to the person for whom it was harvested
@@ -35,12 +37,14 @@ async def create_source_record(
     :param source_record_service: service to handle CRUD operations on source records
     :param source_record: entity built from fields
     :param person: entity built from fields
+    :param identifier_used: person identifier that triggered the harvest
     :return: json response
     """
 
     created_source_record = await source_record_service.create_source_record(
         source_record=source_record,
-        harvested_for=person)
+        harvested_for=person,
+        identifier_used=identifier_used)
 
     response_data = {"message": "Source record created successfully", "source_record":
         created_source_record}

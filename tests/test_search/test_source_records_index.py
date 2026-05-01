@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.search.source_record_index import SourceRecordIndex
@@ -19,7 +20,8 @@ async def test_signal_source_record_created(
         test_app,  # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         scanr_thesis_source_record_pydantic_model: SourceRecord,
-        mock_source_record_index_add_source_record: mock.MagicMock):
+        mock_source_record_index_add_source_record: mock.MagicMock,
+        default_identifier_used: PersonIdentifier):
     """
     Given a new source record Pydantic model
     When the source record is added to the graph
@@ -29,7 +31,8 @@ async def test_signal_source_record_created(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=scanr_thesis_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used
     )
     mock_source_record_index_add_source_record.assert_called_once_with(
         service,

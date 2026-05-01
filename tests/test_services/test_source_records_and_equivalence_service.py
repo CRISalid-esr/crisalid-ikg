@@ -2,6 +2,7 @@ from typing import cast
 
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.document import Document
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
@@ -16,7 +17,8 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
         persisted_person_b_pydantic_model: Person,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
         hal_article_a_source_record_pydantic_model: SourceRecord,
-        open_alex_article_a_source_record_pydantic_model: SourceRecord
+        open_alex_article_a_source_record_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given 3 source records with common hal identifier and created for different persons,
@@ -26,15 +28,18 @@ async def test_create_multiple_source_records_with_common_id_for_multiple_person
     source_record_service = SourceRecordService()
     await source_record_service.create_source_record(
         source_record=hal_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
 
     await source_record_service.create_source_record(
         source_record=scanr_article_a_v2_source_record_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
 
     await source_record_service.create_source_record(
         source_record=open_alex_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
 
     hal_fetched_source_record = await source_record_service.get_source_record(
         hal_article_a_source_record_pydantic_model.uid
@@ -76,7 +81,8 @@ async def test_update_one_source_record_between_multiple_related_source_records(
         hal_article_a_source_record_persisted_model: SourceRecord,
         open_alex_article_a_source_record_persisted_model: SourceRecord,
         scanr_article_a_v2_source_record_persisted_model: SourceRecord,
-        scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model: SourceRecord
+        scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given 3 persisted source records with common hal identifier and a Document in common
@@ -99,7 +105,8 @@ async def test_update_one_source_record_between_multiple_related_source_records(
 
     await source_record_service.update_source_record(
         source_record=scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
     updated_fetched_source_record = await source_record_service.get_source_record(
         scanr_article_a_v2_source_record_without_hal_doi_identifiers_pydantic_model.uid)
     assert updated_fetched_source_record
@@ -128,6 +135,7 @@ async def test_create_source_records_with_one_having_common_id_with_others(
         scanr_article_a_source_record_pydantic_model: SourceRecord,
         open_alex_article_b_source_record_pydantic_model: SourceRecord,
         idref_article_a_source_record_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given 3 source records harvested, with one of them having common identifiers with the other two,
@@ -143,7 +151,8 @@ async def test_create_source_records_with_one_having_common_id_with_others(
     ]:
         await source_record_service.create_source_record(
             source_record=record,
-            harvested_for=persisted_person_a_pydantic_model)
+            harvested_for=persisted_person_a_pydantic_model,
+            identifier_used=default_identifier_used)
 
         assert await source_record_service.get_source_record(record.uid)
 
@@ -165,6 +174,7 @@ async def test_create_source_record_with_common_id_with_persisted_source_records
         scanr_article_a_source_record_persisted_model: SourceRecord,
         idref_article_a_source_record_persisted_model: SourceRecord,
         open_alex_article_b_source_record_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given 2 persisted source record with no identifiers in common,
@@ -184,7 +194,8 @@ async def test_create_source_record_with_common_id_with_persisted_source_records
 
     await source_record_service.create_source_record(
         source_record=open_alex_article_b_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
 
     document_after_update = await document_dao.get_document_by_source_record_uid(
         open_alex_article_b_source_record_pydantic_model.uid

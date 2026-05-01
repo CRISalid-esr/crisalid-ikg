@@ -1,3 +1,4 @@
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.harvesters import Harvester
 from app.models.identifier_types import PublicationIdentifierType
 from app.models.people import Person
@@ -8,7 +9,8 @@ from app.services.source_records.source_record_service import SourceRecordServic
 async def test_update_scanr_article_source_record(
         scanr_article_a_source_record_persisted_model: SourceRecord,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ):
     """
         Given a valid source record model recording an article harvested from ScanR
@@ -20,7 +22,8 @@ async def test_update_scanr_article_source_record(
     assert scanr_article_a_v2_source_record_pydantic_model.uid == common_uid
     await service.update_source_record(
         source_record=scanr_article_a_v2_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_source_record = await service.get_source_record(
         scanr_article_a_v2_source_record_pydantic_model.uid)
     assert fetched_source_record.source_identifier == "doi10.3847/1538-4357/ad0cc0"
@@ -60,7 +63,8 @@ async def test_update_scanr_article_source_record(
 async def test_update_hal_article_source_record_with_custom_metadata(
         hal_article_source_record_persisted_model: SourceRecord,
         hal_article_source_record_with_custom_metadata_v2_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ):
     """
         Given a valid source record model recording an article harvested from ScanR
@@ -72,7 +76,8 @@ async def test_update_hal_article_source_record_with_custom_metadata(
     assert hal_article_source_record_with_custom_metadata_v2_pydantic_model.uid == common_uid
     await service.update_source_record(
         source_record=hal_article_source_record_with_custom_metadata_v2_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_source_record = await service.get_source_record(
         hal_article_source_record_with_custom_metadata_v2_pydantic_model.uid)
     assert fetched_source_record.source_identifier == "hal-02732648"
@@ -108,7 +113,8 @@ async def test_double_update_scanr_article_source_record(
         scanr_article_a_source_record_persisted_model: SourceRecord,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
         scanr_article_a_v3_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ):
     """
         Given a valid source record model recording an article harvested from ScanR
@@ -120,7 +126,8 @@ async def test_double_update_scanr_article_source_record(
     assert scanr_article_a_v2_source_record_pydantic_model.uid == common_uid
     await service.update_source_record(
         source_record=scanr_article_a_v2_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_source_record_v2 = await service.get_source_record(
         scanr_article_a_v2_source_record_pydantic_model.uid)
     assert any(
@@ -143,7 +150,8 @@ async def test_double_update_scanr_article_source_record(
     assert scanr_article_a_v3_source_record_pydantic_model.uid == common_uid
     await service.update_source_record(
         source_record=scanr_article_a_v3_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used
     )
     fetched_source_record_v3 = await service.get_source_record(
         scanr_article_a_v3_source_record_pydantic_model.uid
@@ -167,7 +175,8 @@ async def test_update_record_with_shared_concept(
         persisted_person_b_pydantic_model: Person,
         scanr_article_a_source_record_persisted_model: SourceRecord,
         scanr_article_c_source_record_persisted_model: SourceRecord,
-        scanr_article_c_v2_source_record_pydantic_model: SourceRecord
+        scanr_article_c_v2_source_record_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ):
     """
         Given two persisted source records with a shared concept
@@ -200,7 +209,8 @@ async def test_update_record_with_shared_concept(
 
     await service.update_source_record(
         source_record=scanr_article_c_v2_source_record_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_source_record_c_v2 = await service.get_source_record(
         scanr_article_c_v2_source_record_pydantic_model.uid)
 
@@ -226,6 +236,7 @@ async def test_update_source_record_issue(
         persisted_person_a_pydantic_model: Person,
         scanr_article_a_source_record_persisted_model: SourceRecord,
         scanr_article_a_source_record_with_updated_issue_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ):
     """
     Given a persisted source record with an issue
@@ -240,7 +251,8 @@ async def test_update_source_record_issue(
             scanr_article_a_source_record_persisted_model.issue)
     await service.update_source_record(
         source_record=scanr_article_a_source_record_with_updated_issue_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
 
     fetched_source_record_updated = await service.get_source_record(
         scanr_article_a_source_record_with_updated_issue_pydantic_model.uid)

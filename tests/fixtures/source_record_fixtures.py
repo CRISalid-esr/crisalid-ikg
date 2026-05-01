@@ -1,10 +1,20 @@
 import pytest_asyncio
 
+from app.models.agent_identifiers import PersonIdentifier
+from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.source_records.source_record_service import SourceRecordService
 from tests.fixtures.common import _source_record_from_json_data, \
     _source_record_json_data_from_file
+
+
+@pytest_asyncio.fixture(name="default_identifier_used")
+async def fixture_default_identifier_used() -> PersonIdentifier:
+    """
+    Default person identifier used to harvest a source record in test fixtures
+    """
+    return PersonIdentifier(type=PersonIdentifierType.IDREF, value="122758765")
 
 
 @pytest_asyncio.fixture(name="scanr_thesis_source_record_pydantic_model")
@@ -48,7 +58,8 @@ async def fixture_hal_chapter_a_v2_source_record_json_data(_base_path) -> dict:
 @pytest_asyncio.fixture(name="hal_chapter_a_source_record_persisted_model")
 async def fixture_hal_chapter_a_source_record_persisted_model(
         hal_chapter_a_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from hal data
@@ -57,7 +68,8 @@ async def fixture_hal_chapter_a_source_record_persisted_model(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=hal_chapter_a_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used
     )
     return await service.get_source_record(
         hal_chapter_a_source_record_pydantic_model.uid)
@@ -85,7 +97,8 @@ async def fixture_hal_chapter_a_source_record_json_data(_base_path) -> dict:
 @pytest_asyncio.fixture(name="scanr_article_a_source_record_persisted_model")
 async def fixture_scanr_article_a_source_record_persisted_model(
         scanr_article_a_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from ScanR data
@@ -93,7 +106,8 @@ async def fixture_scanr_article_a_source_record_persisted_model(
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=scanr_article_a_source_record_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
     return await service.get_source_record(
         scanr_article_a_source_record_pydantic_model.uid)
 
@@ -142,7 +156,8 @@ async def fixture_scanr_article_a_source_record_with_updated_issue_json_data(_ba
 @pytest_asyncio.fixture(name="scanr_article_a_v2_source_record_persisted_model")
 async def fixture_scanr_article_a_v2_source_record_persisted_model(
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
-        persisted_person_b_pydantic_model: Person
+        persisted_person_b_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from ScanR data
@@ -151,7 +166,8 @@ async def fixture_scanr_article_a_v2_source_record_persisted_model(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=scanr_article_a_v2_source_record_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
     return await service.get_source_record(
         scanr_article_a_v2_source_record_pydantic_model.uid)
 
@@ -282,7 +298,8 @@ async def fixture_scanr_article_b_source_record_json_data(_base_path) -> dict:
 @pytest_asyncio.fixture(name="scanr_article_c_source_record_persisted_model")
 async def fixture_scanr_article_c_source_record_persisted_model(
         scanr_article_c_source_record_pydantic_model: SourceRecord,
-        persisted_person_b_pydantic_model: Person
+        persisted_person_b_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from ScanR data
@@ -290,7 +307,8 @@ async def fixture_scanr_article_c_source_record_persisted_model(
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=scanr_article_c_source_record_pydantic_model,
-                                       harvested_for=persisted_person_b_pydantic_model)
+                                       harvested_for=persisted_person_b_pydantic_model,
+                                       identifier_used=default_identifier_used)
     return await service.get_source_record(
         scanr_article_c_source_record_pydantic_model.uid)
 
@@ -528,7 +546,8 @@ async def fixture_source_record_with_unknown_source_json_data(_base_path) -> dic
 @pytest_asyncio.fixture(name="hal_article_a_source_record_persisted_model")
 async def fixture_hal_article_a_source_record_persisted_model(
         hal_article_a_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from hal data
@@ -536,7 +555,8 @@ async def fixture_hal_article_a_source_record_persisted_model(
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=hal_article_a_source_record_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
     return await service.get_source_record(
         hal_article_a_source_record_pydantic_model.uid)
 
@@ -563,7 +583,8 @@ async def fixture_hal_article_a_source_record_json_data(_base_path) -> dict:
 @pytest_asyncio.fixture(name="open_alex_article_a_source_record_persisted_model")
 async def fixture_open_alex_article_a_source_record_persisted_model(
         open_alex_article_a_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from open_alex data
@@ -572,7 +593,8 @@ async def fixture_open_alex_article_a_source_record_persisted_model(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=open_alex_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used
     )
     return await service.get_source_record(
         open_alex_article_a_source_record_pydantic_model.uid)
@@ -600,7 +622,8 @@ async def fixture_open_alex_article_a_source_record_json_data(_base_path) -> dic
 @pytest_asyncio.fixture(name="open_alex_article_b_source_record_persisted_model")
 async def fixture_open_alex_article_b_source_record_persisted_model(
         open_alex_article_b_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from open_alex data
@@ -609,7 +632,8 @@ async def fixture_open_alex_article_b_source_record_persisted_model(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=open_alex_article_b_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used
     )
     return await service.get_source_record(
         open_alex_article_b_source_record_pydantic_model.uid)
@@ -636,7 +660,8 @@ async def fixture_open_alex_article_b_source_record_json_data(_base_path) -> dic
 @pytest_asyncio.fixture(name="idref_article_a_source_record_persisted_model")
 async def fixture_idref_article_a_source_record_persisted_model(
         idref_article_a_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from open_alex data
@@ -645,7 +670,8 @@ async def fixture_idref_article_a_source_record_persisted_model(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=idref_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used
     )
     return await service.get_source_record(
         idref_article_a_source_record_pydantic_model.uid)
@@ -673,7 +699,8 @@ async def fixture_idref_article_a_source_record_json_data(_base_path) -> dict:
 @pytest_asyncio.fixture(name="hal_article_source_record_persisted_model")
 async def fixture_hal_persisted_article_source_record_with_custom_metadata_pydantic_model(
         hal_article_source_record_with_custom_metadata_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ) -> SourceRecord:
     """
     Persist a source record pydantic model from ScanR data
@@ -682,7 +709,8 @@ async def fixture_hal_persisted_article_source_record_with_custom_metadata_pydan
     service = SourceRecordService()
     await service.create_source_record(
         source_record=hal_article_source_record_with_custom_metadata_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     return await service.get_source_record(
         hal_article_source_record_with_custom_metadata_pydantic_model.uid)
 
@@ -756,17 +784,20 @@ async def fixture_hal_article_source_record_with_inconsistent_custom_metadata_js
 @pytest_asyncio.fixture(name="open_alex_article_with_journal_1_persisted_model")
 async def fixture_open_alex_article_with_journal_1_persisted_model(
         open_alex_article_with_journal_1_pydantic_model: SourceRecord,
-        persisted_person_f_pydantic_model: Person) -> SourceRecord:
+        persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier) -> SourceRecord:
     """
     Persist a source record pydantic model from OpenAlex data with journal 1 information
     :param open_alex_article_with_journal_1_pydantic_model:
     :param persisted_person_f_pydantic_model:
+    :param default_identifier_used:
     :return:
     """
     service = SourceRecordService()
     await service.create_source_record(
         source_record=open_alex_article_with_journal_1_pydantic_model,
-        harvested_for=persisted_person_f_pydantic_model
+        harvested_for=persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     return await service.get_source_record(
         open_alex_article_with_journal_1_pydantic_model.uid)
@@ -796,17 +827,20 @@ async def fixture_open_alex_article_with_journal_1_json_data(_base_path) -> dict
 @pytest_asyncio.fixture(name="open_alex_article_with_journal_2_persisted_model")
 async def fixture_open_alex_article_with_journal_2_persisted_model(
         open_alex_article_with_journal_2_pydantic_model: SourceRecord,
-        persisted_person_f_pydantic_model: Person) -> SourceRecord:
+        persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier) -> SourceRecord:
     """
     Persist a source record pydantic model from OpenAlex data with journal 2 information
     :param open_alex_article_with_journal_2_pydantic_model:
     :param persisted_person_f_pydantic_model:
+    :param default_identifier_used:
     :return:
     """
     service = SourceRecordService()
     await service.create_source_record(
         source_record=open_alex_article_with_journal_2_pydantic_model,
-        harvested_for=persisted_person_f_pydantic_model
+        harvested_for=persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     return await service.get_source_record(
         open_alex_article_with_journal_2_pydantic_model.uid)
@@ -836,17 +870,20 @@ async def fixture_open_alex_article_with_journal_2_json_data(_base_path) -> dict
 @pytest_asyncio.fixture(name="hal_article_with_journal_1_persisted_model")
 async def fixture_hal_article_with_journal_1_persisted_model(
         hal_article_with_journal_1_pydantic_model: SourceRecord,
-        persisted_person_f_pydantic_model: Person) -> SourceRecord:
+        persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier) -> SourceRecord:
     """
     Persist a source record pydantic model from HAL data with journal 1 information
     :param hal_article_with_journal_1_pydantic_model:
     :param persisted_person_f_pydantic_model:
+    :param default_identifier_used:
     :return:
     """
     service = SourceRecordService()
     await service.create_source_record(
         source_record=hal_article_with_journal_1_pydantic_model,
-        harvested_for=persisted_person_f_pydantic_model
+        harvested_for=persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     return await service.get_source_record(
         hal_article_with_journal_1_pydantic_model.uid)
@@ -897,17 +934,20 @@ async def fixture_hal_article_with_journal_2_json_data(_base_path) -> dict:
 @pytest_asyncio.fixture(name="hal_article_with_inconsistent_journal_1_persisted_model")
 async def fixture_hal_article_with_inconsistent_journal_1_persisted_model(
         hal_article_with_inconsistent_journal_1_pydantic_model: SourceRecord,
-        persisted_person_f_pydantic_model: Person) -> SourceRecord:
+        persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier) -> SourceRecord:
     """
     Persist a source record pydantic model from HAL data with inconsistent journal 1 information
     :param hal_article_with_inconsistent_journal_1_pydantic_model:
     :param persisted_person_f_pydantic_model:
+    :param default_identifier_used:
     :return:
     """
     service = SourceRecordService()
     await service.create_source_record(
         source_record=hal_article_with_inconsistent_journal_1_pydantic_model,
-        harvested_for=persisted_person_f_pydantic_model
+        harvested_for=persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     return await service.get_source_record(
         hal_article_with_inconsistent_journal_1_pydantic_model.uid)
