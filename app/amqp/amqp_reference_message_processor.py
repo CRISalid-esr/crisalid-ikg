@@ -30,30 +30,18 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         })
         event_data = json_payload["reference_event"]
         person_data = json_payload["entity"]
-        harvesting_data = json_payload["harvesting"]
-        raw_event_type: str = event_data["type"]
-        enhanced: bool = event_data["enhanced"]
-
         effective_event_type = (
             "updated"
-            if raw_event_type == "unchanged" and enhanced
-            else raw_event_type
+            if event_data["type"] == "unchanged" and event_data["enhanced"]
+            else event_data["type"]
         )
         # If the event type is not in settings.event_types_to_process, we skip processing
         if effective_event_type not in self.settings.event_types_to_process:
             logger.info(f"Event type {effective_event_type} not in settings, skipping processing")
             return
-        identifier_used_type = PersonIdentifierType.from_str(
-            harvesting_data["identifier_used_type"])
-        if identifier_used_type is None:
-            logger.error(
-                f"Unknown identifier type '{harvesting_data['identifier_used_type']}'"
-                f" in harvesting field, aborting message processing")
+        identifier_used = self._parse_identifier_used(json_payload["harvesting"])
+        if identifier_used is None:
             return
-        identifier_used = PersonIdentifier(
-            type=identifier_used_type,
-            value=harvesting_data["identifier_used_value"]
-        )
         reference_data = event_data["reference"]
         try:
             person = Person(**person_data | {'display_name': person_data['name']})
@@ -74,6 +62,20 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
             logger.debug(f"Source record {source_record.uid} is unchanged (not enhanced), "
                          f"no action "
                         f"taken")
+
+    @staticmethod
+    def _parse_identifier_used(harvesting_data: dict) -> PersonIdentifier | None:
+        identifier_used_type = PersonIdentifierType.from_str(
+            harvesting_data["identifier_used_type"])
+        if identifier_used_type is None:
+            logger.error(
+                f"Unknown identifier type '{harvesting_data['identifier_used_type']}'"
+                f" in harvesting field, aborting message processing")
+            return None
+        return PersonIdentifier(
+            type=identifier_used_type,
+            value=harvesting_data["identifier_used_value"]
+        )
 
     async def _create_source_record(self, source_record, person, identifier_used,
                                     first_attempt=True):
