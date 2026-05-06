@@ -21,6 +21,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
     async def _create_constraints(cls, tx: AsyncManagedTransaction):
         settings = get_app_settings()
         await cls._create_person_uid_constraint(tx)
+        await cls._create_person_fulltext_name_index(tx)
         await cls._create_agent_identifier_unique_type_value_constraint(tx)
         await cls._create_journal_uid_constraint(tx)
         await cls._create_journal_identifier_uid_constraint(tx)
@@ -90,6 +91,24 @@ class Neo4jSetup(Setup[AsyncDriver]):
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating person uid unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_person_fulltext_name_index(tx: AsyncManagedTransaction):
+        query = """
+        CREATE FULLTEXT INDEX person_fulltext_name IF NOT EXISTS
+        FOR (p:Person)
+        ON EACH [p.display_name, p.display_name_variants]
+        OPTIONS {
+          indexConfig: {
+            `fulltext.analyzer`: 'standard-no-stop-words'
+          }
+        }
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating person fulltext name index: {e}")
             raise e
 
     @staticmethod
