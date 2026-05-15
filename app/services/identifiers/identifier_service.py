@@ -72,10 +72,9 @@ class AgentIdentifierService:
         if entity_cls.__name__ == "Person":
             return PersonIdentifier(type=PersonIdentifierType(identifier_type),
                                     value=identifier_value)
-        if entity_cls.__name__ == "ResearchUnit":
-            return OrganizationIdentifier(type=OrganizationIdentifierType(identifier_type),
-                                          value=identifier_value)
-        if entity_cls.__name__ == "Institution":
+        if entity_cls.__module__ == "app.models.organization_unit" or entity_cls.__name__ in (
+            "ResearchUnit", "Institution"
+        ):
             return OrganizationIdentifier(type=OrganizationIdentifierType(identifier_type),
                                           value=identifier_value)
         raise ValueError(f"No identifier type defined for {entity_cls.__name__}.")
@@ -100,9 +99,12 @@ class AgentIdentifierService:
         :return: The list of identifier types.
         """
         settings = get_app_settings()
-        # check with string comparison to avoid circular imports
+        # Check module path to avoid circular imports
         if entity_cls.__name__ == "Person":
             return settings.person_identifier_order
+        if entity_cls.__module__ == "app.models.organization_unit":
+            return settings.organization_identifier_order
+        # Legacy DAOs
         if entity_cls.__name__ == "ResearchUnit":
             return settings.research_unit_identifier_order
         if entity_cls.__name__ == "Institution":

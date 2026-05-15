@@ -1,0 +1,46 @@
+from typing import cast
+
+from app.config import get_app_settings
+from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from app.graph.generic.dao import DAO
+from app.graph.neo4j.organization_unit_dao import OrganizationUnitDAO
+from app.models.organization_unit import OrganizationBase, OrganizationUnit
+from app.signals import structure_created, structure_updated, structure_unchanged, structure_deleted
+
+
+class OrganizationUnitService:
+    """Service for all research organization structure types."""
+
+    async def create_structure(self, org_unit: OrganizationBase) -> OrganizationBase:
+        result = await self._get_dao().create(org_unit)
+        await structure_created.send_async(self, payload=result.uid)
+        return result
+
+    async def update_structure(self, org_unit: OrganizationBase) -> OrganizationBase:
+        result = await self._get_dao().update(org_unit)
+        await structure_updated.send_async(self, payload=result.uid)
+        return result
+
+    async def create_or_update_structure(self, org_unit: OrganizationBase) -> OrganizationBase:
+        uid, status = await self._get_dao().create_or_update(org_unit)
+        if status == DAO.Status.CREATED:
+            await structure_created.send_async(self, payload=uid)
+        elif status == DAO.Status.UPDATED:
+            await structure_updated.send_async(self, payload=uid)
+        return org_unit
+
+    async def get_structure_by_uid(self, uid: str) -> OrganizationUnit | None:
+        return await self._get_dao().get(uid)
+
+    async def get_all_structure_uids(self) -> list[str]:
+        return await self._get_dao().get_all_uids()
+
+    @staticmethod
+    def _get_dao() -> OrganizationUnitDAO:
+        settings = get_app_settings()
+        return cast(
+            OrganizationUnitDAO,
+            AbstractDAOFactory()
+            .get_dao_factory(settings.graph_db)
+            .get_dao(OrganizationBase),
+        )

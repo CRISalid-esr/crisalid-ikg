@@ -9,6 +9,17 @@ from app.models.research_units import ResearchUnit
 from app.models.source_records import SourceRecord
 
 
+def _organization_unit_json_data_from_file(base_path, name) -> dict:
+    return _json_data_from_file(base_path, f"data/organizations/{name}.json")
+
+
+def _organization_unit_from_json_data(data: dict):
+    from app.models.organization_unit import nonUnitAdapter, unitAdapter  # avoid circular import
+    if data.get("generic_type") == "unit":
+        return unitAdapter.validate_python(data)
+    return nonUnitAdapter.validate_python(data)
+
+
 @pytest.fixture(name="_base_path")
 def fixture_base_path() -> pathlib.Path:
     """Get the current folder of the test"""
