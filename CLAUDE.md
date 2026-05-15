@@ -157,3 +157,82 @@ APP_ENV=TEST pytest -m current
 - Settings are environment-specific subclasses in `app/settings/`; selected via `APP_ENV`.
 - Elasticsearch indexing is optional (`es_enabled` setting) and is secondary to the graph.
 
+---
+
+## Graph model
+
+### Organization structures
+
+Research structures are stored as **OrganizationUnit** nodes. Every such node carries the `OrganizationUnit` label plus one or more specific labels that reflect its position in the taxonomy:
+
+| Pydantic class | Neo4j labels | `generic_type` | Typical `national_type` |
+|---|---|---|---|
+| `Institution` | `OrganizationUnit:Institution` | `institution` | `UNIV`, `EPE`, `COMUE` |
+| `InstitutionSubdivision` | `OrganizationUnit:InstitutionSubdivision` | `institution_subdivision` | `UFR`, `FAC` |
+| `ResearchUnit` | `OrganizationUnit:Unit:ResearchUnit` | `unit` | `UMR`, `UAR`, `UR`, `IRL` |
+| `SupportUnit` | `OrganizationUnit:Unit:SupportUnit` | `unit` | — |
+| `AdministrativeUnit` | `OrganizationUnit:Unit:AdministrativeUnit` | `unit` | — |
+| `UnitSubdivision` | `OrganizationUnit:UnitSubdivision` | `unit_subdivision` | — |
+| `Team` | `OrganizationUnit:Team` | `team` | `TEAM`, `THEME` |
+
+Each OrganizationUnit node stores:
+- `uid` — primary key (e.g. `local-U123`)
+- `generic_type`, `national_type` — classification enums
+- Labels (**HAS_LONG_LABEL**, **HAS_SHORT_LABEL**, **HAS_LOCAL_TYPE** → `Literal` nodes)
+- Descriptions (**HAS_DESCRIPTION** → `TextLiteral` nodes)
+- Identifiers (**HAS_IDENTIFIER** → `AgentIdentifier` nodes)
+
+Inter-structure relationships:
+- **PART_OF** — strong structural inclusion (e.g. a faculty inside a university), with optional `start_date` / `end_date` properties
+- **MEMBER_OF** (between OrganizationUnit nodes) — supervision/membership, with optional `position` (`main_supervision`, `associated_supervision`, `participating_supervision`), `start_date`, `end_date`
+
+### Persons
+
+**Person** nodes are built from the institution's own people registry (`external: False`) or discovered as co-authors of publications (`external: True`).
+
+Internal persons are linked to:
+- Research structures via **MEMBER_OF** → `OrganizationUnit` (`:ResearchUnit` label)
+- Employing institutions via **EMPLOYED_AT** → `OrganizationUnit` (`:Institution` label); the relation carries an optional `position_code` property
+- Their published works via **HARVESTED_FOR** ← `SourceRecord`
+
+Identifiers are stored as **AgentIdentifier** nodes linked by **HAS_IDENTIFIER**. Person names are stored as **PersonName** nodes linked by **HAS_NAME**, each PersonName having **HAS_FIRST_NAME** and **HAS_LAST_NAME** edges to **Literal** nodes.
+
+External persons (`external: True`) have only a `display_name` (and optionally `display_name_variants`); they carry no **MEMBER_OF** or **EMPLOYED_AT** relations — their affiliations appear only at the **Contribution** level (see below).
+
+### Source layer and documents
+
+The harvesting process creates **SourceRecord** nodes, each linked to a Person by **HARVESTED_FOR**. SourceRecords are the raw bibliographic records as they appear in external databases (Hal, OpenAlex, ScanR, IdRef…). They carry a full source layer: **SourceContribution**, **SourceIdentifier**, **SourceIssue**, **SourceJournal**, etc. This layer is rarely needed unless the question specifically concerns how a reference appears in a given database.
+
+From SourceRecords, a merging algorithm produces **Document** nodes, with specific sublabels: `Article`, `Book`, `BookChapter`, `ConferencePaper`, `Thesis`, etc.
+
+Documents are linked to:
+- **Concept** nodes via **HAS_SUBJECT** — treat with caution (see note below)
+- **Literal** nodes via **HAS_TITLE** (type `"document_title"`) and **HAS_ABSTRACT** (type `"document_abstract"`)
+- **Journal** nodes (for journal articles) via **PUBLISHED_IN**, which carries `issue`, `volume`, and `page` properties
+
+> ⚠️ **Do not overweight concepts**: they are often assigned approximately, and many (e.g. "Theses and academic writings", "Sociology") are document-type or domain labels derived from automatic tagging with low informational value. To identify a researcher's themes, titles (**HAS_TITLE**) and abstracts (**HAS_ABSTRACT**) are more reliable.
+
+### Contributions and co-authorship
+
+Co-authors are represented by **Contribution** nodes linked to a Document by **HAS_CONTRIBUTION**, and to a Person by **HAS_CONTRIBUTION** (incoming from Person). Each Contribution carries:
+- One or several **roles** from the Library of Congress vocabulary (e.g. `http://id.loc.gov/vocabulary/relators/aut` for author, `.../edt` for editor)
+- For external co-authors: **HAS_AFFILIATION_STATEMENT** → **AuthorityOrganization**, representing the affiliation signature from the external database
+
+### Authority organizations
+
+External research structures (non-managed) are stored as **AuthorityOrganization** nodes via two subtypes:
+- **AuthorityOrganizationState** — an organization at a point in time, with identifiers (RoR, IdRef, Hal) and a `display_name`
+- **AuthorityOrganizationRoot** — groups states via **HAS_STATE** relations (handles renames, mergers, splits)
+
+When a contribution affiliation cannot be resolved to a specific state, it links to the root instead. `display_name` is a direct property (no intermediate Literal node).
+
+### Journals
+
+**Journal** nodes are linked to `JournalArticle` documents via **PUBLISHED_IN**. A Journal carries `titles` (list of strings), `publisher`, and `issn_l` (linking ISSN). Individual ISSNs are stored as **JournalIdentifier** nodes linked by **HAS_IDENTIFIER**.
+
+### Literals and TextLiterals
+
+Almost all strings in the graph are stored as typed nodes rather than plain properties:
+- **Literal** — has `value`, `language` (ISO 639-1 two-letter code, or `"und"` for undetermined), and `type` (e.g. `"organization_long_label"`, `"document_title"`, `"concept_pref_label"`)
+- **TextLiteral** — same fields plus a `key` (hash-based deduplication key); used for longer text such as descriptions and abstracts
+
