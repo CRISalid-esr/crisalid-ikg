@@ -23,6 +23,7 @@ from app.models.text_literal import TextLiteral
 
 
 class ElectronicalAddress(BaseModel):
+    """A web or electronic address."""
     uri: str
 
 
@@ -59,21 +60,8 @@ class OrganizationBase(Agent[OrganizationIdentifierType]):
     memberships: list[OrgMembership] = Field(default_factory=list)
     parents: list[OrgInclusion] = Field(default_factory=list)
 
-    @model_validator(mode='before')
     @classmethod
-    def _normalize_input(cls, data):
-        if not isinstance(data, dict):
-            return data
-
-        # Rename 'type' → 'national_type' (incoming AMQP field name)
-        if 'type' in data and 'national_type' not in data:
-            data['national_type'] = data.pop('type')
-
-        # Parse contacts → addresses + electronical_addresses
-        contacts = data.pop('contacts', None) or []
-        addresses = list(data.get('addresses') or [])
-        electronical_addresses = list(data.get('electronical_addresses') or [])
-
+    def _parse_contacts(cls, contacts: list, addresses: list, electronical_addresses: list):
         for contact in contacts:
             fmt = contact.get('format')
             value = contact.get('value') or {}
@@ -90,47 +78,57 @@ class OrganizationBase(Agent[OrganizationIdentifierType]):
                 if uri:
                     electronical_addresses.append({'uri': uri})
 
-        data['addresses'] = addresses
-        data['electronical_addresses'] = electronical_addresses
-
-        # Parse relationships → memberships + parents
-        relationships = data.pop('relationships', None) or []
-        memberships = list(data.get('memberships') or [])
-        parents = list(data.get('parents') or [])
-
+    @classmethod
+    def _parse_relationships(cls, relationships: list, memberships: list, parents: list):
         for rel in relationships:
             rel_type = rel.get('type')
             target = rel.get('target')
+            if not target:
+                continue
             start_date = rel.get('start_date')
             end_date = rel.get('end_date')
             subtype = rel.get('subtype')
-            if not target:
-                continue
             if rel_type == 'member_of':
-                membership: dict = {
-                    'target': target,
-                    'start_date': start_date,
-                    'end_date': end_date,
-                }
+                membership: dict = {'target': target, 'start_date': start_date,
+                                    'end_date': end_date}
                 if subtype:
                     membership['position'] = subtype
                 memberships.append(membership)
             elif rel_type == 'part_of':
-                parents.append({
-                    'target': target,
-                    'start_date': start_date,
-                    'end_date': end_date,
-                })
+                parents.append({'target': target, 'start_date': start_date, 'end_date': end_date})
 
+    @model_validator(mode='before')
+    @classmethod
+    def _normalize_input(cls, data):
+        """Rename legacy fields and parse contacts/relationships into typed lists."""
+        if not isinstance(data, dict):
+            return data
+
+        if 'type' in data and 'national_type' not in data:
+            data['national_type'] = data.pop('type')
+
+        contacts = data.pop('contacts', None) or []
+        addresses = list(data.get('addresses') or [])
+        electronical_addresses = list(data.get('electronical_addresses') or [])
+        cls._parse_contacts(contacts, addresses, electronical_addresses)
+        data['addresses'] = addresses
+        data['electronical_addresses'] = electronical_addresses
+
+        relationships = data.pop('relationships', None) or []
+        memberships = list(data.get('memberships') or [])
+        parents = list(data.get('parents') or [])
+        cls._parse_relationships(relationships, memberships, parents)
         data['memberships'] = memberships
         data['parents'] = parents
         return data
 
     @model_validator(mode='after')
     def _validate_type_constraints(self):
+        """Ensure a national type, local type, or label is present; validate allowed types."""
         if not self.national_type and not self.local_types and not self.long_labels:
             raise ValueError(
-                "Either national_type, at least one local_type, or at least one long_label is required"
+                "Either national_type, at least one local_type, "
+                "or at least one long_label is required"
             )
         if self.national_type is not None:
             allowed = ALLOWED_NATIONAL_TYPES_BY_GENERIC_TYPE.get(self.generic_type, set())
@@ -150,24 +148,28 @@ class OrganizationBase(Agent[OrganizationIdentifierType]):
 # ── Non-unit concrete classes ──────────────────────────────────────────────────
 
 class Institution(OrganizationBase):
+    """A higher-education or research institution (UNIV, EPE, COMUE…)."""
     generic_type: TypingLiteral[GenericOrganizationType.INSTITUTION] = (
         GenericOrganizationType.INSTITUTION
     )
 
 
 class InstitutionSubdivision(OrganizationBase):
+    """A faculty, school, or other subdivision of an institution (UFR, FAC…)."""
     generic_type: TypingLiteral[GenericOrganizationType.INSTITUTION_SUBDIVISION] = (
         GenericOrganizationType.INSTITUTION_SUBDIVISION
     )
 
 
 class UnitSubdivision(OrganizationBase):
+    """A subdivision of a research unit."""
     generic_type: TypingLiteral[GenericOrganizationType.UNIT_SUBDIVISION] = (
         GenericOrganizationType.UNIT_SUBDIVISION
     )
 
 
 class Team(OrganizationBase):
+    """A research team within a unit."""
     generic_type: TypingLiteral[GenericOrganizationType.TEAM] = (
         GenericOrganizationType.TEAM
     )
@@ -176,6 +178,7 @@ class Team(OrganizationBase):
 # ── Unit classes (discriminated by main_mission) ───────────────────────────────
 
 class UnitBase(OrganizationBase):
+    """Abstract base for unit types; discriminated by main_mission."""
     generic_type: TypingLiteral[GenericOrganizationType.UNIT] = (
         GenericOrganizationType.UNIT
     )
@@ -184,16 +187,19 @@ class UnitBase(OrganizationBase):
 
 
 class ResearchUnit(UnitBase):
+    """A research unit (UMR, UAR, UR, IRL…)."""
     main_mission: TypingLiteral[MissionType.RESEARCH] = MissionType.RESEARCH
 
 
 class SupportUnit(UnitBase):
+    """A unit providing scientific services."""
     main_mission: TypingLiteral[MissionType.SCIENTIFIC_SERVICES] = (
         MissionType.SCIENTIFIC_SERVICES
     )
 
 
 class AdministrativeUnit(UnitBase):
+    """A unit providing administrative services."""
     main_mission: TypingLiteral[MissionType.ADMINISTRATIVE_SERVICES] = (
         MissionType.ADMINISTRATIVE_SERVICES
     )

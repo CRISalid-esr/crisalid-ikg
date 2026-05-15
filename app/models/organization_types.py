@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class GenericOrganizationType(str, Enum):
+    """Top-level category of a research organization structure."""
     INSTITUTION = "institution"
     INSTITUTION_SUBDIVISION = "institution_subdivision"
     UNIT = "unit"
@@ -10,6 +11,7 @@ class GenericOrganizationType(str, Enum):
 
 
 class NationalOrganizationType(str, Enum):
+    """National/official classification code for an organization."""
     UNIV = "UNIV"
     EPE = "EPE"
     COMUE = "COMUE"
@@ -24,12 +26,14 @@ class NationalOrganizationType(str, Enum):
 
 
 class MissionType(str, Enum):
+    """Primary mission of a research unit."""
     RESEARCH = "research"
     SCIENTIFIC_SERVICES = "scientific_services"
     ADMINISTRATIVE_SERVICES = "administrative_services"
 
 
 class OrgMembershipPosition(str, Enum):
+    """Position/role of an institution in a unit's supervision chain."""
     MAIN_SUPERVISION = "main_supervision"
     ASSOCIATED_SUPERVISION = "associated_supervision"
     PARTICIPATING_SUPERVISION = "participating_supervision"

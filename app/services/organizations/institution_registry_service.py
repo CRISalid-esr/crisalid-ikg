@@ -37,7 +37,7 @@ class InstitutionRegistryService:
             # add each provided identifier to the institution if not already present
             for identifier in identifiers:
                 if identifier not in institution.identifiers:
-                    institution.identifiers.append(identifier)
+                    institution.identifiers.append(identifier)  # pylint: disable=no-member
         return institution
 
     async def _query_external_source(

@@ -15,15 +15,19 @@ class InstitutionService:
     """
 
     async def signal_institution_created(self, uid: str):
+        """Dispatch the 'created' signal for an institution."""
         await institution_created.send_async(self, payload=uid)
 
     async def signal_institution_updated(self, uid: str):
+        """Dispatch the 'updated' signal for an institution."""
         await institution_updated.send_async(self, payload=uid)
 
     async def signal_institution_unchanged(self, uid: str):
+        """Dispatch the 'unchanged' signal for an institution."""
         await institution_unchanged.send_async(self, payload=uid)
 
     async def signal_institution_deleted(self, uid: str):
+        """Dispatch the 'deleted' signal for an institution."""
         await institution_deleted.send_async(self, payload=uid)
 
     async def institution_uid(self, entity_uid: str) -> str | None:
@@ -63,6 +67,7 @@ class InstitutionService:
         return institution.uid
 
     async def get_institution_by_uid(self, uid: str) -> Institution | None:
+        """Retrieve an institution by its uid."""
         return await self._get_org_unit_dao().get(uid)
 
     @staticmethod

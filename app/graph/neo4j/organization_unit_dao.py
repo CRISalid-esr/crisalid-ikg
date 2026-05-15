@@ -7,16 +7,11 @@ from app.errors.not_found_error import NotFoundError
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
-from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
-from app.models.literal import Literal
-from app.models.organization_types import OrgMembershipPosition
 from app.models.organization_unit import (
     AdministrativeUnit,
     Institution,
     InstitutionSubdivision,
-    OrgInclusion,
-    OrgMembership,
     OrganizationBase,
     OrganizationUnit,
     ResearchUnit,
@@ -26,7 +21,6 @@ from app.models.organization_unit import (
     nonUnitAdapter,
     unitAdapter,
 )
-from app.models.text_literal import TextLiteral
 from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
@@ -37,6 +31,7 @@ class OrganizationUnitDAO(Neo4jDAO):
 
     @handle_database_errors
     async def create(self, org_unit: OrganizationBase) -> OrganizationBase:
+        """Create a new OrganizationUnit node in the graph."""
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(
@@ -46,6 +41,7 @@ class OrganizationUnitDAO(Neo4jDAO):
 
     @handle_database_errors
     async def update(self, org_unit: OrganizationBase) -> OrganizationBase:
+        """Update an existing OrganizationUnit node in the graph."""
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(
@@ -55,6 +51,7 @@ class OrganizationUnitDAO(Neo4jDAO):
 
     @handle_database_errors
     async def create_or_update(self, org_unit: OrganizationBase) -> tuple[str, Neo4jDAO.Status]:
+        """Create an OrganizationUnit if it does not exist, otherwise update it."""
         org_unit.uid = AgentIdentifierService.compute_uid_for(org_unit)
         existing = await self.find_by_identifier(
             OrganizationIdentifierType.LOCAL,
@@ -80,6 +77,7 @@ class OrganizationUnitDAO(Neo4jDAO):
         identifier_type: OrganizationIdentifierType,
         identifier_value: str,
     ) -> OrganizationUnit | None:
+        """Find an OrganizationUnit by one of its identifiers."""
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
@@ -95,6 +93,7 @@ class OrganizationUnitDAO(Neo4jDAO):
 
     @handle_database_errors
     async def get(self, uid: str) -> OrganizationUnit | None:
+        """Retrieve an OrganizationUnit by its uid."""
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 return await session.read_transaction(
@@ -103,6 +102,7 @@ class OrganizationUnitDAO(Neo4jDAO):
 
     @handle_database_errors
     async def get_all_uids(self) -> list[str]:
+        """Return the uids of all OrganizationUnit nodes."""
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:

@@ -45,7 +45,10 @@ async def create_research_unit(
     structure = _parse_organization_body(await request.json())
     created = await structure_service.create_structure(structure)
     return JSONResponse(
-        jsonable_encoder({"message": "Research structure created successfully", "structure": created}),
+        jsonable_encoder({
+            "message": "Research structure created successfully",
+            "structure": created,
+        }),
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -65,7 +68,7 @@ async def update_research_unit(
     updated = await structure_service.update_structure(structure)
     return JSONResponse(
         jsonable_encoder({
-            "message": f"Research structure updated successfully",
+            "message": "Research structure updated successfully",
             "structure": updated,
         }),
         status_code=status.HTTP_200_OK,
