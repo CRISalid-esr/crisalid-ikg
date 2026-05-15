@@ -226,3 +226,8 @@ async def fixture_research_unit_center_updated_json_data(_base_path) -> dict:
 async def fixture_research_unit_center_updated_pydantic_model(
         research_unit_center_updated_json_data) -> OrganizationBase:
     return _organization_unit_from_json_data(research_unit_center_updated_json_data)
+
+
+@pytest_asyncio.fixture(name="research_unit_without_labels_json_data")
+async def fixture_research_unit_without_labels_json_data(_base_path) -> dict:
+    return _organization_unit_json_data_from_file(_base_path, "research_unit_without_labels")

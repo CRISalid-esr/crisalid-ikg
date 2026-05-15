@@ -7,9 +7,8 @@ from app.config import get_app_settings
 from app.http.aio_http_client_manager import AioHttpClientManager
 from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
-from app.models.institution import Institution
 from app.models.literal import Literal
-from app.models.places import Place
+from app.models.organization_unit import Institution
 from app.models.structured_physical_address import StructuredPhysicalAddress
 
 
@@ -88,15 +87,13 @@ class InstitutionRegistryService:
         """
 
         identifiers = cls._build_identifiers_from_registry_data(data)
-        names = cls._build_names_from_registry_data(data)
+        long_labels = cls._build_names_from_registry_data(data)
         address = cls._build_addresses_from_registry_data(data)
-        place = cls._build_places_from_registry_data(data)
 
         return Institution(
-            names=names,
+            long_labels=long_labels,
             identifiers=identifiers,
             addresses=[address],
-            places=[place]
         )
 
     @staticmethod
@@ -117,13 +114,6 @@ class InstitutionRegistryService:
                             f"Unknown identifier type : {key} "
                             f"for institution from registry : {data['id']}")
         return identifiers
-
-    @staticmethod
-    def _build_places_from_registry_data(data):
-        return Place(
-            latitude=data.get("latitude"),
-            longitude=data.get("longitude")
-        )
 
     @staticmethod
     def _build_addresses_from_registry_data(data):

@@ -326,23 +326,21 @@ class PersonDAO(Neo4jDAO):
     async def _create_employments(cls, incoming_person: Person, tx):
         try:
             for employment in incoming_person.employments:
-                # employments have been filtered at service level
-                # to only include existing institutions
                 create_employment_query = load_query("create_employment")
                 try:
                     await tx.run(create_employment_query,
                                  person_uid=incoming_person.uid,
-                                 institution_uid=employment.institution.uid,
+                                 institution_uid=employment.entity_uid,
                                  position=employment.position.code if employment.position else None)
                 except ConstraintError as constraint_error:
                     raise ConflictError(
                         f"Schema constraint violation while creating employment "
-                        f"for person {incoming_person} and institution {employment.institution_uid}"
+                        f"for person {incoming_person} and institution {employment.entity_uid}"
                     ) from constraint_error
                 except ClientError as client_error:
                     raise ValueError(
                         f"Bad request error while creating employment "
-                        f"for person {incoming_person} and institution {employment.institution_uid}"
+                        f"for person {incoming_person} and institution {employment.entity_uid}"
                     ) from client_error
 
         except Exception as e:
@@ -352,19 +350,11 @@ class PersonDAO(Neo4jDAO):
     @classmethod
     async def _create_memberships(cls, incoming_person: Person, tx):
         for membership in incoming_person.memberships:
-            try:
-                research_unit_uid = AgentIdentifierService.compute_uid_for(
-                    membership.research_unit
-                )
-            except ValueError:
-                logger.error(
-                    "Unable to compute primary key for research structure "
-                    f"{membership.research_unit}"
-                )
-                continue
-            find_structure_query = load_query("find_research_unit_by_uid")
-            result = await tx.run(find_structure_query,
-                                  research_unit_uid=research_unit_uid)
+            research_unit_uid = membership.entity_uid
+            result = await tx.run(
+                load_query("research_unit_exists_by_uid"),
+                uid=research_unit_uid,
+            )
             structure = await result.single()
             if not structure:
                 logger.error(f"Research structure with uid {research_unit_uid} not found")
@@ -413,12 +403,10 @@ class PersonDAO(Neo4jDAO):
         """
         return (sorted(
             existing_employments,
-            key=lambda x: (
-                str(x.institution.uid), x.position.code if x.position else None)) ==
+            key=lambda x: (x.entity_uid, x.position.code if x.position else None)) ==
                 sorted(
                     incoming_employments,
-                    key=lambda x: (
-                        str(x.institution.uid), x.position.code if x.position else None)))
+                    key=lambda x: (x.entity_uid, x.position.code if x.position else None)))
 
     @handle_database_errors
     async def find_by_identifiers(self, identifiers: list[dict]) -> str | None:

@@ -1,13 +1,15 @@
-""" Person routes"""
+""" Organization routes"""
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 from starlette import status
 from starlette.responses import JSONResponse
 
-from app.models.research_units import ResearchUnit
-from app.services.organizations.research_unit_service import ResearchUnitService
+from app.models.organization_unit import OrganizationBase, unitAdapter, nonUnitAdapter
+from app.services.organizations.organization_unit_service import OrganizationUnitService
 
 router = APIRouter()
 
@@ -19,26 +21,33 @@ tags_metadata = [
 ]
 
 
+def _parse_organization_body(data: dict) -> OrganizationBase:
+    """Dispatch raw dict to the correct TypeAdapter based on generic_type."""
+    try:
+        if data.get("generic_type") == "unit":
+            return unitAdapter.validate_python(data)
+        return nonUnitAdapter.validate_python(data)
+    except ValidationError as exc:
+        raise RequestValidationError(errors=exc.errors()) from exc
+
+
 @router.post(
     "/research-unit",
     name="create-research-unit",
 )
 async def create_research_unit(
-        structure_service: Annotated[ResearchUnitService, Depends(ResearchUnitService)],
-        structure: ResearchUnit | None,
+        structure_service: Annotated[OrganizationUnitService, Depends(OrganizationUnitService)],
+        request: Request,
 ) -> JSONResponse:
     """
-    Creates a research structure
-
-    :param structure_service:
-    :param structure: entity built from fields
-    :return: json response
+    Creates a research structure.
     """
-
-    created_research_unit = await structure_service.create_structure(structure)
-    response_data = {"message": "Research structure created successfully",
-                     "structure": created_research_unit}
-    return JSONResponse(jsonable_encoder(response_data), status_code=status.HTTP_201_CREATED)
+    structure = _parse_organization_body(await request.json())
+    created = await structure_service.create_structure(structure)
+    return JSONResponse(
+        jsonable_encoder({"message": "Research structure created successfully", "structure": created}),
+        status_code=status.HTTP_201_CREATED,
+    )
 
 
 @router.put(
@@ -46,17 +55,18 @@ async def create_research_unit(
     name="update-research-unit",
 )
 async def update_research_unit(
-        structure_service: Annotated[ResearchUnitService, Depends(ResearchUnitService)],
-        structure: ResearchUnit | None,
+        structure_service: Annotated[OrganizationUnitService, Depends(OrganizationUnitService)],
+        request: Request,
 ) -> JSONResponse:
     """
-    Updates a research structure
-
-    :param structure_service:
-    :param structure: entity built from fields
-    :return: json response
+    Updates a research structure.
     """
-    updated_structure = await structure_service.update_structure(structure)
-    response_data = {"message": f"Research structure with id {structure.uid} updated successfully",
-                     "structure": updated_structure}
-    return JSONResponse(jsonable_encoder(response_data), status_code=status.HTTP_200_OK)
+    structure = _parse_organization_body(await request.json())
+    updated = await structure_service.update_structure(structure)
+    return JSONResponse(
+        jsonable_encoder({
+            "message": f"Research structure updated successfully",
+            "structure": updated,
+        }),
+        status_code=status.HTTP_200_OK,
+    )

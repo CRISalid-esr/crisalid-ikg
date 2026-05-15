@@ -3,22 +3,19 @@ from typing import Optional
 
 from pydantic import BaseModel, model_validator
 
-from app.models.research_units import ResearchUnit
 from app.services.identifiers.identifier_service import AgentIdentifierService
 
 
 class Membership(BaseModel):
     """
-    Membership API model
+    Membership API model — links a Person to a research unit by uid.
     """
     entity_uid: str
-    research_unit: Optional[ResearchUnit] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     past: bool = False
     future: bool = False
 
-    # If entity_uid is not pefixed, treat it as a local identifier by default
     @model_validator(mode='before')
     @classmethod
     def _set_entity_uid(cls, values) -> dict:
@@ -26,13 +23,3 @@ class Membership(BaseModel):
             values['entity_uid'] = f"local{AgentIdentifierService.IDENTIFIER_SEPARATOR}" \
                                    f"{values['entity_uid']}"
         return values
-
-    @model_validator(mode='after')
-    def _set_research_unit(self) -> 'Membership':
-        if self.research_unit is None:
-            self.research_unit = ResearchUnit(
-                names=[],
-                identifiers=[AgentIdentifierService.compute_identifier_from_uid(
-                    ResearchUnit, self.entity_uid)]
-            )
-        return self

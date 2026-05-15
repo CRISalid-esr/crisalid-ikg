@@ -128,9 +128,9 @@ class OrganizationBase(Agent[OrganizationIdentifierType]):
 
     @model_validator(mode='after')
     def _validate_type_constraints(self):
-        if not self.national_type and not self.local_types:
+        if not self.national_type and not self.local_types and not self.long_labels:
             raise ValueError(
-                "Either national_type or at least one local_type is required"
+                "Either national_type, at least one local_type, or at least one long_label is required"
             )
         if self.national_type is not None:
             allowed = ALLOWED_NATIONAL_TYPES_BY_GENERIC_TYPE.get(self.generic_type, set())

@@ -85,12 +85,12 @@ def test_invalid_national_type_for_generic_type_raises():
         unitAdapter.validate_python(data)
 
 
-def test_organization_requires_national_type_or_local_type():
+def test_organization_requires_national_type_or_local_type_or_long_label():
     data = {
         "generic_type": "institution",
-        # No 'type' (national_type) and no local_types
         "identifiers": [{"type": "local", "value": "INST-001"}],
         "local_types": [],
+        "long_labels": [],
     }
     with pytest.raises(ValidationError):
         nonUnitAdapter.validate_python(data)
