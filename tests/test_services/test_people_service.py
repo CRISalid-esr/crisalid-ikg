@@ -7,7 +7,6 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.identifier_types import OrganizationIdentifierType, PersonIdentifierType
 from app.models.organization_unit import OrganizationBase
 from app.models.people import Person
-from app.models.research_units import ResearchUnit  # legacy fixture type
 from app.services.people.people_service import PeopleService
 
 
@@ -62,8 +61,8 @@ async def test_create_person_a_without_name(
 
 
 async def test_update_person_membership(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
-        persisted_research_unit_b_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
+        persisted_research_unit_b_pydantic_model: OrganizationBase,
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_membership_pydantic_model: Person,
 ) -> None:
@@ -146,7 +145,7 @@ async def test_update_person_identifiers_with_authentication(
 
 
 async def test_update_person_employment(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
         # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_employment_pydantic_model: Person,
@@ -263,7 +262,7 @@ async def test_update_person_employment(
 
 
 async def test_update_person_employment_position(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
         # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_employment_pydantic_model: Person,

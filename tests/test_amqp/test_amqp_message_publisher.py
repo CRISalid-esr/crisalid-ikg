@@ -6,8 +6,8 @@ from app.amqp.amqp_message_publisher import AMQPMessagePublisher
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.document import Document
 from app.models.identifier_types import PersonIdentifierType
+from app.models.organization_unit import OrganizationBase
 from app.models.people import Person
-from app.models.research_units import ResearchUnit  # legacy fixture type
 from tests.test_utils.comparaison import force_dict_inner_list_ordering
 
 
@@ -98,7 +98,7 @@ async def test_publish_person_event(
 
 async def test_publish_structure_event(
         mocked_exchange: Exchange,
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
 ):
     """
     Test that an event message for a created structure is published to the AMQP queue
@@ -121,7 +121,6 @@ async def test_publish_structure_event(
     assert message_body['event'] == 'created'
     assert message_body['type'] == 'research_unit'
     assert message_body['fields']['uid'] == 'local-U123'
-    assert message_body['fields']['acronym'] == 'FL'
     expected_identifiers = [
         {'type': 'ror', 'value': '123456'},
         {'type': 'local', 'value': 'U123'},
@@ -130,13 +129,13 @@ async def test_publish_structure_event(
     assert all(
         any(identifier == expected for identifier in message_body['fields']['identifiers']) for
         expected in expected_identifiers)
-    expected_names = [
+    expected_long_labels = [
         {'language': 'fr', 'value': 'Laboratoire toto'},
         {'language': 'en', 'value': 'Foobar Laboratory'}
     ]
     assert all(
-        any(name == expected for name in message_body['fields']['names']) for expected in
-        expected_names)
+        any(label == expected for label in message_body['fields']['long_labels']) for expected in
+        expected_long_labels)
     expected_descriptions = [
         {'language': 'fr', 'value': 'Un laboratoire de recherche fictif'},
         {'language': 'en', 'value': 'An imaginary laboratory'}

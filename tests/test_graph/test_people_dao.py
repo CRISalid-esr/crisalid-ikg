@@ -1,12 +1,12 @@
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.identifier_types import PersonIdentifierType
+from app.models.organization_unit import OrganizationBase
 from app.models.people import Person
-from app.models.research_units import ResearchUnit  # legacy fixture type
 
 
 async def test_create_person(
         person_a_pydantic_model: Person,
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
 ):
     """
     Given a basic person Pydantic model
@@ -272,8 +272,8 @@ async def test_create_person_with_mononym(
 
 async def test_create_person_d_with_two_memberships(
         person_d_with_two_memberships_pydantic_model: Person,
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
-        persisted_research_unit_b_pydantic_model: ResearchUnit,  #
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
+        persisted_research_unit_b_pydantic_model: OrganizationBase,
 ):
     """
     Given a basic person Pydantic model
@@ -321,8 +321,8 @@ async def test_create_person_d_with_two_memberships(
 
 
 async def test_update_existing_person_membership(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
-        persisted_research_unit_b_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
+        persisted_research_unit_b_pydantic_model: OrganizationBase,
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_membership_pydantic_model: Person,
 ):

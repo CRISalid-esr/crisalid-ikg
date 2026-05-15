@@ -1,25 +1,24 @@
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.identifier_types import PersonIdentifierType, OrganizationIdentifierType
+from app.models.organization_unit import OrganizationBase
 from app.models.people import Person
-from app.models.research_units import ResearchUnit  # legacy fixture type
 
 
 # pylint: disable=too-many-locals
 async def test_update_people_and_structure(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
         # pylint: disable=unused-argument
-        persisted_research_unit_b_pydantic_model: ResearchUnit,
+        persisted_research_unit_b_pydantic_model: OrganizationBase,
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_name_new_hal_identifier_and_membership_pydantic_model: Person,
         research_unit_a_with_nam_acr_desc_str_ror_ital_desc_name_added_pydantic_model:
-        ResearchUnit
+        OrganizationBase
 ):
     """
     Given a basic person Pydantic model
     When the create_person method is called
     Then the person should be created in the database
 
-    :param person_d_with_two_memberships_pydantic_model:
     :param persisted_research_unit_a_pydantic_model:
     :return:
     """
@@ -35,17 +34,28 @@ async def test_update_people_and_structure(
         )
 
     async def assert_names_match(updated_object, pydantic_object):
-        fields = ("first_names", "last_names") if isinstance(updated_object, Person) else (
-            "value", "language")
-        assert len(updated_object.names) == len(pydantic_object.names)
-        assert all(
-            any(
-                getattr(updated_name, fields[0]) == getattr(new_name, fields[0]) and getattr(
-                    updated_name, fields[1]) == getattr(new_name, fields[1])
-                for updated_name in updated_object.names
+        if isinstance(updated_object, Person):
+            fields = ("first_names", "last_names")
+            names_attr = "names"
+            assert len(updated_object.names) == len(pydantic_object.names)
+            assert all(
+                any(
+                    getattr(updated_name, fields[0]) == getattr(new_name, fields[0])
+                    and getattr(updated_name, fields[1]) == getattr(new_name, fields[1])
+                    for updated_name in updated_object.names
+                )
+                for new_name in pydantic_object.names
             )
-            for new_name in pydantic_object.names
-        )
+        else:
+            assert len(updated_object.long_labels) == len(pydantic_object.long_labels)
+            assert all(
+                any(
+                    updated_label.value == new_label.value
+                    and updated_label.language == new_label.language
+                    for updated_label in updated_object.long_labels
+                )
+                for new_label in pydantic_object.long_labels
+            )
 
     async def assert_memberships_match(updated_object, pydantic_object):
         assert len(updated_object.memberships) == len(pydantic_object.memberships)
@@ -63,7 +73,7 @@ async def test_update_people_and_structure(
         PersonIdentifierType.LOCAL
     )
 
-    structure_dao = factory.get_dao(ResearchUnit)
+    structure_dao = factory.get_dao(OrganizationBase)
     structure_local_identifier = persisted_research_unit_a_pydantic_model.get_identifier(
         OrganizationIdentifierType.LOCAL
     )

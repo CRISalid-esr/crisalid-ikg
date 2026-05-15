@@ -4,7 +4,7 @@ from loguru import logger
 
 from app.amqp.abstract_amqp_message_factory import AbstractAMQPMessageFactory
 from app.errors.database_error import DatabaseError
-from app.services.organizations.research_unit_service import ResearchUnitService
+from app.services.organizations.organization_unit_service import OrganizationUnitService
 
 
 class AMQPResearchUnitEventMessageFactory(AbstractAMQPMessageFactory):
@@ -16,10 +16,9 @@ class AMQPResearchUnitEventMessageFactory(AbstractAMQPMessageFactory):
         if research_unit_uid is None:
             logger.error("Research structure UID is None while building AMQP message payload")
             return
-        research_unit_service = ResearchUnitService()
+        service = OrganizationUnitService()
         try:
-            research_unit = await research_unit_service.get_structure_by_uid(
-                research_unit_uid)
+            research_unit = await service.get_structure_by_uid(research_unit_uid)
         except DatabaseError as e:
             logger.error(f"Error fetching research structure {research_unit_uid}: {e} "
                          "while building AMQP message payload")
@@ -32,13 +31,18 @@ class AMQPResearchUnitEventMessageFactory(AbstractAMQPMessageFactory):
                     "value": identifier.value
                 } for identifier in research_unit.identifiers
             ],
-            "names": [
+            "long_labels": [
                 {
-                    "value": name.value,
-                    "language": name.language
-                } for name in research_unit.names
+                    "value": label.value,
+                    "language": label.language
+                } for label in research_unit.long_labels
             ],
-            "acronym": research_unit.acronym,
+            "short_labels": [
+                {
+                    "value": label.value,
+                    "language": label.language
+                } for label in research_unit.short_labels
+            ],
             "descriptions": [
                 {
                     "value": description.value,

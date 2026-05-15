@@ -1,7 +1,7 @@
 import asyncio
 import typer
 from app.commands import with_app_lifecycle
-from app.services.organizations.research_unit_service import ResearchUnitService
+from app.services.organizations.organization_unit_service import OrganizationUnitService
 
 structure_cli = typer.Typer()
 
@@ -21,15 +21,15 @@ def dispatch_event(
 
     @with_app_lifecycle
     async def _dispatch_event(event: str, uid: str):
-        service = ResearchUnitService()
+        service = OrganizationUnitService()
         if event == "created":
-            await service.signal_research_unit_created(uid)
+            await service.signal_structure_created(uid)
         elif event == "updated":
-            await service.signal_research_unit_updated(uid)
+            await service.signal_structure_updated(uid)
         elif event == "unchanged":
-            await service.signal_research_unit_unchanged(uid)
+            await service.signal_structure_unchanged(uid)
         elif event == "deleted":
-            await service.signal_research_unit_deleted(uid)
+            await service.signal_structure_deleted(uid)
         typer.echo(f"Research structure event '{event}' dispatched for UID {uid}.")
 
     asyncio.run(_dispatch_event(event, uid))
@@ -49,17 +49,17 @@ def dispatch_all(
 
     @with_app_lifecycle
     async def _dispatch_all(event: str):
-        service = ResearchUnitService()
+        service = OrganizationUnitService()
         try:
             uids = await service.get_all_structure_uids()
             for uid in uids:
                 try:
                     if event == "created":
-                        await service.signal_research_unit_created(uid)
+                        await service.signal_structure_created(uid)
                     elif event == "updated":
-                        await service.signal_research_unit_updated(uid)
+                        await service.signal_structure_updated(uid)
                     elif event == "unchanged":
-                        await service.signal_research_unit_unchanged(uid)
+                        await service.signal_structure_unchanged(uid)
                     typer.echo(f"Event '{event}' dispatched for UID {uid}.")
                 # pylint: disable=broad-except
                 except Exception as e:

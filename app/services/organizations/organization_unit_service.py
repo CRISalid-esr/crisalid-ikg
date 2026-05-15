@@ -11,6 +11,18 @@ from app.signals import structure_created, structure_updated, structure_unchange
 class OrganizationUnitService:
     """Service for all research organization structure types."""
 
+    async def signal_structure_created(self, uid: str):
+        await structure_created.send_async(self, payload=uid)
+
+    async def signal_structure_updated(self, uid: str):
+        await structure_updated.send_async(self, payload=uid)
+
+    async def signal_structure_unchanged(self, uid: str):
+        await structure_unchanged.send_async(self, payload=uid)
+
+    async def signal_structure_deleted(self, uid: str):
+        await structure_deleted.send_async(self, payload=uid)
+
     async def create_structure(self, org_unit: OrganizationBase) -> OrganizationBase:
         result = await self._get_dao().create(org_unit)
         await structure_created.send_async(self, payload=result.uid)

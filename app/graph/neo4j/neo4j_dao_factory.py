@@ -13,11 +13,9 @@ from app.models.authority_organization_state import AuthorityOrganizationState
 from app.models.change import Change
 from app.models.concepts import Concept
 from app.models.document import Document
-from app.models.institution import Institution
 from app.models.journal import Journal
 from app.models.organization_unit import OrganizationBase
 from app.models.people import Person
-from app.models.research_units import ResearchUnit
 from app.models.source_journal import SourceJournal
 from app.models.source_organizations import SourceOrganization
 from app.models.source_people import SourcePerson
@@ -41,8 +39,6 @@ class Neo4jDAOFactory(DAOFactory):
             AuthorityOrganization:
                 "app.graph.neo4j.authority_organization_dao.AuthorityOrganizationDAO",
             OrganizationBase: "app.graph.neo4j.organization_unit_dao.OrganizationUnitDAO",
-            ResearchUnit: "app.graph.neo4j.research_unit_dao.ResearchUnitDAO",
-            Institution: "app.graph.neo4j.institution_dao.InstitutionDAO",
             SourceRecord: "app.graph.neo4j.source_record_dao.SourceRecordDAO",
             Concept: "app.graph.neo4j.concept_dao.ConceptDAO",
             SourceJournal: "app.graph.neo4j.source_journal_dao.SourceJournalDAO",
