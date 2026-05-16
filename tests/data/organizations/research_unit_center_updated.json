@@ -1,0 +1,24 @@
+{
+  "generic_type": "unit",
+  "type": "UMR",
+  "local_types": [
+    {"value": "Research Center", "language": "en"}
+  ],
+  "main_mission": "research",
+  "secondary_missions": [],
+  "long_labels": [
+    {"value": "Updated Example Research Center", "language": "en"}
+  ],
+  "short_labels": [
+    {"value": "UERC", "language": "en"}
+  ],
+  "descriptions": [
+    {"value": "Updated description in English.", "language": "en"}
+  ],
+  "identifiers": [
+    {"type": "local", "value": "CENTER-001"},
+    {"type": "ror", "value": "ROR-EXAMPLE"}
+  ],
+  "relationships": [],
+  "contacts": []
+}

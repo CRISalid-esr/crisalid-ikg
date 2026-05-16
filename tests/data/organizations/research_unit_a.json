@@ -1,25 +1,26 @@
 {
-  "names": [
-    {
-      "value": "Laboratoire toto",
-      "language": "fr"
-    },
-    {
-      "value": "Foobar Laboratory",
-      "language": "en"
-    }
+  "generic_type": "unit",
+  "type": "UMR",
+  "main_mission": "research",
+  "secondary_missions": [],
+  "local_types": [],
+  "long_labels": [
+    {"value": "Laboratoire toto", "language": "fr"},
+    {"value": "Foobar Laboratory", "language": "en"}
   ],
-  "acronym": "FL",
+  "short_labels": [
+    {"value": "FL", "language": "fr"}
+  ],
   "descriptions": [
-    {
-      "value": "Un laboratoire de recherche fictif",
-      "language": "fr"
-    },
-    {
-      "value": "An imaginary laboratory",
-      "language": "en"
-    }
+    {"value": "Un laboratoire de recherche fictif", "language": "fr"},
+    {"value": "An imaginary laboratory", "language": "en"}
   ],
+  "identifiers": [
+    {"type": "local", "value": "U123"},
+    {"type": "nns", "value": "200012123S"},
+    {"type": "ror", "value": "123456"}
+  ],
+  "relationships": [],
   "contacts": [
     {
       "type": "postal_address",
@@ -30,20 +31,6 @@
         "city": "PARIS",
         "street": "Sorbonne, 1 rue de la Sorbonne"
       }
-    }
-  ],
-  "identifiers": [
-    {
-      "type": "local",
-      "value": "U123"
-    },
-    {
-      "type": "nns",
-      "value": "200012123S"
-    },
-    {
-      "type": "ror",
-      "value": "123456"
     }
   ]
 }

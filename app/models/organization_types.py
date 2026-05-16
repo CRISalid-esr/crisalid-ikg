@@ -1,0 +1,67 @@
+from enum import Enum
+
+
+class GenericOrganizationType(str, Enum):
+    """Top-level category of a research organization structure."""
+    INSTITUTION = "institution"
+    INSTITUTION_SUBDIVISION = "institution_subdivision"
+    UNIT = "unit"
+    UNIT_SUBDIVISION = "unit_subdivision"
+    TEAM = "team"
+
+
+class NationalOrganizationType(str, Enum):
+    """National/official classification code for an organization."""
+    UNIV = "UNIV"
+    EPE = "EPE"
+    EPST = "EPST"
+    GE = "GE"
+    COMUE = "COMUE"
+    UMR = "UMR"
+    UAR = "UAR"
+    UR = "UR"
+    IRL = "IRL"
+    UFR = "UFR"
+    FAC = "FAC"
+    TEAM = "TEAM"
+    THEME = "THEME"
+
+
+class MissionType(str, Enum):
+    """Primary mission of a research unit."""
+    RESEARCH = "research"
+    SCIENTIFIC_SERVICES = "scientific_services"
+    ADMINISTRATIVE_SERVICES = "administrative_services"
+
+
+class OrgMembershipPosition(str, Enum):
+    """Position/role of an institution in a unit's supervision chain."""
+    MAIN_SUPERVISION = "main_supervision"
+    ASSOCIATED_SUPERVISION = "associated_supervision"
+    PARTICIPATING_SUPERVISION = "participating_supervision"
+
+
+ALLOWED_NATIONAL_TYPES_BY_GENERIC_TYPE: dict = {
+    GenericOrganizationType.INSTITUTION: {
+        NationalOrganizationType.EPE,
+        NationalOrganizationType.EPST,
+        NationalOrganizationType.GE,
+        NationalOrganizationType.UNIV,
+        NationalOrganizationType.COMUE,
+    },
+    GenericOrganizationType.UNIT: {
+        NationalOrganizationType.UMR,
+        NationalOrganizationType.UAR,
+        NationalOrganizationType.UR,
+        NationalOrganizationType.IRL,
+    },
+    GenericOrganizationType.INSTITUTION_SUBDIVISION: {
+        NationalOrganizationType.UFR,
+        NationalOrganizationType.FAC,
+    },
+    GenericOrganizationType.UNIT_SUBDIVISION: set(),
+    GenericOrganizationType.TEAM: {
+        NationalOrganizationType.TEAM,
+        NationalOrganizationType.THEME,
+    },
+}

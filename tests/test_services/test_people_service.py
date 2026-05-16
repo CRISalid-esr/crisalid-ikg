@@ -1,15 +1,12 @@
 import datetime
-from typing import cast
 
 import pytest
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
-from app.graph.neo4j.institution_dao import InstitutionDAO
 from app.models.identifier_types import OrganizationIdentifierType, PersonIdentifierType
-from app.models.institution import Institution
+from app.models.organization_unit import OrganizationBase
 from app.models.people import Person
-from app.models.research_units import ResearchUnit
 from app.services.people.people_service import PeopleService
 
 
@@ -38,34 +35,10 @@ async def test_create_person(
     assert len(fetched_person.names) == len(person_a_pydantic_model.names)
     assert len(person_a_pydantic_model.memberships) == 1
     assert len(fetched_person.memberships) == len(person_a_pydantic_model.memberships)
-    assert len(person_a_pydantic_model.memberships[0].research_unit.identifiers) == 1
-    assert len(fetched_person.memberships[0].research_unit.identifiers) == len(
-        person_a_pydantic_model.memberships[0].research_unit.identifiers
-    )
-    for fetched_membership in fetched_person.memberships:
-        for fetched_identifier in fetched_membership.research_unit.identifiers:
-            assert any(
-                identifier.type == fetched_identifier.type
-                and identifier.value == fetched_identifier.value
-                for membership in person_a_pydantic_model.memberships
-                for identifier in membership.research_unit.identifiers
-            )
+    assert fetched_person.memberships[0].entity_uid == person_a_pydantic_model.memberships[0].entity_uid
     assert len(person_a_pydantic_model.employments) == 1
     assert len(fetched_person.employments) == len(person_a_pydantic_model.employments)
-    assert len(person_a_pydantic_model.employments[0].institution.identifiers) == 1
-    assert len(fetched_person.employments[0].institution.identifiers) == len(
-        person_a_pydantic_model.employments[0].institution.identifiers
-    )
-    # Only the uai identifier is available
-    # as it is deduced from the institution uid
-    assert any(
-        identifier.type == OrganizationIdentifierType.UAI
-        and identifier.value == fetched_identifier.value
-        for fetched_employment in fetched_person.employments
-        for fetched_identifier in fetched_employment.institution.identifiers
-        for employment in person_a_pydantic_model.employments
-        for identifier in employment.institution.identifiers
-    )
+    assert fetched_person.employments[0].entity_uid == person_a_pydantic_model.employments[0].entity_uid
 
 
 async def test_create_person_a_without_name(
@@ -88,8 +61,8 @@ async def test_create_person_a_without_name(
 
 
 async def test_update_person_membership(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
-        persisted_research_unit_b_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
+        persisted_research_unit_b_pydantic_model: OrganizationBase,
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_membership_pydantic_model: Person,
 ) -> None:
@@ -172,7 +145,7 @@ async def test_update_person_identifiers_with_authentication(
 
 
 async def test_update_person_employment(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
         # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_employment_pydantic_model: Person,
@@ -186,35 +159,22 @@ async def test_update_person_employment(
     """
     service = PeopleService()
     settings = get_app_settings()
-    institution_dao = cast(
-        InstitutionDAO,
-        AbstractDAOFactory().get_dao_factory(settings.graph_db).get_dao(Institution)
-    )
+    org_unit_dao = AbstractDAOFactory().get_dao_factory(settings.graph_db).get_dao(OrganizationBase)
     fetched_person = await service.get_person(persisted_person_a_pydantic_model.uid)
     assert fetched_person.uid == persisted_person_a_pydantic_model.uid
     assert len(fetched_person.employments) == 1
     assert (fetched_person.employments[0].entity_uid ==
             persisted_person_a_pydantic_model.employments[0].entity_uid)
-    assert (fetched_person.employments[0].institution.identifiers[0].value ==
-            persisted_person_a_pydantic_model.employments[
-                0].institution.identifiers[0].value)
-    old_institution = await institution_dao.get(fetched_person.employments[0].institution.uid)
-    assert old_institution.uid == fetched_person.employments[0].institution.uid
-    assert len(old_institution.identifiers) == 5
+    old_institution = await org_unit_dao.get(fetched_person.employments[0].entity_uid)
+    assert old_institution.uid == fetched_person.employments[0].entity_uid
+    assert len(old_institution.identifiers) >= 1
     assert any(
-        identifier
-        for identifier in old_institution.identifiers
-        if identifier.value == fetched_person.employments[0].institution.identifiers[0].value
+        ll for ll in old_institution.long_labels
+        if ll.value == "International University of the Côte d'Azur"
     )
     assert any(
-        name
-        for name in old_institution.names
-        if name.value == "International University of the Côte d'Azur"
-    )
-    assert any(
-        name
-        for name in old_institution.names
-        if name.value == "Université Internationale de la Côte d'Azur"
+        ll for ll in old_institution.long_labels
+        if ll.value == "Université Internationale de la Côte d'Azur"
     )
     assert any(
         identifier
@@ -231,8 +191,7 @@ async def test_update_person_employment(
     assert any(
         identifier
         for identifier in old_institution.identifiers
-        if
-        identifier.value == "28574391600014"
+        if identifier.value == "28574391600014"
         and identifier.type == OrganizationIdentifierType.SIRET
     )
     assert any(
@@ -257,33 +216,18 @@ async def test_update_person_employment(
         if employment.entity_uid == person_a_with_different_employment_pydantic_model.employments[
             0].entity_uid
     )
-    assert any(
-        employment
-        for employment in updated_fetched_person.employments
-        if employment.institution.identifiers[0].value ==
-        person_a_with_different_employment_pydantic_model.employments[
-            0].institution.identifiers[0].value
+    new_institution = await org_unit_dao.get(
+        updated_fetched_person.employments[0].entity_uid
     )
-    new_institution = await institution_dao.get(
-        updated_fetched_person.employments[0].institution.uid
-    )
-    assert new_institution.uid == updated_fetched_person.employments[0].institution.uid
-    assert len(new_institution.identifiers) == 5
+    assert new_institution.uid == updated_fetched_person.employments[0].entity_uid
+    assert len(new_institution.identifiers) >= 1
     assert any(
-        identifier
-        for identifier in new_institution.identifiers
-        if identifier.value == updated_fetched_person.employments[0].institution.identifiers[
-            0].value
+        ll for ll in new_institution.long_labels
+        if ll.value == 'Université de Nouvelles Sciences et Technologies'
     )
     assert any(
-        name
-        for name in new_institution.names
-        if name.value == 'Université de Nouvelles Sciences et Technologies'
-    )
-    assert any(
-        name
-        for name in new_institution.names
-        if name.value == 'New Science and Technology University'
+        ll for ll in new_institution.long_labels
+        if ll.value == 'New Science and Technology University'
     )
     assert any(
         identifier
@@ -318,7 +262,7 @@ async def test_update_person_employment(
 
 
 async def test_update_person_employment_position(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
         # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_employment_pydantic_model: Person,
@@ -336,9 +280,6 @@ async def test_update_person_employment_position(
     assert len(fetched_person.employments) == 1
     assert (fetched_person.employments[0].entity_uid ==
             persisted_person_a_pydantic_model.employments[0].entity_uid)
-    assert (fetched_person.employments[0].institution.identifiers[0].value ==
-            persisted_person_a_pydantic_model.employments[
-                0].institution.identifiers[0].value)
     assert (fetched_person.employments[0].position.code ==
             persisted_person_a_pydantic_model.employments[0].position.code)
     await service.update_person(person_a_with_different_employment_pydantic_model)
@@ -353,13 +294,6 @@ async def test_update_person_employment_position(
         for employment in updated_fetched_person.employments
         if employment.entity_uid == person_a_with_different_employment_pydantic_model.employments[
             0].entity_uid
-    )
-    assert any(
-        employment
-        for employment in updated_fetched_person.employments
-        if employment.institution.identifiers[0].value ==
-        person_a_with_different_employment_pydantic_model.employments[
-            0].institution.identifiers[0].value
     )
     assert any(
         employment

@@ -1,0 +1,17 @@
+{
+  "generic_type": "institution",
+  "type": "EPST",
+  "local_types": [],
+  "long_labels": [{"value": "Centre national de la recherche scientifique", "language": "fr"}],
+  "short_labels": [{"value": "CNRS", "language": "fr"}],
+  "descriptions": [
+    {"value": "French national public research organization, associated supervision of the LRA research unit.", "language": "en"},
+    {"value": "Organisme national de recherche scientifique public, tutelle associée de l'unité de recherche LRA.", "language": "fr"}
+  ],
+  "identifiers": [
+    {"type": "uai", "value": "0757581P"},
+    {"type": "ror", "value": "https://ror.org/02feahw73"}
+  ],
+  "relationships": [],
+  "contacts": []
+}

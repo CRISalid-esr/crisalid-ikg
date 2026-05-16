@@ -5,8 +5,18 @@ import pytest
 
 from app.models.concepts import Concept
 from app.models.people import Person
-from app.models.research_units import ResearchUnit
 from app.models.source_records import SourceRecord
+
+
+def _organization_unit_json_data_from_file(base_path, name) -> dict:
+    return _json_data_from_file(base_path, f"data/organizations/{name}.json")
+
+
+def _organization_unit_from_json_data(data: dict):
+    from app.models.organization_unit import nonUnitAdapter, unitAdapter  # avoid circular import
+    if data.get("generic_type") == "unit":
+        return unitAdapter.validate_python(data)
+    return nonUnitAdapter.validate_python(data)
 
 
 @pytest.fixture(name="_base_path")
@@ -34,10 +44,6 @@ def _person_from_json_data(input_data: dict) -> Person:
 def _organization_json_data_from_file(base_path, structure) -> dict:
     file_path = f"data/organizations/{structure}.json"
     return _json_data_from_file(base_path, file_path)
-
-
-def _research_unit_from_json_data(input_data: dict) -> ResearchUnit:
-    return ResearchUnit(**input_data)
 
 
 def _source_record_json_data_from_file(base_path, source_record) -> dict:

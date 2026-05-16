@@ -1,0 +1,24 @@
+{
+  "generic_type": "institution_subdivision",
+  "local_types": [
+    {"value": "Département", "language": "fr"},
+    {"value": "Department", "language": "en"}
+  ],
+  "long_labels": [
+    {"value": "Département de physique", "language": "fr"},
+    {"value": "Physics Department", "language": "en"}
+  ],
+  "short_labels": [],
+  "descriptions": [
+    {"value": "Physics department of Université Étienne Dupond, part of the Science faculty, hosting the LRA research unit.", "language": "en"},
+    {"value": "Département de physique de l'Université Étienne Dupond, composante de la Faculté des sciences, accueillant l'unité LRA.", "language": "fr"}
+  ],
+  "identifiers": [
+    {"type": "local", "value": "DEPT-PHY-001"},
+    {"type": "ror", "value": "https://ror.org/0deptph1x"}
+  ],
+  "relationships": [
+    {"type": "part_of", "subtype": null, "target": "uai-02345", "start_date": "1995-01-01", "end_date": null}
+  ],
+  "contacts": []
+}

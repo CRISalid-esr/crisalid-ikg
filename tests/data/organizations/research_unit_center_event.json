@@ -1,0 +1,41 @@
+{
+  "structures_event": {
+    "type": "unchanged",
+    "data": {
+      "generic_type": "unit",
+      "type": "UMR",
+      "local_types": [
+        {"value": "Center", "language": "en"},
+        {"value": "Centre", "language": "fr"}
+      ],
+      "main_mission": "research",
+      "secondary_missions": [],
+      "long_labels": [
+        {"value": "Example Research Center", "language": "en"},
+        {"value": "Centre de recherche exemple", "language": "fr"}
+      ],
+      "short_labels": [
+        {"value": "ERC", "language": "en"}
+      ],
+      "descriptions": [
+        {"value": "Example description in English.", "language": "en"},
+        {"value": "Description d'exemple en français.", "language": "fr"}
+      ],
+      "identifiers": [
+        {"type": "local", "value": "CENTER-001"},
+        {"type": "nns", "value": "NNS-EXAMPLE"},
+        {"type": "ror", "value": "ROR-EXAMPLE"}
+      ],
+      "relationships": [
+        {
+          "type": "member_of",
+          "subtype": "main_supervision",
+          "target": "local-EXAMPLE-UNIV-001",
+          "start_date": "2000-01-01",
+          "end_date": null
+        }
+      ],
+      "contacts": []
+    }
+  }
+}

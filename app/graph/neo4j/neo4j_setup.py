@@ -48,6 +48,9 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_text_literal_type_key_constraint(tx)
         await cls._create_source_record_uid_constraint(tx)
         await cls._create_change_uid_constraint(tx)
+        await cls._create_organization_unit_uid_constraint(tx)
+        await cls._create_organization_unit_generic_type_index(tx)
+        await cls._create_organization_unit_national_type_index(tx)
 
         if settings.neo4j_edition == "community":
             return
@@ -476,4 +479,41 @@ class Neo4jSetup(Setup[AsyncDriver]):
                 "Error creating Journal uid unique constraint: "
                 f"{e}"
             )
+            raise e
+
+    @staticmethod
+    async def _create_organization_unit_uid_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT organization_unit_uid_unique IF NOT EXISTS
+        FOR (o:OrganizationUnit)
+        REQUIRE o.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error("Error creating OrganizationUnit uid unique constraint: {}", e)
+            raise e
+
+    @staticmethod
+    async def _create_organization_unit_generic_type_index(tx: AsyncManagedTransaction):
+        query = """
+        CREATE INDEX organization_unit_generic_type IF NOT EXISTS
+        FOR (o:OrganizationUnit) ON (o.generic_type);
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error("Error creating OrganizationUnit generic_type index: {}", e)
+            raise e
+
+    @staticmethod
+    async def _create_organization_unit_national_type_index(tx: AsyncManagedTransaction):
+        query = """
+        CREATE INDEX organization_unit_national_type IF NOT EXISTS
+        FOR (o:OrganizationUnit) ON (o.national_type);
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error("Error creating OrganizationUnit national_type index: {}", e)
             raise e
