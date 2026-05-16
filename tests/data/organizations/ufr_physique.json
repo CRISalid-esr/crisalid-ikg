@@ -1,0 +1,24 @@
+{
+  "generic_type": "institution_subdivision",
+  "type": "UFR",
+  "local_types": [
+    {"value": "Unité de formation et de recherche", "language": "fr"},
+    {"value": "Teaching and research unit", "language": "en"}
+  ],
+  "long_labels": [
+    {"value": "UFR de physique et astrophysique", "language": "fr"},
+    {"value": "Physics and astrophysics UFR", "language": "en"}
+  ],
+  "short_labels": [
+    {"value": "UFR Physique", "language": "fr"}
+  ],
+  "descriptions": [
+    {"value": "Teaching and research unit in physics and astrophysics, part of the Science faculty, hosting the LRA research unit from 2015.", "language": "en"},
+    {"value": "UFR de physique et astrophysique, composante de la Faculté des sciences, accueillant l'unité LRA depuis 2015.", "language": "fr"}
+  ],
+  "identifiers": [{"type": "local", "value": "UFR-PHY-001"}],
+  "relationships": [
+    {"type": "part_of", "subtype": null, "target": "local-FAC-SCI-001", "start_date": "2015-01-01", "end_date": null}
+  ],
+  "contacts": []
+}

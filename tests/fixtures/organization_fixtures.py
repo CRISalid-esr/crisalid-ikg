@@ -340,3 +340,57 @@ async def fixture_persisted_axis_observationnel_pydantic_model(
     dao = factory.get_dao(OrganizationBase)
     await dao.create(axis_observationnel_pydantic_model)
     return axis_observationnel_pydantic_model
+
+
+# ── Evolution step fixtures ────────────────────────────────────────────────────
+
+@pytest_asyncio.fixture(name="ufr_physique_json_data")
+async def fixture_ufr_physique_json_data(_base_path) -> dict:
+    return _organization_unit_json_data_from_file(_base_path, "ufr_physique")
+
+
+@pytest_asyncio.fixture(name="ufr_physique_pydantic_model")
+async def fixture_ufr_physique_pydantic_model(ufr_physique_json_data) -> OrganizationBase:
+    return _organization_unit_from_json_data(ufr_physique_json_data)
+
+
+@pytest_asyncio.fixture(name="persisted_ufr_physique_pydantic_model")
+async def fixture_persisted_ufr_physique_pydantic_model(
+        ufr_physique_pydantic_model) -> OrganizationBase:
+    settings = get_app_settings()
+    factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
+    dao = factory.get_dao(OrganizationBase)
+    await dao.create(ufr_physique_pydantic_model)
+    return ufr_physique_pydantic_model
+
+
+@pytest_asyncio.fixture(name="team_astro_observatoire_json_data")
+async def fixture_team_astro_observatoire_json_data(_base_path) -> dict:
+    return _organization_unit_json_data_from_file(_base_path, "team_astro_observatoire")
+
+
+@pytest_asyncio.fixture(name="team_astro_observatoire_pydantic_model")
+async def fixture_team_astro_observatoire_pydantic_model(
+        team_astro_observatoire_json_data) -> OrganizationBase:
+    return _organization_unit_from_json_data(team_astro_observatoire_json_data)
+
+
+@pytest_asyncio.fixture(name="persisted_team_astro_observatoire_pydantic_model")
+async def fixture_persisted_team_astro_observatoire_pydantic_model(
+        team_astro_observatoire_pydantic_model) -> OrganizationBase:
+    settings = get_app_settings()
+    factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
+    dao = factory.get_dao(OrganizationBase)
+    await dao.create(team_astro_observatoire_pydantic_model)
+    return team_astro_observatoire_pydantic_model
+
+
+@pytest_asyncio.fixture(name="lra_research_unit_v2_json_data")
+async def fixture_lra_research_unit_v2_json_data(_base_path) -> dict:
+    return _organization_unit_json_data_from_file(_base_path, "lra_research_unit_v2")
+
+
+@pytest_asyncio.fixture(name="lra_research_unit_v2_pydantic_model")
+async def fixture_lra_research_unit_v2_pydantic_model(
+        lra_research_unit_v2_json_data) -> OrganizationBase:
+    return _organization_unit_from_json_data(lra_research_unit_v2_json_data)

@@ -217,3 +217,47 @@ def test_create_unit_subdivision_without_national_type(axis_observationnel_json_
     assert any(lt.value == "Axe de recherche" and lt.language == "fr" for lt in org.local_types)
     assert len(org.parents) == 1
     assert org.parents[0].target == "local-123456"
+
+
+# ── Evolution step model tests ─────────────────────────────────────────────────
+
+def test_create_ufr_institution_subdivision(ufr_physique_json_data):
+    org = nonUnitAdapter.validate_python(ufr_physique_json_data)
+    assert isinstance(org, InstitutionSubdivision)
+    assert org.national_type == NationalOrganizationType.UFR
+    assert len(org.local_types) == 2
+    assert any(lt.value == "Unité de formation et de recherche" for lt in org.local_types)
+    assert org.uid is None
+    assert len(org.parents) == 1
+    assert org.parents[0].target == "local-FAC-SCI-001"
+    assert org.parents[0].start_date == date(2015, 1, 1)
+
+
+def test_create_second_team(team_astro_observatoire_json_data):
+    from app.models.organization_unit import Team
+    org = nonUnitAdapter.validate_python(team_astro_observatoire_json_data)
+    assert isinstance(org, Team)
+    assert org.national_type == NationalOrganizationType.TEAM
+    assert len(org.parents) == 1
+    assert org.parents[0].target == "local-123456"
+    assert org.parents[0].start_date == date(2018, 1, 1)
+    assert len(org.memberships) == 1
+    assert org.memberships[0].target == "local-AXIS-OBS-001"
+    assert org.memberships[0].start_date == date(2018, 1, 1)
+
+
+def test_lra_v2_italian_labels(lra_research_unit_v2_json_data):
+    org = unitAdapter.validate_python(lra_research_unit_v2_json_data)
+    assert isinstance(org, ResearchUnit)
+    assert len(org.long_labels) == 2
+    assert any(ll.value == "Laboratorio di ricerca in astrofisica" and ll.language == "it"
+               for ll in org.long_labels)
+    assert any(ll.value == "Laboratoire de recherche en astrophysique" and ll.language == "fr"
+               for ll in org.long_labels)
+    assert len(org.short_labels) == 2
+    assert len(org.parents) == 0
+    assert len(org.memberships) == 4
+    ena_membership = next(m for m in org.memberships if m.target == "uai-0123456A")
+    assert ena_membership.position == OrgMembershipPosition.PARTICIPATING_SUPERVISION
+    cnrs_membership = next(m for m in org.memberships if m.target == "uai-0757581P")
+    assert cnrs_membership.end_date == date(2025, 12, 31)
