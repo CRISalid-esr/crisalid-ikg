@@ -96,30 +96,23 @@ async def test_publish_person_event(
         expected in expected_identifiers)
 
 
-async def test_publish_structure_event(
+async def test_publish_structure_event_research_unit(
         mocked_exchange: Exchange,
         persisted_research_unit_a_pydantic_model: OrganizationBase,
 ):
-    """
-    Test that an event message for a created structure is published to the AMQP queue
-    when the publish method is called.
-    :param mocked_exchange:
-    :param research_unit_a_pydantic_model:
-    :return:
-    """
+    """Test that a created event for a research unit carries type='unit' and correct fields."""
     # pylint: disable=duplicate-code
     publisher = AMQPMessagePublisher(mocked_exchange)
-    expected_sent_message_routing_key = "event.structures.structure.created"
     await publisher.publish(
         AMQPMessagePublisher.MessageType.EVENT,
         AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_CREATED,
-        {"research_unit_uid": persisted_research_unit_a_pydantic_model.uid})
+        {"structure_uid": persisted_research_unit_a_pydantic_model.uid})
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
-    assert mocked_exchange.publish.call_args[1]["routing_key"] == expected_sent_message_routing_key
+    assert mocked_exchange.publish.call_args[1]["routing_key"] == "event.structures.structure.created"
     message_body = json.loads(message.body)
     assert message_body['event'] == 'created'
-    assert message_body['type'] == 'research_unit'
+    assert message_body['type'] == 'unit'
     assert message_body['fields']['uid'] == 'local-U123'
     expected_identifiers = [
         {'type': 'ror', 'value': '123456'},
@@ -127,22 +120,79 @@ async def test_publish_structure_event(
         {'type': 'nns', 'value': '200012123S'}
     ]
     assert all(
-        any(identifier == expected for identifier in message_body['fields']['identifiers']) for
-        expected in expected_identifiers)
+        any(identifier == expected for identifier in message_body['fields']['identifiers'])
+        for expected in expected_identifiers)
     expected_long_labels = [
         {'language': 'fr', 'value': 'Laboratoire toto'},
         {'language': 'en', 'value': 'Foobar Laboratory'}
     ]
     assert all(
-        any(label == expected for label in message_body['fields']['long_labels']) for expected in
-        expected_long_labels)
+        any(label == expected for label in message_body['fields']['long_labels'])
+        for expected in expected_long_labels)
     expected_descriptions = [
         {'language': 'fr', 'value': 'Un laboratoire de recherche fictif'},
         {'language': 'en', 'value': 'An imaginary laboratory'}
     ]
     assert all(
-        any(description == expected for description in message_body['fields']['descriptions']) for
-        expected in expected_descriptions)
+        any(description == expected for description in message_body['fields']['descriptions'])
+        for expected in expected_descriptions)
+
+
+async def test_publish_structure_event_institution(
+        mocked_exchange: Exchange,
+        persisted_institution_a_pydantic_model: OrganizationBase,
+):
+    """Test that a created event for an institution carries type='institution'."""
+    publisher = AMQPMessagePublisher(mocked_exchange)
+    await publisher.publish(
+        AMQPMessagePublisher.MessageType.EVENT,
+        AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_CREATED,
+        {"structure_uid": persisted_institution_a_pydantic_model.uid})
+    mocked_exchange.publish.assert_called_once()
+    message = mocked_exchange.publish.call_args[1]["message"]
+    assert mocked_exchange.publish.call_args[1]["routing_key"] == "event.structures.structure.created"
+    message_body = json.loads(message.body)
+    assert message_body['event'] == 'created'
+    assert message_body['type'] == 'institution'
+    assert message_body['fields']['uid'] == 'local-EXAMPLE-UNIV-001'
+    expected_identifiers = [
+        {'type': 'local', 'value': 'EXAMPLE-UNIV-001'},
+        {'type': 'uai', 'value': 'UAI001'}
+    ]
+    assert all(
+        any(identifier == expected for identifier in message_body['fields']['identifiers'])
+        for expected in expected_identifiers)
+    expected_long_labels = [
+        {'language': 'en', 'value': 'Example University'},
+        {'language': 'fr', 'value': 'Université Exemple'}
+    ]
+    assert all(
+        any(label == expected for label in message_body['fields']['long_labels'])
+        for expected in expected_long_labels)
+
+
+async def test_publish_structure_event_institution_subdivision(
+        mocked_exchange: Exchange,
+        persisted_institution_subdivision_a_pydantic_model: OrganizationBase,
+):
+    """Test that a created event for an institution subdivision carries type='institution_subdivision'."""
+    publisher = AMQPMessagePublisher(mocked_exchange)
+    await publisher.publish(
+        AMQPMessagePublisher.MessageType.EVENT,
+        AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_CREATED,
+        {"structure_uid": persisted_institution_subdivision_a_pydantic_model.uid})
+    mocked_exchange.publish.assert_called_once()
+    message = mocked_exchange.publish.call_args[1]["message"]
+    message_body = json.loads(message.body)
+    assert message_body['event'] == 'created'
+    assert message_body['type'] == 'institution_subdivision'
+    assert message_body['fields']['uid'] == 'local-FAC-EXAMPLE-001'
+    expected_identifiers = [
+        {'type': 'local', 'value': 'FAC-EXAMPLE-001'}
+    ]
+    assert all(
+        any(identifier == expected for identifier in message_body['fields']['identifiers'])
+        for expected in expected_identifiers)
 
 
 async def test_publish_document_event(

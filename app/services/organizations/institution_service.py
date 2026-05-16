@@ -5,30 +5,13 @@ from app.graph.neo4j.utils import load_query
 from app.models.organization_unit import Institution, OrganizationBase
 from app.services.identifiers.identifier_service import AgentIdentifierService
 from app.services.organizations.institution_registry_service import InstitutionRegistryService
-from app.signals import institution_created, institution_updated, institution_unchanged, \
-    institution_deleted
+from app.signals import structure_created
 
 
 class InstitutionService:
     """
     Service to handle operations on institutions in the graph database.
     """
-
-    async def signal_institution_created(self, uid: str):
-        """Dispatch the 'created' signal for an institution."""
-        await institution_created.send_async(self, payload=uid)
-
-    async def signal_institution_updated(self, uid: str):
-        """Dispatch the 'updated' signal for an institution."""
-        await institution_updated.send_async(self, payload=uid)
-
-    async def signal_institution_unchanged(self, uid: str):
-        """Dispatch the 'unchanged' signal for an institution."""
-        await institution_unchanged.send_async(self, payload=uid)
-
-    async def signal_institution_deleted(self, uid: str):
-        """Dispatch the 'deleted' signal for an institution."""
-        await institution_deleted.send_async(self, payload=uid)
 
     async def institution_uid(self, entity_uid: str) -> str | None:
         """
@@ -63,7 +46,7 @@ class InstitutionService:
             )
         dao = self._get_org_unit_dao()
         await dao.create(institution)
-        await self.signal_institution_created(institution.uid)
+        await structure_created.send_async(self, payload=institution.uid)
         return institution.uid
 
     async def get_institution_by_uid(self, uid: str) -> Institution | None:
