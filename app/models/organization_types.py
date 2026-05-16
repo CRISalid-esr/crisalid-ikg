@@ -14,6 +14,8 @@ class NationalOrganizationType(str, Enum):
     """National/official classification code for an organization."""
     UNIV = "UNIV"
     EPE = "EPE"
+    EPST = "EPST"
+    GE = "GE"
     COMUE = "COMUE"
     UMR = "UMR"
     UAR = "UAR"
@@ -42,6 +44,8 @@ class OrgMembershipPosition(str, Enum):
 ALLOWED_NATIONAL_TYPES_BY_GENERIC_TYPE: dict = {
     GenericOrganizationType.INSTITUTION: {
         NationalOrganizationType.EPE,
+        NationalOrganizationType.EPST,
+        NationalOrganizationType.GE,
         NationalOrganizationType.UNIV,
         NationalOrganizationType.COMUE,
     },
