@@ -1,0 +1,22 @@
+{
+  "generic_type": "unit",
+  "type": "UMR",
+  "main_mission": "research",
+  "secondary_missions": [],
+  "local_types": [],
+  "long_labels": [{"value": "Laboratoire de recherche en astrophysique", "language": "fr"}],
+  "short_labels": [{"value": "LRA", "language": "fr"}],
+  "descriptions": [
+    {"value": "UMR in astrophysics under main supervision of Université Étienne Dupond and associated supervision of CNRS and École nationale d'astrophysique, member of the Physics Department.", "language": "en"},
+    {"value": "UMR en astrophysique sous tutelle principale de l'Université Étienne Dupond et tutelles associées du CNRS et de l'École nationale d'astrophysique, membre du Département de physique.", "language": "fr"}
+  ],
+  "identifiers": [{"type": "local", "value": "123456"}],
+  "relationships": [
+    {"type": "member_of", "subtype": "main_supervision", "target": "uai-02345", "start_date": "2000-01-01", "end_date": null},
+    {"type": "member_of", "subtype": "associated_supervision", "target": "uai-0757581P", "start_date": "2000-01-01", "end_date": null},
+    {"type": "member_of", "subtype": "associated_supervision", "target": "uai-0123456A", "start_date": "2005-01-01", "end_date": null},
+    {"type": "member_of", "subtype": null, "target": "local-DEPT-PHY-001", "start_date": "2000-01-01", "end_date": null},
+    {"type": "part_of", "subtype": null, "target": "local-FAC-SCI-001", "start_date": "2000-01-01", "end_date": null}
+  ],
+  "contacts": []
+}

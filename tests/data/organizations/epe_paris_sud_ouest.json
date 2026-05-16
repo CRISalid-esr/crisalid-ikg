@@ -1,0 +1,17 @@
+{
+  "generic_type": "institution",
+  "type": "EPE",
+  "local_types": [],
+  "long_labels": [{"value": "Université Paris Sud-Ouest", "language": "fr"}],
+  "short_labels": [],
+  "descriptions": [
+    {"value": "Établissement public expérimental grouping universities and research institutions in the Paris Sud-Ouest area.", "language": "en"},
+    {"value": "Établissement public expérimental regroupant universités et établissements de recherche de la région Paris Sud-Ouest.", "language": "fr"}
+  ],
+  "identifiers": [
+    {"type": "uai", "value": "07890"},
+    {"type": "ror", "value": "https://ror.org/0parso01x"}
+  ],
+  "relationships": [],
+  "contacts": []
+}

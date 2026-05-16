@@ -1,0 +1,19 @@
+{
+  "generic_type": "institution",
+  "type": "UNIV",
+  "local_types": [],
+  "long_labels": [{"value": "Université Étienne Dupond", "language": "fr"}],
+  "short_labels": [],
+  "descriptions": [
+    {"value": "University member of the Université Paris Sud-Ouest EPE, main supervising institution of the LRA research unit.", "language": "en"},
+    {"value": "Université membre de l'EPE Université Paris Sud-Ouest, établissement de tutelle principale de l'unité de recherche LRA.", "language": "fr"}
+  ],
+  "identifiers": [
+    {"type": "uai", "value": "02345"},
+    {"type": "ror", "value": "https://ror.org/0etdup01x"}
+  ],
+  "relationships": [
+    {"type": "member_of", "subtype": null, "target": "uai-07890", "start_date": "2020-01-01", "end_date": null}
+  ],
+  "contacts": []
+}

@@ -1,0 +1,17 @@
+{
+  "generic_type": "institution",
+  "type": "GE",
+  "local_types": [],
+  "long_labels": [{"value": "École nationale d'astrophysique", "language": "fr"}],
+  "short_labels": [],
+  "descriptions": [
+    {"value": "National school of astrophysics, associated supervision of the LRA research unit.", "language": "en"},
+    {"value": "École nationale d'astrophysique, tutelle associée de l'unité de recherche LRA.", "language": "fr"}
+  ],
+  "identifiers": [
+    {"type": "uai", "value": "0123456A"},
+    {"type": "ror", "value": "https://ror.org/0enastr1x"}
+  ],
+  "relationships": [],
+  "contacts": []
+}
