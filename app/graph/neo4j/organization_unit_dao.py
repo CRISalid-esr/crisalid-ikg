@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 from loguru import logger
 from neo4j import AsyncSession
 
