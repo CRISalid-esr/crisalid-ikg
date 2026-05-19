@@ -18,6 +18,7 @@ from app.models.organization_unit import (
     ResearchUnit,
     SupportUnit,
     Team,
+    TeachingUnit,
     UnitSubdivision,
     nonUnitAdapter,
     unitAdapter,
@@ -253,6 +254,8 @@ class OrganizationUnitDAO(Neo4jDAO):
             labels += ["Unit", "SupportUnit"]
         elif isinstance(org_unit, AdministrativeUnit):
             labels += ["Unit", "AdministrativeUnit"]
+        elif isinstance(org_unit, TeachingUnit):
+            labels += ["Unit", "TeachingUnit"]
         elif isinstance(org_unit, Institution):
             labels.append("Institution")
         elif isinstance(org_unit, InstitutionSubdivision):

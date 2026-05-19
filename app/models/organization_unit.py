@@ -205,10 +205,15 @@ class AdministrativeUnit(UnitBase):
     )
 
 
+class TeachingUnit(UnitBase):
+    """A unit whose primary mission is teaching (pedagogy)."""
+    main_mission: TypingLiteral[MissionType.TEACHING] = MissionType.TEACHING
+
+
 # ── Type aliases and adapters ──────────────────────────────────────────────────
 
 Unit = Annotated[
-    Union[ResearchUnit, SupportUnit, AdministrativeUnit],
+    Union[ResearchUnit, SupportUnit, AdministrativeUnit, TeachingUnit],
     Field(discriminator='main_mission'),
 ]
 

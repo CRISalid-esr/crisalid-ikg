@@ -32,6 +32,7 @@ class MissionType(str, Enum):
     RESEARCH = "research"
     SCIENTIFIC_SERVICES = "scientific_services"
     ADMINISTRATIVE_SERVICES = "administrative_services"
+    TEACHING = "teaching"
 
 
 class OrgMembershipPosition(str, Enum):
