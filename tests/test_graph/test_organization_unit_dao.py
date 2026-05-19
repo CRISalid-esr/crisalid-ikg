@@ -123,6 +123,9 @@ async def test_create_research_unit(
     assert id_map["nns"] == "NNS-EXAMPLE"
     assert id_map["ror"] == "ROR-EXAMPLE"
 
+    # external defaults to False for directory-sourced structures
+    assert retrieved.external is False
+
     # MEMBER_OF not created because institution doesn't exist
     assert len(retrieved.memberships) == 0
     assert any("not found" in msg.lower() or "target" in msg.lower() for msg in caplog.messages)
@@ -149,6 +152,7 @@ async def test_create_institution(
     assert len(retrieved.long_labels) == 2
     assert len(retrieved.short_labels) == 2
     assert retrieved.national_type == NationalOrganizationType.UNIV
+    assert retrieved.external is False
 
 
 async def test_create_institution_subdivision_with_part_of(

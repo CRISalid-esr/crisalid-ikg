@@ -48,6 +48,7 @@ class OrganizationBase(Agent[OrganizationIdentifierType]):
     All concrete subtypes share the OrganizationUnit label in Neo4j.
     """
     uid: Optional[str] = None
+    external: bool = False
     generic_type: GenericOrganizationType
     national_type: Optional[NationalOrganizationType] = None
     local_types: list[Literal] = Field(default_factory=list)

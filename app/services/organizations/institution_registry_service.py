@@ -94,6 +94,7 @@ class InstitutionRegistryService:
             long_labels=long_labels,
             identifiers=identifiers,
             addresses=[address],
+            external=True,
         )
 
     @staticmethod

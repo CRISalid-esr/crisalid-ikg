@@ -108,6 +108,7 @@ class OrganizationBase(BaseModel):
     generic_type: GenericOrganizationType
     national_type: Optional[NationalOrganizationType] = None
     local_types: list[Literal] = Field(default_factory=list)
+    external: bool = False  # False = sourced from institutional directory; True = auto-created from registry
 
 Add a model_validator ensuring that every organization has either national_type or at least one local_type.
 
@@ -236,11 +237,40 @@ Relationships must be reified in Pydantic to carry attributes.
 -memberships is a list of OrgMembership (start_date, end_date, position) --> MEMBER_OF
 -parents is a list of OrgInclusion (start_date, end_date) --> PART_OF
 When processing a relationship, you must:
-- check that the target uid exists; if not, log an error (but this does not prevent the structure from being created)
-this must be done when populating the associated Pydantic entities.
 - the ‘start_date’ and ‘end_date’ attributes must be added to the relationship
 - Organization sub-type.
 This should only be taken into account if the parent is an Institution and the child is a Unit. In this case, we are dealing with the French system of supervision. The position must be added (make a Pydantic enum of it)
+
+### Relationship target resolution
+
+Relationship targets follow two different rules depending on their uid prefix:
+
+**local-xxx targets** (structures sourced from the institutional directory)
+- Must have been created by a prior AMQP message before this one arrives.
+- The service does **not** attempt to create them from any external source.
+- If a local target is absent from the graph, the DAO logs an error and silently skips
+  that relationship (the structure node itself is still created/updated).
+
+**non-local targets** (uai-xxx, ror-xxx, …)
+- May refer to institutions that have not yet been created by a message (e.g. a supervising
+  institution described only in the national registry).
+- Before persisting the structure, `OrganizationUnitService` checks whether each non-local
+  target uid already exists in the graph.
+- If not found, it calls `InstitutionService.create_institution(target_uid)` to fetch the
+  institution from the external registry and persist it with `external=True`.
+- If the registry lookup fails, a warning is logged and the relationship is skipped by the DAO
+  (same behaviour as a missing local target). The structure itself is not blocked.
+
+### external field
+
+All organisation structures carry an `external: bool` field (default `False`):
+
+- `False` — the structure was sourced from the institutional directory via an AMQP message.
+- `True`  — the structure was auto-created from the external registry
+  (`InstitutionRegistryService`) because it appeared as a relationship target.
+
+The field is stored as a property on the `OrganizationUnit` Neo4j node and is round-tripped
+through the DAO.
 
 class OrgMembershipPosition(Enum):
     MAIN_SUPERVISION = "main_supervision"

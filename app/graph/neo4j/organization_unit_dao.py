@@ -271,6 +271,7 @@ class OrganizationUnitDAO(Neo4jDAO):
         props: dict = {
             "uid": org_unit.uid,
             "generic_type": org_unit.generic_type.value,
+            "external": org_unit.external,
         }
         if org_unit.national_type:
             props["national_type"] = org_unit.national_type.value
@@ -333,6 +334,7 @@ class OrganizationUnitDAO(Neo4jDAO):
             "uid": org_data["uid"],
             "generic_type": generic_type,
             "national_type": org_data.get("national_type"),
+            "external": org_data.get("external", False),
             "short_labels": short_labels,
             "long_labels": long_labels,
             "descriptions": descriptions,
