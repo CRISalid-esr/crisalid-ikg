@@ -3,8 +3,8 @@ from loguru import logger
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.errors.conflict_error import ConflictError
 from app.errors.not_found_error import NotFoundError
-from app.models.research_units import ResearchUnit
-from app.services.organizations.research_unit_service import ResearchUnitService
+from app.models.organization_unit import nonUnitAdapter, unitAdapter
+from app.services.organizations.organization_unit_service import OrganizationUnitService
 
 
 class AMQPStructureMessageProcessor(AMQPMessageProcessor):
@@ -14,7 +14,7 @@ class AMQPStructureMessageProcessor(AMQPMessageProcessor):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.service = ResearchUnitService()
+        self.service = OrganizationUnitService()
 
     async def _process_message(self, key: str, payload: str):
         json_payload = await self._read_message_json(payload)
@@ -26,7 +26,11 @@ class AMQPStructureMessageProcessor(AMQPMessageProcessor):
         event_type = event_data["type"]
         structure_data = event_data["data"]
         try:
-            structure = ResearchUnit(**structure_data)
+            generic_type = structure_data.get("generic_type")
+            if generic_type == "unit":
+                structure = unitAdapter.validate_python(structure_data)
+            else:
+                structure = nonUnitAdapter.validate_python(structure_data)
         except (ValueError, AttributeError) as e:
             logger.error(f"Error processing structure data {structure_data} : {e}")
             raise e

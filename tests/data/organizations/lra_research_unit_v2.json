@@ -1,0 +1,27 @@
+{
+  "generic_type": "unit",
+  "type": "UMR",
+  "main_mission": "research",
+  "secondary_missions": [],
+  "local_types": [],
+  "long_labels": [
+    {"value": "Laboratoire de recherche en astrophysique", "language": "fr"},
+    {"value": "Laboratorio di ricerca in astrofisica", "language": "it"}
+  ],
+  "short_labels": [
+    {"value": "LRA", "language": "fr"},
+    {"value": "LRA", "language": "it"}
+  ],
+  "descriptions": [
+    {"value": "UMR in astrophysics under main supervision of Université Étienne Dupond and associated supervision of CNRS (until 2025) and participating supervision of École nationale d'astrophysique, hosted by the Physics and Astrophysics UFR since 2015.", "language": "en"},
+    {"value": "UMR en astrophysique sous tutelle principale de l'Université Étienne Dupond, tutelle associée du CNRS (jusqu'en 2025) et tutelle participante de l'École nationale d'astrophysique, accueillie par l'UFR de physique et astrophysique depuis 2015.", "language": "fr"}
+  ],
+  "identifiers": [{"type": "local", "value": "123456"}],
+  "relationships": [
+    {"type": "member_of", "subtype": "main_supervision", "target": "uai-02345", "start_date": "2000-01-01", "end_date": null},
+    {"type": "member_of", "subtype": "associated_supervision", "target": "uai-0757581P", "start_date": "2000-01-01", "end_date": "2025-12-31"},
+    {"type": "member_of", "subtype": "participating_supervision", "target": "uai-0123456A", "start_date": "2005-01-01", "end_date": null},
+    {"type": "member_of", "subtype": null, "target": "local-UFR-PHY-001", "start_date": "2015-01-01", "end_date": null}
+  ],
+  "contacts": []
+}

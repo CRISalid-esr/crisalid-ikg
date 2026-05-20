@@ -1,0 +1,29 @@
+{
+  "generic_type": "institution_subdivision",
+  "type": "FAC",
+  "local_types": [],
+  "long_labels": [
+    {"value": "Example Faculty of Sciences", "language": "en"},
+    {"value": "Faculté des Sciences Exemple", "language": "fr"}
+  ],
+  "short_labels": [
+    {"value": "Faculty Sciences", "language": "en"},
+    {"value": "Fac Sciences", "language": "fr"}
+  ],
+  "descriptions": [
+    {"value": "Example Faculty dedicated to scientific research.", "language": "en"}
+  ],
+  "identifiers": [
+    {"type": "local", "value": "FAC-EXAMPLE-001"}
+  ],
+  "relationships": [
+    {
+      "type": "part_of",
+      "subtype": null,
+      "target": "local-EXAMPLE-UNIV-001",
+      "start_date": "2010-01-01",
+      "end_date": "2030-12-31"
+    }
+  ],
+  "contacts": []
+}

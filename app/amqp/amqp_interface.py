@@ -324,9 +324,9 @@ class AMQPInterface:
         :param extra: extra parameters (payload of the message)
         :return: None
         """
-        research_unit_uid = extra["payload"]
+        structure_uid = extra["payload"]
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_CREATED
-        await self._dispatch_structure_event(event_message_subtype, research_unit_uid)
+        await self._dispatch_structure_event(event_message_subtype, structure_uid)
 
     async def dispatch_structure_updated(self, _, **extra) -> None:
         """
@@ -335,9 +335,9 @@ class AMQPInterface:
         :param extra: extra parameters (payload of the message)
         :return: None
         """
-        research_unit_uid = extra["payload"]
+        structure_uid = extra["payload"]
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_UPDATED
-        await self._dispatch_structure_event(event_message_subtype, research_unit_uid)
+        await self._dispatch_structure_event(event_message_subtype, structure_uid)
 
     async def dispatch_structure_unchanged(self, _, **extra) -> None:
         """
@@ -346,9 +346,9 @@ class AMQPInterface:
         :param extra: extra parameters (payload of the message)
         :return: None
         """
-        research_unit_uid = extra["payload"]
+        structure_uid = extra["payload"]
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_UNCHANGED
-        await self._dispatch_structure_event(event_message_subtype, research_unit_uid)
+        await self._dispatch_structure_event(event_message_subtype, structure_uid)
 
     async def dispatch_structure_deleted(self, _, **extra) -> None:
         """
@@ -357,21 +357,20 @@ class AMQPInterface:
         :param extra: extra parameters (payload of the message)
         :return: None
         """
-        research_unit_uid = extra["payload"]
+        structure_uid = extra["payload"]
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_DELETED
-        await self._dispatch_structure_event(event_message_subtype, research_unit_uid)
+        await self._dispatch_structure_event(event_message_subtype, structure_uid)
 
-    async def _dispatch_structure_event(self, event_message_subtype, research_unit_uid):
+    async def _dispatch_structure_event(self, event_message_subtype, structure_uid):
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
             logger.error("Cannot dispatch %s event for structure %s: "
-                         "AMQP exchange not declared", event_message_subtype,
-                         research_unit_uid)
+                         "AMQP exchange not declared", event_message_subtype, structure_uid)
             return
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
                                 event_message_subtype,
-                                {"research_unit_uid": research_unit_uid})
+                                {"structure_uid": structure_uid})
 
     async def dispatch_document_updated(self, _, **extra) -> None:
         """

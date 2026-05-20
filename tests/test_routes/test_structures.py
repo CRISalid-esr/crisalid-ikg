@@ -7,45 +7,24 @@ RESEARCH_UNIT_API_PATH = "/api/v1/organization/research-unit"
 
 
 def test_create_research_unit_success(test_client: TestClient,
-                                           research_unit_a_json_data):
-    """
-    Given a valid person json data
-    When creating a person through  REST API
-    Then the person should be created successfully
-
-    :param test_client:
-    :param person_a_json_data:
-    :return:
-    """
-    response = test_client.post(RESEARCH_UNIT_API_PATH,
-                                json=research_unit_a_json_data)
+                                      research_unit_center_json_data):
+    response = test_client.post(RESEARCH_UNIT_API_PATH, json=research_unit_center_json_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert "structure" in response.json()
-    assert response.json()["structure"]["uid"] == "local-U123"
+    assert response.json()["structure"]["uid"] == "local-CENTER-001"
     assert any(
-        name["value"] == "Laboratoire toto" for name in response.json()["structure"]["names"])
+        ll["value"] == "Example Research Center"
+        for ll in response.json()["structure"]["long_labels"]
+    )
     assert any(
-        name["value"] == "Foobar Laboratory" for name in response.json()["structure"]["names"])
-    assert any(identifier["type"] == "local" and identifier["value"] == "U123" for identifier in
-               response.json()["structure"]["identifiers"])
-    assert any(
-        identifier["type"] == "nns" and identifier["value"] == "200012123S" for identifier in
-        response.json()["structure"]["identifiers"])
-    assert any(identifier["type"] == "ror" and identifier["value"] == "123456" for identifier in
-               response.json()["structure"]["identifiers"])
+        identifier["type"] == "local" and identifier["value"] == "CENTER-001"
+        for identifier in response.json()["structure"]["identifiers"]
+    )
 
 
 def test_create_research_unit_invalid_identifier_type(
         test_client: TestClient,
         research_unit_a_with_invalid_identifier_type_json_data):
-    """
-    Given json research structure data with invalid identifier type
-    When creating a structure through REST API
-    Then a 422 error should be raised
-    :param test_client:
-    :param research_unit_a_with_invalid_identifier_type_json_data:
-    :return:
-    """
     response = test_client.post(RESEARCH_UNIT_API_PATH,
                                 json=research_unit_a_with_invalid_identifier_type_json_data)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -54,59 +33,30 @@ def test_create_research_unit_invalid_identifier_type(
 def test_update_research_unit_invalid_identifier_type(
         test_client: TestClient,
         research_unit_a_with_invalid_identifier_type_json_data):
-    """
-    Given json research structure data with invalid identifier type
-    When updating a structure through REST API
-    Then a 422 error should be raised
-    :param test_client:
-    :param research_unit_a_with_invalid_identifier_type_json_data:
-    :return:
-    """
     response = test_client.put(RESEARCH_UNIT_API_PATH,
                                json=research_unit_a_with_invalid_identifier_type_json_data)
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 def test_create_research_unit_twice(test_client: TestClient,
-                                         research_unit_a_json_data):
-    """
-    Given a valid research structure json data
-    When creating a research structure twice through REST API
-    Then a 409 error should be raised
-
-    :param test_client:
-    :param research_unit_a_json_data:
-    :return:
-    """
-    response = test_client.post(RESEARCH_UNIT_API_PATH,
-                                json=research_unit_a_json_data)
+                                    research_unit_center_json_data):
+    response = test_client.post(RESEARCH_UNIT_API_PATH, json=research_unit_center_json_data)
     assert response.status_code == status.HTTP_201_CREATED
-    assert "structure" in response.json()
-    assert response.json()["structure"]["uid"] == "local-U123"
-    response = test_client.post(RESEARCH_UNIT_API_PATH,
-                                json=research_unit_a_json_data)
+    assert response.json()["structure"]["uid"] == "local-CENTER-001"
+    response = test_client.post(RESEARCH_UNIT_API_PATH, json=research_unit_center_json_data)
     assert response.status_code == status.HTTP_409_CONFLICT
     assert "error" in response.json()
-    assert response.json()["error"] == "Research structure with uid local-U123 already exists"
+    assert "local-CENTER-001" in response.json()["error"]
 
 
-def test_create_research_unit_b_without_name(
-        test_client: TestClient, research_unit_b_without_name_json_data
+def test_create_research_unit_without_labels(
+        test_client: TestClient, research_unit_without_labels_json_data
 ):
-    """
-    Given a valid person json data
-    When creating a person through  REST API
-    Then the person should be created successfully
-
-    :param test_client:
-    :param research_unit_b_without_name_json_data:
-    :return:
-    """
     response = test_client.post(
-        RESEARCH_UNIT_API_PATH, json=research_unit_b_without_name_json_data
+        RESEARCH_UNIT_API_PATH, json=research_unit_without_labels_json_data
     )
     assert response.status_code == status.HTTP_201_CREATED
     assert "structure" in response.json()
-    assert len(response.json()["structure"]["names"]) == 0
+    assert len(response.json()["structure"]["long_labels"]) == 0
     assert len(response.json()["structure"]["identifiers"]) == 3
     assert response.json()["structure"]["uid"] == "local-U153"

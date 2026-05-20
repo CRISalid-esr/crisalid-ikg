@@ -152,6 +152,12 @@ class AppSettings(BaseSettings):
          OrganizationIdentifierType.ROR,
          OrganizationIdentifierType.IDREF]
 
+    organization_identifier_order: list[OrganizationIdentifierType] = \
+        [OrganizationIdentifierType.LOCAL,
+         OrganizationIdentifierType.UAI,
+         OrganizationIdentifierType.ROR,
+         OrganizationIdentifierType.IDREF]
+
     publication_source_policies_file: str = settings_file_path(
         filename="publication_sources_policies.yaml")
     publication_source_policies: dict = dct_from_yml(yml_file=publication_source_policies_file)

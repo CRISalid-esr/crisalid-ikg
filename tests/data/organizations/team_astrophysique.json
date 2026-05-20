@@ -1,0 +1,23 @@
+{
+  "generic_type": "team",
+  "type": "TEAM",
+  "local_types": [
+    {"value": "Groupe", "language": "fr"},
+    {"value": "Group", "language": "en"}
+  ],
+  "long_labels": [
+    {"value": "Groupe d'astrophysique observationnelle", "language": "fr"},
+    {"value": "Observational astrophysics group", "language": "en"}
+  ],
+  "short_labels": [],
+  "descriptions": [
+    {"value": "Research team in observational astrophysics, part of the LRA research unit.", "language": "en"},
+    {"value": "Équipe de recherche en astrophysique observationnelle, composante de l'unité LRA.", "language": "fr"}
+  ],
+  "identifiers": [{"type": "local", "value": "TEAM-ASTRO-001"}],
+  "relationships": [
+    {"type": "part_of", "subtype": null, "target": "local-123456", "start_date": "2010-01-01", "end_date": null},
+    {"type": "member_of", "subtype": null, "target": "local-AXIS-OBS-001", "start_date": "2010-01-01", "end_date": null}
+  ],
+  "contacts": []
+}

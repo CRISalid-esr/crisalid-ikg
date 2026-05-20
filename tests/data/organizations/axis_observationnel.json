@@ -1,0 +1,21 @@
+{
+  "generic_type": "unit_subdivision",
+  "local_types": [
+    {"value": "Axe de recherche", "language": "fr"},
+    {"value": "Research axis", "language": "en"}
+  ],
+  "long_labels": [
+    {"value": "Axe astrophysique observationnelle", "language": "fr"},
+    {"value": "Observational astrophysics axis", "language": "en"}
+  ],
+  "short_labels": [],
+  "descriptions": [
+    {"value": "Research axis in observational astrophysics, part of the LRA research unit, grouping the observational astrophysics team.", "language": "en"},
+    {"value": "Axe de recherche en astrophysique observationnelle, composante de l'unité LRA, regroupant le groupe d'astrophysique observationnelle.", "language": "fr"}
+  ],
+  "identifiers": [{"type": "local", "value": "AXIS-OBS-001"}],
+  "relationships": [
+    {"type": "part_of", "subtype": null, "target": "local-123456", "start_date": "2010-01-01", "end_date": null}
+  ],
+  "contacts": []
+}

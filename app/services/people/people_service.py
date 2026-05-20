@@ -114,20 +114,17 @@ class PeopleService:
         institution_service = InstitutionService()
         valid_employments = []
         for employment in employments:
-            existing_institution_uid = await institution_service.institution_uid(
-                employment.institution)
-            if existing_institution_uid is None:
+            existing_uid = await institution_service.institution_uid(employment.entity_uid)
+            if existing_uid is None:
                 logger.warning(
-                    f"Institution with identifiers {employment.institution.identifiers} not found")
+                    f"Institution with uid {employment.entity_uid!r} not found, "
+                    f"fetching from registry"
+                )
                 try:
-                    institution = await institution_service.create_institution(
-                        employment.institution)
-                    employment.institution.uid = institution.uid
+                    await institution_service.create_institution(employment.entity_uid)
                 except ValueError as e:
                     logger.error(f"Error creating institution: {e}")
                     continue
-            else:
-                employment.institution.uid = existing_institution_uid
             valid_employments.append(employment)
         return valid_employments
 

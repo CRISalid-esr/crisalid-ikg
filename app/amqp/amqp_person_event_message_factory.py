@@ -41,21 +41,6 @@ class AMQPPersonEventMessageFactory(AbstractAMQPMessageFactory):
             "memberships": [
                 {
                     "entity_uid": membership.entity_uid,
-                    "research_unit": {
-                        "names": [
-                            {
-                                "value": name.value
-                            }
-                            for name in membership.research_unit.names
-                        ],
-                        "identifiers": [
-                            {
-                                "type": identifier.type.value,
-                                "value": identifier.value
-                            }
-                            for identifier in membership.research_unit.identifiers
-                        ]
-                    },
                     "start_date": membership.start_date,
                     "end_date": membership.end_date,
                 }
@@ -64,21 +49,6 @@ class AMQPPersonEventMessageFactory(AbstractAMQPMessageFactory):
             "employments": [
                 {
                     "entity_uid": employment.entity_uid,
-                    "institution": {
-                        "names": [
-                            {
-                                "value": name.value
-                            }
-                            for name in employment.institution.names
-                        ],
-                        "identifiers": [
-                            {
-                                "type": identifier.type.value,
-                                "value": identifier.value
-                            }
-                            for identifier in employment.institution.identifiers
-                        ]
-                    },
                     "position": {
                         "title": employment.position.title if employment.position else None,
                         "code": employment.position.code if employment.position else None

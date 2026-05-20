@@ -17,27 +17,25 @@ class AgentIdentifierService:
     @classmethod
     def compute_uid_for(cls, entity: BaseModel) -> str:
         """
-        Compute an ID based on the first identifier type in the given order.
+        Compute an ID based on the first available identifier type in the given order.
         :param entity: The entity to compute the ID for.
         :return: The computed ID.
-        :raises ValueError: If the first identifier type in the order is not found.
+        :raises ValueError: If no identifier type from the order is found.
         """
         identifier_order = cls._get_identifier_order(entity.__class__)
 
-        first_identifier_type = identifier_order[0]
+        for identifier_type in identifier_order:
+            selected_identifier = next(
+                (identifier for identifier in entity.identifiers
+                 if identifier.type == identifier_type), None)
+            if selected_identifier is not None:
+                return (f"{selected_identifier.type.value}"
+                        f"{cls.IDENTIFIER_SEPARATOR}"
+                        f"{selected_identifier.value}")
 
-        selected_identifier = next(
-            (identifier for identifier in entity.identifiers
-             if identifier.type == first_identifier_type), None)
-
-        if selected_identifier is None:
-            raise ValueError(
-                f"Identifier of type {first_identifier_type} "
-                f"not found in data : {entity.model_dump()}.")
-
-        return f"{selected_identifier.type.value}" \
-               f"{cls.IDENTIFIER_SEPARATOR}" \
-               f"{selected_identifier.value}"
+        raise ValueError(
+            f"No identifier from order {identifier_order} "
+            f"found in data : {entity.model_dump()}.")
 
     @classmethod
     def compute_possible_uids_for(cls, entity: BaseModel) -> List[str]:
@@ -72,10 +70,9 @@ class AgentIdentifierService:
         if entity_cls.__name__ == "Person":
             return PersonIdentifier(type=PersonIdentifierType(identifier_type),
                                     value=identifier_value)
-        if entity_cls.__name__ == "ResearchUnit":
-            return OrganizationIdentifier(type=OrganizationIdentifierType(identifier_type),
-                                          value=identifier_value)
-        if entity_cls.__name__ == "Institution":
+        if entity_cls.__module__ == "app.models.organization_unit" or entity_cls.__name__ in (
+            "ResearchUnit", "Institution"
+        ):
             return OrganizationIdentifier(type=OrganizationIdentifierType(identifier_type),
                                           value=identifier_value)
         raise ValueError(f"No identifier type defined for {entity_cls.__name__}.")
@@ -100,9 +97,12 @@ class AgentIdentifierService:
         :return: The list of identifier types.
         """
         settings = get_app_settings()
-        # check with string comparison to avoid circular imports
+        # Check module path to avoid circular imports
         if entity_cls.__name__ == "Person":
             return settings.person_identifier_order
+        if entity_cls.__module__ == "app.models.organization_unit":
+            return settings.organization_identifier_order
+        # Legacy DAOs
         if entity_cls.__name__ == "ResearchUnit":
             return settings.research_unit_identifier_order
         if entity_cls.__name__ == "Institution":

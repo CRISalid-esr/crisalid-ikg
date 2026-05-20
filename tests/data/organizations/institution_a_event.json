@@ -1,0 +1,25 @@
+{
+  "structures_event": {
+    "type": "created",
+    "data": {
+      "generic_type": "institution",
+      "type": "UNIV",
+      "local_types": [],
+      "long_labels": [
+        {"value": "Example University", "language": "en"},
+        {"value": "Université Exemple", "language": "fr"}
+      ],
+      "short_labels": [
+        {"value": "ExUni", "language": "en"},
+        {"value": "UniEx", "language": "fr"}
+      ],
+      "descriptions": [],
+      "identifiers": [
+        {"type": "local", "value": "EXAMPLE-UNIV-001"},
+        {"type": "uai", "value": "UAI001"}
+      ],
+      "relationships": [],
+      "contacts": []
+    }
+  }
+}
