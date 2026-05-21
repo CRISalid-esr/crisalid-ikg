@@ -33,20 +33,22 @@ FOREACH (address_data IN CASE WHEN size($addresses) > 0 THEN $addresses ELSE [] 
   )
 
   FOREACH (state_data IN CASE WHEN size(address_data.state_or_province) > 0 THEN address_data.state_or_province ELSE [] END |
-    MERGE (state:Literal {
+    MERGE (state:Literal:Embeddable {
       value: trim(state_data.value),
       language: coalesce(nullif(trim(state_data.language), ''), 'und'),
       type: 'institution_state_name'
     })
+    ON CREATE SET state.embedding_status = 'pending'
     MERGE (address)-[:HAS_STATE]->(state)
   )
 
   FOREACH (country_data IN CASE WHEN size(address_data.country) > 0 THEN address_data.country ELSE [] END |
-    MERGE (country:Literal {
+    MERGE (country:Literal:Embeddable {
       value: trim(country_data.value),
       language: coalesce(nullif(trim(country_data.language), ''), 'und'),
       type: 'institution_country_name'
     })
+    ON CREATE SET country.embedding_status = 'pending'
     MERGE (address)-[:HAS_COUNTRY]->(country)
   )
 )

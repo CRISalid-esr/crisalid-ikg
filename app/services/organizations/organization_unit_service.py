@@ -8,7 +8,8 @@ from app.graph.generic.dao import DAO
 from app.graph.neo4j.organization_unit_dao import OrganizationUnitDAO
 from app.models.organization_unit import OrganizationBase, OrganizationUnit
 from app.services.organizations.institution_service import InstitutionService
-from app.signals import structure_created, structure_updated, structure_unchanged, structure_deleted
+from app.signals import (structure_created, structure_updated, structure_unchanged,
+                         structure_deleted, literal_updated)
 
 
 class OrganizationUnitService:
@@ -35,6 +36,7 @@ class OrganizationUnitService:
         await self._resolve_non_local_relationship_targets(org_unit)
         result = await self._get_dao().create(org_unit)
         await structure_created.send_async(self, payload=result.uid)
+        await literal_updated.send_async(self)
         return result
 
     async def update_structure(self, org_unit: OrganizationBase) -> OrganizationBase:
@@ -42,6 +44,7 @@ class OrganizationUnitService:
         await self._resolve_non_local_relationship_targets(org_unit)
         result = await self._get_dao().update(org_unit)
         await structure_updated.send_async(self, payload=result.uid)
+        await literal_updated.send_async(self)
         return result
 
     async def create_or_update_structure(self, org_unit: OrganizationBase) -> OrganizationBase:
@@ -50,8 +53,10 @@ class OrganizationUnitService:
         uid, status = await self._get_dao().create_or_update(org_unit)
         if status == DAO.Status.CREATED:
             await structure_created.send_async(self, payload=uid)
+            await literal_updated.send_async(self)
         elif status == DAO.Status.UPDATED:
             await structure_updated.send_async(self, payload=uid)
+            await literal_updated.send_async(self)
         return org_unit
 
     async def get_structure_by_uid(self, uid: str) -> OrganizationUnit | None:

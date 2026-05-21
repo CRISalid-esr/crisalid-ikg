@@ -5,6 +5,7 @@ from neo4j.exceptions import DatabaseError
 from app.config import get_app_settings
 from app.graph.generic.setup import Setup
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
+from app.graph.neo4j.utils import load_query
 
 
 class Neo4jSetup(Setup[AsyncDriver]):
@@ -16,6 +17,9 @@ class Neo4jSetup(Setup[AsyncDriver]):
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_constraints)
+            async with driver.session() as session:
+                await session.write_transaction(self._add_embeddable_label_to_existing_nodes)
+            await self._create_embeddable_vector_index(driver)
 
     @classmethod
     async def _create_constraints(cls, tx: AsyncManagedTransaction):
@@ -516,4 +520,48 @@ class Neo4jSetup(Setup[AsyncDriver]):
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error("Error creating OrganizationUnit national_type index: {}", e)
+            raise e
+
+    _EMBEDDABLE_TYPES = [
+        "organization_long_label",
+        "organization_description",
+        "research_unit_name",
+        "research_unit_description",
+        "institution_name",
+        "institution_country_name",
+        "concept_pref_label",
+        "document_title",
+        "document_abstract",
+        "concept_alt_label",
+        "authority_organization_state_name",
+        "institution_state_name",
+        "institution_continent_name",
+        "concept_definition",
+    ]
+
+    @classmethod
+    async def _add_embeddable_label_to_existing_nodes(cls, tx: AsyncManagedTransaction):
+        try:
+            await tx.run(
+                "MATCH (l:Literal) WHERE l.type IN $types SET l:Embeddable",
+                types=cls._EMBEDDABLE_TYPES,
+            )
+            await tx.run(
+                "MATCH (t:TextLiteral) WHERE t.type IN $types SET t:Embeddable",
+                types=cls._EMBEDDABLE_TYPES,
+            )
+        except DatabaseError as e:
+            logger.error("Error adding Embeddable label to existing nodes: {}", e)
+            raise e
+
+    async def _create_embeddable_vector_index(self, driver: AsyncDriver):
+        settings = get_app_settings()
+        try:
+            async with driver.session() as session:
+                await session.run(
+                    load_query("create_embeddable_vector_index"),
+                    dims=settings.embedding_dimensions,
+                )
+        except DatabaseError as e:
+            logger.error("Error creating Embeddable vector index: {}", e)
             raise e

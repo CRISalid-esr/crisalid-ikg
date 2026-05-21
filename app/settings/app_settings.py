@@ -137,6 +137,17 @@ class AppSettings(BaseSettings):
         }
     }
 
+    embedding_enabled: bool = False
+    embedding_provider: str = "openai_compatible"
+    embedding_api_url: str = ""
+    embedding_api_key: str = ""
+    embedding_api_model: str = ""
+    embedding_dimensions: int = 384
+    embedding_batch_size: int = 64
+    embedding_timeout_seconds: int = 30
+    embedding_local_model: str = ""
+    embedding_device: str = "cpu"
+
     person_identifier_order: list[PersonIdentifierType] = \
         [PersonIdentifierType.LOCAL,
          PersonIdentifierType.ORCID,

@@ -33,7 +33,7 @@ from app.signals import person_created, person_identifiers_updated, source_recor
     document_created_from_sources, authority_organisation_state_updated
 
 
-class CrisalidIKG(FastAPI):
+class CrisalidIKG(FastAPI):  # pylint: disable=too-many-instance-attributes
     """Main application, routing logic, middlewares and startup/shutdown events"""
 
     def __init__(self):
@@ -82,6 +82,7 @@ class CrisalidIKG(FastAPI):
         self._register_harvesting_events()
         self._register_person_events()
         self._register_authority_organization_state_events()
+        self._register_embedding_events()
 
     @logger.catch(reraise=True)
     async def setup_graph(self) -> None:  # pragma: no cover
@@ -148,6 +149,14 @@ class CrisalidIKG(FastAPI):
         self.authority_organization_location_service = AuthorityOrganizationLocationService()
         authority_organisation_state_updated.connect(
             self.authority_organization_location_service.add_location_from_source_organizations)
+
+    def _register_embedding_events(self):
+        if not get_app_settings().embedding_enabled:
+            return
+        from app.services.embeddings.embedding_service import EmbeddingService  # pylint: disable=import-outside-toplevel
+        from app.signals import literal_updated  # pylint: disable=import-outside-toplevel
+        self.embedding_service = EmbeddingService()
+        literal_updated.connect(self.embedding_service.on_literals_pending)
 
     @logger.catch(reraise=True)
     async def close_elasticsearch(self) -> None:  # pragma: no cover

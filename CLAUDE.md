@@ -150,6 +150,35 @@ APP_ENV=TEST pytest -m current
 # Always remove @pytest.mark.current before committing.
 ```
 
+### Embedding pipeline
+
+Embedding support is optional, controlled by `embedding_enabled` (default `False`). When enabled, selected `Literal` and `TextLiteral` nodes carry a `:Embeddable` label and a Neo4j vector index (`embeddable_embedding`) is maintained on their `embedding` property.
+
+**Embeddable literal types** (defined in `Neo4jSetup._EMBEDDABLE_TYPES`):
+`organization_long_label`, `organization_description`, `research_unit_name`, `research_unit_description`, `institution_name`, `institution_country_name`, `institution_state_name`, `institution_continent_name`, `concept_pref_label`, `concept_alt_label`, `concept_definition`, `document_title`, `document_abstract`, `authority_organization_state_name`
+
+Non-embeddable types (e.g. `person_first_name`, `person_last_name`) never receive the `:Embeddable` label.
+
+**Node lifecycle** — `embedding_status` property:
+- `"pending"` — set `ON CREATE` in the MERGE query for embeddable nodes
+- `"success"` — set after a vector is stored
+- `"failed"` — set when the provider call fails, with `embedding_error` property
+
+**Signal-driven path** — `literal_updated` (in `app/signals.py`) is emitted by `DocumentService`, `OrganizationUnitService`, and `AuthorityOrganizationLocationService` after writes that produce embeddable literals. `EmbeddingService.on_literals_pending` is connected to this signal at startup (only when `embedding_enabled=True`). It processes all `pending` nodes in batches.
+
+**Bulk / CLI path** — `cli literals compute_embeddings` (in `app/commands/literals.py`) calls `EmbeddingService.compute_embeddings(statuses, types, model_exclude)` directly, with optional `--recreate-vector-indexes` to reset and rebuild the index with new dimensions.
+
+**Key classes:**
+- `EmbeddingService` (`app/services/embeddings/embedding_service.py`) — batching, hash-based skip logic (skips provider call if `embedding_hash == sha256(value)` and model matches), failure isolation
+- `EmbeddableDAO` (`app/graph/neo4j/embeddable_dao.py`) — standalone (does NOT inherit from the DAO factory framework); methods: `get_pending_nodes`, `update_embeddings_batch`, `mark_failed`, `reset_all_for_migration`, `count_by_status`, `drop_vector_index`, `recreate_vector_index`
+- `OpenAICompatibleProvider` (`app/services/embeddings/providers/openai_compatible.py`) — POSTs to `{EMBEDDING_API_URL}/v1/embeddings`; requires `EMBEDDING_API_URL` and `EMBEDDING_API_MODEL` settings
+- `SentenceTransformerProvider` — stub, raises `NotImplementedError`
+
+**Neo4j setup** — `Neo4jSetup.run()` runs three separate operations in sequence (they cannot share a transaction):
+1. Schema constraints write transaction
+2. Migration write transaction — adds `:Embeddable` label to existing nodes of embeddable types
+3. Vector index creation (`CREATE VECTOR INDEX embeddable_embedding IF NOT EXISTS`) — uses `create_embeddable_vector_index.cypher`, shared by both setup and `EmbeddableDAO.recreate_vector_index`
+
 ### Key conventions
 
 - All I/O (Neo4j, AMQP, HTTP clients) is **async/await**.

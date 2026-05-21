@@ -12,11 +12,12 @@ FOREACH (sl IN $short_labels |
 
 WITH org
 FOREACH (ll IN $long_labels |
-  MERGE (l:Literal {
+  MERGE (l:Literal:Embeddable {
     value: trim(ll.value),
     language: coalesce(nullif(trim(ll.language), ''), 'und'),
     type: "organization_long_label"
   })
+  ON CREATE SET l.embedding_status = 'pending'
   MERGE (org)-[:HAS_LONG_LABEL]->(l)
 )
 
@@ -32,9 +33,10 @@ FOREACH (lt IN $local_types |
 
 WITH org
 FOREACH (d IN $descriptions |
-  MERGE (t:TextLiteral {key: d.key, type: "organization_description"})
+  MERGE (t:TextLiteral:Embeddable {key: d.key, type: "organization_description"})
   ON CREATE SET t.value = d.value,
-               t.language = coalesce(nullif(trim(d.language), ''), 'und')
+               t.language = coalesce(nullif(trim(d.language), ''), 'und'),
+               t.embedding_status = 'pending'
   MERGE (org)-[:HAS_DESCRIPTION]->(t)
 )
 
