@@ -543,11 +543,13 @@ class Neo4jSetup(Setup[AsyncDriver]):
     async def _add_embeddable_label_to_existing_nodes(cls, tx: AsyncManagedTransaction):
         try:
             await tx.run(
-                "MATCH (l:Literal) WHERE l.type IN $types SET l:Embeddable",
+                "MATCH (l:Literal) WHERE l.type IN $types "
+                "SET l:Embeddable, l.embedding_status = coalesce(l.embedding_status, 'pending')",
                 types=cls._EMBEDDABLE_TYPES,
             )
             await tx.run(
-                "MATCH (t:TextLiteral) WHERE t.type IN $types SET t:Embeddable",
+                "MATCH (t:TextLiteral) WHERE t.type IN $types "
+                "SET t:Embeddable, t.embedding_status = coalesce(t.embedding_status, 'pending')",
                 types=cls._EMBEDDABLE_TYPES,
             )
         except DatabaseError as e:
