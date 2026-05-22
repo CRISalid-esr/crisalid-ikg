@@ -16,7 +16,7 @@ from app.services.source_contributors.source_contributor_mapping_service import 
     SourceContributorMappingService
 from app.services.source_records.equivalence_service import EquivalenceService
 from app.signals import document_updated, document_created, \
-    document_unchanged, document_deleted
+    document_unchanged, document_deleted, literal_updated
 
 
 class DocumentService:
@@ -36,6 +36,7 @@ class DocumentService:
             await self.signal_document_deleted(document_uid)
         else:
             await self.signal_document_updated(document_uid)
+            await literal_updated.send_async(self)
 
     async def create_from_source_records(self, _, document_uid: str):
         """
@@ -47,6 +48,7 @@ class DocumentService:
         # fetch the source records to be merged
         await self._compute_document_from_source_records(document_uid)
         await self.signal_document_created(document_uid)
+        await literal_updated.send_async(self)
 
     async def merge_documents(self, document_uids: set[str]) -> None:
         """

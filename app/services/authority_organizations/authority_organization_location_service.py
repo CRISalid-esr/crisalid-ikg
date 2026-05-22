@@ -12,6 +12,7 @@ from app.models.literal import Literal
 from app.models.places import Place
 from app.models.source_organizations import SourceOrganization
 from app.models.structured_physical_address import StructuredPhysicalAddress
+from app.signals import literal_updated
 
 class AuthorityOrganizationLocationService:
     """
@@ -69,6 +70,7 @@ class AuthorityOrganizationLocationService:
             await auth_org_dao.attach_place_and_address_nodes_to_state(state_uid,
                                                                    place_list,
                                                                    address_list)
+            await literal_updated.send_async(self)
 
         except DatabaseError as e:
             logger.error(f"Error attaching place and address to "

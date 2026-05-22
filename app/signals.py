@@ -32,3 +32,5 @@ source_journal_unchanged = signal('source-journal-unchanged')
 source_journal_deleted = signal('source-journal-deleted')
 
 authority_organisation_state_updated = signal('authority-organization-state-updated')
+
+literal_updated = signal('literal-updated')

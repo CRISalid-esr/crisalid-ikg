@@ -5,11 +5,12 @@ CREATE (research_struct:Organisation:ResearchUnit {
 WITH research_struct
 
 FOREACH (name IN $names |
-  MERGE (rs_name:Literal {
+  MERGE (rs_name:Literal:Embeddable {
     value: trim(name.value),
     language: coalesce(nullif(trim(name.language), ''), 'und'),
     type: "research_unit_name"
   })
+  ON CREATE SET rs_name.embedding_status = 'pending'
   MERGE (research_struct)-[:HAS_NAME]->(rs_name)
 )
 
@@ -24,10 +25,11 @@ FOREACH (identifier IN $identifiers |
 
 WITH research_struct
 FOREACH (description IN $descriptions |
-  MERGE (rs_description:Literal {
+  MERGE (rs_description:Literal:Embeddable {
     value: trim(description.value),
     language: coalesce(nullif(trim(description.language), ''), 'und'),
     type: "research_unit_description"
   })
+  ON CREATE SET rs_description.embedding_status = 'pending'
   MERGE (research_struct)-[:HAS_DESCRIPTION]->(rs_description)
 );
