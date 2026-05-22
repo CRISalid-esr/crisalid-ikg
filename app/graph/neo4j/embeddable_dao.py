@@ -14,7 +14,7 @@ class EmbeddableDAO:
     """
 
     @handle_database_errors
-    async def get_pending_nodes(  # pylint: disable=too-many-arguments
+    async def get_pending_nodes(  # pylint: disable=too-many-arguments,R0917
         self,
         statuses: list[str],
         types: list[str] | None = None,
