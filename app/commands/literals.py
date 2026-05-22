@@ -35,7 +35,7 @@ def compute_embeddings(
     """
     Compute or recompute embeddings for Embeddable (Literal / TextLiteral) nodes.
 
-    Requires ENABLE_EMBEDDINGS=true in the environment.
+    Requires EMBEDDING_ENABLED=true in the environment.
     """
     @with_app_lifecycle
     async def _run():

@@ -166,7 +166,7 @@ Non-embeddable types (e.g. `person_first_name`, `person_last_name`) never receiv
 
 **Signal-driven path** — `literal_updated` (in `app/signals.py`) is emitted by `DocumentService`, `OrganizationUnitService`, and `AuthorityOrganizationLocationService` after writes that produce embeddable literals. `EmbeddingService.on_literals_pending` is connected to this signal at startup (only when `embedding_enabled=True`). It processes all `pending` nodes in batches.
 
-**Bulk / CLI path** — `cli literals compute_embeddings` (in `app/commands/literals.py`) calls `EmbeddingService.compute_embeddings(statuses, types, model_exclude)` directly, with optional `--recreate-vector-indexes` to reset and rebuild the index with new dimensions.
+**Bulk / CLI path** — `cli literals compute-embeddings` (in `app/commands/literals.py`) calls `EmbeddingService.compute_embeddings(statuses, types, model_exclude)` directly, with optional `--recreate-vector-indexes` to reset and rebuild the index with new dimensions.
 
 **Key classes:**
 - `EmbeddingService` (`app/services/embeddings/embedding_service.py`) — batching, hash-based skip logic (skips provider call if `embedding_hash == sha256(value)` and model matches), failure isolation
