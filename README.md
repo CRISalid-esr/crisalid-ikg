@@ -87,6 +87,120 @@ docker run --publish=9200:9200 --publish=9300:9300 --env="discovery.type=single-
 
 
 
+### Embeddings (optional)
+
+The application can compute and store embedding vectors on selected graph nodes (`Literal` and `TextLiteral` nodes whose type is semantically meaningful — titles, abstracts, labels, descriptions, etc.). These vectors are stored on nodes carrying the `:Embeddable` label and indexed in a Neo4j vector index, enabling semantic similarity search.
+
+Embedding computation is **opt-in** and controlled by a single environment variable:
+
+```env
+EMBEDDING_ENABLED=true
+```
+
+When disabled (the default), the `:Embeddable` label is still applied to eligible nodes as they are created, so embeddings can be computed later without rebuilding the graph.
+
+#### Configuration
+
+Copy the embedding block from `.env.example` to your `.env` and adjust the values:
+
+```env
+EMBEDDING_ENABLED=true
+EMBEDDING_PROVIDER=openai_compatible
+EMBEDDING_API_URL="http://localhost:8081"
+EMBEDDING_API_KEY=""
+EMBEDDING_API_MODEL="intfloat/multilingual-e5-small"
+EMBEDDING_DIMENSIONS=384
+EMBEDDING_BATCH_SIZE=8
+EMBEDDING_TIMEOUT_SECONDS=30
+```
+
+`EMBEDDING_DIMENSIONS` must match the output dimension of the model you use. `EMBEDDING_BATCH_SIZE` must not exceed the server's maximum batch size.
+
+#### Running a local embedding server (TEI)
+
+For development, [Hugging Face Text Embeddings Inference (TEI)](https://github.com/huggingface/text-embeddings-inference) is the recommended backend. It exposes an OpenAI-compatible `/v1/embeddings` endpoint that the `openai_compatible` provider uses directly.
+
+```bash
+model=intfloat/multilingual-e5-small
+volume=$HOME/.cache/huggingface/tei
+
+docker run --rm \
+  --pull always \
+  -p 8081:80 \
+  -v "$volume:/data" \
+  ghcr.io/huggingface/text-embeddings-inference:cpu-latest \
+  --model-id "$model" \
+  --max-batch-tokens 2048 \
+  --max-client-batch-size 8
+```
+
+`intfloat/multilingual-e5-small` is a compact multilingual model (384 dimensions, ~120 MB) that works well for French and English academic text. It is downloaded automatically on first run into `~/.cache/huggingface/tei`.
+
+Verify the server is up:
+
+```bash
+curl http://localhost:8081/health
+# → "Ok"
+
+curl http://localhost:8081/v1/embeddings \
+  -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"model": "intfloat/multilingual-e5-small", "input": ["test sentence"]}'
+```
+
+#### How embeddings are computed
+
+**Automatically (signal-driven path):** when embeddings are enabled, every write that produces embeddable nodes (document ingestion, structure creation, etc.) emits a `literal_updated` signal. `EmbeddingService` is connected to this signal at startup and processes all `pending` nodes in batches immediately after each write.
+
+**Manually (CLI path):** use the `literals compute-embeddings` command to compute or recompute embeddings in bulk:
+
+```bash
+# Process all pending and failed nodes (default)
+APP_ENV=DEV python -m app.cli literals compute-embeddings
+
+# Process only specific literal types
+APP_ENV=DEV python -m app.cli literals compute-embeddings --types document_title,document_abstract
+
+# Recompute nodes not yet processed with the current model
+APP_ENV=DEV python -m app.cli literals compute-embeddings --new-model intfloat/multilingual-e5-small
+
+# Include already-successful nodes (full recompute)
+APP_ENV=DEV python -m app.cli literals compute-embeddings --statuses pending,failed,success
+```
+
+#### Applying embeddings to an existing graph
+
+If the graph was built with `EMBEDDING_ENABLED=false` (or before embedding support was added), nodes already carry the `:Embeddable` label with `embedding_status = "pending"`. No graph rebuild is needed — just run:
+
+```bash
+APP_ENV=DEV python -m app.cli literals compute-embeddings
+```
+
+This will process all pending nodes in batches and report counts before and after.
+
+#### Changing the embedding model
+
+If you switch to a model with a different output dimension, the existing vector index is incompatible and must be rebuilt. Use `--recreate-vector-indexes`, which resets all embedding properties, drops the index, recreates it with the new `EMBEDDING_DIMENSIONS`, and recomputes everything:
+
+```bash
+# Update EMBEDDING_API_MODEL and EMBEDDING_DIMENSIONS in .env first, then:
+APP_ENV=DEV python -m app.cli literals compute-embeddings --recreate-vector-indexes
+```
+
+> **Warning:** `--recreate-vector-indexes` resets all embeddings and ignores `--statuses`. All nodes will be reprocessed.
+
+#### Embedding status lifecycle
+
+Each `:Embeddable` node carries an `embedding_status` property:
+
+| Status | Meaning |
+|---|---|
+| `pending` | Node created or updated; embedding not yet computed |
+| `success` | Embedding computed and stored; `embedding`, `embedding_hash`, `embedding_model` are set |
+| `failed` | Provider call failed; `embedding_error` contains the reason |
+
+Failed nodes are not retried automatically. Re-run `compute-embeddings` (default `--statuses pending,failed`) to retry them.
+
 ### Project and dependencies installation
 
 
