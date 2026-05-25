@@ -26,7 +26,7 @@ from app.models.source_organization_identifiers import SourceOrganizationIdentif
 from app.models.source_organizations import SourceOrganization
 from app.models.source_people import SourcePerson
 from app.models.source_person_identifiers import SourcePersonIdentifier
-from app.models.source_records import SourceRecord
+from app.models.source_records import SourceRecord, SourceRecordDomain
 from app.models.text_literal import TextLiteral
 
 
@@ -251,6 +251,25 @@ class SourceRecordDAO(Neo4jDAO):
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await SourceRecordDAO._source_record_exists(tx, source_record_uid)
+
+    @handle_database_errors
+    async def sync_topics(
+        self, source_record_uid: str, domains: List[SourceRecordDomain]
+    ) -> None:
+        """
+        Replace all HAS_TOPIC edges on a source record with the supplied list.
+        Passing an empty list clears all existing edges.
+
+        :param source_record_uid: uid of the source record
+        :param domains: list of SourceRecordDomain entries (uri + optional score)
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.run(
+                    load_query("sync_source_record_topics"),
+                    source_record_uid=source_record_uid,
+                    topics=[{"uri": d.uri, "score": d.score} for d in domains],
+                )
 
     @handle_database_errors
     async def delete_contributions(self, source_record_uid: str):
