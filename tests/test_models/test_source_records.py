@@ -8,8 +8,17 @@ from app.models.harvesting_sources import HarvestingSource
 from app.models.identifier_types import PublicationIdentifierType, JournalIdentifierType
 from app.models.journal_identifiers import JournalIdentifierFormat
 from app.models.literal import Literal
-from app.models.source_records import SourceRecord
+from app.models.source_records import SourceRecord, SourceRecordDomain
 from app.models.text_literal import TextLiteral
+
+
+def _minimal_source_record(**kwargs) -> SourceRecord:
+    return SourceRecord(
+        source_identifier="test-id",
+        harvester=Harvester.SCOPUS.value,
+        titles=[Literal(value="Test title")],
+        **kwargs,
+    )
 
 
 def test_create_thesis_source_record_from_scanr_data(
@@ -425,6 +434,58 @@ def test_source_record_truncates_literal_values(scanr_thesis_source_record_json_
 
     assert len(sr.abstracts[0].value) == Literal.MAX_VALUE_LENGTH
     assert sr.abstracts[0].value == "A" * Literal.MAX_VALUE_LENGTH
+
+
+def test_coerce_domains_strips_wire_format_fields():
+    """
+    Given a domains list with full wire-format dicts (source_id, uri, label, score)
+    When a SourceRecord is created
+    Then only uri and score are kept
+    """
+    sr = _minimal_source_record(domains=[
+        {
+            "source_id": "T10153",
+            "uri": "https://openalex.org/T10153",
+            "label": "Education, sociology, and vocational training",
+            "score": 0.9588,
+        }
+    ])
+    assert len(sr.domains) == 1
+    assert sr.domains[0].uri == "https://openalex.org/T10153"
+    assert sr.domains[0].score == pytest.approx(0.9588)
+
+
+def test_coerce_domains_score_is_optional():
+    """
+    Given a domains list entry without a score
+    When a SourceRecord is created
+    Then score is None
+    """
+    sr = _minimal_source_record(domains=[{"uri": "https://openalex.org/T10153"}])
+    assert len(sr.domains) == 1
+    assert sr.domains[0].uri == "https://openalex.org/T10153"
+    assert sr.domains[0].score is None
+
+
+def test_coerce_domains_accepts_dataclass_instances():
+    """
+    Given a domains list with already-coerced SourceRecordDomain instances
+    When a SourceRecord is created
+    Then they are passed through unchanged
+    """
+    domain = SourceRecordDomain(uri="https://openalex.org/T10153", score=0.5)
+    sr = _minimal_source_record(domains=[domain])
+    assert sr.domains[0] is domain
+
+
+def test_coerce_domains_empty_list():
+    """
+    Given no domains field
+    When a SourceRecord is created
+    Then domains defaults to an empty list
+    """
+    sr = _minimal_source_record()
+    assert sr.domains == []
 
 
 def test_two_source_records_with_same_text_literal_have_same_key():
