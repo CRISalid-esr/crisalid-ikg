@@ -23,6 +23,7 @@ class NationalOrganizationType(str, Enum):
     IRL = "IRL"
     UFR = "UFR"
     FAC = "FAC"
+    FDR = "FDR"
     TEAM = "TEAM"
     THEME = "THEME"
 
@@ -59,6 +60,7 @@ ALLOWED_NATIONAL_TYPES_BY_GENERIC_TYPE: dict = {
     GenericOrganizationType.INSTITUTION_SUBDIVISION: {
         NationalOrganizationType.UFR,
         NationalOrganizationType.FAC,
+        NationalOrganizationType.FDR,
     },
     GenericOrganizationType.UNIT_SUBDIVISION: set(),
     GenericOrganizationType.TEAM: {
