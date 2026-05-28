@@ -1,6 +1,7 @@
 """
 Organization unit model hierarchy for research structures.
 """
+import re
 from datetime import date
 from typing import Optional, Union, Annotated
 from typing import Literal as TypingLiteral
@@ -27,11 +28,23 @@ class ElectronicalAddress(BaseModel):
     uri: str
 
 
+def _normalize_yyyymmdd(v):
+    """Convert compact YYYYMMDD strings to ISO YYYY-MM-DD before date parsing."""
+    if isinstance(v, str) and re.fullmatch(r'\d{8}', v):
+        return f"{v[:4]}-{v[4:6]}-{v[6:]}"
+    return v
+
+
 class OrgInclusion(BaseModel):
     """Reified PART_OF relationship (strong inclusion)."""
     target: str
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+
+    @field_validator('start_date', 'end_date', mode='before')
+    @classmethod
+    def _normalize_date(cls, v):
+        return _normalize_yyyymmdd(v)
 
 
 class OrgMembership(BaseModel):
@@ -40,6 +53,11 @@ class OrgMembership(BaseModel):
     position: Optional[OrgMembershipPosition] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
+
+    @field_validator('start_date', 'end_date', mode='before')
+    @classmethod
+    def _normalize_date(cls, v):
+        return _normalize_yyyymmdd(v)
 
 
 class OrganizationBase(Agent[OrganizationIdentifierType]):
@@ -60,6 +78,16 @@ class OrganizationBase(Agent[OrganizationIdentifierType]):
     electronical_addresses: list[ElectronicalAddress] = Field(default_factory=list)
     memberships: list[OrgMembership] = Field(default_factory=list)
     parents: list[OrgInclusion] = Field(default_factory=list)
+
+    @staticmethod
+    def _parse_local_type(lt):
+        """Accept a Literal dict or a 'value[lang]' / 'value' string."""
+        if not isinstance(lt, str):
+            return lt
+        m = re.match(r'^(.*)\[([a-z]{2,3})\]\s*$', lt.strip())
+        if m:
+            return {'value': m.group(1).strip(), 'language': m.group(2)}
+        return {'value': lt.strip()}
 
     @classmethod
     def _parse_contacts(cls, contacts: list, addresses: list, electronical_addresses: list):
@@ -107,6 +135,10 @@ class OrganizationBase(Agent[OrganizationIdentifierType]):
 
         if 'type' in data and 'national_type' not in data:
             data['national_type'] = data.pop('type')
+
+        raw_local_types = data.get('local_types')
+        if raw_local_types:
+            data['local_types'] = [cls._parse_local_type(lt) for lt in raw_local_types]
 
         contacts = data.pop('contacts', None) or []
         addresses = list(data.get('addresses') or [])
