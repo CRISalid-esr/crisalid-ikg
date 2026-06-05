@@ -394,3 +394,24 @@ async def fixture_lra_research_unit_v2_json_data(_base_path) -> dict:
 async def fixture_lra_research_unit_v2_pydantic_model(
         lra_research_unit_v2_json_data) -> OrganizationBase:
     return _organization_unit_from_json_data(lra_research_unit_v2_json_data)
+
+
+@pytest_asyncio.fixture(name="support_unit_a_json_data")
+async def fixture_support_unit_a_json_data(_base_path) -> dict:
+    return _organization_unit_json_data_from_file(_base_path, "support_unit_a")
+
+
+@pytest_asyncio.fixture(name="support_unit_a_pydantic_model")
+async def fixture_support_unit_a_pydantic_model(support_unit_a_json_data) -> OrganizationBase:
+    return _organization_unit_from_json_data(support_unit_a_json_data)
+
+
+@pytest_asyncio.fixture(name="persisted_support_unit_a_pydantic_model")
+async def fixture_persisted_support_unit_a_pydantic_model(
+        support_unit_a_pydantic_model) -> OrganizationBase:
+    settings = get_app_settings()
+    factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
+    dao = factory.get_dao(OrganizationBase)
+    await dao.create(support_unit_a_pydantic_model)
+    return support_unit_a_pydantic_model
+
