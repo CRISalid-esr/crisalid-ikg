@@ -559,3 +559,23 @@ async def fixture_person_f_json_data(_base_path) -> dict:
     :return: basic person json data
     """
     return _person_json_data_from_file(_base_path, "person_f")
+
+
+@pytest_asyncio.fixture(name="person_a_with_support_unit_membership_json_data")
+async def fixture_person_a_with_support_unit_membership_json_data(_base_path) -> dict:
+    """
+    Create a person json data with membership in a SupportUnit (scientific_services)
+    :return: person json data with SupportUnit membership
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_support_unit_membership")
+
+
+@pytest_asyncio.fixture(name="person_a_with_support_unit_membership_pydantic_model")
+async def fixture_person_a_with_support_unit_membership_pydantic_model(
+        person_a_with_support_unit_membership_json_data) -> Person:
+    """
+    Create a person pydantic model with membership in a SupportUnit
+    :return: person pydantic model with SupportUnit membership
+    """
+    return _person_from_json_data(person_a_with_support_unit_membership_json_data)
+

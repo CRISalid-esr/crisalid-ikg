@@ -1,0 +1,19 @@
+{
+  "generic_type": "unit",
+  "main_mission": "scientific_services",
+  "secondary_missions": [],
+  "local_types": [],
+  "long_labels": [
+    {"value": "Plateforme de microscopie", "language": "fr"},
+    {"value": "Microscopy Platform", "language": "en"}
+  ],
+  "short_labels": [
+    {"value": "PM", "language": "fr"}
+  ],
+  "descriptions": [],
+  "identifiers": [
+    {"type": "local", "value": "SP001"}
+  ],
+  "relationships": [],
+  "contacts": []
+}
