@@ -1,6 +1,7 @@
 from loguru import logger
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
+from app.amqp.message_mode import MessageMode
 from app.errors.conflict_error import ConflictError
 from app.errors.database_error import DatabaseError
 from app.errors.reference_owner_not_found_error import ReferenceOwnerNotFoundError
@@ -21,6 +22,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         self.service = SourceRecordService()
 
     async def _process_message(self, key: str, payload: str):
+        mode = MessageMode.INTERACTIVE if key.endswith(".interactive") else MessageMode.BATCH
         json_payload = await self._read_message_json(payload)
         logger.info(f"Processing message {json_payload}")
         self._check_keys(json_payload, {
@@ -55,9 +57,9 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
             logger.error(f"Error processing source record data {reference_data} : {e}")
             raise e
         if effective_event_type in ["created"]:
-            await self._create_source_record(source_record, person, identifier_used)
+            await self._create_source_record(source_record, person, identifier_used, mode=mode)
         elif effective_event_type in ["updated"]:
-            await self._update_source_record(source_record, person, identifier_used)
+            await self._update_source_record(source_record, person, identifier_used, mode=mode)
         elif effective_event_type in ["unchanged"]:
             logger.debug(f"Source record {source_record.uid} is unchanged (not enhanced), "
                          f"no action "
@@ -77,22 +79,24 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
             value=harvesting_data["identifier_used_value"]
         )
 
-    async def _create_source_record(self, source_record, person, identifier_used,
-                                    first_attempt=True):
+    async def _create_source_record(  # pylint: disable=too-many-arguments
+            self, source_record, person, identifier_used,
+            mode: MessageMode = MessageMode.BATCH, first_attempt=True):
         try:
             if await self.service.source_record_exists(source_record.uid):
                 logger.warning(f"Source record {source_record.uid} already exists in the database")
                 if first_attempt:
                     logger.warning("The system will try to update it")
                     await self._update_source_record(source_record, person, identifier_used,
-                                                     first_attempt=False)
+                                                     mode=mode, first_attempt=False)
                     return
                 logger.error(f"Aborting update attempt for {source_record.uid}"
                              f" after failed create attempt", exc_info=True)
                 return
             await self.service.create_source_record(source_record=source_record,
                                                     harvested_for=person,
-                                                    identifier_used=identifier_used)
+                                                    identifier_used=identifier_used,
+                                                    mode=mode)
         except ReferenceOwnerNotFoundError as e:
             logger.error(
                 f"Reference owner {person} not found while trying to create source record"
@@ -107,19 +111,21 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
                 f"Database error while trying to create source record {source_record} : {e}")
             raise e
 
-    async def _update_source_record(self, source_record, person, identifier_used,
-                                    first_attempt=True):
+    async def _update_source_record(  # pylint: disable=too-many-arguments
+            self, source_record, person, identifier_used,
+            mode: MessageMode = MessageMode.BATCH, first_attempt=True):
         try:
             if await self.service.source_record_exists(source_record.uid):
                 await self.service.update_source_record(source_record=source_record,
                                                         harvested_for=person,
-                                                        identifier_used=identifier_used)
+                                                        identifier_used=identifier_used,
+                                                        mode=mode)
             else:
                 logger.warning(f"Source record {source_record.uid} does not exist in the database")
                 if first_attempt:
                     logger.warning("The system will try to create it")
                     await self._create_source_record(source_record, person, identifier_used,
-                                                     first_attempt=False)
+                                                     mode=mode, first_attempt=False)
                 else:
                     logger.error(f"Aborting create attempt for {source_record.uid}"
                                  f" after failed update attempt", exc_info=True)

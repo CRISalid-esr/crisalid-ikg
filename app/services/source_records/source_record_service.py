@@ -9,6 +9,7 @@ from app.graph.neo4j.concept_dao import ConceptDAO
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.person_dao import PersonDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
+from app.amqp.message_mode import MessageMode
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.concepts import Concept
 from app.models.people import Person
@@ -27,7 +28,8 @@ class SourceRecordService:
 
     async def create_source_record(self, source_record: SourceRecord,
                                    harvested_for: Person,
-                                   identifier_used: PersonIdentifier) -> SourceRecord:
+                                   identifier_used: PersonIdentifier,
+                                   mode: MessageMode = MessageMode.BATCH) -> SourceRecord:
         """
         Create a source bibliographic record in the graph database
         from a Pydantic SourceRecord object and a Pydantic Person object
@@ -46,12 +48,14 @@ class SourceRecordService:
         await self._update_source_record_contributions(source_record)
         await self._handle_source_record_domains(source_record)
         if status == Neo4jDAO.Status.CREATED:
-            await source_record_created.send_async(self, source_record_id=source_record.uid)
+            await source_record_created.send_async(self, source_record_id=source_record.uid,
+                                                   mode=mode)
         return source_record
 
     async def update_source_record(self, source_record: SourceRecord,
                                    harvested_for: Person,
-                                   identifier_used: PersonIdentifier) -> SourceRecord:
+                                   identifier_used: PersonIdentifier,
+                                   mode: MessageMode = MessageMode.BATCH) -> SourceRecord:
         """
         Update a source bibliographic record in the graph database
         from a Pydantic SourceRecord object and a Pydantic Person object
@@ -70,7 +74,8 @@ class SourceRecordService:
         await self._update_source_record_contributions(source_record)
         await self._handle_source_record_domains(source_record)
         if status == Neo4jDAO.Status.UPDATED:
-            await source_record_updated.send_async(self, source_record_id=source_record.uid)
+            await source_record_updated.send_async(self, source_record_id=source_record.uid,
+                                                   mode=mode)
         return source_record
 
     async def _create_source_record(self, source_record, person,

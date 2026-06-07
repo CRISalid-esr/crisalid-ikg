@@ -251,17 +251,42 @@ base keys; the publisher appends `.{mode}` at publish time.
 
 ---
 
-## 8. Inbound publications queues — 5-segment binding keys (svp-harvester #902)
+## 8. Inbound publications queues — split into -batch / -interactive (svp-harvester #902)
 
-svp-harvester #902 emits all outbound messages with a 5th routing-key segment (mode). The two
-inbound queues on the `publications` exchange must update their binding keys:
+svp-harvester #902 preserves mode through the full harvesting pipeline and emits all outbound
+reference events with a 5th routing-key segment. `crisalid-ikg-publications` is therefore split
+into two isolated queues so that interactive document events are not queued behind bulk harvests.
 
-| Queue | Old binding key | New binding key |
+### Queue topology
+
+| Queue | Exchange | Binding key |
 |---|---|---|
-| `crisalid-ikg-publications` | `event.references.reference.*` | `event.references.reference.*.*` |
-| `crisalid-ikg-harvesting-events` | `event.references.*.*` | `event.references.*.*.*` |
+| `crisalid-ikg-publications-batch` | `publications` | `event.references.reference.*.batch` |
+| `crisalid-ikg-publications-interactive` | `publications` | `event.references.reference.*.interactive` |
 
-Queue names and `definitions.sample.json` are unchanged (already updated ahead of time).
+Both queues are bound on the same `AMQPReferenceMessageProcessor`.
 
-The outbound `task.entity.references.retrieval` base key is unchanged; the publisher appends
-`.{mode}`, producing `…retrieval.batch` or `…retrieval.interactive` for the harvester's two queues.
+### Mode propagation
+
+Mode is extracted from the routing key's last segment in
+`AMQPReferenceMessageProcessor._process_message()` and threads through the processing chain:
+
+```
+key.endswith(".interactive") → MessageMode.INTERACTIVE, else BATCH
+  ↓
+SourceRecordService.create/update_source_record(..., mode)
+  ↓
+source_record_created/updated.send_async(..., mode=mode)
+  ↓
+EquivalenceService.update_source_record(mode=mode)  → stores self._mode
+  ↓
+document_*_from_sources / document_sources_changed.send_async(mode=self._mode)
+  ↓
+AMQPInterface.dispatch_document_* → publisher.publish(mode=mode)
+```
+
+### What does NOT change
+
+- `crisalid-ikg-harvesting-events` remains a single queue bound to `event.references.*.*.*`.
+- The outbound `task.entity.references.retrieval` base key is unchanged; the publisher appends
+  `.{mode}` producing `…retrieval.batch` or `…retrieval.interactive`.

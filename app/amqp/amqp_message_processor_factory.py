@@ -27,7 +27,8 @@ class AMQPMessageProcessorFactory:
         :return:
         """
         settings = get_app_settings()
-        if topic == settings.amqp_publications_topic:
+        if topic in (settings.amqp_publications_batch_topic,
+                     settings.amqp_publications_interactive_topic):
             return AMQReferenceMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_people_topic:
             return AMQPPeopleMessageProcessor(tasks_queue, settings)

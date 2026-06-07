@@ -32,7 +32,10 @@ class AMQPInterface:
         self.keys = {
             "people": [self.settings.amqp_directory_people_event_routing_key],
             "structures": [self.settings.amqp_directory_structure_event_routing_key],
-            "publications": [self.settings.amqp_harvester_reference_event_routing_key],
+            "publications_batch": [
+                self.settings.amqp_harvester_reference_event_batch_routing_key],
+            "publications_interactive": [
+                self.settings.amqp_harvester_reference_event_interactive_routing_key],
             "harvesting_events": [self.settings.amqp_harvesting_event_routing_key],
             "user_actions_interactive": [
                 self.settings.amqp_graph_document_task_routing_key,
@@ -65,8 +68,11 @@ class AMQPInterface:
                                self.settings.amqp_structures_topic,
                                self.settings.amqp_structures_queue_name)
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
-                               self.settings.amqp_publications_topic,
-                               self.settings.amqp_publications_queue_name)
+                               self.settings.amqp_publications_batch_topic,
+                               self.settings.amqp_publications_batch_queue_name)
+        await self._bind_queue(self.settings.amqp_publications_exchange_name,
+                               self.settings.amqp_publications_interactive_topic,
+                               self.settings.amqp_publications_interactive_queue_name)
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
                                self.settings.amqp_harvesting_events_topic,
                                self.settings.amqp_harvesting_events_queue_name)
@@ -77,7 +83,8 @@ class AMQPInterface:
 
         logger.info("Attaching message processing workers...")
         self._attach_message_processing_workers(self.settings.amqp_people_topic)
-        self._attach_message_processing_workers(self.settings.amqp_publications_topic)
+        self._attach_message_processing_workers(self.settings.amqp_publications_batch_topic)
+        self._attach_message_processing_workers(self.settings.amqp_publications_interactive_topic)
         self._attach_message_processing_workers(self.settings.amqp_structures_topic)
         self._attach_message_processing_workers(self.settings.amqp_user_actions_interactive_topic)
         self._attach_message_processing_workers(self.settings.amqp_harvesting_events_topic)
