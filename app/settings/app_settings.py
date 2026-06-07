@@ -68,8 +68,8 @@ class AppSettings(BaseSettings):
     amqp_directory_exchange_name: str = "directory"
     amqp_graph_exchange_name: str = "graph"
     amqp_consumer_ack_timeout: int = 43200000
-    amqp_harvester_reference_event_routing_key: str = "event.references.reference.*"
-    amqp_harvesting_event_routing_key: str = "event.references.*.*"
+    amqp_harvester_reference_event_routing_key: str = "event.references.reference.*.*"
+    amqp_harvesting_event_routing_key: str = "event.references.*.*.*"
     amqp_directory_people_event_routing_key: str = "event.people.person.*.batch"
     amqp_graph_people_event_created_routing_key: str = "event.people.person.created"
     amqp_graph_people_event_updated_routing_key: str = "event.people.person.updated"

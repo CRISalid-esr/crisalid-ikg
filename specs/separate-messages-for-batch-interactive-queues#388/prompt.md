@@ -248,3 +248,20 @@ base keys; the publisher appends `.{mode}` at publish time.
   names and `.batch` suffix.
 - `test_amqp_user_actions_message_processor.py` or integration test: verify that a FETCH action
   triggers `task.entity.references.retrieval.interactive`.
+
+---
+
+## 8. Inbound publications queues — 5-segment binding keys (svp-harvester #902)
+
+svp-harvester #902 emits all outbound messages with a 5th routing-key segment (mode). The two
+inbound queues on the `publications` exchange must update their binding keys:
+
+| Queue | Old binding key | New binding key |
+|---|---|---|
+| `crisalid-ikg-publications` | `event.references.reference.*` | `event.references.reference.*.*` |
+| `crisalid-ikg-harvesting-events` | `event.references.*.*` | `event.references.*.*.*` |
+
+Queue names and `definitions.sample.json` are unchanged (already updated ahead of time).
+
+The outbound `task.entity.references.retrieval` base key is unchanged; the publisher appends
+`.{mode}`, producing `…retrieval.batch` or `…retrieval.interactive` for the harvester's two queues.
