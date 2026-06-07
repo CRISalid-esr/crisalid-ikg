@@ -53,7 +53,9 @@ class AppSettings(BaseSettings):
     amqp_host: str = "127.0.0.1"
     amqp_publications_batch_queue_name: str = "crisalid-ikg-publications-batch"
     amqp_publications_interactive_queue_name: str = "crisalid-ikg-publications-interactive"
-    amqp_harvesting_events_queue_name: str = "crisalid-ikg-harvesting-events"
+    amqp_harvesting_events_batch_queue_name: str = "crisalid-ikg-harvesting-events-batch"
+    amqp_harvesting_events_interactive_queue_name: str = \
+        "crisalid-ikg-harvesting-events-interactive"
     amqp_people_queue_name: str = "crisalid-ikg-people-batch"
     amqp_structures_queue_name: str = "crisalid-ikg-structures-batch"
     amqp_user_actions_interactive_queue_name: str = "crisalid-ikg-actions-interactive"
@@ -62,7 +64,8 @@ class AppSettings(BaseSettings):
     amqp_prefetch_count: int = 10
     amqp_publications_batch_topic: str = "publications_batch"
     amqp_publications_interactive_topic: str = "publications_interactive"
-    amqp_harvesting_events_topic: str = "harvesting_events"
+    amqp_harvesting_events_batch_topic: str = "harvesting_events_batch"
+    amqp_harvesting_events_interactive_topic: str = "harvesting_events_interactive"
     amqp_publications_exchange_name: str = "publications"
     amqp_people_topic: str = "people"
     amqp_structures_topic: str = "structures"
@@ -73,7 +76,8 @@ class AppSettings(BaseSettings):
     amqp_harvester_reference_event_batch_routing_key: str = "event.references.reference.*.batch"
     amqp_harvester_reference_event_interactive_routing_key: str = \
         "event.references.reference.*.interactive"
-    amqp_harvesting_event_routing_key: str = "event.references.*.*.*"
+    amqp_harvesting_event_batch_routing_key: str = "event.references.*.*.batch"
+    amqp_harvesting_event_interactive_routing_key: str = "event.references.*.*.interactive"
     amqp_directory_people_event_routing_key: str = "event.people.person.*.batch"
     amqp_graph_people_event_created_routing_key: str = "event.people.person.created"
     amqp_graph_people_event_updated_routing_key: str = "event.people.person.updated"

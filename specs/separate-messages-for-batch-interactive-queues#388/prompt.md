@@ -285,8 +285,20 @@ document_*_from_sources / document_sources_changed.send_async(mode=self._mode)
 AMQPInterface.dispatch_document_* → publisher.publish(mode=mode)
 ```
 
+### Harvesting events queue split
+
+`crisalid-ikg-harvesting-events` is also split into two queues:
+
+| Queue | Exchange | Binding key |
+|---|---|---|
+| `crisalid-ikg-harvesting-events-batch` | `publications` | `event.references.*.*.batch` |
+| `crisalid-ikg-harvesting-events-interactive` | `publications` | `event.references.*.*.interactive` |
+
+`AMQPHarvestingEventsMessageProcessor._process_message()` extracts mode from the routing key's
+last segment (same pattern as the reference processor) and forwards it to the
+`harvesting_state_event_received` and `harvesting_result_event_received` signals.
+
 ### What does NOT change
 
-- `crisalid-ikg-harvesting-events` remains a single queue bound to `event.references.*.*.*`.
 - The outbound `task.entity.references.retrieval` base key is unchanged; the publisher appends
   `.{mode}` producing `…retrieval.batch` or `…retrieval.interactive`.

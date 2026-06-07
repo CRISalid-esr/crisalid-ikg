@@ -36,6 +36,7 @@ class AMQPMessageProcessorFactory:
             return AMQPStructureMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_user_actions_interactive_topic:
             return AMQPUserActionsMessageProcessor(tasks_queue, settings)
-        if topic == settings.amqp_harvesting_events_topic:
+        if topic in (settings.amqp_harvesting_events_batch_topic,
+                     settings.amqp_harvesting_events_interactive_topic):
             return AMQPHarvestingEventsMessageProcessor(tasks_queue, settings)
         raise ValueError(f"No processor found for topic: {topic}")
