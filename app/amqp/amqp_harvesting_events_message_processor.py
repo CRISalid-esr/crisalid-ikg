@@ -3,6 +3,7 @@
 from loguru import logger
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
+from app.amqp.message_mode import MessageMode
 from app.signals import harvesting_state_event_received, harvesting_result_event_received
 
 
@@ -17,8 +18,10 @@ class AMQPHarvestingEventsMessageProcessor(AMQPMessageProcessor):
         json_payload = await self._read_message_json(payload)
         logger.debug(f"Reposting harvesting event message for downstream apps: {json_payload}")
         if "harvester" in json_payload and "state" in json_payload:
-            await harvesting_state_event_received.send_async(self, payload=json_payload)
+            await harvesting_state_event_received.send_async(self, payload=json_payload,
+                                                             mode=MessageMode.BATCH)
         elif "reference_event" in json_payload:
-            await harvesting_result_event_received.send_async(self, payload=json_payload)
+            await harvesting_result_event_received.send_async(self, payload=json_payload,
+                                                              mode=MessageMode.BATCH)
         else:
             logger.debug(f"Message will not be processed : {json_payload}.")

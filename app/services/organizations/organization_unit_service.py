@@ -8,6 +8,7 @@ from app.graph.generic.dao import DAO
 from app.graph.neo4j.organization_unit_dao import OrganizationUnitDAO
 from app.models.organization_unit import OrganizationBase, OrganizationUnit
 from app.services.organizations.institution_service import InstitutionService
+from app.amqp.message_mode import MessageMode
 from app.signals import (structure_created, structure_updated, structure_unchanged,
                          structure_deleted, literal_updated)
 
@@ -17,25 +18,25 @@ class OrganizationUnitService:
 
     async def signal_structure_created(self, uid: str):
         """Dispatch the 'created' signal for a structure."""
-        await structure_created.send_async(self, payload=uid)
+        await structure_created.send_async(self, payload=uid, mode=MessageMode.BATCH)
 
     async def signal_structure_updated(self, uid: str):
         """Dispatch the 'updated' signal for a structure."""
-        await structure_updated.send_async(self, payload=uid)
+        await structure_updated.send_async(self, payload=uid, mode=MessageMode.BATCH)
 
     async def signal_structure_unchanged(self, uid: str):
         """Dispatch the 'unchanged' signal for a structure."""
-        await structure_unchanged.send_async(self, payload=uid)
+        await structure_unchanged.send_async(self, payload=uid, mode=MessageMode.BATCH)
 
     async def signal_structure_deleted(self, uid: str):
         """Dispatch the 'deleted' signal for a structure."""
-        await structure_deleted.send_async(self, payload=uid)
+        await structure_deleted.send_async(self, payload=uid, mode=MessageMode.BATCH)
 
     async def create_structure(self, org_unit: OrganizationBase) -> OrganizationBase:
         """Persist a new structure and emit the created signal."""
         await self._resolve_non_local_relationship_targets(org_unit)
         result = await self._get_dao().create(org_unit)
-        await structure_created.send_async(self, payload=result.uid)
+        await structure_created.send_async(self, payload=result.uid, mode=MessageMode.BATCH)
         await literal_updated.send_async(self)
         return result
 
@@ -43,7 +44,7 @@ class OrganizationUnitService:
         """Update an existing structure and emit the updated signal."""
         await self._resolve_non_local_relationship_targets(org_unit)
         result = await self._get_dao().update(org_unit)
-        await structure_updated.send_async(self, payload=result.uid)
+        await structure_updated.send_async(self, payload=result.uid, mode=MessageMode.BATCH)
         await literal_updated.send_async(self)
         return result
 
@@ -52,10 +53,10 @@ class OrganizationUnitService:
         await self._resolve_non_local_relationship_targets(org_unit)
         uid, status = await self._get_dao().create_or_update(org_unit)
         if status == DAO.Status.CREATED:
-            await structure_created.send_async(self, payload=uid)
+            await structure_created.send_async(self, payload=uid, mode=MessageMode.BATCH)
             await literal_updated.send_async(self)
         elif status == DAO.Status.UPDATED:
-            await structure_updated.send_async(self, payload=uid)
+            await structure_updated.send_async(self, payload=uid, mode=MessageMode.BATCH)
             await literal_updated.send_async(self)
         return org_unit
 

@@ -33,7 +33,7 @@ class AMQPMessageProcessorFactory:
             return AMQPPeopleMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_structures_topic:
             return AMQPStructureMessageProcessor(tasks_queue, settings)
-        if topic == settings.amqp_user_actions_topic:
+        if topic == settings.amqp_user_actions_interactive_topic:
             return AMQPUserActionsMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_harvesting_events_topic:
             return AMQPHarvestingEventsMessageProcessor(tasks_queue, settings)

@@ -179,8 +179,9 @@ class CrisalidIKG(FastAPI):  # pylint: disable=too-many-instance-attributes
                                     name="amqp_publications_listener")
                 asyncio.create_task(self.amqp_interface.listen(settings.amqp_structures_topic),
                                     name="amqp_structures_listener")
-                asyncio.create_task(self.amqp_interface.listen(settings.amqp_user_actions_topic),
-                                    name="amqp_user_actions_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_user_actions_interactive_topic),
+                    name="amqp_user_actions_listener")
                 asyncio.create_task(
                     self.amqp_interface.listen(settings.amqp_harvesting_events_topic),
                     name="amqp_harvesting_events_listener")

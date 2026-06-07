@@ -5,6 +5,8 @@ import aio_pika
 from aio_pika import DeliveryMode
 from loguru import logger
 
+from app.amqp.message_mode import MessageMode
+
 from app.amqp.amqp_document_created_event_message_factory import \
     AMQPDocumentCreatedEventMessageFactory
 from app.amqp.amqp_document_deleted_event_message_factory import \
@@ -105,11 +107,13 @@ class AMQPMessagePublisher:
         self.exchange = exchange
 
     async def publish(self, message_type: MessageType, message_subtype: MessageSubtype,
-                      content: dict) -> None:
+                      content: dict, mode: MessageMode = MessageMode.BATCH) -> None:
         """Publish a message to the AMQP queue"""
         payload, routing_key = await self._build_message(message_type, message_subtype, content)
         if routing_key is None or payload is None:
             return
+        if message_type == self.MessageType.EVENT:
+            routing_key = f"{routing_key}.{mode.value}"
         try:
             message = aio_pika.Message(
                 json.dumps(payload, default=str).encode(),

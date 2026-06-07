@@ -55,7 +55,7 @@ class AppSettings(BaseSettings):
     amqp_harvesting_events_queue_name: str = "crisalid-ikg-harvesting-events"
     amqp_people_queue_name: str = "crisalid-ikg-people"
     amqp_structures_queue_name: str = "crisalid-ikg-structures"
-    amqp_user_actions_queue_name: str = "crisalid-ikg-user-actions"
+    amqp_user_actions_interactive_queue_name: str = "crisalid-ikg-actions-interactive"
     amqp_wait_before_shutdown: int = 30
     amqp_task_parallelism_limit: int = 10
     amqp_prefetch_count: int = 10
@@ -64,7 +64,7 @@ class AppSettings(BaseSettings):
     amqp_publications_exchange_name: str = "publications"
     amqp_people_topic: str = "people"
     amqp_structures_topic: str = "structures"
-    amqp_user_actions_topic: str = "user_actions"
+    amqp_user_actions_interactive_topic: str = "user_actions_interactive"
     amqp_directory_exchange_name: str = "directory"
     amqp_graph_exchange_name: str = "graph"
     amqp_consumer_ack_timeout: int = 43200000
@@ -75,11 +75,14 @@ class AppSettings(BaseSettings):
     amqp_graph_people_event_updated_routing_key: str = "event.people.person.updated"
     amqp_graph_people_event_deleted_routing_key: str = "event.people.person.deleted"
     amqp_graph_people_event_unchanged_routing_key: str = "event.people.person.unchanged"
-    amqp_graph_harvesting_state_event_routing_key: str = "event.harvestings.state.*"
-    amqp_graph_harvesting_result_event_routing_key: str = "event.harvestings.result.*"
-    amqp_graph_document_task_routing_key: str = "task.documents.document.*"
-    amqp_graph_person_documents_fetch_task_routing_key: str = "task.people.documents.fetch"
-    amqp_graph_person_attribute_update_task_routing_key: str = "task.people.person.*"
+    amqp_graph_harvesting_state_event_routing_key: str = \
+        "event.harvestings.harvesting_state_event.*"
+    amqp_graph_harvesting_result_event_routing_key: str = \
+        "event.harvestings.harvesting_result_event.*"
+    amqp_graph_document_task_routing_key: str = "task.documents.document.*.interactive"
+    amqp_graph_person_documents_fetch_task_routing_key: str = \
+        "task.people.documents.fetch.interactive"
+    amqp_graph_person_attribute_update_task_routing_key: str = "task.people.person.*.interactive"
     amqp_graph_research_unit_event_created_routing_key: str = \
         "event.structures.structure.created"
     amqp_graph_research_unit_event_updated_routing_key: str = \

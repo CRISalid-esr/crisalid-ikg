@@ -5,6 +5,7 @@ from app.graph.neo4j.utils import load_query
 from app.models.organization_unit import Institution, OrganizationBase
 from app.services.identifiers.identifier_service import AgentIdentifierService
 from app.services.organizations.institution_registry_service import InstitutionRegistryService
+from app.amqp.message_mode import MessageMode
 from app.signals import structure_created
 
 
@@ -46,7 +47,7 @@ class InstitutionService:
             )
         dao = self._get_org_unit_dao()
         await dao.create(institution)
-        await structure_created.send_async(self, payload=institution.uid)
+        await structure_created.send_async(self, payload=institution.uid, mode=MessageMode.BATCH)
         return institution.uid
 
     async def get_institution_by_uid(self, uid: str) -> Institution | None:

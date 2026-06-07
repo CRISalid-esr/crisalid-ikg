@@ -1,5 +1,6 @@
 from loguru import logger
 
+from app.amqp.message_mode import MessageMode
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao_factory import DAOFactory
@@ -19,14 +20,18 @@ class EquivalenceService:
 
     def __init__(self):
         self.source_records_to_update_uids = []
+        self._mode: MessageMode = MessageMode.BATCH
 
-    async def update_source_record(self, _, source_record_id) -> None:
+    async def update_source_record(self, _, source_record_id,
+                                   mode: MessageMode = MessageMode.BATCH) -> None:
         """
         Update a source record with the given id
         :param _:
         :param source_record_id:
+        :param mode: message mode for outbound events (BATCH or INTERACTIVE)
         :return:
         """
+        self._mode = mode
         logger.debug(f"beginning to update source record with id {source_record_id}")
         self.source_records_to_update_uids.append(source_record_id)
         await self._update_inferred_equivalence_relationships()
@@ -165,12 +170,13 @@ class EquivalenceService:
         # if the document was created, send the document_created_from_sources signal
         if document_created:
             await document_created_from_sources.send_async(self,
-                                                           document_uid=recorded_documents[0].uid)
+                                                           document_uid=recorded_documents[0].uid,
+                                                           mode=self._mode)
         else:
             # Otherwise, send the document_sources_changed signal for each recorded document
             for document in recorded_documents:
                 await document_sources_changed.send_async(
-                    self, document_uid=document.uid
+                    self, document_uid=document.uid, mode=self._mode
                 )
 
     @staticmethod
