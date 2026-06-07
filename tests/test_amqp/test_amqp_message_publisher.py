@@ -42,7 +42,7 @@ async def test_publish_fetch_publications_taks(
             ]
         }
     }
-    expected_sent_message_routing_key = "task.entity.references.retrieval"
+    expected_sent_message_routing_key = "task.entity.references.retrieval.batch"
     await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
                             AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
                             {"person_uid": persisted_person_a_pydantic_model.uid})

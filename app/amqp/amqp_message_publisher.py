@@ -112,8 +112,7 @@ class AMQPMessagePublisher:
         payload, routing_key = await self._build_message(message_type, message_subtype, content)
         if routing_key is None or payload is None:
             return
-        if message_type == self.MessageType.EVENT:
-            routing_key = f"{routing_key}.{mode.value}"
+        routing_key = f"{routing_key}.{mode.value}"
         try:
             message = aio_pika.Message(
                 json.dumps(payload, default=str).encode(),

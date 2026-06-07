@@ -260,10 +260,12 @@ class AMQPInterface:
             logger.error(f"Cannot fetch publications for person {person_uid}"
                          "AMQP exchange not declared")
             return
+        mode = extra.get("mode", MessageMode.BATCH)
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
                                 AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
-                                {"person_uid": person_uid, "harvesters": harvesters})
+                                {"person_uid": person_uid, "harvesters": harvesters},
+                                mode=mode)
 
     async def dispatch_person_created(self, _, **extra) -> None:
         """

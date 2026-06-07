@@ -4,6 +4,7 @@ from loguru import logger
 from pydantic import ValidationError
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
+from app.amqp.message_mode import MessageMode
 from app.models.change import Change
 from app.models.identifier_types import PersonIdentifierType
 from app.services.changes.change_service import ChangeService
@@ -71,7 +72,8 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
                 harvesters = None
             service = PeopleService()
             await service.signal_publications_to_be_updated(json_payload["targetUid"],
-                                                            harvesters=harvesters)
+                                                            harvesters=harvesters,
+                                                            mode=MessageMode.INTERACTIVE)
             logger.debug(f"Publications fetched for person {json_payload['targetUid']}.")
             return
 
