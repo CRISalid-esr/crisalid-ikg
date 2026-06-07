@@ -15,9 +15,10 @@ This issue implements the **crisalid-ikg** side:
 
 1. Rename/replace the inbound user-actions queue to `crisalid-ikg-actions-interactive` and update
    its binding keys to the new 5-segment format.
-2. Add a **mode** (`batch` or `interactive`) to all outbound messages published on the `graph`
+2. Rename the inbound directory queues to `-batch` and add `.batch` to their binding keys.
+3. Add a **mode** (`batch` or `interactive`) to all outbound messages published on the `graph`
    exchange and on the `publications` exchange.
-3. Fix the harvesting event routing key names to match the catalog.
+4. Fix the harvesting event routing key names to match the catalog.
 
 ---
 
@@ -66,7 +67,29 @@ The queue carries a DLQ as before:
 
 ---
 
-## 2. Outbound — 5th segment on all emitted messages
+## 2. Inbound directory queues — rename to `-batch`
+
+ETL pipelines only ever produce `batch`-class messages. The two `directory` exchange queues are
+renamed accordingly and their binding keys gain the `.batch` 5th segment.
+
+| Setting | Old value | New value |
+|---|---|---|
+| `amqp_people_queue_name` | `"crisalid-ikg-people"` | `"crisalid-ikg-people-batch"` |
+| `amqp_structures_queue_name` | `"crisalid-ikg-structures"` | `"crisalid-ikg-structures-batch"` |
+| `amqp_directory_people_event_routing_key` | `"event.people.person.*"` | `"event.people.person.*.batch"` |
+| `amqp_directory_structure_event_routing_key` | `"event.structures.structure.*"` | `"event.structures.structure.*.batch"` |
+
+**`app/settings/app_settings.py`** — update the four values above.
+
+`amqp_interface.py` already uses the settings for queue names and binding keys (`self.keys` dict
+and `_bind_queue` calls) — no code change needed there.
+
+This requires the ETL service (crisalid-directory-bridge) to emit routing keys with a `.batch`
+5th segment on the `directory` exchange (coordinated change).
+
+---
+
+## 3. Outbound — 5th segment on all emitted messages
 
 ### Routing key convention
 
@@ -161,7 +184,7 @@ appends it.
 
 ---
 
-## 3. Harvesting event routing key name fix
+## 4. Harvesting event routing key name fix
 
 The current settings use incorrect 3rd-segment names. Update:
 
@@ -178,7 +201,7 @@ These match the `event.harvestings.*.*.batch` wildcard binding on `sovisuplus-ba
 
 ---
 
-## 4. Settings summary
+## 5. Settings summary
 
 Remove:
 - `amqp_user_actions_queue_name`
@@ -189,6 +212,10 @@ Add:
 - `amqp_user_actions_interactive_topic: str = "user_actions_interactive"`
 
 Update:
+- `amqp_people_queue_name`: `"crisalid-ikg-people-batch"`
+- `amqp_structures_queue_name`: `"crisalid-ikg-structures-batch"`
+- `amqp_directory_people_event_routing_key`: `"event.people.person.*.batch"`
+- `amqp_directory_structure_event_routing_key`: `"event.structures.structure.*.batch"`
 - `amqp_graph_document_task_routing_key`: `"task.documents.document.*.interactive"`
 - `amqp_graph_person_documents_fetch_task_routing_key`: `"task.people.documents.fetch.interactive"`
 - `amqp_graph_person_attribute_update_task_routing_key`: `"task.people.person.*.interactive"`
@@ -200,7 +227,7 @@ base keys; the publisher appends `.{mode}` at publish time.
 
 ---
 
-## 5. What does NOT change
+## 6. What does NOT change
 
 - All queues and exchanges other than `crisalid-ikg-user-actions` (directory, harvesting-events).
 - Message payload schemas — this issue is routing-key / queue-topology only.
@@ -212,7 +239,7 @@ base keys; the publisher appends `.{mode}` at publish time.
 
 ---
 
-## 6. Testing
+## 7. Testing
 
 - `test_amqp_message_publisher.py`: verify EVENT routing keys append `.batch` by default;
   `task.entity.references.retrieval` also appends `.batch` by default; passing `INTERACTIVE`
