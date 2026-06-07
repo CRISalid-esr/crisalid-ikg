@@ -18,18 +18,19 @@ def fixture_mock_queue() -> AsyncMock:
     return AsyncMock(spec=asyncio.Queue)
 
 
-def test_get_publication_processor(mock_queue) -> None:
+@pytest.mark.parametrize("topic_attr", [
+    "amqp_publications_batch_topic",
+    "amqp_publications_interactive_topic",
+])
+def test_get_publication_processor(mock_queue, topic_attr) -> None:
     """
     Given the AMQPMessageProcessorFactory
-    When get_processor is called with the amqp_publications_topic
-    Then an AMQPPublicationMessageProcessor should be returned
-
-    :param mock_queue: mock queue object
-    :return: None
+    When get_processor is called with a publications topic (batch or interactive)
+    Then an AMQReferenceMessageProcessor should be returned
     """
     settings = get_app_settings()
     processor = AMQPMessageProcessorFactory.get_processor(
-        settings.amqp_publications_topic, mock_queue
+        getattr(settings, topic_attr), mock_queue
     )
     assert isinstance(processor, AMQReferenceMessageProcessor)
 
