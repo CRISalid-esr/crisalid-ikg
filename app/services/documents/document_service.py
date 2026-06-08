@@ -15,6 +15,7 @@ from app.services.journals.journal_service import JournalService
 from app.services.source_contributors.source_contributor_mapping_service import \
     SourceContributorMappingService
 from app.services.source_records.equivalence_service import EquivalenceService
+from app.amqp.message_mode import MessageMode
 from app.signals import document_updated, document_created, \
     document_unchanged, document_deleted, literal_updated
 
@@ -24,33 +25,38 @@ class DocumentService:
     Service to handle operations on publication data
     """
 
-    async def update_from_source_records(self, _, document_uid: str):
+    async def update_from_source_records(self, _, document_uid: str,
+                                         mode: MessageMode = MessageMode.BATCH):
         """
         Recompute metadata for an existing document
         :param _: unused (for compatibility with signal handlers)
         :param document_uid: the document uid
+        :param mode: message mode for outbound events
         :return:
         """
         to_be_deleted = not await self._compute_document_from_source_records(document_uid)
         if to_be_deleted:
-            await self.signal_document_deleted(document_uid)
+            await self.signal_document_deleted(document_uid, mode=mode)
         else:
-            await self.signal_document_updated(document_uid)
+            await self.signal_document_updated(document_uid, mode=mode)
             await literal_updated.send_async(self)
 
-    async def create_from_source_records(self, _, document_uid: str):
+    async def create_from_source_records(self, _, document_uid: str,
+                                         mode: MessageMode = MessageMode.BATCH):
         """
         Recompute metadata for a newly created document
         :param _: unused (for compatibility with signal handlers)
         :param document_uid: the document uid
+        :param mode: message mode for outbound events
         :return:
         """
         # fetch the source records to be merged
         await self._compute_document_from_source_records(document_uid)
-        await self.signal_document_created(document_uid)
+        await self.signal_document_created(document_uid, mode=mode)
         await literal_updated.send_async(self)
 
-    async def merge_documents(self, document_uids: set[str]) -> None:
+    async def merge_documents(self, document_uids: set[str],
+                              mode: MessageMode = MessageMode.BATCH) -> None:
         """
         Merge a set of documents by asserting equivalences between their source records.
         Steps:
@@ -86,7 +92,7 @@ class DocumentService:
             return
 
         svc = EquivalenceService()
-        await svc.update_source_record(self, representative_uid)
+        await svc.update_source_record(self, representative_uid, mode=mode)
 
     async def _compute_document_from_source_records(self, document_uid) -> bool:
         """
@@ -128,37 +134,42 @@ class DocumentService:
         await ChangeService().apply_changes_to_node(document_uid)
         return True
 
-    async def signal_document_updated(self, document_uid):
+    async def signal_document_updated(self, document_uid, mode: MessageMode = MessageMode.BATCH):
         """
         Signal that a document has been updated for all listeners to be notified
         :param document_uid:
+        :param mode: message mode for outbound events
         :return:
         """
-        await document_updated.send_async(self, document_uid=document_uid)
+        await document_updated.send_async(self, document_uid=document_uid, mode=mode)
 
-    async def signal_document_created(self, document_uid):
+    async def signal_document_created(self, document_uid, mode: MessageMode = MessageMode.BATCH):
         """
         Signal that a document has been created for all listeners to be notified
         :param document_uid:
+        :param mode: message mode for outbound events
         :return:
         """
-        await document_created.send_async(self, document_uid=document_uid)
+        await document_created.send_async(self, document_uid=document_uid, mode=mode)
 
-    async def signal_document_unchanged(self, document_uid):
+    async def signal_document_unchanged(self, document_uid,
+                                        mode: MessageMode = MessageMode.BATCH):
         """
         Signal that a document has not been changed for all listeners to be notified
         :param document_uid:
+        :param mode: message mode for outbound events
         :return:
         """
-        await document_unchanged.send_async(self, document_uid=document_uid)
+        await document_unchanged.send_async(self, document_uid=document_uid, mode=mode)
 
-    async def signal_document_deleted(self, document_uid):
+    async def signal_document_deleted(self, document_uid, mode: MessageMode = MessageMode.BATCH):
         """
         Signal that a document has been deleted for all listeners to be notified
         :param document_uid:
+        :param mode: message mode for outbound events
         :return:
         """
-        await document_deleted.send_async(self, document_uid=document_uid)
+        await document_deleted.send_async(self, document_uid=document_uid, mode=mode)
 
     async def _get_source_records_of_document(self, document_uid) -> list[
         SourceRecord]:

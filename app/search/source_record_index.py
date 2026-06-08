@@ -20,7 +20,7 @@ class SourceRecordIndex:
         settings = get_app_settings()
         self.index_config = settings.es_indexes["source_records"]
 
-    async def add_source_record(self, _, source_record_id):
+    async def add_source_record(self, _, source_record_id, **_kwargs):
         """
         Add a source record to the index
         :param emitter: the emitter of the signal

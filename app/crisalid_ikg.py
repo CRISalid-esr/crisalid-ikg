@@ -175,15 +175,23 @@ class CrisalidIKG(FastAPI):  # pylint: disable=too-many-instance-attributes
             if listen:
                 asyncio.create_task(self.amqp_interface.listen(settings.amqp_people_topic),
                                     name="amqp_people_listener")
-                asyncio.create_task(self.amqp_interface.listen(settings.amqp_publications_topic),
-                                    name="amqp_publications_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_publications_batch_topic),
+                    name="amqp_publications_batch_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_publications_interactive_topic),
+                    name="amqp_publications_interactive_listener")
                 asyncio.create_task(self.amqp_interface.listen(settings.amqp_structures_topic),
                                     name="amqp_structures_listener")
-                asyncio.create_task(self.amqp_interface.listen(settings.amqp_user_actions_topic),
-                                    name="amqp_user_actions_listener")
                 asyncio.create_task(
-                    self.amqp_interface.listen(settings.amqp_harvesting_events_topic),
-                    name="amqp_harvesting_events_listener")
+                    self.amqp_interface.listen(settings.amqp_user_actions_interactive_topic),
+                    name="amqp_user_actions_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_harvesting_events_batch_topic),
+                    name="amqp_harvesting_events_batch_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_harvesting_events_interactive_topic),
+                    name="amqp_harvesting_events_interactive_listener")
             logger.info("RabbitMQ connexion has been enabled")
         except AMQPConnectionError as error:
             logger.error(

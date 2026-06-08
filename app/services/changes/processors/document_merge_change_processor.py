@@ -1,5 +1,6 @@
 from typing import Set, List, Optional
 
+from app.amqp.message_mode import MessageMode
 from app.services.changes.processors.abstract_change_processor import AbstractChangeProcessor
 from app.services.documents.document_service import DocumentService
 
@@ -39,4 +40,4 @@ class DocumentMergeChangeProcessor(AbstractChangeProcessor):
             )
 
         service = DocumentService()
-        await service.merge_documents(all_uids)
+        await service.merge_documents(all_uids, mode=MessageMode.INTERACTIVE)

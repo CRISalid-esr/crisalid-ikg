@@ -11,6 +11,7 @@ from app.models.employments import Employment
 from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.services.organizations.institution_service import InstitutionService
+from app.amqp.message_mode import MessageMode
 from app.signals import person_created, person_identifiers_updated, person_unchanged, \
     person_deleted, person_updated, publications_to_be_updated
 
@@ -25,40 +26,43 @@ class PeopleService:
         Dispatch the 'created' signal for a person.
         :param uid: The UID of the person
         """
-        await person_created.send_async(self, payload=uid)
+        await person_created.send_async(self, payload=uid, mode=MessageMode.BATCH)
 
     async def signal_person_updated(self, uid: str):
         """
         Dispatch the 'updated' signal for a person.
         :param uid: The UID of the person
         """
-        await person_updated.send_async(self, payload=uid)
+        await person_updated.send_async(self, payload=uid, mode=MessageMode.BATCH)
 
     async def signal_person_unchanged(self, uid: str):
         """
         Dispatch the 'unchanged' signal for a person.
         :param uid: The UID of the person
         """
-        await person_unchanged.send_async(self, payload=uid)
+        await person_unchanged.send_async(self, payload=uid, mode=MessageMode.BATCH)
 
     async def signal_person_deleted(self, uid: str):
         """
         Dispatch the 'deleted' signal for a person.
         :param uid: The UID of the person
         """
-        await person_deleted.send_async(self, payload=uid)
+        await person_deleted.send_async(self, payload=uid, mode=MessageMode.BATCH)
 
     async def signal_publications_to_be_updated(self, person_uid: str,
-                                                harvesters: list[str] | None = None):
+                                                harvesters: list[str] | None = None,
+                                                mode: MessageMode = MessageMode.BATCH):
         """
         Dispatch the 'publications_to_be_updated' signal for a person.
         :param person_uid:
+        :param harvesters:
+        :param mode: message mode for the outbound retrieval task
         :return:
         """
         await publications_to_be_updated.send_async(self, payload={
             "person_uid": person_uid,
             "harvesters": harvesters
-        })
+        }, mode=mode)
 
     async def create_person(self, person: Person) -> Person:
         """

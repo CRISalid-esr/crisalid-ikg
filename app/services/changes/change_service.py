@@ -11,6 +11,7 @@ from app.graph.neo4j.document_dao import DocumentDAO
 from app.models.change import Change, TargetType, ChangeStatus
 from app.models.document import Document
 from app.services.changes.change_processor_factory import ChangeProcessorFactory
+from app.amqp.message_mode import MessageMode
 from app.signals import document_updated
 
 
@@ -70,7 +71,8 @@ class ChangeService:
             await self._update_change_status(change)
             # for MERGE changes, the document_updated signal is sent by the processor
             if change.target_type == TargetType.DOCUMENT and change.action_type not in ("MERGE"):
-                await document_updated.send_async(self, document_uid=change.target_uid)
+                await document_updated.send_async(self, document_uid=change.target_uid,
+                                                  mode=MessageMode.INTERACTIVE)
         except (DatabaseError, ValueError) as e:
             change.status = ChangeStatus.FAILED
             change.error_message = str(e)

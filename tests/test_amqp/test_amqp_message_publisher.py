@@ -42,7 +42,7 @@ async def test_publish_fetch_publications_taks(
             ]
         }
     }
-    expected_sent_message_routing_key = "task.entity.references.retrieval"
+    expected_sent_message_routing_key = "task.entity.references.retrieval.batch"
     await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
                             AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
                             {"person_uid": persisted_person_a_pydantic_model.uid})
@@ -71,7 +71,7 @@ async def test_publish_person_event(
     """
     # pylint: disable=duplicate-code
     publisher = AMQPMessagePublisher(mocked_exchange)
-    expected_sent_message_routing_key = "event.people.person.created"
+    expected_sent_message_routing_key = "event.people.person.created.batch"
     await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
                             AMQPMessagePublisher.EventMessageSubtype.PERSON_CREATED,
                             {"person_uid": persisted_person_a_pydantic_model.uid})
@@ -109,7 +109,7 @@ async def test_publish_structure_event_research_unit(
         {"structure_uid": persisted_research_unit_a_pydantic_model.uid})
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
-    assert mocked_exchange.publish.call_args[1]["routing_key"] == "event.structures.structure.created"
+    assert mocked_exchange.publish.call_args[1]["routing_key"] == "event.structures.structure.created.batch"
     message_body = json.loads(message.body)
     fields = message_body['fields']
     assert message_body['event'] == 'created'
@@ -157,7 +157,7 @@ async def test_publish_structure_event_institution(
         {"structure_uid": persisted_institution_a_pydantic_model.uid})
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
-    assert mocked_exchange.publish.call_args[1]["routing_key"] == "event.structures.structure.created"
+    assert mocked_exchange.publish.call_args[1]["routing_key"] == "event.structures.structure.created.batch"
     message_body = json.loads(message.body)
     fields = message_body['fields']
     assert message_body['event'] == 'created'
@@ -226,7 +226,7 @@ async def test_publish_document_event(
     :return:
     """
     publisher = AMQPMessagePublisher(mocked_exchange)
-    expected_sent_message_routing_key = "event.documents.document.created"
+    expected_sent_message_routing_key = "event.documents.document.created.batch"
     await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
                             AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_CREATED,
                             {"document_uid": document_persisted_model.uid})

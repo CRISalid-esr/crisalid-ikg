@@ -39,7 +39,7 @@ async def test_amqp_harvesting_state_event_is_forwarded(test_app: CrisalidIKG):
         "fields": harvesting_state_message,
     }
 
-    routing_key_expected = "event.harvestings.state.running"
+    routing_key_expected = "event.harvestings.harvesting_state_event.running.batch"
 
     payload_bytes = json.dumps(harvesting_state_message).encode("utf-8")
     queue = asyncio.Queue()
@@ -133,7 +133,7 @@ async def test_amqp_harvesting_result_event_is_forwarded(test_app: CrisalidIKG):
         "fields": harvesting_result_message
     }
 
-    routing_key_expected = "event.harvestings.result.created"
+    routing_key_expected = "event.harvestings.harvesting_result_event.created.batch"
 
     payload_bytes = json.dumps(harvesting_result_message).encode("utf-8")
     queue = asyncio.Queue()

@@ -51,35 +51,46 @@ class AppSettings(BaseSettings):
     amqp_user: str = "guest"
     amqp_password: str = "guest"
     amqp_host: str = "127.0.0.1"
-    amqp_publications_queue_name: str = "crisalid-ikg-publications"
-    amqp_harvesting_events_queue_name: str = "crisalid-ikg-harvesting-events"
-    amqp_people_queue_name: str = "crisalid-ikg-people"
-    amqp_structures_queue_name: str = "crisalid-ikg-structures"
-    amqp_user_actions_queue_name: str = "crisalid-ikg-user-actions"
+    amqp_publications_batch_queue_name: str = "crisalid-ikg-publications-batch"
+    amqp_publications_interactive_queue_name: str = "crisalid-ikg-publications-interactive"
+    amqp_harvesting_events_batch_queue_name: str = "crisalid-ikg-harvesting-events-batch"
+    amqp_harvesting_events_interactive_queue_name: str = \
+        "crisalid-ikg-harvesting-events-interactive"
+    amqp_people_queue_name: str = "crisalid-ikg-people-batch"
+    amqp_structures_queue_name: str = "crisalid-ikg-structures-batch"
+    amqp_user_actions_interactive_queue_name: str = "crisalid-ikg-actions-interactive"
     amqp_wait_before_shutdown: int = 30
     amqp_task_parallelism_limit: int = 10
     amqp_prefetch_count: int = 10
-    amqp_publications_topic: str = "publications"
-    amqp_harvesting_events_topic: str = "harvesting_events"
+    amqp_publications_batch_topic: str = "publications_batch"
+    amqp_publications_interactive_topic: str = "publications_interactive"
+    amqp_harvesting_events_batch_topic: str = "harvesting_events_batch"
+    amqp_harvesting_events_interactive_topic: str = "harvesting_events_interactive"
     amqp_publications_exchange_name: str = "publications"
     amqp_people_topic: str = "people"
     amqp_structures_topic: str = "structures"
-    amqp_user_actions_topic: str = "user_actions"
+    amqp_user_actions_interactive_topic: str = "user_actions_interactive"
     amqp_directory_exchange_name: str = "directory"
     amqp_graph_exchange_name: str = "graph"
     amqp_consumer_ack_timeout: int = 43200000
-    amqp_harvester_reference_event_routing_key: str = "event.references.reference.*"
-    amqp_harvesting_event_routing_key: str = "event.references.*.*"
-    amqp_directory_people_event_routing_key: str = "event.people.person.*"
+    amqp_harvester_reference_event_batch_routing_key: str = "event.references.reference.*.batch"
+    amqp_harvester_reference_event_interactive_routing_key: str = \
+        "event.references.reference.*.interactive"
+    amqp_harvesting_event_batch_routing_key: str = "event.references.*.*.batch"
+    amqp_harvesting_event_interactive_routing_key: str = "event.references.*.*.interactive"
+    amqp_directory_people_event_routing_key: str = "event.people.person.*.batch"
     amqp_graph_people_event_created_routing_key: str = "event.people.person.created"
     amqp_graph_people_event_updated_routing_key: str = "event.people.person.updated"
     amqp_graph_people_event_deleted_routing_key: str = "event.people.person.deleted"
     amqp_graph_people_event_unchanged_routing_key: str = "event.people.person.unchanged"
-    amqp_graph_harvesting_state_event_routing_key: str = "event.harvestings.state.*"
-    amqp_graph_harvesting_result_event_routing_key: str = "event.harvestings.result.*"
-    amqp_graph_document_task_routing_key: str = "task.documents.document.*"
-    amqp_graph_person_documents_fetch_task_routing_key: str = "task.people.documents.fetch"
-    amqp_graph_person_attribute_update_task_routing_key: str = "task.people.person.*"
+    amqp_graph_harvesting_state_event_routing_key: str = \
+        "event.harvestings.harvesting_state_event.*"
+    amqp_graph_harvesting_result_event_routing_key: str = \
+        "event.harvestings.harvesting_result_event.*"
+    amqp_graph_document_task_routing_key: str = "task.documents.document.*.interactive"
+    amqp_graph_person_documents_fetch_task_routing_key: str = \
+        "task.people.documents.fetch.interactive"
+    amqp_graph_person_attribute_update_task_routing_key: str = "task.people.person.*.interactive"
     amqp_graph_research_unit_event_created_routing_key: str = \
         "event.structures.structure.created"
     amqp_graph_research_unit_event_updated_routing_key: str = \
@@ -92,7 +103,7 @@ class AppSettings(BaseSettings):
     amqp_graph_document_event_updated_routing_key: str = "event.documents.document.updated"
     amqp_graph_document_event_deleted_routing_key: str = "event.documents.document.deleted"
     amqp_graph_document_event_unchanged_routing_key: str = "event.documents.document.unchanged"
-    amqp_directory_structure_event_routing_key: str = "event.structures.structure.*"
+    amqp_directory_structure_event_routing_key: str = "event.structures.structure.*.batch"
     amqp_harvester_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
 
     event_types_to_process: List[str] = [
