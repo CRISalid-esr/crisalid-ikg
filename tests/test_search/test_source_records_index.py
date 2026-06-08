@@ -2,6 +2,7 @@ from unittest import mock
 
 import pytest
 
+from app.amqp.message_mode import MessageMode
 from app.models.agent_identifiers import PersonIdentifier
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -36,5 +37,6 @@ async def test_signal_source_record_created(
     )
     mock_source_record_index_add_source_record.assert_called_once_with(
         service,
-        source_record_id='scanr-nnt2023xyz135'
+        source_record_id='scanr-nnt2023xyz135',
+        mode=MessageMode.BATCH
     )

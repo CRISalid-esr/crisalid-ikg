@@ -79,7 +79,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
             value=harvesting_data["identifier_used_value"]
         )
 
-    async def _create_source_record(  # pylint: disable=too-many-arguments
+    async def _create_source_record(  # pylint: disable=too-many-arguments,too-many-positional-arguments
             self, source_record, person, identifier_used,
             mode: MessageMode = MessageMode.BATCH, first_attempt=True):
         try:
@@ -111,7 +111,7 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
                 f"Database error while trying to create source record {source_record} : {e}")
             raise e
 
-    async def _update_source_record(  # pylint: disable=too-many-arguments
+    async def _update_source_record(  # pylint: disable=too-many-arguments,too-many-positional-arguments
             self, source_record, person, identifier_used,
             mode: MessageMode = MessageMode.BATCH, first_attempt=True):
         try:

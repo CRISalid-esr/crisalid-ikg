@@ -16,7 +16,7 @@ async def test_signal_person_created(
         get_app_settings().amqp_graph_exchange_name] = mocked_exchange
     service = PeopleService()
     await service.signal_person_created(persisted_person_a_pydantic_model.uid)
-    expected_sent_message_routing_key = "event.people.person.created"
+    expected_sent_message_routing_key = "event.people.person.created.batch"
     expected_sent_message_payload = {'event': 'created',
                                      'fields': {'display_name': 'John Doe', 'external': False,
                                                 'first_name': 'John', 'identifiers': [
