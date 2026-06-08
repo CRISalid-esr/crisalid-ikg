@@ -55,33 +55,39 @@ class AMQPInterface:
 
         logger.info("Declaring exchanges...")
         await self._declare_exchange(self.settings.amqp_graph_exchange_name, with_dlx=True)
-        await self._declare_exchange(self.settings.amqp_publications_exchange_name)
+        await self._declare_exchange(self.settings.amqp_publications_exchange_name, with_dlx=True)
 
         if not listen:
             logger.info("Connection established in non-listening mode.")
             return
 
-        await self._declare_exchange(self.settings.amqp_directory_exchange_name)
+        await self._declare_exchange(self.settings.amqp_directory_exchange_name, with_dlx=True)
 
         logger.info("Binding queues...")
         await self._bind_queue(self.settings.amqp_directory_exchange_name,
                                self.settings.amqp_people_topic,
-                               self.settings.amqp_people_queue_name)
+                               self.settings.amqp_people_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_directory_exchange_name,
                                self.settings.amqp_structures_topic,
-                               self.settings.amqp_structures_queue_name)
+                               self.settings.amqp_structures_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
                                self.settings.amqp_publications_batch_topic,
-                               self.settings.amqp_publications_batch_queue_name)
+                               self.settings.amqp_publications_batch_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
                                self.settings.amqp_publications_interactive_topic,
-                               self.settings.amqp_publications_interactive_queue_name)
+                               self.settings.amqp_publications_interactive_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
                                self.settings.amqp_harvesting_events_batch_topic,
-                               self.settings.amqp_harvesting_events_batch_queue_name)
+                               self.settings.amqp_harvesting_events_batch_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
                                self.settings.amqp_harvesting_events_interactive_topic,
-                               self.settings.amqp_harvesting_events_interactive_queue_name)
+                               self.settings.amqp_harvesting_events_interactive_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_graph_exchange_name,
                                self.settings.amqp_user_actions_interactive_topic,
                                self.settings.amqp_user_actions_interactive_queue_name,
@@ -216,7 +222,7 @@ class AMQPInterface:
 
         if with_dlq:
             queue_arguments["x-dead-letter-exchange"] = f"dlx.{exchange_name}"
-            queue_arguments["x-dead-letter-routing-key"] = topic
+            queue_arguments["x-dead-letter-routing-key"] = queue_name
 
         self.pika_queues[topic] = await self.pika_channel.declare_queue(
             queue_name,
