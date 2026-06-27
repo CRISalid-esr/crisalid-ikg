@@ -1,9 +1,5 @@
-import re
-import unicodedata
 from typing import cast, AsyncGenerator, List
 from venv import logger
-
-from rapidfuzz import fuzz
 
 from app.config import get_app_settings
 from app.errors.conflict_error import ConflictError
@@ -25,6 +21,7 @@ from app.models.source_records import SourceRecord
 from app.services.authority_organizations.authority_organization_service import \
     AuthorityOrganizationService
 from app.services.source_contributors.source_organization_service import SourceOrganizationService
+from app.utils.name_matching import normalize_name, fuzz_distance
 
 
 class SourceContributorMappingService:
@@ -263,7 +260,8 @@ class SourceContributorMappingService:
             contribution_ids=list(current_contribution_ids)
         )
 
-    def _elect_authority_organizations_for_affiliation_statements(self, root_objects,
+    @staticmethod
+    def _elect_authority_organizations_for_affiliation_statements(root_objects,
                                                                   source_organisations):
         # elect one target per root: either a state (unique match) or the root (0 or multiple
         # matches)
@@ -497,20 +495,7 @@ class SourceContributorMappingService:
         return distance
 
     def _normalize_string(self, input_string):
-        # Convert to lowercase
-        normalized = input_string.lower()
-
-        # Replace accented characters with their ASCII equivalents
-        normalized = unicodedata.normalize('NFD', normalized)
-        normalized = ''.join(char for char in normalized if unicodedata.category(char) != 'Mn')
-
-        # Replace all non-letter characters with spaces
-        normalized = re.sub(r'[^a-z]', ' ', normalized)
-
-        # Remove extra spaces
-        normalized = re.sub(r'\s+', ' ', normalized).strip()
-
-        return normalized
+        return normalize_name(input_string)
 
     def _coauthor_names_maximal_distance(self):
         settings = get_app_settings()
@@ -538,7 +523,7 @@ class SourceContributorMappingService:
         :param name2: Second name
         :return: normalized Levenshtein distance
         """
-        return fuzz.token_sort_ratio(name1, name2, processor=self._normalize_string)
+        return fuzz_distance(name1, name2)
 
     def _is_similar(self, internal_person: Person, external_people: list[SourcePerson]) -> bool:
         """

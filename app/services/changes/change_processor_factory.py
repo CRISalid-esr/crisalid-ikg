@@ -3,6 +3,8 @@ from app.models.change import Change, TargetType
 from app.services.changes.processors.abstract_change_processor import AbstractChangeProcessor
 from app.services.changes.processors.document_abstract_change_processor import \
     DocumentAbstractChangeProcessor
+from app.services.changes.processors.document_contributions_change_processor import \
+    DocumentContributionsChangeProcessor
 from app.services.changes.processors.document_merge_change_processor import \
     DocumentMergeChangeProcessor
 from app.services.changes.processors.document_subjects_change_processor import (
@@ -28,6 +30,9 @@ class ChangeProcessorFactory:
         if change.target_type == TargetType.DOCUMENT:
             if change.action_type == "MERGE":
                 return DocumentMergeChangeProcessor(change)
+
+            if change.path == "contributions":
+                return DocumentContributionsChangeProcessor(change)
 
             if change.path == "subjects":
                 return DocumentSubjectsChangeProcessor(change)

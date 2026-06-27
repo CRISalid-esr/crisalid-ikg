@@ -29,8 +29,12 @@ class AuthorityOrganizationLocationService:
         state = await auth_org_dao.get_authority_organization_state_by_uid(state_uid)
 
         source_org_dao = self._get_source_org_dao()
-        source_orgs = [await source_org_dao.get_by_uid(uid) for uid
-                       in state.source_organization_uids]
+        # some source organization uids may not have a backing node in the graph
+        # (e.g. affiliations resolved in-memory from a user contribution update)
+        source_orgs = [source_org for source_org in
+                       [await source_org_dao.get_by_uid(uid)
+                        for uid in state.source_organization_uids]
+                       if source_org is not None]
 
         address_list = []
         place_list = []

@@ -268,7 +268,8 @@ class DocumentDAO(Neo4jDAO):
             self,
             document_uid: str,
             person_uid: str,
-            roles: list[str]
+            roles: list[str],
+            rank: int | None = None
     ) -> str | None:
         """
         Create a Contribution node and establish relationships to the Document and Person.
@@ -276,6 +277,7 @@ class DocumentDAO(Neo4jDAO):
         :param document_uid: UID of the Document.
         :param person_uid: UID of the Person.
         :param roles: List of roles to attach to the contribution.
+        :param rank: Optional rank (card position) of the contribution.
         :return: UID of the created Contribution.
         """
         async with Neo4jConnexion().get_driver() as driver:
@@ -284,7 +286,8 @@ class DocumentDAO(Neo4jDAO):
                     self._create_contribution_transaction,
                     document_uid,
                     person_uid,
-                    roles
+                    roles,
+                    rank
                 )
 
     @staticmethod
@@ -292,7 +295,8 @@ class DocumentDAO(Neo4jDAO):
             tx: AsyncManagedTransaction,
             document_uid: str,
             person_uid: str,
-            roles: list[str]
+            roles: list[str],
+            rank: int | None = None
     ) -> str | None:
         """
         Transaction to create Contribution and link it to Document and Person.
@@ -301,6 +305,7 @@ class DocumentDAO(Neo4jDAO):
         :param document_uid: UID of the Document.
         :param person_uid: UID of the Person.
         :param roles: List of roles to attach to the contribution.
+        :param rank: Optional rank (card position) of the contribution.
         :return: id of the created Contribution.
         """
         query = load_query("create_contribution_to_document")
@@ -308,7 +313,8 @@ class DocumentDAO(Neo4jDAO):
             query,
             document_uid=document_uid,
             person_uid=person_uid,
-            roles=roles
+            roles=roles,
+            rank=rank
         )
         single = await result.single()
         if single is None:

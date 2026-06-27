@@ -34,7 +34,8 @@ class DocumentService:
         :param mode: message mode for outbound events
         :return:
         """
-        to_be_deleted = not await self._compute_document_from_source_records(document_uid)
+        to_be_deleted = not await self._compute_document_from_source_records(
+            document_uid, mode=mode)
         if to_be_deleted:
             await self.signal_document_deleted(document_uid, mode=mode)
         else:
@@ -51,7 +52,7 @@ class DocumentService:
         :return:
         """
         # fetch the source records to be merged
-        await self._compute_document_from_source_records(document_uid)
+        await self._compute_document_from_source_records(document_uid, mode=mode)
         await self.signal_document_created(document_uid, mode=mode)
         await literal_updated.send_async(self)
 
@@ -94,10 +95,12 @@ class DocumentService:
         svc = EquivalenceService()
         await svc.update_source_record(self, representative_uid, mode=mode)
 
-    async def _compute_document_from_source_records(self, document_uid) -> bool:
+    async def _compute_document_from_source_records(
+            self, document_uid, mode: MessageMode = MessageMode.BATCH) -> bool:
         """
         Compute the metadata of a document from its source records
         :param document_uid:
+        :param mode: message mode for outbound events emitted while replaying changes
         :return: False if the document should be deleted (i.e. has no source records)
         """
         sources_records = await self._get_source_records_of_document(document_uid)
@@ -131,7 +134,7 @@ class DocumentService:
         # import dynamically to avoid circular imports
         # pylint: disable=import-outside-toplevel,cyclic-import
         from app.services.changes.change_service import ChangeService
-        await ChangeService().apply_changes_to_node(document_uid)
+        await ChangeService().apply_changes_to_node(document_uid, mode=mode)
         return True
 
     async def signal_document_updated(self, document_uid, mode: MessageMode = MessageMode.BATCH):
