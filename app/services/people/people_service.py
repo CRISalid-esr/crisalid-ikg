@@ -152,6 +152,28 @@ class PeopleService:
         dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.get_all_uids(external=external)
 
+    async def find_external_internal_shared_identifiers(self) -> list[dict]:
+        """
+        List every AgentIdentifier shared between an external and an internal person.
+
+        :return: list of dicts (external_uid, external_display_name, id_type, id_value,
+            internal_uid, internal_display_name).
+        """
+        factory = self._get_dao_factory()
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
+        return await dao.find_external_internal_shared_identifiers()
+
+    async def detach_external_shared_identifiers(self) -> int:
+        """
+        Detach, from external persons, every HAS_IDENTIFIER edge whose AgentIdentifier is also
+        owned by an internal person, restoring one-owner-per-identifier.
+
+        :return: number of HAS_IDENTIFIER relationships detached.
+        """
+        factory = self._get_dao_factory()
+        dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
+        return await dao.detach_external_shared_identifiers()
+
     async def authenticate_identifier(self, person_uid: str,
                                       identifier_type: str, received_identifier: str,
                                       timestamp: str):
