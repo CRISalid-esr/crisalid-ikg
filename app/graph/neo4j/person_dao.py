@@ -437,6 +437,62 @@ class PersonDAO(Neo4jDAO):
         record = await result.single()
         return record["uid"] if record else None
 
+    async def find_candidates_by_identifiers(self, identifiers: list[dict]) -> list[dict]:
+        """
+        Find every Person matching any of the provided identifiers, either through their
+        AgentIdentifiers (internal people) or through their source people's
+        SourcePersonIdentifiers (external people).
+
+        Unlike :meth:`find_by_identifiers` (AgentIdentifier-only, first match), this returns
+        all candidates together with the identifier that matched, so the caller can
+        disambiguate between several persons and discard inconsistent identifiers.
+
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        :return: list of dicts with keys id_type, id_value, person_uid, external, display_name.
+        """
+        if not identifiers:
+            return []
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.read_transaction(
+                    self._find_candidates_by_identifiers_transaction, identifiers)
+
+    @staticmethod
+    async def _find_candidates_by_identifiers_transaction(
+            tx: AsyncManagedTransaction, identifiers: list[dict]
+    ) -> list[dict]:
+        """
+        Transaction backing :meth:`find_candidates_by_identifiers`.
+        """
+        query = load_query("find_person_candidates_by_identifiers")
+        result = await tx.run(query, identifiers=identifiers)
+        return await result.data()
+
+    async def add_person_identifiers(self, person_uid: str, identifiers: list[dict]) -> None:
+        """
+        Add AgentIdentifiers to an existing person without touching its names or other
+        identifiers (MERGE-based, idempotent).
+
+        :param person_uid: UID of the person.
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        """
+        if not identifiers:
+            return
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._add_person_identifiers_transaction, person_uid, identifiers)
+
+    @staticmethod
+    async def _add_person_identifiers_transaction(
+            tx: AsyncManagedTransaction, person_uid: str, identifiers: list[dict]
+    ) -> None:
+        """
+        Transaction backing :meth:`add_person_identifiers`.
+        """
+        query = load_query("create_person_identifiers")
+        await tx.run(query, person_uid=person_uid, identifiers=identifiers)
+
     @staticmethod
     def _hydrate(record) -> Person:
         person_data = record["person"]
@@ -469,6 +525,9 @@ class PersonDAO(Neo4jDAO):
             )
         person = Person(
             uid=person_data["uid"],
+            display_name=person_data.get("display_name"),
+            display_name_variants=person_data.get("display_name_variants") or [],
+            external=person_data.get("external", False),
             identifiers=identifiers,
             names=names,
             memberships=memberships,
