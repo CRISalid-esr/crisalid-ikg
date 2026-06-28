@@ -122,7 +122,8 @@ class InstitutionRegistryService:
             street=[Literal(value=data["address"], language="fr")] if data.get("address") else [],
             city=[Literal(value=data["city"], language="fr")] if data.get("city") else [],
             zip_code=(
-                [Literal(value=data["postal_code"], language="fr")] if data.get("postal_code") else []
+                [Literal(value=data["postal_code"], language="fr")]
+                if data.get("postal_code") else []
             ),
             state_or_province=(
                 [Literal(value=data["reg_nom"], language="fr")] if data.get("reg_nom") else []
