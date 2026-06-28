@@ -91,10 +91,26 @@ class ContributionUpdateService:
         """
         Resolve the contribution's person to a graph Person uid, creating a new external
         person when necessary, and applying the internal/external identifier policy.
+
+        An incoming identifier already owned by an existing person through an ``AgentIdentifier``
+        is authoritative: the contribution is re-pointed onto that owner (internal owners win
+        over external ones) rather than copying the identifier onto a second person and creating
+        a shared node.
         """
         uid = person.get("uid")
         incoming_identifiers = self._incoming_identifiers(person)
         display_name = person.get("displayName") or person.get("display_name")
+
+        candidates = await self._person_dao().find_candidates_by_identifiers(incoming_identifiers)
+
+        # Authoritative re-point: a person that owns an incoming identifier via AgentIdentifier.
+        owner = self._select_agent_owner(candidates, display_name)
+        if owner is not None:
+            owner_uid, owner_external = owner
+            await self._apply_identifier_policy(
+                owner_uid, owner_external, incoming_identifiers,
+                self._agent_inconsistent_keys(candidates, owner_uid))
+            return owner_uid
 
         if uid:
             existing = await self._person_dao().get(uid)
@@ -105,13 +121,17 @@ class ContributionUpdateService:
             # uid provided but not found: fall back to matching/creation
             logger.info("Person uid %s not found, falling back to identifier matching", uid)
 
-        return await self._match_or_create_person(incoming_identifiers, display_name)
+        return await self._match_or_create_person(
+            candidates, incoming_identifiers, display_name)
 
     async def _match_or_create_person(
-            self, incoming_identifiers: list[dict], display_name: Optional[str]
+            self, candidates: list[dict], incoming_identifiers: list[dict],
+            display_name: Optional[str]
     ) -> Optional[str]:
-        candidates = await self._person_dao().find_candidates_by_identifiers(incoming_identifiers)
-
+        """
+        Match the person against source-identifier candidates (AgentIdentifier owners are
+        handled earlier by re-pointing), else create a new external person.
+        """
         persons: dict[str, dict] = {}
         id_to_persons: dict[tuple, set] = defaultdict(set)
         for row in candidates:
@@ -134,6 +154,47 @@ class ContributionUpdateService:
             selected, bool(persons[selected]["external"]), incoming_identifiers,
             self._inconsistent_identifier_keys(id_to_persons, selected))
         return selected
+
+    @classmethod
+    def _select_agent_owner(
+            cls, candidates: list[dict], submitted_name: Optional[str]
+    ) -> Optional[tuple]:
+        """
+        Among the candidates that own an incoming identifier through an ``AgentIdentifier``,
+        pick the one to re-point onto: internal persons take precedence over external ones,
+        ties broken by name similarity. Returns ``(uid, external)`` or ``None`` when no
+        candidate owns an incoming identifier via an AgentIdentifier.
+        """
+        agent_persons: dict[str, dict] = {}
+        for row in candidates:
+            if row.get("via") != "agent":
+                continue
+            agent_persons[row["person_uid"]] = {
+                "external": bool(row.get("external")),
+                "display_name": row.get("display_name"),
+            }
+        if not agent_persons:
+            return None
+        internal = [uid for uid, data in agent_persons.items() if not data["external"]]
+        pool = internal or list(agent_persons.keys())
+        if len(pool) == 1:
+            selected = pool[0]
+        else:
+            selected = cls._select_by_name_similarity(pool, agent_persons, submitted_name)
+        return selected, agent_persons[selected]["external"]
+
+    @classmethod
+    def _agent_inconsistent_keys(cls, candidates: list[dict], selected: str) -> set:
+        """
+        AgentIdentifier (type, value) keys owned by a person other than the selected one; these
+        must not be written onto the selected person.
+        """
+        id_to_persons: dict[tuple, set] = defaultdict(set)
+        for row in candidates:
+            if row.get("via") != "agent":
+                continue
+            id_to_persons[(row["id_type"], row["id_value"])].add(row["person_uid"])
+        return cls._inconsistent_identifier_keys(id_to_persons, selected)
 
     @staticmethod
     def _inconsistent_identifier_keys(id_to_persons: dict[tuple, set], selected: str) -> set:

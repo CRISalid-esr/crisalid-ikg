@@ -177,6 +177,44 @@ def resave_people_all():
 
 
 @people_cli.command()
+def clear_shared_identifiers(
+        apply: bool = typer.Option(
+            False,
+            "--apply",
+            help="Actually detach the shared identifier edges. Without it, only report them."
+        )
+):
+    """
+    Clear AgentIdentifiers wrongly shared between an external and an internal person.
+
+    Lists every AgentIdentifier owned by both an external and an internal person and, with
+    --apply, detaches the external person's HAS_IDENTIFIER edge (the AgentIdentifier node and
+    the external Person are left intact), restoring one-owner-per-identifier.
+    """
+
+    @with_app_lifecycle
+    async def _clear_shared_identifiers():
+        service = PeopleService()
+        shared = await service.find_external_internal_shared_identifiers()
+        if not shared:
+            typer.echo("No AgentIdentifier shared between external and internal persons.")
+            return
+        typer.echo(f"{len(shared)} shared identifier(s) found:")
+        for row in shared:
+            typer.echo(
+                f"  {row['id_type']}={row['id_value']} | "
+                f"external {row['external_uid']} ({row['external_display_name']}) "
+                f"-> internal {row['internal_uid']} ({row['internal_display_name']})")
+        if not apply:
+            typer.echo("Dry run: re-run with --apply to detach the external edges.")
+            return
+        detached = await service.detach_external_shared_identifiers()
+        typer.echo(f"Detached {detached} external HAS_IDENTIFIER edge(s).")
+
+    asyncio.run(_clear_shared_identifiers())
+
+
+@people_cli.command()
 def resave_person(
         uid: str = typer.Argument(..., help="The UID of the person")
 ):

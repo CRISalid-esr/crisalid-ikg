@@ -448,7 +448,9 @@ class PersonDAO(Neo4jDAO):
         disambiguate between several persons and discard inconsistent identifiers.
 
         :param identifiers: List of dictionaries with 'type' and 'value'.
-        :return: list of dicts with keys id_type, id_value, person_uid, external, display_name.
+        :return: list of dicts with keys id_type, id_value, person_uid, external, display_name,
+            via ('agent' when matched through an AgentIdentifier, 'source' when matched through a
+            SourcePersonIdentifier).
         """
         if not identifiers:
             return []
@@ -492,6 +494,43 @@ class PersonDAO(Neo4jDAO):
         """
         query = load_query("create_person_identifiers")
         await tx.run(query, person_uid=person_uid, identifiers=identifiers)
+
+    async def find_external_internal_shared_identifiers(self) -> list[dict]:
+        """
+        Find every AgentIdentifier shared between an external and an internal person.
+
+        :return: list of dicts with keys external_uid, external_display_name, id_type, id_value,
+            internal_uid, internal_display_name (one row per shared identifier / internal owner).
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("find_external_internal_shared_identifiers"))
+                return await result.data()
+
+    async def detach_external_shared_identifiers(self) -> int:
+        """
+        Detach, from external persons, every HAS_IDENTIFIER edge whose AgentIdentifier is also
+        owned by an internal person. The AgentIdentifier node and the external Person are left
+        intact.
+
+        :return: number of HAS_IDENTIFIER relationships detached.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.write_transaction(
+                    self._detach_external_shared_identifiers_transaction)
+
+    @staticmethod
+    async def _detach_external_shared_identifiers_transaction(
+            tx: AsyncManagedTransaction
+    ) -> int:
+        """
+        Transaction backing :meth:`detach_external_shared_identifiers`.
+        """
+        result = await tx.run(load_query("detach_external_shared_identifiers"))
+        record = await result.single()
+        return record["detached"] if record else 0
 
     @staticmethod
     def _hydrate(record) -> Person:

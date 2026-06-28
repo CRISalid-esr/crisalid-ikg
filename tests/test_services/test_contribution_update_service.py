@@ -13,6 +13,7 @@ from app.services.changes.change_processor_factory import ChangeProcessorFactory
 from app.services.changes.change_service import ChangeService
 from app.services.changes.processors.document_contributions_change_processor import \
     DocumentContributionsChangeProcessor
+from app.services.people.people_service import PeopleService
 
 AUT = "http://id.loc.gov/vocabulary/relators/aut"
 CTB = "http://id.loc.gov/vocabulary/relators/ctb"
@@ -234,6 +235,113 @@ async def test_reconcile_resolves_existing_external_person_by_uid(
         _contributions_change(document.uid, contributions))
 
     assert external.uid in await _contributor_uids(document.uid)
+
+
+@pytest.mark.asyncio
+async def test_repoints_to_internal_owner_of_aligned_identifier(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document,
+        persisted_person_a_pydantic_model: Person,
+        mocked_document_updated_signal) -> None:  # pylint: disable=unused-argument
+    """
+    A contribution referencing an external person by uid whose incoming identifier already
+    belongs (via AgentIdentifier) to an internal person re-points to the internal person, and
+    never copies that identifier onto the external person.
+    """
+    document = document_hal_article_a_persisted_model
+    internal = persisted_person_a_pydantic_model
+    person_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Person)
+    aligned = (await person_dao.get(internal.uid)).identifiers[0]
+    aligned_key = (aligned.type.value, aligned.value)
+
+    external = Person(uid="hal-ext-lamy", display_name="Lamy, Jerome",
+                      external=True, identifiers=[])
+    await person_dao.create(external)
+
+    contributions = [{
+        "rank": 0, "roles": [AUT],
+        "person": {"uid": external.uid, "displayName": "Lamy, Jerome",
+                   "identifiers": [{"type": aligned_key[0], "value": aligned_key[1]}]},
+        "affiliations": [],
+    }]
+    await ChangeService().create_and_apply_change(
+        _contributions_change(document.uid, contributions))
+
+    contributor_uids = await _contributor_uids(document.uid)
+    assert internal.uid in contributor_uids
+    assert external.uid not in contributor_uids
+
+    external_keys = {(i.type.value, i.value)
+                     for i in (await person_dao.get(external.uid)).identifiers}
+    assert aligned_key not in external_keys
+
+
+@pytest.mark.asyncio
+async def test_repoints_to_existing_external_owner(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document,
+        mocked_document_updated_signal) -> None:  # pylint: disable=unused-argument
+    """
+    A contribution whose incoming identifier already belongs (via AgentIdentifier) to an
+    existing external person consolidates onto that person instead of spawning a duplicate.
+    """
+    document = document_hal_article_a_persisted_model
+    person_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Person)
+    owner = Person(uid="orcid-0000-0000-0000-0009", display_name="Paul Martin",
+                   external=True,
+                   identifiers=[{"type": "orcid", "value": "0000-0000-0000-0009"}])
+    await person_dao.create(owner)
+
+    contributions = [{
+        "rank": 0, "roles": [CTB],
+        "person": {"uid": None, "displayName": "Paul Martin",
+                   "identifiers": [{"type": "orcid", "value": "0000-0000-0000-0009"}]},
+        "affiliations": [],
+    }]
+    await ChangeService().create_and_apply_change(
+        _contributions_change(document.uid, contributions))
+
+    contributor_uids = await _contributor_uids(document.uid)
+    assert contributor_uids == {owner.uid}
+
+
+@pytest.mark.asyncio
+async def test_clear_shared_identifiers_detaches_external_edge(
+        test_app,  # pylint: disable=unused-argument
+        persisted_person_a_pydantic_model: Person) -> None:
+    """
+    The cleanup detaches a shared AgentIdentifier from the external person while leaving the
+    node, the external person and the internal owner intact.
+    """
+    internal = persisted_person_a_pydantic_model
+    person_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Person)
+    shared = (await person_dao.get(internal.uid)).identifiers[0]
+    shared_id = {"type": shared.type.value, "value": shared.value}
+
+    external = Person(uid="hal-ext-shared", display_name="Shared Owner",
+                      external=True, identifiers=[])
+    await person_dao.create(external)
+    # simulate the bug: link the internal person's identifier onto the external person
+    await person_dao.add_person_identifiers(external.uid, [shared_id])
+
+    service = PeopleService()
+    rows = await service.find_external_internal_shared_identifiers()
+    assert any(r["external_uid"] == external.uid
+               and r["internal_uid"] == internal.uid
+               and r["id_value"] == shared.value for r in rows)
+
+    detached = await service.detach_external_shared_identifiers()
+    assert detached >= 1
+
+    external_keys = {(i.type.value, i.value)
+                     for i in (await person_dao.get(external.uid)).identifiers}
+    assert (shared.type.value, shared.value) not in external_keys
+    # the internal owner keeps the identifier
+    internal_keys = {(i.type.value, i.value)
+                     for i in (await person_dao.get(internal.uid)).identifiers}
+    assert (shared.type.value, shared.value) in internal_keys
+    # nothing left shared
+    assert await service.find_external_internal_shared_identifiers() == []
 
 
 @pytest.mark.asyncio
