@@ -119,13 +119,16 @@ class InstitutionRegistryService:
     @staticmethod
     def _build_addresses_from_registry_data(data):
         return StructuredPhysicalAddress(
-            street=[Literal(value=data["address"], language="fr")] if "address" in data else [],
-            city=[Literal(value=data["city"], language="fr")] if "city" in data else [],
-            zip_code=[
-                Literal(value=data["postal_code"], language="fr")] if "postal_code" in data else [],
-            state_or_province=[
-                Literal(value=data["reg_nom"], language="fr")] if "reg_nom" in data else [],
-            country=[Literal(value=data["country"], language="fr")] if "country" in data else [],
+            street=[Literal(value=data["address"], language="fr")] if data.get("address") else [],
+            city=[Literal(value=data["city"], language="fr")] if data.get("city") else [],
+            zip_code=(
+                [Literal(value=data["postal_code"], language="fr")]
+                if data.get("postal_code") else []
+            ),
+            state_or_province=(
+                [Literal(value=data["reg_nom"], language="fr")] if data.get("reg_nom") else []
+            ),
+            country=[Literal(value=data["country"], language="fr")] if data.get("country") else [],
         )
 
     @staticmethod
@@ -133,8 +136,8 @@ class InstitutionRegistryService:
         names = [
             Literal(value=data["name"], language="fr")
         ]
-        if "uo_lib_en" in data:
+        if data.get("uo_lib_en"):
             names.append(Literal(value=data["uo_lib_en"], language="en"))
-        if "uo_lib_officiel" in data:
+        if data.get("uo_lib_officiel"):
             names.append(Literal(value=data["uo_lib_officiel"], language="fr"))
         return names
