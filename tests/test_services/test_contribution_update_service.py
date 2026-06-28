@@ -62,6 +62,20 @@ async def _count_affiliation_statements(document_uid: str) -> int:
             return record["n"]
 
 
+async def _affiliation_identifiers(document_uid: str) -> set:
+    query = (
+        "MATCH (:Document {uid: $uid})-[:HAS_CONTRIBUTION]->(:Contribution)"
+        "-[:HAS_AFFILIATION_STATEMENT]->(:AuthorityOrganization)"
+        "-[:HAS_IDENTIFIER]->(i:AgentIdentifier) "
+        "RETURN collect(DISTINCT [i.type, i.value]) AS ids"
+    )
+    async with Neo4jConnexion().get_driver() as driver:
+        async with driver.session() as session:
+            result = await session.run(query, uid=document_uid)
+            record = await result.single()
+            return {(t, v) for t, v in record["ids"]}
+
+
 def test_factory_routes_contributions_to_processor() -> None:
     """The factory routes a path=contributions document change to the new processor."""
     change = _contributions_change("doc-1", [])
@@ -366,3 +380,32 @@ async def test_replay_emits_batch_mode(
 
     assert mocked_document_updated_signal.call_args is not None
     assert mocked_document_updated_signal.call_args.kwargs["mode"] == MessageMode.BATCH
+
+
+@pytest.mark.asyncio
+async def test_affiliation_hal_structid_becomes_identifier(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document,
+        persisted_person_a_pydantic_model: Person,
+        mocked_document_updated_signal) -> None:  # pylint: disable=unused-argument
+    """
+    An affiliation whose only identifier is a HAL structId resolves to an authority that
+    carries a `hal` identifier (so sovisuplus sees it as identified).
+    """
+    document = document_hal_article_a_persisted_model
+    internal = persisted_person_a_pydantic_model
+    contributions = [{
+        "rank": 0, "roles": [AUT],
+        "person": {"uid": internal.uid, "displayName": internal.display_name,
+                   "identifiers": []},
+        "affiliations": [
+            {"hal": "1210550", "nns": None, "ror": None, "isni": None,
+             "name": "University of Bologna - DIMEVET", "type": "institution",
+             "idref": None, "label": "University of Bologna - DIMEVET",
+             "acronym": None, "wikidata": None}
+        ],
+    }]
+    await ChangeService().create_and_apply_change(
+        _contributions_change(document.uid, contributions))
+
+    assert ("hal", "1210550") in await _affiliation_identifiers(document.uid)
