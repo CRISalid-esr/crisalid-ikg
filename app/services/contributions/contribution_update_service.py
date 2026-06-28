@@ -11,6 +11,7 @@ from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.person_dao import PersonDAO
 from app.models.document import Document
 from app.models.harvesting_sources import HarvestingSource
+from app.models.identifier_types import OrganizationIdentifierType
 from app.models.people import Person
 from app.models.source_organization_identifiers import SourceOrganizationIdentifier
 from app.models.source_organizations import SourceOrganization
@@ -311,7 +312,14 @@ class ContributionUpdateService:
             logger.warning("Affiliation without usable identifier skipped: %s", affiliation)
             return None
 
-        identifiers = [
+        identifiers = []
+        # The HAL structId is both the source key and a genuine identifier: record it as a
+        # ``hal`` identifier so the resolved authority is identified and converges (by identifier)
+        # on the harvested authority keyed on the same structId.
+        if affiliation.get("hal"):
+            identifiers.append(SourceOrganizationIdentifier(
+                type=OrganizationIdentifierType.HAL.value, value=str(affiliation["hal"])))
+        identifiers += [
             SourceOrganizationIdentifier(type=key, value=affiliation[key])
             for key in self._AFFILIATION_IDENTIFIER_KEYS
             if affiliation.get(key)
