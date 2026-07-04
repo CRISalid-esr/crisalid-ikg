@@ -30,7 +30,7 @@ class SourceRecordIndex:
 
         if not self._init_es_client():
             logger.debug(
-                "Elasticsearch client is not set up, cannot add source record %s to the index",
+                "Elasticsearch client is not set up, cannot add source record {} to the index",
                 source_record_id)
             return False
         print(f"Adding source record {source_record_id} to the index")

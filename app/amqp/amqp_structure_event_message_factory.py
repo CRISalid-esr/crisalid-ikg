@@ -33,7 +33,7 @@ class AMQPStructureEventMessageFactory(AbstractAMQPMessageFactory):
         try:
             structure = await service.get_structure_by_uid(structure_uid)
         except DatabaseError as e:
-            logger.error("Error fetching structure %s: %s while building AMQP message payload",
+            logger.error("Error fetching structure {}: {} while building AMQP message payload",
                          structure_uid, e)
             return None
 

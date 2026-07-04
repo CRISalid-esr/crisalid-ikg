@@ -193,7 +193,7 @@ class SourceRecord(BaseModel):
         for item in v:
             value = item.get("value") if isinstance(item, dict) else getattr(item, "value", None)
             if value is None or not str(value).strip():
-                logger.warning("Skipping identifier with empty value: %s", item)
+                logger.warning("Skipping identifier with empty value: {}", item)
                 continue
             valid.append(item)
 
