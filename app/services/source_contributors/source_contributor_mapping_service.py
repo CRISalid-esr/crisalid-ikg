@@ -1,5 +1,6 @@
 from typing import cast, AsyncGenerator, List
-from venv import logger
+
+from loguru import logger
 
 from app.config import get_app_settings
 from app.errors.conflict_error import ConflictError
@@ -148,7 +149,7 @@ class SourceContributorMappingService:
             try:
                 person_uid, _, _ = await self.person_dao.create(external_person)
             except ConflictError:
-                logger.error("External person %s already exists", external_person)
+                logger.error("External person {} already exists", external_person)
                 person_uid = external_person.uid
             existing_external_people_uids.add(person_uid)
         if len(existing_external_people_uids) == 1:
@@ -312,7 +313,7 @@ class SourceContributorMappingService:
             except ConflictError as e:
                 logger.error(
                     "Conflict error while creating or fetching authority "
-                    "organization for source organization cluster %s : %s",
+                    "organization for source organization cluster {} : {}",
                     [org.uid for org in so_cluster],
                     e
                 )

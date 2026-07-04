@@ -62,7 +62,7 @@ class ContributionUpdateService:
             person = contribution.get("person") or {}
             person_uid = await self._resolve_person(person)
             if person_uid is None:
-                logger.warning("Skipping contribution with unresolvable person: %s", person)
+                logger.warning("Skipping contribution with unresolvable person: {}", person)
                 continue
             roles = contribution.get("roles") or []
             rank = contribution.get("rank")
@@ -120,7 +120,7 @@ class ContributionUpdateService:
                     existing.uid, bool(existing.external), incoming_identifiers, set())
                 return existing.uid
             # uid provided but not found: fall back to matching/creation
-            logger.info("Person uid %s not found, falling back to identifier matching", uid)
+            logger.info("Person uid {} not found, falling back to identifier matching", uid)
 
         return await self._match_or_create_person(
             candidates, incoming_identifiers, display_name)
@@ -255,7 +255,7 @@ class ContributionUpdateService:
             person_uid, _, _ = await self._person_dao().create(person)
             return person_uid
         except (ConflictError, ValueError) as error:
-            logger.error("Could not create external person %s: %s", display_name, error)
+            logger.error("Could not create external person {}: {}", display_name, error)
             return None
 
     @staticmethod
@@ -293,7 +293,7 @@ class ContributionUpdateService:
                 root_objects.append(root)
             except ConflictError as error:
                 logger.error(
-                    "Conflict error while resolving affiliation %s: %s", organisation.uid, error)
+                    "Conflict error while resolving affiliation {}: {}", organisation.uid, error)
 
         # pylint: disable=protected-access
         return SourceContributorMappingService\
@@ -309,7 +309,7 @@ class ContributionUpdateService:
                     source_identifier = affiliation.get(key)
                     break
         if not source_identifier:
-            logger.warning("Affiliation without usable identifier skipped: %s", affiliation)
+            logger.warning("Affiliation without usable identifier skipped: {}", affiliation)
             return None
 
         identifiers = []

@@ -21,6 +21,6 @@ class PublicationIdentifier(BaseModel):
     @classmethod
     def _allow_unknown_identifier_type(cls, value):
         if value not in [member.value for member in PublicationIdentifierType]:
-            logger.warning("Unknown publication identifier type submitted: %s", value)
+            logger.warning("Unknown publication identifier type submitted: {}", value)
             return PublicationIdentifierType.UNKNOWN.value
         return value

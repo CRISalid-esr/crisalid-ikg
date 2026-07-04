@@ -401,7 +401,7 @@ class AMQPInterface:
                                         mode: MessageMode = MessageMode.BATCH):
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
-            logger.error("Cannot dispatch %s event for structure %s: "
+            logger.error("Cannot dispatch {} event for structure {}: "
                          "AMQP exchange not declared", event_message_subtype, structure_uid)
             return
         publisher = AMQPMessagePublisher(exchange)
@@ -465,8 +465,8 @@ class AMQPInterface:
             f" for document {document_uid}")
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
-            logger.error("Cannot dispatch %s event for document %s: "
-                         "AMQP exchange not declared", document_uid)
+            logger.error("Cannot dispatch {} event for document {}: "
+                         "AMQP exchange not declared", event_message_subtype, document_uid)
             return
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
