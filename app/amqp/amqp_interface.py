@@ -474,6 +474,41 @@ class AMQPInterface:
                                 {"document_uid": document_uid},
                                 mode=mode)
 
+    async def dispatch_change_applied(self, _, **extra) -> None:
+        """
+        Dispatch a change applied event (user-action outcome, interactive only)
+        :param _: sender of message (unused)
+        :param extra: extra parameters carrying the change event fields
+        :return: None
+        """
+        event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.CHANGE_APPLIED
+        await self._dispatch_change_event(event_message_subtype, extra["fields"])
+
+    async def dispatch_change_failed(self, _, **extra) -> None:
+        """
+        Dispatch a change failed event (user-action outcome, interactive only)
+        :param _: sender of message (unused)
+        :param extra: extra parameters carrying the change event fields
+        :return: None
+        """
+        event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.CHANGE_FAILED
+        await self._dispatch_change_event(event_message_subtype, extra["fields"])
+
+    async def _dispatch_change_event(self, event_message_subtype, fields: dict):
+        logger.info(
+            f"Dispatching change event: {event_message_subtype}"
+            f" for change {fields.get('uid')}")
+        exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
+        if not exchange:
+            logger.error("Cannot dispatch {} event for change {}: "
+                         "AMQP exchange not declared", event_message_subtype, fields.get("uid"))
+            return
+        publisher = AMQPMessagePublisher(exchange)
+        await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
+                                event_message_subtype,
+                                {"fields": fields},
+                                mode=MessageMode.INTERACTIVE)
+
     async def dispatch_harvesting_state_event(self, _, **extra):
         """
         Dispatch a harvesting state event

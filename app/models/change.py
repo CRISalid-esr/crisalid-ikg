@@ -1,9 +1,11 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Literal, Optional
 
 from pydantic import BaseModel, model_validator, Field, field_validator, AliasChoices
+
+from app.models.change_report import ChangeWarning
 
 
 class ChangeStatus(str, Enum):
@@ -45,6 +47,7 @@ class Change(BaseModel):
     timestamp: datetime
     status: ChangeStatus = ChangeStatus.CREATED
     error_message: Optional[str] = None  # if status == FAILED
+    warnings: list[ChangeWarning] = []  # per-item losses
 
     @model_validator(mode="before")
     @classmethod
@@ -70,8 +73,45 @@ class Change(BaseModel):
                 raise ValueError("Invalid JSON in parameters field") from e
         return v
 
+    @field_validator("warnings", mode="before")
+    @classmethod
+    def _unmarshal_warnings(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError as e:
+                raise ValueError("Invalid JSON in warnings field") from e
+        return v
+
     def marshal_parameters(self) -> str:
         """
         Convert parameters to a JSON string for storage.
         """
         return json.dumps(self.parameters, ensure_ascii=False)
+
+    def marshal_warnings(self) -> str:
+        """
+        Convert warnings to a JSON string for storage.
+        """
+        return json.dumps([warning.model_dump() for warning in self.warnings],
+                          ensure_ascii=False)
+
+    def to_event_fields(self) -> dict:
+        """
+        Build the JSON-safe ``fields`` payload of an outbound change event message.
+        """
+        return {
+            "uid": self.uid,
+            "id": self.id,
+            "application": self.application,
+            "person_uid": self.person_uid,
+            # false positive: pylint infers FieldInfo for the aliased field
+            "target_type": self.target_type.value,  # pylint: disable=no-member
+            "target_uid": self.target_uid,
+            "path": self.path,
+            "action_type": self.action_type,
+            "status": self.status.value,
+            "error_message": self.error_message,
+            "warnings": [warning.model_dump() for warning in self.warnings],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }

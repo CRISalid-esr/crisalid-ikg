@@ -1,14 +1,17 @@
 # file: app/amqp/amqp_user_actions_message_processor.py
 
+from datetime import datetime, timezone
+
 from loguru import logger
 from pydantic import ValidationError
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.message_mode import MessageMode
-from app.models.change import Change
+from app.models.change import Change, ChangeStatus
 from app.models.identifier_types import PersonIdentifierType
 from app.services.changes.change_service import ChangeService
 from app.services.people.people_service import PeopleService
+from app.signals import change_failed
 
 
 class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
@@ -51,9 +54,35 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
         try:
             change = Change.model_validate(json_payload)
         except ValidationError as e:
+            # no valid Change can be built: the failure event is the only record
+            await change_failed.send_async(
+                self, fields=self._invalid_change_fields(json_payload, e))
             raise ValueError(f"Failed to build Change object: {e}") from e
         # exceptions are handled in the base class
         await self.change_service.create_and_apply_change(change)
+
+    @staticmethod
+    def _invalid_change_fields(json_payload: dict, error: ValidationError) -> dict:
+        """
+        Build change-failed event fields from a raw payload that failed validation,
+        so the originating application can still correlate the failure.
+        """
+        application = json_payload.get("application")
+        raw_id = json_payload.get("id")
+        return {
+            "uid": f"{application}:{raw_id}" if application and raw_id else None,
+            "id": raw_id,
+            "application": application,
+            "person_uid": json_payload.get("personUid"),
+            "target_type": json_payload.get("targetType"),
+            "target_uid": json_payload.get("targetUid"),
+            "path": json_payload.get("path"),
+            "action_type": json_payload.get("actionType"),
+            "status": ChangeStatus.FAILED.value,
+            "error_message": f"invalid message: {error}",
+            "warnings": [],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
     async def _process_unregistered_change(self, json_payload: str):
         """

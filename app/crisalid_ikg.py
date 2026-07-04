@@ -30,7 +30,8 @@ from app.signals import person_created, person_identifiers_updated, source_recor
     document_unchanged, document_deleted, structure_unchanged, structure_deleted, \
     person_deleted, person_updated, publications_to_be_updated, source_journal_created, \
     source_journal_updated, harvesting_state_event_received, harvesting_result_event_received, \
-    document_created_from_sources, authority_organisation_state_updated
+    document_created_from_sources, authority_organisation_state_updated, \
+    change_applied, change_failed
 
 
 class CrisalidIKG(FastAPI):  # pylint: disable=too-many-instance-attributes
@@ -139,6 +140,8 @@ class CrisalidIKG(FastAPI):  # pylint: disable=too-many-instance-attributes
         document_created.connect(self.amqp_interface.dispatch_document_created)
         document_unchanged.connect(self.amqp_interface.dispatch_document_unchanged)
         document_deleted.connect(self.amqp_interface.dispatch_document_deleted)
+        change_applied.connect(self.amqp_interface.dispatch_change_applied)
+        change_failed.connect(self.amqp_interface.dispatch_change_failed)
 
     def _register_harvesting_events(self):
         harvesting_state_event_received.connect(self.amqp_interface.dispatch_harvesting_state_event)

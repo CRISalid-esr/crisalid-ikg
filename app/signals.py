@@ -16,6 +16,9 @@ structure_deleted = signal('structure-deleted')
 source_record_created = signal('source-record-created')
 source_record_updated = signal('source-record-updated')
 
+change_applied = signal('change-applied')
+change_failed = signal('change-failed')
+
 document_created_from_sources = signal('document-created-from-sources')
 document_sources_changed = signal('document-sources-changed')
 document_updated = signal('document-updated')

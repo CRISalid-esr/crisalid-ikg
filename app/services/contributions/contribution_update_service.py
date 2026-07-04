@@ -9,6 +9,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao_factory import DAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.person_dao import PersonDAO
+from app.models.change_report import ChangeApplicationReport
 from app.models.document import Document
 from app.models.harvesting_sources import HarvestingSource
 from app.models.identifier_types import OrganizationIdentifierType
@@ -49,20 +50,32 @@ class ContributionUpdateService:
     def __init__(self) -> None:
         self.authority_organization_service = AuthorityOrganizationService()
 
-    async def reconcile(self, document_uid: str, contributions: list[dict]) -> None:
+    async def reconcile(self, document_uid: str,
+                        contributions: list[dict]) -> ChangeApplicationReport:
         """
         Reconcile the document's contributions to exactly the submitted list.
 
         :param document_uid: target document uid
         :param contributions: full ordered contribution list from the message
+        :return: application report with one warning per skipped or degraded item
         """
+        report = ChangeApplicationReport()
         document_dao = self._document_dao()
         contribution_ids: list[str] = []
         for contribution in contributions:
             person = contribution.get("person") or {}
-            person_uid = await self._resolve_person(person)
+            warnings_before = len(report.warnings)
+            person_uid = await self._resolve_person(person, report)
             if person_uid is None:
                 logger.warning("Skipping contribution with unresolvable person: {}", person)
+                # a more specific warning may already have been recorded during resolution
+                if len(report.warnings) == warnings_before:
+                    report.add_warning(
+                        "UNRESOLVABLE_PERSON",
+                        "Skipping contribution with unresolvable person",
+                        display_name=person.get("displayName") or person.get("display_name"),
+                        identifiers=self._incoming_identifiers(person),
+                    )
                 continue
             roles = contribution.get("roles") or []
             rank = contribution.get("rank")
@@ -73,22 +86,39 @@ class ContributionUpdateService:
                 rank=rank,
             )
             if contribution_id is None:
+                report.add_warning(
+                    "CONTRIBUTION_NOT_CREATED",
+                    "Contribution could not be created",
+                    person_uid=person_uid,
+                )
                 continue
-            targets = await self._resolve_affiliations(contribution.get("affiliations") or [])
+            targets = await self._resolve_affiliations(
+                contribution.get("affiliations") or [], report)
             await document_dao.update_contribution_affiliation_statements(
                 contribution_id=contribution_id,
                 targets=targets,
             )
             contribution_ids.append(contribution_id)
+        # Safety guard: a non-empty submitted list that resolved to nothing must not wipe
+        # every contributor from the document — abort and keep the previous state.
+        if contributions and not contribution_ids:
+            details = "; ".join(
+                f"{warning.code}: {warning.message}" for warning in report.warnings)
+            raise ValueError(
+                f"None of the {len(contributions)} submitted contributions could be applied "
+                f"to document {document_uid}; aborting to avoid removing all contributors"
+                f"{f' ({details})' if details else ''}")
         # Remove contributors absent from the submitted list
         await document_dao.delete_contributions_not_in(
             document_uid=document_uid,
             contribution_ids=contribution_ids,
         )
+        return report
 
     # ------------------------------------------------------------------ persons
 
-    async def _resolve_person(self, person: dict) -> Optional[str]:
+    async def _resolve_person(
+            self, person: dict, report: ChangeApplicationReport) -> Optional[str]:
         """
         Resolve the contribution's person to a graph Person uid, creating a new external
         person when necessary, and applying the internal/external identifier policy.
@@ -123,11 +153,11 @@ class ContributionUpdateService:
             logger.info("Person uid {} not found, falling back to identifier matching", uid)
 
         return await self._match_or_create_person(
-            candidates, incoming_identifiers, display_name)
+            candidates, incoming_identifiers, display_name, report)
 
     async def _match_or_create_person(
             self, candidates: list[dict], incoming_identifiers: list[dict],
-            display_name: Optional[str]
+            display_name: Optional[str], report: ChangeApplicationReport
     ) -> Optional[str]:
         """
         Match the person against source-identifier candidates (AgentIdentifier owners are
@@ -144,7 +174,8 @@ class ContributionUpdateService:
 
         distinct = list(persons.keys())
         if not distinct:
-            return await self._create_external_person(incoming_identifiers, display_name)
+            return await self._create_external_person(
+                incoming_identifiers, display_name, report)
 
         if len(distinct) == 1:
             selected = distinct[0]
@@ -240,10 +271,16 @@ class ContributionUpdateService:
         return best_uid
 
     async def _create_external_person(
-            self, incoming_identifiers: list[dict], display_name: Optional[str]
+            self, incoming_identifiers: list[dict], display_name: Optional[str],
+            report: ChangeApplicationReport
     ) -> Optional[str]:
         if not display_name:
             logger.warning("Cannot create external person without a display name")
+            report.add_warning(
+                "MISSING_DISPLAY_NAME",
+                "Cannot create external person without a display name",
+                identifiers=incoming_identifiers,
+            )
             return None
         person = Person(
             uid=None,
@@ -256,6 +293,12 @@ class ContributionUpdateService:
             return person_uid
         except (ConflictError, ValueError) as error:
             logger.error("Could not create external person {}: {}", display_name, error)
+            report.add_warning(
+                "EXTERNAL_PERSON_CREATION_FAILED",
+                "Could not create external person",
+                display_name=display_name,
+                error=str(error),
+            )
             return None
 
     @staticmethod
@@ -269,13 +312,15 @@ class ContributionUpdateService:
 
     # ------------------------------------------------------------- affiliations
 
-    async def _resolve_affiliations(self, affiliations: list[dict]) -> list[str]:
+    async def _resolve_affiliations(
+            self, affiliations: list[dict], report: ChangeApplicationReport) -> list[str]:
         """
         Resolve message affiliations to elected authority-organization target uids, reusing
         the existing in-memory authority resolution (no SourceOrganization node persisted).
         """
         source_organisations = [
-            org for org in (self._build_source_organization(aff) for aff in affiliations)
+            org for org in (self._build_source_organization(aff, report)
+                            for aff in affiliations)
             if org is not None
         ]
         if not source_organisations:
@@ -294,13 +339,21 @@ class ContributionUpdateService:
             except ConflictError as error:
                 logger.error(
                     "Conflict error while resolving affiliation {}: {}", organisation.uid, error)
+                report.add_warning(
+                    "AFFILIATION_CONFLICT",
+                    "Conflict error while resolving affiliation",
+                    source_organization_uid=organisation.uid,
+                    error=str(error),
+                )
 
         # pylint: disable=protected-access
         return SourceContributorMappingService\
             ._elect_authority_organizations_for_affiliation_statements(
                 root_objects, source_organisations)
 
-    def _build_source_organization(self, affiliation: dict) -> Optional[SourceOrganization]:
+    def _build_source_organization(
+            self, affiliation: dict,
+            report: ChangeApplicationReport) -> Optional[SourceOrganization]:
         source_identifier = affiliation.get("hal")
         if not source_identifier:
             # affiliations are normally HAL-sourced; fall back to any other identifier
@@ -310,6 +363,11 @@ class ContributionUpdateService:
                     break
         if not source_identifier:
             logger.warning("Affiliation without usable identifier skipped: {}", affiliation)
+            report.add_warning(
+                "AFFILIATION_WITHOUT_IDENTIFIER",
+                "Affiliation without usable identifier skipped",
+                affiliation=affiliation,
+            )
             return None
 
         identifiers = []
