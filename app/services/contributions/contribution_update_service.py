@@ -140,7 +140,8 @@ class ContributionUpdateService:
             owner_uid, owner_external = owner
             await self._apply_identifier_policy(
                 owner_uid, owner_external, incoming_identifiers,
-                self._agent_inconsistent_keys(candidates, owner_uid), report, display_name)
+                self._agent_inconsistent_keys(candidates, owner_uid),
+                report=report, display_name=display_name)
             return owner_uid
 
         if uid:
@@ -148,7 +149,7 @@ class ContributionUpdateService:
             if existing is not None:
                 await self._apply_identifier_policy(
                     existing.uid, bool(existing.external), incoming_identifiers, set(),
-                    report, display_name)
+                    report=report, display_name=display_name)
                 return existing.uid
             # uid provided but not found: fall back to matching/creation
             logger.info("Person uid {} not found, falling back to identifier matching", uid)
@@ -185,7 +186,8 @@ class ContributionUpdateService:
 
         await self._apply_identifier_policy(
             selected, bool(persons[selected]["external"]), incoming_identifiers,
-            self._inconsistent_identifier_keys(id_to_persons, selected), report, display_name)
+            self._inconsistent_identifier_keys(id_to_persons, selected),
+            report=report, display_name=display_name)
         return selected
 
     @classmethod
@@ -243,6 +245,7 @@ class ContributionUpdateService:
             external: bool,
             incoming_identifiers: list[dict],
             inconsistent_keys: set,
+            *,
             report: ChangeApplicationReport,
             display_name: Optional[str],
     ) -> None:
