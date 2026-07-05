@@ -9,6 +9,7 @@ from app.amqp.amqp_user_actions_message_processor import AMQPUserActionsMessageP
 from app.amqp.message_mode import MessageMode
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.models.change import Change, TargetType, ChangeStatus
 from app.models.document import Document
 from app.models.people import Person
@@ -60,6 +61,16 @@ async def _contributor_uids(document_uid: str) -> set:
     document_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Document)
     document = await document_dao.get_document_by_uid(document_uid)
     return {contribution.contributor.uid for contribution in document.contributions}
+
+
+async def _agent_identifiers(person_uid: str) -> set:
+    query = ("MATCH (:Person {uid: $uid})-[:HAS_IDENTIFIER]->(i:AgentIdentifier) "
+             "RETURN collect([i.type, i.value]) AS ids")
+    async with Neo4jConnexion().get_driver() as driver:
+        async with driver.session() as session:
+            result = await session.run(query, uid=person_uid)
+            record = await result.single()
+            return {(t, v) for t, v in record["ids"]}
 
 
 @pytest.mark.asyncio
@@ -288,6 +299,133 @@ async def test_invalid_message_emits_failed_event(
     assert fields["target_uid"] == "some-document-uid"
     assert fields["status"] == "failed"
     assert fields["error_message"].startswith("invalid message")
+
+
+@pytest.mark.asyncio
+async def test_invalid_identifier_only_reports_real_cause(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document,
+        persisted_person_a_pydantic_model: Person,
+        mocked_document_updated_signal,  # pylint: disable=unused-argument
+        mocked_change_applied_signal) -> None:
+    """
+    Given a new person whose only identifier is an invalid idhals (digits),
+    When the change is applied,
+    Then the warnings name the invalid identifier explicitly, and the creation-failure
+        error is the informative uid message (no model dump).
+    """
+    document = document_hal_article_a_persisted_model
+    internal = persisted_person_a_pydantic_model
+
+    contributions = [
+        {"rank": 0, "roles": [AUT],
+         "person": {"uid": internal.uid, "displayName": internal.display_name,
+                    "identifiers": []},
+         "affiliations": []},
+        {"rank": 1, "roles": [AUT],
+         "person": {"uid": None, "displayName": "Laurent Touquet",
+                    "identifiers": [{"type": "idhals", "value": "123456"}]},
+         "affiliations": []},
+    ]
+    change = _contributions_change(document.uid, contributions,
+                                   uid="sovisuplus:badid1", change_id="badid1")
+    await ChangeService().create_and_apply_change(change)
+
+    change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
+    stored = await change_dao.get_by_uid(change.uid)
+    assert stored.status == ChangeStatus.APPLIED
+    codes = [warning.code for warning in stored.warnings]
+    assert codes == ["INVALID_IDENTIFIER", "EXTERNAL_PERSON_CREATION_FAILED"]
+
+    invalid = stored.warnings[0]
+    assert invalid.context["type"] == "idhals"
+    assert invalid.context["value"] == "123456"
+    assert invalid.context["display_name"] == "Laurent Touquet"
+
+    creation_failed = stored.warnings[1]
+    assert "Cannot compute uid for Person" in creation_failed.context["error"]
+    assert "model" not in creation_failed.context["error"]
+
+    fields = mocked_change_applied_signal.call_args.kwargs["fields"]
+    assert [warning["code"] for warning in fields["warnings"]] == codes
+
+
+@pytest.mark.asyncio
+async def test_invalid_identifier_dropped_on_person_creation(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document,
+        mocked_document_updated_signal,  # pylint: disable=unused-argument
+        mocked_change_applied_signal) -> None:  # pylint: disable=unused-argument
+    """
+    Given a new person with a valid orcid and an invalid idhals,
+    When the change is applied,
+    Then the person is created from the valid identifier only, and the invalid one is
+        reported and not persisted.
+    """
+    document = document_hal_article_a_persisted_model
+    contributions = [
+        {"rank": 0, "roles": [AUT],
+         "person": {"uid": None, "displayName": "Claire Durand",
+                    "identifiers": [{"type": "orcid", "value": "0000-0000-0000-0003"},
+                                    {"type": "idhals", "value": "123456"}]},
+         "affiliations": []},
+    ]
+    change = _contributions_change(document.uid, contributions,
+                                   uid="sovisuplus:badid2", change_id="badid2")
+    await ChangeService().create_and_apply_change(change)
+
+    assert await _contributor_uids(document.uid) == {"orcid-0000-0000-0000-0003"}
+
+    change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
+    stored = await change_dao.get_by_uid(change.uid)
+    assert stored.status == ChangeStatus.APPLIED
+    assert [warning.code for warning in stored.warnings] == ["INVALID_IDENTIFIER"]
+
+    identifiers = await _agent_identifiers("orcid-0000-0000-0000-0003")
+    assert ("orcid", "0000-0000-0000-0003") in identifiers
+    assert not any(id_type == "idhals" for id_type, _ in identifiers)
+
+
+@pytest.mark.asyncio
+async def test_invalid_identifier_not_merged_on_existing_external_person(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document,
+        mocked_document_updated_signal,  # pylint: disable=unused-argument
+        mocked_change_applied_signal) -> None:  # pylint: disable=unused-argument
+    """
+    Given an existing external person and incoming identifiers containing an invalid idhals,
+    When the change is applied,
+    Then the invalid identifier is reported and not written onto the person.
+    """
+    document = document_hal_article_a_persisted_model
+    person_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Person)
+    external = Person(uid="orcid-0000-0002-7428-4209", display_name="Bernard Chevalier",
+                      external=True,
+                      identifiers=[{"type": "orcid", "value": "0000-0002-7428-4209"}])
+    await person_dao.create(external)
+
+    contributions = [
+        {"rank": 0, "roles": [AUT],
+         "person": {"uid": external.uid, "displayName": external.display_name,
+                    "identifiers": [{"type": "orcid", "value": "0000-0002-7428-4209"},
+                                    {"type": "idhals", "value": "987654"}]},
+         "affiliations": []},
+    ]
+    change = _contributions_change(document.uid, contributions,
+                                   uid="sovisuplus:badid3", change_id="badid3")
+    await ChangeService().create_and_apply_change(change)
+
+    assert await _contributor_uids(document.uid) == {external.uid}
+
+    change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
+    stored = await change_dao.get_by_uid(change.uid)
+    assert stored.status == ChangeStatus.APPLIED
+    assert [warning.code for warning in stored.warnings] == ["INVALID_IDENTIFIER"]
+    assert stored.warnings[0].context["value"] == "987654"
+
+    identifiers = await _agent_identifiers(external.uid)
+    assert ("orcid", "0000-0002-7428-4209") in identifiers
+    assert not any(id_type == "idhals" for id_type, _ in identifiers)
 
 
 def test_change_warnings_marshalling_round_trip() -> None:

@@ -12,7 +12,7 @@ from app.graph.neo4j.person_dao import PersonDAO
 from app.models.change_report import ChangeApplicationReport
 from app.models.document import Document
 from app.models.harvesting_sources import HarvestingSource
-from app.models.identifier_types import OrganizationIdentifierType
+from app.models.identifier_types import OrganizationIdentifierType, PersonIdentifierType
 from app.models.people import Person
 from app.models.source_organization_identifiers import SourceOrganizationIdentifier
 from app.models.source_organizations import SourceOrganization
@@ -140,14 +140,15 @@ class ContributionUpdateService:
             owner_uid, owner_external = owner
             await self._apply_identifier_policy(
                 owner_uid, owner_external, incoming_identifiers,
-                self._agent_inconsistent_keys(candidates, owner_uid))
+                self._agent_inconsistent_keys(candidates, owner_uid), report, display_name)
             return owner_uid
 
         if uid:
             existing = await self._person_dao().get(uid)
             if existing is not None:
                 await self._apply_identifier_policy(
-                    existing.uid, bool(existing.external), incoming_identifiers, set())
+                    existing.uid, bool(existing.external), incoming_identifiers, set(),
+                    report, display_name)
                 return existing.uid
             # uid provided but not found: fall back to matching/creation
             logger.info("Person uid {} not found, falling back to identifier matching", uid)
@@ -184,7 +185,7 @@ class ContributionUpdateService:
 
         await self._apply_identifier_policy(
             selected, bool(persons[selected]["external"]), incoming_identifiers,
-            self._inconsistent_identifier_keys(id_to_persons, selected))
+            self._inconsistent_identifier_keys(id_to_persons, selected), report, display_name)
         return selected
 
     @classmethod
@@ -236,16 +237,19 @@ class ContributionUpdateService:
         """
         return {key for key, owners in id_to_persons.items() if owners - {selected}}
 
-    async def _apply_identifier_policy(
+    async def _apply_identifier_policy(  # pylint: disable=too-many-arguments
             self,
             person_uid: str,
             external: bool,
             incoming_identifiers: list[dict],
             inconsistent_keys: set,
+            report: ChangeApplicationReport,
+            display_name: Optional[str],
     ) -> None:
         """
         Internal people: identifiers are frozen (incoming identifiers ignored).
-        External people: add the consistent incoming identifiers (MERGE, names untouched).
+        External people: add the consistent and valid incoming identifiers
+        (MERGE, names untouched).
         """
         if not external:
             return
@@ -253,7 +257,36 @@ class ContributionUpdateService:
             identifier for identifier in incoming_identifiers
             if (identifier["type"], identifier["value"]) not in inconsistent_keys
         ]
+        consistent = self._validate_identifiers(consistent, report, display_name)
         await self._person_dao().add_person_identifiers(person_uid, consistent)
+
+    @staticmethod
+    def _validate_identifiers(
+            identifiers: list[dict], report: ChangeApplicationReport,
+            display_name: Optional[str]
+    ) -> list[dict]:
+        """
+        Keep only identifiers whose type is known and whose value matches the type-specific
+        pattern; each dropped identifier is reported — the Person model validators would
+        otherwise discard it silently and the DAO would persist it unchecked.
+        """
+        valid = []
+        for identifier in identifiers:
+            identifier_type = PersonIdentifierType.from_str(identifier["type"])
+            value = str(identifier["value"])
+            if identifier_type is None or not PersonIdentifierType.validate_identifier(
+                    identifier_type, value):
+                logger.warning("Invalid person identifier ignored: {}", identifier)
+                report.add_warning(
+                    "INVALID_IDENTIFIER",
+                    "Invalid person identifier ignored",
+                    type=identifier["type"],
+                    value=identifier["value"],
+                    display_name=display_name,
+                )
+                continue
+            valid.append({"type": identifier["type"], "value": value})
+        return valid
 
     @staticmethod
     def _select_by_name_similarity(
@@ -274,6 +307,8 @@ class ContributionUpdateService:
             self, incoming_identifiers: list[dict], display_name: Optional[str],
             report: ChangeApplicationReport
     ) -> Optional[str]:
+        incoming_identifiers = self._validate_identifiers(
+            incoming_identifiers, report, display_name)
         if not display_name:
             logger.warning("Cannot create external person without a display name")
             report.add_warning(

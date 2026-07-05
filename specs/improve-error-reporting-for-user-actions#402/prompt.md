@@ -144,6 +144,8 @@ Notes:
 | `UNRESOLVABLE_PERSON` | contribution skipped, person could not be resolved | `display_name`, `identifiers` |
 | `EXTERNAL_PERSON_CREATION_FAILED` | `ConflictError`/`ValueError` on person create | `display_name`, `error` |
 | `MISSING_DISPLAY_NAME` | external person without display name | `identifiers` |
+| `INVALID_IDENTIFIER` | identifier with unknown type or value not matching the type pattern, dropped before any write | `type`, `value`, `display_name` |
+| `CONTRIBUTION_NOT_CREATED` | contribution creation returned no id | `person_uid` |
 | `AFFILIATION_CONFLICT` | `ConflictError` on authority resolution | `source_organization_uid`, `error` |
 | `AFFILIATION_WITHOUT_IDENTIFIER` | affiliation with no usable identifier | `affiliation` |
 
