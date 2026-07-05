@@ -164,7 +164,8 @@ class AppSettings(BaseSettings):
     person_identifier_order: list[PersonIdentifierType] = \
         [PersonIdentifierType.LOCAL,
          PersonIdentifierType.ORCID,
-         PersonIdentifierType.IDREF]
+         PersonIdentifierType.IDREF,
+         PersonIdentifierType.IDHALS]
 
     research_unit_identifier_order: list[OrganizationIdentifierType] = \
         [OrganizationIdentifierType.LOCAL,
