@@ -7,7 +7,8 @@ c.path = $path,
 c.parameters = $params,
 c.timestamp = datetime($timestamp),
 c.status = $status,
-c.error_message = $error_message
+c.error_message = $error_message,
+c.warnings = $warnings
 
 WITH c
 MATCH (d:Document {uid: $document_uid})

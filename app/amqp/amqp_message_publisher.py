@@ -7,6 +7,10 @@ from loguru import logger
 
 from app.amqp.message_mode import MessageMode
 
+from app.amqp.amqp_change_applied_event_message_factory import \
+    AMQPChangeAppliedEventMessageFactory
+from app.amqp.amqp_change_failed_event_message_factory import \
+    AMQPChangeFailedEventMessageFactory
 from app.amqp.amqp_document_created_event_message_factory import \
     AMQPDocumentCreatedEventMessageFactory
 from app.amqp.amqp_document_deleted_event_message_factory import \
@@ -77,6 +81,8 @@ class AMQPMessagePublisher:
         DOCUMENT_CREATED = "Document created"
         DOCUMENT_DELETED = "Document deleted"
         DOCUMENT_UNCHANGED = "Document unchanged"
+        CHANGE_APPLIED = "Change applied"
+        CHANGE_FAILED = "Change failed"
         HARVESTING_STATE_EVENT = "Harvesting state event"
         HARVESTING_RESULT_EVENT = "Harvesting result event"
 
@@ -97,6 +103,8 @@ class AMQPMessagePublisher:
             EventMessageSubtype.DOCUMENT_UPDATED: AMQPDocumentUpdatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_DELETED: AMQPDocumentDeletedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_UNCHANGED: AMQPDocumentUnchangedEventMessageFactory,
+            EventMessageSubtype.CHANGE_APPLIED: AMQPChangeAppliedEventMessageFactory,
+            EventMessageSubtype.CHANGE_FAILED: AMQPChangeFailedEventMessageFactory,
             EventMessageSubtype.HARVESTING_STATE_EVENT: AMQPHarvestingStateEventMessageFactory,
             EventMessageSubtype.HARVESTING_RESULT_EVENT: AMQPHarvestingResultEventMessageFactory,
         },

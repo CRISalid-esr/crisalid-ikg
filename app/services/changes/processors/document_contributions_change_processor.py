@@ -1,3 +1,4 @@
+from app.models.change_report import ChangeApplicationReport
 from app.services.changes.processors.abstract_change_processor import AbstractChangeProcessor
 from app.services.contributions.contribution_update_service import ContributionUpdateService
 
@@ -11,7 +12,7 @@ class DocumentContributionsChangeProcessor(AbstractChangeProcessor):
     that list (replace semantics).
     """
 
-    async def apply(self) -> None:
+    async def apply(self) -> ChangeApplicationReport:
         document_uid = self.change.target_uid
         if not isinstance(document_uid, str):
             raise ValueError(f"Invalid 'targetUid' in change: {self.change.target_uid}")
@@ -22,7 +23,7 @@ class DocumentContributionsChangeProcessor(AbstractChangeProcessor):
                 f"Invalid 'contributions' in parameters of change {self.change.uid}: "
                 f"expected a list, got {type(contributions).__name__}")
 
-        await ContributionUpdateService().reconcile(
+        return await ContributionUpdateService().reconcile(
             document_uid=document_uid,
             contributions=contributions,
         )

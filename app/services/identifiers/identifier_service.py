@@ -33,9 +33,12 @@ class AgentIdentifierService:
                         f"{cls.IDENTIFIER_SEPARATOR}"
                         f"{selected_identifier.value}")
 
+        present = [f"{identifier.type.value}={identifier.value}"
+                   for identifier in entity.identifiers]
         raise ValueError(
-            f"No identifier from order {identifier_order} "
-            f"found in data : {entity.model_dump()}.")
+            f"Cannot compute uid for {entity.__class__.__name__}: no identifier of type "
+            f"{[identifier_type.value for identifier_type in identifier_order]} present "
+            f"(identifiers: {present or 'none'}).")
 
     @classmethod
     def compute_possible_uids_for(cls, entity: BaseModel) -> List[str]:

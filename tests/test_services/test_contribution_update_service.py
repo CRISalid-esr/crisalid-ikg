@@ -252,6 +252,28 @@ async def test_reconcile_resolves_existing_external_person_by_uid(
 
 
 @pytest.mark.asyncio
+async def test_external_person_created_from_idhals_only(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document,
+        mocked_document_updated_signal) -> None:  # pylint: disable=unused-argument
+    """
+    A brand-new person whose only identifier is a valid idHal (string form) is created
+    as an external person keyed on it (idhals is part of the person identifier order).
+    """
+    document = document_hal_article_a_persisted_model
+    contributions = [{
+        "rank": 0, "roles": [AUT],
+        "person": {"uid": None, "displayName": "Laurent Touquet",
+                   "identifiers": [{"type": "idhals", "value": "laurent-touquet"}]},
+        "affiliations": [],
+    }]
+    await ChangeService().create_and_apply_change(
+        _contributions_change(document.uid, contributions))
+
+    assert await _contributor_uids(document.uid) == {"idhals-laurent-touquet"}
+
+
+@pytest.mark.asyncio
 async def test_repoints_to_internal_owner_of_aligned_identifier(
         test_app,  # pylint: disable=unused-argument
         document_hal_article_a_persisted_model: Document,

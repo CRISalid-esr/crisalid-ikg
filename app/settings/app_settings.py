@@ -103,6 +103,8 @@ class AppSettings(BaseSettings):
     amqp_graph_document_event_updated_routing_key: str = "event.documents.document.updated"
     amqp_graph_document_event_deleted_routing_key: str = "event.documents.document.deleted"
     amqp_graph_document_event_unchanged_routing_key: str = "event.documents.document.unchanged"
+    amqp_graph_change_event_applied_routing_key: str = "event.changes.change.applied"
+    amqp_graph_change_event_failed_routing_key: str = "event.changes.change.failed"
     amqp_directory_structure_event_routing_key: str = "event.structures.structure.*.batch"
     amqp_harvester_publication_retrieval_routing_key: str = "task.entity.references.retrieval"
 
@@ -162,7 +164,8 @@ class AppSettings(BaseSettings):
     person_identifier_order: list[PersonIdentifierType] = \
         [PersonIdentifierType.LOCAL,
          PersonIdentifierType.ORCID,
-         PersonIdentifierType.IDREF]
+         PersonIdentifierType.IDREF,
+         PersonIdentifierType.IDHALS]
 
     research_unit_identifier_order: list[OrganizationIdentifierType] = \
         [OrganizationIdentifierType.LOCAL,

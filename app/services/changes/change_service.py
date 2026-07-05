@@ -12,7 +12,7 @@ from app.models.change import Change, TargetType, ChangeStatus
 from app.models.document import Document
 from app.services.changes.change_processor_factory import ChangeProcessorFactory
 from app.amqp.message_mode import MessageMode
-from app.signals import document_updated
+from app.signals import document_updated, change_applied, change_failed
 
 
 class ChangeService:
@@ -37,12 +37,23 @@ class ChangeService:
                 return
             if existing.status == ChangeStatus.FAILED:
                 logger.info(f"Change {change.uid} had failed. Retrying.")
-                return
-            logger.info(f"Change {change.uid} found bu not applied. Applying.")
+                existing.error_message = None
+                existing.warnings = []
+            else:
+                logger.info(f"Change {change.uid} found but not applied. Applying.")
             await self.apply_change(existing, mode=mode)
         else:
             logger.info(f"Change {change.uid} not found. Creating and applying.")
-            await self.create_change(change)
+            try:
+                await self.create_change(change)
+            except (DatabaseError, ValueError) as e:
+                # the Change node is not persisted (e.g. missing target document):
+                # the failure event and the logs are the only record
+                change.status = ChangeStatus.FAILED
+                change.error_message = str(e)
+                logger.error(f"Failed to create change {change.uid}: {e}")
+                await self._signal_change_failed(change, mode)
+                raise
             await self.apply_change(change, mode=mode)
 
     async def create_change(self, change: Change) -> Change:
@@ -70,9 +81,13 @@ class ChangeService:
         """
         try:
             processor = ChangeProcessorFactory.get_processor(change)
-            await processor.apply()
+            report = await processor.apply()
             change.status = ChangeStatus.APPLIED
+            change.error_message = None
+            change.warnings = report.warnings if report else []
             await self._update_change_status(change)
+            if mode == MessageMode.INTERACTIVE:
+                await change_applied.send_async(self, fields=change.to_event_fields())
             # for MERGE changes, the document_updated signal is sent by the processor
             if change.target_type == TargetType.DOCUMENT and change.action_type not in ("MERGE"):
                 await document_updated.send_async(self, document_uid=change.target_uid,
@@ -82,6 +97,7 @@ class ChangeService:
             change.error_message = str(e)
             await self._update_change_status(change)
             logger.error(f"Failed to apply change {change.uid}: {e}")
+            await self._signal_change_failed(change, mode)
             raise e
 
     async def apply_changes_to_node(
@@ -114,6 +130,13 @@ class ChangeService:
                 await self.apply_change(change, mode=mode)
             except (DatabaseError, ValueError) as e:
                 logger.error(f"Failed to apply change {change.uid} to {target_uid}: {e}")
+
+    async def _signal_change_failed(self, change: Change, mode: MessageMode) -> None:
+        """
+        Emit the change-failed event; batch replays stay silent toward clients.
+        """
+        if mode == MessageMode.INTERACTIVE:
+            await change_failed.send_async(self, fields=change.to_event_fields())
 
     async def _update_change_status(self, change: Change) -> None:
         """
