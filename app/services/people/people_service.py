@@ -188,6 +188,9 @@ class PeopleService:
         elif identifier_type == PersonIdentifierType.ORCID.value:
             await self._authenticate_orcid(person_uid, received_identifier, timestamp)
 
+        elif identifier_type == PersonIdentifierType.IDREF.value:
+            await self._validate_idref(person_uid, received_identifier)
+
         return
 
     async def _authenticate_id_hal(self, person_uid: str, received_id_hal: str,
@@ -202,6 +205,7 @@ class PeopleService:
             new_hal_identifier = PersonIdentifier(
                 type=identifier_type,
                 value=received_id_hal,
+                validated=True,
                 authenticated=True,
                 authentication_date=timestamp
             )
@@ -217,6 +221,7 @@ class PeopleService:
                 (id for id in person.identifiers if id.type.value == identifier_type), None
             )
             hal_identifier.value = received_id_hal
+            hal_identifier.validated = True
             hal_identifier.authenticated = True
             hal_identifier.authentication_date = timestamp
 
@@ -235,6 +240,7 @@ class PeopleService:
             new_orcid_identifier = PersonIdentifier(
                 type=PersonIdentifierType.ORCID,
                 value=received_orcid,
+                validated=True,
                 authenticated=True,
                 authentication_date=timestamp
             )
@@ -260,11 +266,49 @@ class PeopleService:
                 (id for id in person.identifiers if
                  id.type.value == PersonIdentifierType.ORCID.value), None
             )
+            orcid_identifier.validated = True
             orcid_identifier.authenticated = True
             orcid_identifier.authentication_date = timestamp
 
         await self.update_person(person)
         logger.debug(f"ORCID authenticated for person {person_uid}.")
+        return
+
+    async def _validate_idref(self, person_uid: str, received_idref: str):
+        """
+        Validate a person's idref if necessary.
+
+        idref has no real authentication process (no account linking), so this only sets
+        `validated` on the identifier — never `authenticated` / `authentication_date`.
+        Mirrors the id_hal replace-in-place semantics: a different value overwrites the
+        existing idref (a Person may only have one idref identifier).
+        """
+        person = await self.get_person(person_uid)
+        idref_identifier = person.get_identifier(PersonIdentifierType.IDREF)
+
+        if idref_identifier is None:
+            new_idref_identifier = PersonIdentifier(
+                type=PersonIdentifierType.IDREF,
+                value=received_idref,
+                validated=True
+            )
+            person.identifiers.append(new_idref_identifier)
+
+        elif idref_identifier.value == received_idref and idref_identifier.validated:
+            logger.debug(f"idref already validated for person {person_uid}.")
+            raise ValueError(f"idref {idref_identifier.value} is already validated "
+                             f"for person {person_uid}.")
+
+        else:
+            idref_identifier = next(
+                (id for id in person.identifiers if
+                 id.type.value == PersonIdentifierType.IDREF.value), None
+            )
+            idref_identifier.value = received_idref
+            idref_identifier.validated = True
+
+        await self.update_person(person)
+        logger.debug(f"idref validated for person {person_uid}.")
         return
 
     @staticmethod

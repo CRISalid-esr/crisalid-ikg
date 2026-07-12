@@ -168,6 +168,44 @@ async def test_amqp_user_actions_processor_authenticate_identifier(
 
 
 @pytest.mark.asyncio
+async def test_amqp_user_actions_processor_validate_idref(
+        mocked_authenticate_identifier,
+        test_app,  # pylint: disable=unused-argument
+):
+    """
+    Integration test for ADD actionType to validate an idref identifier
+    """
+    payload = {
+        "actionType": "ADD",
+        "targetType": "PERSON",
+        "targetUid": "local-jdoe@univ-domain.edu",
+        "path": "identifiers",
+        "parameters": {
+            "identifier": {
+                "type": PersonIdentifierType.IDREF.value,
+                "value": "12345678X"
+            }
+        },
+        "timestamp": "2025-08-26T06:17:28.243Z",
+        "personUid": "local-jdoe@univ-domain.edu",
+        "application": "sovisuplus"
+    }
+
+    queue = asyncio.Queue()
+    settings = get_app_settings()
+    processor = AMQPUserActionsMessageProcessor(queue, settings)
+
+    payload_bytes = json.dumps(payload).encode("utf-8")
+    # pylint: disable=protected-access
+    await processor._process_message("task.people.person.*", payload_bytes)
+
+    mocked_authenticate_identifier.assert_awaited_once()
+    args, _ = mocked_authenticate_identifier.call_args
+    assert args == ('local-jdoe@univ-domain.edu', 'idref',
+                    '12345678X', '2025-08-26T06:17:28.243Z')
+
+
+@pytest.mark.asyncio
 async def test_amqp_user_actions_processor_merges_document_triggers_registered_change(
         test_app  # pylint: disable=unused-argument
 ):

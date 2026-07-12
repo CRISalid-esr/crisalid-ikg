@@ -4,9 +4,13 @@ MERGE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
   ON CREATE SET
     i.type = identifier.type,
     i.value = identifier.value,
+    i.validated = CASE
+      WHEN identifier.validated = true OR identifier.authenticated = true THEN true
+      ELSE false
+    END,
     i.authenticated = CASE
-      WHEN identifier.authenticated IS NOT NULL THEN identifier.authenticated
-      ELSE NULL
+      WHEN identifier.authenticated = true THEN true
+      ELSE false
     END,
     i.authentication_date = CASE
       WHEN identifier.authenticated = true
@@ -17,9 +21,13 @@ MERGE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
   ON MATCH SET
     i.type = identifier.type,
     i.value = identifier.value,
+    i.validated = CASE
+      WHEN identifier.validated = true OR identifier.authenticated = true THEN true
+      ELSE coalesce(i.validated, false)
+    END,
     i.authenticated = CASE
-      WHEN identifier.authenticated IS NOT NULL THEN identifier.authenticated
-      ELSE i.authenticated
+      WHEN identifier.authenticated = true THEN true
+      ELSE coalesce(i.authenticated, false)
     END,
     i.authentication_date = CASE
       WHEN identifier.authenticated = true
