@@ -174,7 +174,7 @@ class PeopleService:
         dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.detach_external_shared_identifiers()
 
-    # pylint: disable-next=too-many-arguments
+    # pylint: disable-next=too-many-arguments, too-many-positional-arguments
     async def add_identifier(self, person_uid: str, identifier_type: str,
                              value: str, authenticated: bool, timestamp: str):
         """
@@ -212,7 +212,7 @@ class PeopleService:
                 detached, id_type.value, value, person_uid)
         logger.debug("{} identifier added for person {}.", identifier_type, person_uid)
 
-    # pylint: disable-next=too-many-arguments
+    # pylint: disable-next=too-many-arguments, too-many-positional-arguments
     async def confirm_identifier(self, person_uid: str, identifier_type: str,
                                  value: str, authenticated: bool, timestamp: str):
         """
