@@ -23,15 +23,16 @@ from app.services.authority_organizations.authority_organization_location_servic
 from app.services.documents.document_service import DocumentService
 from app.services.journals.journal_service import JournalService
 from app.services.source_records.equivalence_service import EquivalenceService
+from app.services.source_records.source_record_service import SourceRecordService
 from app.settings.app_env_types import AppEnvTypes
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
     person_unchanged, document_updated, source_record_updated, structure_created, \
     structure_updated, document_sources_changed, document_created, \
     document_unchanged, document_deleted, structure_unchanged, structure_deleted, \
-    person_deleted, person_updated, publications_to_be_updated, source_journal_created, \
-    source_journal_updated, harvesting_state_event_received, harvesting_result_event_received, \
-    document_created_from_sources, authority_organisation_state_updated, \
-    change_applied, change_failed
+    person_deleted, person_identifier_removed, person_updated, publications_to_be_updated, \
+    source_journal_created, source_journal_updated, harvesting_state_event_received, \
+    harvesting_result_event_received, document_created_from_sources, \
+    authority_organisation_state_updated, change_applied, change_failed
 
 
 class CrisalidIKG(FastAPI):  # pylint: disable=too-many-instance-attributes
@@ -214,6 +215,9 @@ class CrisalidIKG(FastAPI):  # pylint: disable=too-many-instance-attributes
         person_unchanged.connect(self.amqp_interface.dispatch_person_unchanged)
         person_deleted.connect(self.amqp_interface.dispatch_person_deleted)
         person_identifiers_updated.connect(self.amqp_interface.dispatch_person_updated)
+        self.source_record_service = SourceRecordService()
+        person_identifier_removed.connect(
+            self.source_record_service.cleanup_harvested_data_for_identifier)
         structure_created.connect(self.amqp_interface.dispatch_structure_created)
         structure_updated.connect(self.amqp_interface.dispatch_structure_updated)
         structure_unchanged.connect(self.amqp_interface.dispatch_structure_unchanged)

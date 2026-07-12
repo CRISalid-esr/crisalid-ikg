@@ -286,6 +286,96 @@ class SourceRecordDAO(Neo4jDAO):
                 )
 
     @handle_database_errors
+    async def count_harvested_for(self, source_record_uid: str) -> int:
+        """
+        Count the HARVESTED_FOR relationships of a source record
+        :param source_record_uid: uid of the source record
+        :return: number of HARVESTED_FOR relationships
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("count_harvested_for"),
+                    source_record_uid=source_record_uid
+                )
+                record = await result.single()
+                return record["harvested_for_count"] if record else 0
+
+    @handle_database_errors
+    async def delete_exclusive_source_record(self, source_record_uid: str, person_uid: str):
+        """
+        Delete a source record harvested exclusively for one person: the record, its
+        SourceContribution nodes, the person's RECORDED_BY edges to the record's SourcePersons
+        (unless the SourcePerson contributes to another record still harvested for the person)
+        and the SourcePersons orphaned of any contribution. Shared entities (SourceJournal,
+        SourceIssue, SourceOrganization) are preserved.
+
+        :param source_record_uid: uid of the source record
+        :param person_uid: uid of the person the record was harvested for
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    source_person_uids = await self._get_source_record_source_person_uids(
+                        tx, source_record_uid)
+                    await self._delete_person_recorded_by(
+                        tx, source_record_uid, person_uid, source_person_uids)
+                    await tx.run(load_query("delete_source_record_contributions"),
+                                 source_record_uid=source_record_uid)
+                    await tx.run(load_query("delete_orphan_source_people"),
+                                 source_person_uids=source_person_uids)
+                    await tx.run(load_query("delete_source_record"),
+                                 source_record_uid=source_record_uid)
+
+    @handle_database_errors
+    async def detach_shared_harvested_for(self, source_record_uid: str, person_uid: str):
+        """
+        Detach a person's harvesting path from a source record shared with other persons:
+        delete the person's HARVESTED_FOR relationship and its RECORDED_BY edges to the
+        record's SourcePersons (unless the SourcePerson contributes to another record still
+        harvested for the person). The record and the other persons' paths are kept intact.
+
+        :param source_record_uid: uid of the source record
+        :param person_uid: uid of the person the record was harvested for
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    source_person_uids = await self._get_source_record_source_person_uids(
+                        tx, source_record_uid)
+                    await self._delete_person_recorded_by(
+                        tx, source_record_uid, person_uid, source_person_uids)
+                    await tx.run(load_query("detach_harvested_for"),
+                                 source_record_uid=source_record_uid,
+                                 person_uid=person_uid)
+
+    @staticmethod
+    async def _get_source_record_source_person_uids(
+            tx: AsyncManagedTransaction, source_record_uid: str) -> list[str]:
+        """
+        Collect the uids of the SourcePersons contributing to a source record.
+        """
+        result = await tx.run(load_query("get_source_record_source_person_uids"),
+                              source_record_uid=source_record_uid)
+        record = await result.single()
+        return record["source_person_uids"] if record else []
+
+    @staticmethod
+    async def _delete_person_recorded_by(
+            tx: AsyncManagedTransaction, source_record_uid: str,
+            person_uid: str, source_person_uids: list[str]):
+        """
+        Delete the person's RECORDED_BY edges to the given SourcePersons unless the
+        SourcePerson contributes to another record still harvested for the person.
+        """
+        if not source_person_uids:
+            return
+        await tx.run(load_query("delete_person_recorded_by_for_source_people"),
+                     source_record_uid=source_record_uid,
+                     person_uid=person_uid,
+                     source_person_uids=source_person_uids)
+
+    @handle_database_errors
     async def create_contribution(self, source_contribution: SourceContribution,
                                   source_record_uid: str):
         """
