@@ -144,6 +144,47 @@ async def test_update_person_identifiers_with_authentication(
             )
 
 
+async def test_update_person_preserves_validated_idref(
+        persisted_person_a_with_idref_pydantic_model: Person,
+) -> None:
+    """
+    Given a person whose idref has been validated
+    When a people-update message re-sends the same idref as non-validated (directory sync)
+    Then the validated flag must be preserved (not downgraded/deleted),
+        just as authenticated identifiers are preserved.
+    """
+    person_uid = "local-jdoe_with_idref@univ-domain.edu"
+    service = PeopleService()
+
+    # validate the idref
+    await service.authenticate_identifier(
+        person_uid, PersonIdentifierType.IDREF.value, "123456789",
+        "2025-08-26T06:17:28.243Z")
+
+    validated_person = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in validated_person.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier.validated is True
+
+    # simulate a directory people-update that re-sends the idref as non-validated
+    incoming_person = persisted_person_a_with_idref_pydantic_model.copy()
+    incoming_person.uid = person_uid
+    assert all(identifier.validated is False for identifier in incoming_person.identifiers)
+
+    await service.update_person(incoming_person)
+
+    updated_person = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in updated_person.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier is not None
+    assert idref_identifier.value == "123456789"
+    assert idref_identifier.validated is True
+
+
 async def test_update_person_employment(
         persisted_research_unit_a_pydantic_model: OrganizationBase,
         # pylint: disable=unused-argument
