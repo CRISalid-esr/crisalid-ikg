@@ -24,13 +24,16 @@ class AgentIdentifier(BaseModel, Generic[IdType]):
 class PersonIdentifier(AgentIdentifier[PersonIdentifierType]):
     """Person identifier model"""
     type: PersonIdentifierType
-    authenticated: Optional[bool] = None
+    validated: bool = False
+    authenticated: bool = False
     authentication_date: Optional[datetime] = None
 
-    @field_validator("authenticated", mode="before")
+    @field_validator("validated", "authenticated", mode="before")
     @classmethod
-    def parse_authenticated(cls, value):
-        """Ensures that authenticated boolean given as a string is registered as a boolean"""
+    def parse_bool_flag(cls, value):
+        """Coerce string / None boolean flags to a strict boolean"""
+        if value is None:
+            return False
         if isinstance(value, str):
             return value.lower() == "true"
         return value
@@ -42,6 +45,13 @@ class PersonIdentifier(AgentIdentifier[PersonIdentifierType]):
         if isinstance(value, neo4j.time.DateTime):
             return value.to_native()
         return value
+
+    @model_validator(mode="after")
+    def _authenticated_implies_validated(self):
+        """Authentication implies validation: an authenticated identifier is always validated"""
+        if self.authenticated:
+            self.validated = True
+        return self
 
 class OrganizationIdentifier(AgentIdentifier[OrganizationIdentifierType]):
     """Organization identifier model"""

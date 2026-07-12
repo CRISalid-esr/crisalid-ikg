@@ -120,7 +120,7 @@ async def test_update_person_identifiers_with_authentication(
     new_person = person_a_with_hal_pydantic_model.copy()
     new_person.uid = fetched_person.uid
     assert all(
-        identifier.authenticated is None
+        identifier.authenticated is False
         for identifier in new_person.identifiers
         if identifier.type.value in {"idhals", "orcid"}
     )
@@ -142,6 +142,47 @@ async def test_update_person_identifiers_with_authentication(
             for identifier in updated_fetched_person.identifiers
             if identifier.type.value in {"idhals", "orcid"}
             )
+
+
+async def test_update_person_preserves_validated_idref(
+        persisted_person_a_with_idref_pydantic_model: Person,
+) -> None:
+    """
+    Given a person whose idref has been validated
+    When a people-update message re-sends the same idref as non-validated (directory sync)
+    Then the validated flag must be preserved (not downgraded/deleted),
+        just as authenticated identifiers are preserved.
+    """
+    person_uid = "local-jdoe_with_idref@univ-domain.edu"
+    service = PeopleService()
+
+    # validate the idref
+    await service.authenticate_identifier(
+        person_uid, PersonIdentifierType.IDREF.value, "123456789",
+        "2025-08-26T06:17:28.243Z")
+
+    validated_person = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in validated_person.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier.validated is True
+
+    # simulate a directory people-update that re-sends the idref as non-validated
+    incoming_person = persisted_person_a_with_idref_pydantic_model.copy()
+    incoming_person.uid = person_uid
+    assert all(identifier.validated is False for identifier in incoming_person.identifiers)
+
+    await service.update_person(incoming_person)
+
+    updated_person = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in updated_person.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier is not None
+    assert idref_identifier.value == "123456789"
+    assert idref_identifier.validated is True
 
 
 async def test_update_person_employment(
@@ -325,7 +366,8 @@ async def test_authenticate_orcid_same(
     )
     assert orcid_identifier.value == received_identifier
     assert orcid_identifier.authentication_date is None
-    assert orcid_identifier.authenticated is None
+    assert orcid_identifier.authenticated is False
+    assert orcid_identifier.validated is False
 
     await service.authenticate_identifier(person_uid, identifier_type,
                                           received_identifier, timestamp)
@@ -339,6 +381,7 @@ async def test_authenticate_orcid_same(
     assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
     assert orcid_identifier.authenticated
+    assert orcid_identifier.validated
 
 
 async def test_authenticate_orcid_same_authenticated(
@@ -364,6 +407,7 @@ async def test_authenticate_orcid_same_authenticated(
     )
     assert orcid_identifier.value == received_identifier
     assert orcid_identifier.authenticated is True
+    assert orcid_identifier.validated is True
     assert (orcid_identifier.authentication_date ==
             datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
 
@@ -378,6 +422,7 @@ async def test_authenticate_orcid_same_authenticated(
     )
     assert orcid_identifier.value == received_identifier
     assert orcid_identifier.authenticated is True
+    assert orcid_identifier.validated is True
     assert (orcid_identifier.authentication_date ==
             datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
 
@@ -404,7 +449,8 @@ async def test_authenticate_orcid_different(
     )
     assert orcid_identifier.value == actual_orcid
     assert orcid_identifier.authentication_date is None
-    assert orcid_identifier.authenticated is None
+    assert orcid_identifier.authenticated is False
+    assert orcid_identifier.validated is False
 
     with pytest.raises(ValueError):
         await service.authenticate_identifier(person_uid, identifier_type,
@@ -416,7 +462,8 @@ async def test_authenticate_orcid_different(
          id.type.value == PersonIdentifierType.ORCID.value), None
     )
     assert orcid_identifier.value == actual_orcid
-    assert orcid_identifier.authenticated is None
+    assert orcid_identifier.authenticated is False
+    assert orcid_identifier.validated is False
 
 
 async def test_authenticate_orcid_new(
@@ -451,6 +498,7 @@ async def test_authenticate_orcid_new(
     assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
     assert orcid_identifier.authenticated
+    assert orcid_identifier.validated
 
 
 async def test_authenticate_id_hal_s_new(
@@ -485,6 +533,7 @@ async def test_authenticate_id_hal_s_new(
     assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
     assert hal_identifier.authenticated
+    assert hal_identifier.validated
 
 
 async def test_authenticate_id_hal_s_same_authenticated(
@@ -510,6 +559,7 @@ async def test_authenticate_id_hal_s_same_authenticated(
     )
     assert hal_identifier.value == received_identifier
     assert hal_identifier.authenticated is True
+    assert hal_identifier.validated is True
     assert (hal_identifier.authentication_date ==
             datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
 
@@ -524,6 +574,7 @@ async def test_authenticate_id_hal_s_same_authenticated(
     )
     assert hal_identifier.value == received_identifier
     assert hal_identifier.authenticated is True
+    assert hal_identifier.validated is True
     assert (hal_identifier.authentication_date ==
             datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
 
@@ -550,7 +601,8 @@ async def test_authenticate_id_hal_s_same(
     )
     assert hal_identifier.value == received_identifier
     assert hal_identifier.authentication_date is None
-    assert hal_identifier.authenticated is None
+    assert hal_identifier.authenticated is False
+    assert hal_identifier.validated is False
 
     await service.authenticate_identifier(person_uid, identifier_type,
                                           received_identifier, timestamp)
@@ -564,6 +616,7 @@ async def test_authenticate_id_hal_s_same(
     assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
     assert hal_identifier.authenticated
+    assert hal_identifier.validated
 
 
 async def test_authenticate_id_hal_s_different(
@@ -588,7 +641,8 @@ async def test_authenticate_id_hal_s_different(
     )
     assert hal_identifier.value == actual_hal
     assert hal_identifier.authentication_date is None
-    assert hal_identifier.authenticated is None
+    assert hal_identifier.authenticated is False
+    assert hal_identifier.validated is False
 
     await service.authenticate_identifier(person_uid, identifier_type,
                                           received_identifier, timestamp)
@@ -602,6 +656,7 @@ async def test_authenticate_id_hal_s_different(
     assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
     assert hal_identifier.authenticated
+    assert hal_identifier.validated
 
 
 async def test_authenticate_id_hal_i_different(
@@ -626,7 +681,8 @@ async def test_authenticate_id_hal_i_different(
     )
     assert hal_identifier.value == actual_hal
     assert hal_identifier.authentication_date is None
-    assert hal_identifier.authenticated is None
+    assert hal_identifier.authenticated is False
+    assert hal_identifier.validated is False
 
     await service.authenticate_identifier(person_uid, identifier_type,
                                           received_identifier, timestamp)
@@ -640,3 +696,145 @@ async def test_authenticate_id_hal_i_different(
     assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
     assert hal_identifier.authenticated
+    assert hal_identifier.validated
+
+
+async def test_validate_idref_new(
+        persisted_person_a_no_orcid_no_hal_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with no idref identifier
+    Check that the identifier is added and directly validated (never authenticated)
+    """
+    person_uid = "local-jdoe_no_orcid@univ-domain.edu"
+    identifier_type = PersonIdentifierType.IDREF.value
+    received_identifier = "123456789"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+    service = PeopleService()
+    person_before = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in person_before.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier is None
+
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
+
+    person_after = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in person_after.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier.value == received_identifier
+    assert idref_identifier.validated is True
+    assert idref_identifier.authenticated is False
+    assert idref_identifier.authentication_date is None
+
+
+async def test_validate_idref_same(
+        persisted_person_a_with_idref_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with a non validated idref
+    Given a validation with the same idref
+    Check that validating updates the idref identifier (validated only)
+    """
+    person_uid = "local-jdoe_with_idref@univ-domain.edu"
+    identifier_type = PersonIdentifierType.IDREF.value
+    received_identifier = "123456789"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+    service = PeopleService()
+    person_before = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in person_before.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier.value == received_identifier
+    assert idref_identifier.validated is False
+    assert idref_identifier.authenticated is False
+
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
+
+    person_after = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in person_after.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier.value == received_identifier
+    assert idref_identifier.validated is True
+    assert idref_identifier.authenticated is False
+    assert idref_identifier.authentication_date is None
+
+
+async def test_validate_idref_same_validated(
+        persisted_person_a_with_idref_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with an already validated idref
+    Check that validating again raises a value error because it is already validated
+    """
+    person_uid = "local-jdoe_with_idref@univ-domain.edu"
+    identifier_type = PersonIdentifierType.IDREF.value
+    received_identifier = "123456789"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+    service = PeopleService()
+    # first validation
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
+
+    # second validation with the same value must raise
+    with pytest.raises(ValueError):
+        await service.authenticate_identifier(person_uid, identifier_type,
+                                              received_identifier, timestamp)
+
+    person_after = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in person_after.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier.value == received_identifier
+    assert idref_identifier.validated is True
+    assert idref_identifier.authenticated is False
+
+
+async def test_validate_idref_different(
+        persisted_person_a_with_idref_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with a non validated idref
+    Check that validating with a different idref replaces the value in place
+        (a person may only have one idref) and validates it
+    """
+    person_uid = "local-jdoe_with_idref@univ-domain.edu"
+    actual_idref = "123456789"
+    identifier_type = PersonIdentifierType.IDREF.value
+    received_identifier = "987654321"
+    timestamp = "2025-08-26T06:17:28.243Z"
+
+    service = PeopleService()
+    person_before = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in person_before.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier.value == actual_idref
+    assert idref_identifier.validated is False
+
+    await service.authenticate_identifier(person_uid, identifier_type,
+                                          received_identifier, timestamp)
+
+    person_after = await service.get_person(person_uid)
+    idref_identifiers = [
+        id for id in person_after.identifiers
+        if id.type.value == PersonIdentifierType.IDREF.value
+    ]
+    assert len(idref_identifiers) == 1
+    assert idref_identifiers[0].value == received_identifier
+    assert idref_identifiers[0].validated is True
+    assert idref_identifiers[0].authenticated is False
+    assert idref_identifiers[0].authentication_date is None

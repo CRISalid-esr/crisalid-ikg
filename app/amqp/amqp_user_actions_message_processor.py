@@ -119,7 +119,8 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
                                .get("type", ''))
 
             allowed_id_types = [PersonIdentifierType.ORCID.value,
-                                PersonIdentifierType.IDHALS.value]
+                                PersonIdentifierType.IDHALS.value,
+                                PersonIdentifierType.IDREF.value]
             target_uid = json_payload.get("targetUid", None)
 
             if target_uid:
