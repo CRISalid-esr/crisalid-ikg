@@ -106,38 +106,54 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
             logger.debug(f"Publications fetched for person {json_payload['targetUid']}.")
             return
 
-        if json_payload["actionType"] == "ADD":
-            if json_payload["targetType"] != "PERSON":
-                raise ValueError("Target type must be 'PERSON' for unregistered ADD action type.")
-            if not json_payload["targetUid"] or not isinstance(json_payload["targetUid"], str):
-                raise ValueError("Target UID is required for person-related"
-                                 "ADD action type and should be a string.")
-
-            received_identifier = ((json_payload.get("parameters", {}).get("identifier") or {})
-                                   .get("value", None))
-            identifier_type = ((json_payload.get("parameters", {}).get("identifier") or {})
-                               .get("type", ''))
-
-            allowed_id_types = [PersonIdentifierType.ORCID.value,
-                                PersonIdentifierType.IDHALS.value,
-                                PersonIdentifierType.IDREF.value]
-            target_uid = json_payload.get("targetUid", None)
-
-            if target_uid:
-                if received_identifier and identifier_type.lower() in allowed_id_types:
-                    service = PeopleService()
-                    await service.authenticate_identifier(json_payload["targetUid"],
-                                                          identifier_type.lower(),
-                                                          received_identifier,
-                                                          json_payload["timestamp"])
-
-                else:
-                    raise ValueError(
-                        f"No identifier or identifier type given by message "
-                        f"for person {target_uid}. No authentication possible"
-                    )
-            else:
-                raise ValueError(
-                    "No target UID given. No authentication possible."
-                )
+        if json_payload["actionType"] in ["ADD", "UPDATE", "REMOVE"]:
+            await self._process_identifier_action(json_payload)
             return
+
+    async def _process_identifier_action(self, json_payload: dict):
+        """
+        Handle a person-identifier user action: ADD (add-only), UPDATE
+        (confirm existing, value unchanged) or REMOVE (triggers harvested-data cleanup).
+        Value changes are always REMOVE + ADD — never an in-place replacement.
+        """
+        action_type = json_payload["actionType"]
+        if json_payload["targetType"] != "PERSON":
+            raise ValueError(f"Target type must be 'PERSON' for unregistered "
+                             f"{action_type} action type.")
+        target_uid = json_payload.get("targetUid", None)
+        if not target_uid or not isinstance(target_uid, str):
+            raise ValueError(f"Target UID is required for person-related "
+                             f"{action_type} action type and should be a string.")
+
+        parameters = json_payload.get("parameters", {}) or {}
+        if action_type == "REMOVE":
+            # REMOVE carries the identifier fields directly in parameters
+            identifier_fields = parameters
+        else:
+            identifier_fields = parameters.get("identifier") or {}
+        identifier_type = (identifier_fields.get("type") or '').lower()
+        identifier_value = identifier_fields.get("value", None)
+        authenticated = bool(identifier_fields.get("authenticated", False))
+
+        allowed_id_types = [PersonIdentifierType.ORCID.value,
+                            PersonIdentifierType.IDHALS.value,
+                            PersonIdentifierType.IDHALI.value,
+                            PersonIdentifierType.IDREF.value]
+        if not identifier_value or identifier_type not in allowed_id_types:
+            raise ValueError(
+                f"No identifier or identifier type given by message "
+                f"for person {target_uid}. No identifier {action_type} possible."
+            )
+
+        service = PeopleService()
+        if action_type == "ADD":
+            await service.add_identifier(target_uid, identifier_type,
+                                         identifier_value, authenticated,
+                                         json_payload["timestamp"])
+        elif action_type == "UPDATE":
+            await service.confirm_identifier(target_uid, identifier_type,
+                                             identifier_value, authenticated,
+                                             json_payload["timestamp"])
+        else:
+            await service.remove_identifier(target_uid, identifier_type,
+                                            identifier_value)

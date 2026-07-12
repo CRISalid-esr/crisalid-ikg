@@ -119,90 +119,159 @@ async def test_amqp_user_actions_processor_fetch_triggers_signal(
     assert kwargs["payload"]["harvesters"] == ["hal", "scanr", "idref"]
 
 
-@pytest.fixture(name="mocked_authenticate_identifier")
-def mocked_authenticate_identifier_fixture():
+@pytest.fixture(name="mocked_add_identifier")
+def mocked_add_identifier_fixture():
     """
-    Fixture to mock the `amqp_interface.fetch_publications` signal receiver.
+    Fixture to mock the `PeopleService.add_identifier` method.
     """
-    with patch("app.services.people.people_service.PeopleService.authenticate_identifier",
+    with patch("app.services.people.people_service.PeopleService.add_identifier",
                new_callable=AsyncMock) as mocked:
         yield mocked
 
 
-@pytest.mark.asyncio
-async def test_amqp_user_actions_processor_authenticate_identifier(
-        mocked_authenticate_identifier,
-        test_app,  # pylint: disable=unused-argument
-):
+@pytest.fixture(name="mocked_confirm_identifier")
+def mocked_confirm_identifier_fixture():
     """
-    Integration test for ADD actionType to authenticate an ORCID identifier
+    Fixture to mock the `PeopleService.confirm_identifier` method.
     """
+    with patch("app.services.people.people_service.PeopleService.confirm_identifier",
+               new_callable=AsyncMock) as mocked:
+        yield mocked
+
+
+@pytest.fixture(name="mocked_remove_identifier")
+def mocked_remove_identifier_fixture():
+    """
+    Fixture to mock the `PeopleService.remove_identifier` method.
+    """
+    with patch("app.services.people.people_service.PeopleService.remove_identifier",
+               new_callable=AsyncMock) as mocked:
+        yield mocked
+
+
+def _identifier_action_payload(action_type: str, parameters: dict) -> bytes:
     payload = {
-        "actionType": "ADD",
+        "actionType": action_type,
         "targetType": "PERSON",
         "targetUid": "local-jdoe@univ-domain.edu",
         "path": "identifiers",
-        "parameters": {
-            "identifier": {
-                "type": PersonIdentifierType.ORCID.value,
-                "value": "0000-0001-2345-6789"
-            }
-        },
+        "parameters": parameters,
         "timestamp": "2025-08-26T06:17:28.243Z",
         "personUid": "local-jdoe@univ-domain.edu",
         "application": "sovisuplus"
     }
+    return json.dumps(payload).encode("utf-8")
+
+
+@pytest.mark.asyncio
+async def test_amqp_user_actions_processor_add_identifier_authenticated(
+        mocked_add_identifier,
+        test_app,  # pylint: disable=unused-argument
+):
+    """
+    Integration test for ADD actionType carrying an authenticated ORCID identifier
+    """
+    payload_bytes = _identifier_action_payload("ADD", {
+        "identifier": {
+            "type": PersonIdentifierType.ORCID.value,
+            "value": "0000-0001-2345-6789",
+            "authenticated": True
+        }
+    })
 
     queue = asyncio.Queue()
     settings = get_app_settings()
     processor = AMQPUserActionsMessageProcessor(queue, settings)
 
-    payload_bytes = json.dumps(payload).encode("utf-8")
     # pylint: disable=protected-access
     await processor._process_message("task.people.person.*", payload_bytes)
 
-    mocked_authenticate_identifier.assert_awaited_once()
-    args, _ = mocked_authenticate_identifier.call_args
+    mocked_add_identifier.assert_awaited_once()
+    args, _ = mocked_add_identifier.call_args
     assert args == ('local-jdoe@univ-domain.edu', 'orcid',
-                    '0000-0001-2345-6789', '2025-08-26T06:17:28.243Z')
+                    '0000-0001-2345-6789', True, '2025-08-26T06:17:28.243Z')
 
 
 @pytest.mark.asyncio
-async def test_amqp_user_actions_processor_validate_idref(
-        mocked_authenticate_identifier,
+async def test_amqp_user_actions_processor_add_identifier_manual(
+        mocked_add_identifier,
         test_app,  # pylint: disable=unused-argument
 ):
     """
-    Integration test for ADD actionType to validate an idref identifier
+    Integration test for ADD actionType carrying a manually added idref identifier
     """
-    payload = {
-        "actionType": "ADD",
-        "targetType": "PERSON",
-        "targetUid": "local-jdoe@univ-domain.edu",
-        "path": "identifiers",
-        "parameters": {
-            "identifier": {
-                "type": PersonIdentifierType.IDREF.value,
-                "value": "12345678X"
-            }
-        },
-        "timestamp": "2025-08-26T06:17:28.243Z",
-        "personUid": "local-jdoe@univ-domain.edu",
-        "application": "sovisuplus"
-    }
+    payload_bytes = _identifier_action_payload("ADD", {
+        "identifier": {
+            "type": PersonIdentifierType.IDREF.value,
+            "value": "12345678X"
+        }
+    })
 
     queue = asyncio.Queue()
     settings = get_app_settings()
     processor = AMQPUserActionsMessageProcessor(queue, settings)
 
-    payload_bytes = json.dumps(payload).encode("utf-8")
     # pylint: disable=protected-access
     await processor._process_message("task.people.person.*", payload_bytes)
 
-    mocked_authenticate_identifier.assert_awaited_once()
-    args, _ = mocked_authenticate_identifier.call_args
+    mocked_add_identifier.assert_awaited_once()
+    args, _ = mocked_add_identifier.call_args
     assert args == ('local-jdoe@univ-domain.edu', 'idref',
-                    '12345678X', '2025-08-26T06:17:28.243Z')
+                    '12345678X', False, '2025-08-26T06:17:28.243Z')
+
+
+@pytest.mark.asyncio
+async def test_amqp_user_actions_processor_update_identifier(
+        mocked_confirm_identifier,
+        test_app,  # pylint: disable=unused-argument
+):
+    """
+    Integration test for UPDATE actionType confirming an existing identifier
+    """
+    payload_bytes = _identifier_action_payload("UPDATE", {
+        "identifier": {
+            "type": PersonIdentifierType.ORCID.value,
+            "value": "0000-0001-2345-6789",
+            "authenticated": True
+        }
+    })
+
+    queue = asyncio.Queue()
+    settings = get_app_settings()
+    processor = AMQPUserActionsMessageProcessor(queue, settings)
+
+    # pylint: disable=protected-access
+    await processor._process_message("task.people.person.*", payload_bytes)
+
+    mocked_confirm_identifier.assert_awaited_once()
+    args, _ = mocked_confirm_identifier.call_args
+    assert args == ('local-jdoe@univ-domain.edu', 'orcid',
+                    '0000-0001-2345-6789', True, '2025-08-26T06:17:28.243Z')
+
+
+@pytest.mark.asyncio
+async def test_amqp_user_actions_processor_remove_identifier(
+        mocked_remove_identifier,
+        test_app,  # pylint: disable=unused-argument
+):
+    """
+    Integration test for REMOVE actionType removing an identifier
+    """
+    payload_bytes = _identifier_action_payload("REMOVE", {
+        "type": PersonIdentifierType.IDREF.value,
+        "value": "12345678X"
+    })
+
+    queue = asyncio.Queue()
+    settings = get_app_settings()
+    processor = AMQPUserActionsMessageProcessor(queue, settings)
+
+    # pylint: disable=protected-access
+    await processor._process_message("task.people.person.*", payload_bytes)
+
+    mocked_remove_identifier.assert_awaited_once()
+    args, _ = mocked_remove_identifier.call_args
+    assert args == ('local-jdoe@univ-domain.edu', 'idref', '12345678X')
 
 
 @pytest.mark.asyncio

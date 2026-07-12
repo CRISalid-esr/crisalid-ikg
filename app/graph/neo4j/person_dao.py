@@ -532,6 +532,69 @@ class PersonDAO(Neo4jDAO):
         record = await result.single()
         return record["detached"] if record else 0
 
+    async def remove_person_identifier(self, person_uid: str,
+                                       identifier_type: str, identifier_value: str) -> bool:
+        """
+        Remove a specific (type, value) identifier from a person: delete the HAS_IDENTIFIER
+        edge and delete the AgentIdentifier node if no other person references it.
+
+        :param person_uid: UID of the person.
+        :param identifier_type: identifier type (enum string value).
+        :param identifier_value: identifier value.
+        :return: True if an identifier edge was removed, False if nothing matched.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.write_transaction(
+                    self._remove_person_identifier_transaction,
+                    person_uid, identifier_type, identifier_value)
+
+    @staticmethod
+    async def _remove_person_identifier_transaction(
+            tx: AsyncManagedTransaction,
+            person_uid: str, identifier_type: str, identifier_value: str
+    ) -> bool:
+        """
+        Transaction backing :meth:`remove_person_identifier`.
+        """
+        result = await tx.run(load_query("remove_person_identifier"),
+                              person_uid=person_uid,
+                              identifier_type=identifier_type,
+                              identifier_value=identifier_value)
+        record = await result.single()
+        return record is not None
+
+    async def detach_external_identifier_owner(self, identifier_type: str,
+                                               identifier_value: str) -> int:
+        """
+        Detach, from external persons, the HAS_IDENTIFIER edge to the AgentIdentifier with
+        the given (type, value) when an internal person also owns it. The AgentIdentifier
+        node and the external Person are left intact.
+
+        :param identifier_type: identifier type (enum string value).
+        :param identifier_value: identifier value.
+        :return: number of HAS_IDENTIFIER relationships detached.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.write_transaction(
+                    self._detach_external_identifier_owner_transaction,
+                    identifier_type, identifier_value)
+
+    @staticmethod
+    async def _detach_external_identifier_owner_transaction(
+            tx: AsyncManagedTransaction,
+            identifier_type: str, identifier_value: str
+    ) -> int:
+        """
+        Transaction backing :meth:`detach_external_identifier_owner`.
+        """
+        result = await tx.run(load_query("detach_external_identifier_owner"),
+                              identifier_type=identifier_type,
+                              identifier_value=identifier_value)
+        record = await result.single()
+        return record["detached"] if record else 0
+
     @staticmethod
     def _hydrate(record) -> Person:
         person_data = record["person"]

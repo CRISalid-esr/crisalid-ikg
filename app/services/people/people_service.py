@@ -13,7 +13,7 @@ from app.models.people import Person
 from app.services.organizations.institution_service import InstitutionService
 from app.amqp.message_mode import MessageMode
 from app.signals import person_created, person_identifiers_updated, person_unchanged, \
-    person_deleted, person_updated, publications_to_be_updated
+    person_deleted, person_identifier_removed, person_updated, publications_to_be_updated
 
 
 class PeopleService:
@@ -174,142 +174,134 @@ class PeopleService:
         dao: PersonDAO = cast(PersonDAO, factory.get_dao(Person))
         return await dao.detach_external_shared_identifiers()
 
-    async def authenticate_identifier(self, person_uid: str,
-                                      identifier_type: str, received_identifier: str,
-                                      timestamp: str):
+    # pylint: disable-next=too-many-arguments, too-many-positional-arguments
+    async def add_identifier(self, person_uid: str, identifier_type: str,
+                             value: str, authenticated: bool, timestamp: str):
         """
-        Authenticate a person's identifier
+        Add an identifier to a person (add-only: an existing identifier of the same type
+        must be removed first — value changes are always remove + add).
+
+        Any manual add is performed by a privileged user, so the identifier is at least
+        validated; it is authenticated only when the message asserts it (never for idref,
+        which has no authentication process).
+
+        :param person_uid: UID of the person
+        :param identifier_type: identifier type (enum string value)
+        :param value: identifier value
+        :param authenticated: whether the identifier was obtained through authentication
+        :param timestamp: authentication date carried by the message
         """
-        if identifier_type in [PersonIdentifierType.IDHALI.value,
-                               PersonIdentifierType.IDHALS.value]:
-            await self._authenticate_id_hal(person_uid, received_identifier,
-                                            identifier_type, timestamp)
-
-        elif identifier_type == PersonIdentifierType.ORCID.value:
-            await self._authenticate_orcid(person_uid, received_identifier, timestamp)
-
-        elif identifier_type == PersonIdentifierType.IDREF.value:
-            await self._validate_idref(person_uid, received_identifier)
-
-        return
-
-    async def _authenticate_id_hal(self, person_uid: str, received_id_hal: str,
-                                   identifier_type: str, timestamp: str):
-        """
-        Authenticate a person's id_hal if necessary
-        """
+        id_type = self._parse_identifier_type(identifier_type)
         person = await self.get_person(person_uid)
-        hal_identifier = person.get_identifier(PersonIdentifierType.from_str(identifier_type))
-
-        if hal_identifier is None:
-            new_hal_identifier = PersonIdentifier(
-                type=identifier_type,
-                value=received_id_hal,
-                validated=True,
-                authenticated=True,
-                authentication_date=timestamp
-            )
-            person.identifiers.append(new_hal_identifier)
-
-        elif hal_identifier.value == received_id_hal and hal_identifier.authenticated:
-            logger.debug(f"{identifier_type} already authenticated for person {person_uid}.")
-            raise ValueError(f"{identifier_type} {hal_identifier.value} is already authenticated "
-                             f"for person {person_uid}.")
-
-        else:
-            hal_identifier = next(
-                (id for id in person.identifiers if id.type.value == identifier_type), None
-            )
-            hal_identifier.value = received_id_hal
-            hal_identifier.validated = True
-            hal_identifier.authenticated = True
-            hal_identifier.authentication_date = timestamp
-
-        await self.update_person(person)
-        logger.debug(f"{identifier_type} authenticated for person {person_uid}.")
-        return
-
-    async def _authenticate_orcid(self, person_uid: str, received_orcid: str, timestamp: str):
-        """
-        Authenticate a person's Orcid if necessary
-        """
-        person = await self.get_person(person_uid)
-        orcid_identifier = person.get_identifier(PersonIdentifierType.ORCID)
-
-        if orcid_identifier is None:
-            new_orcid_identifier = PersonIdentifier(
-                type=PersonIdentifierType.ORCID,
-                value=received_orcid,
-                validated=True,
-                authenticated=True,
-                authentication_date=timestamp
-            )
-            person.identifiers.append(new_orcid_identifier)
-
-        elif orcid_identifier.value != received_orcid:
-            logger.debug(
-                f"Existing and received ORCID are different for person "
-                f"{person_uid}. No authentication possible"
-            )
+        existing_identifier = person.get_identifier(id_type)
+        if existing_identifier is not None:
             raise ValueError(
-                f"Existing ORCID ({orcid_identifier.value}) and received ORCID ({received_orcid})"
-                f" do not match for person {person_uid}. Authentication aborted."
+                f"Person {person_uid} already has a {identifier_type} identifier "
+                f"({existing_identifier.value}): remove it before adding a new one."
             )
-
-        elif orcid_identifier.value == received_orcid and orcid_identifier.authenticated:
-            logger.debug(f"ORCID already authenticated for person {person_uid}.")
-            raise ValueError(f"ORCID {orcid_identifier.value} is already authenticated "
-                             f"for person {person_uid}.")
-
-        else:
-            orcid_identifier = next(
-                (id for id in person.identifiers if
-                 id.type.value == PersonIdentifierType.ORCID.value), None
-            )
-            orcid_identifier.validated = True
-            orcid_identifier.authenticated = True
-            orcid_identifier.authentication_date = timestamp
-
+        new_identifier = PersonIdentifier(type=id_type, value=value)
+        self._stamp_identifier_flags(new_identifier, authenticated, timestamp)
+        person.identifiers.append(new_identifier)
         await self.update_person(person)
-        logger.debug(f"ORCID authenticated for person {person_uid}.")
-        return
+        detached = await self._get_person_dao().detach_external_identifier_owner(
+            id_type.value, value)
+        if detached:
+            logger.info(
+                "Detached {} external HAS_IDENTIFIER edge(s) for identifier {}={} "
+                "now owned by person {}",
+                detached, id_type.value, value, person_uid)
+        logger.debug("{} identifier added for person {}.", identifier_type, person_uid)
 
-    async def _validate_idref(self, person_uid: str, received_idref: str):
+    # pylint: disable-next=too-many-arguments, too-many-positional-arguments
+    async def confirm_identifier(self, person_uid: str, identifier_type: str,
+                                 value: str, authenticated: bool, timestamp: str):
         """
-        Validate a person's idref if necessary.
+        Confirm (authenticate/validate) an existing identifier without changing its value.
+        The stored value must equal the received one; value changes are always remove + add.
+        Idempotent: re-confirming an already confirmed identifier refreshes its flags.
 
-        idref has no real authentication process (no account linking), so this only sets
-        `validated` on the identifier — never `authenticated` / `authentication_date`.
-        Mirrors the id_hal replace-in-place semantics: a different value overwrites the
-        existing idref (a Person may only have one idref identifier).
+        :param person_uid: UID of the person
+        :param identifier_type: identifier type (enum string value)
+        :param value: identifier value carried by the message
+        :param authenticated: whether the identifier was confirmed through authentication
+        :param timestamp: authentication date carried by the message
         """
+        id_type = self._parse_identifier_type(identifier_type)
         person = await self.get_person(person_uid)
-        idref_identifier = person.get_identifier(PersonIdentifierType.IDREF)
-
-        if idref_identifier is None:
-            new_idref_identifier = PersonIdentifier(
-                type=PersonIdentifierType.IDREF,
-                value=received_idref,
-                validated=True
+        identifier = person.get_identifier(id_type)
+        if identifier is None:
+            raise ValueError(
+                f"Person {person_uid} has no {identifier_type} identifier to confirm."
             )
-            person.identifiers.append(new_idref_identifier)
-
-        elif idref_identifier.value == received_idref and idref_identifier.validated:
-            logger.debug(f"idref already validated for person {person_uid}.")
-            raise ValueError(f"idref {idref_identifier.value} is already validated "
-                             f"for person {person_uid}.")
-
-        else:
-            idref_identifier = next(
-                (id for id in person.identifiers if
-                 id.type.value == PersonIdentifierType.IDREF.value), None
+        if identifier.value != value:
+            raise ValueError(
+                f"Existing {identifier_type} ({identifier.value}) and received ({value}) "
+                f"do not match for person {person_uid}: "
+                f"value changes require remove + add."
             )
-            idref_identifier.value = received_idref
-            idref_identifier.validated = True
-
+        self._stamp_identifier_flags(identifier, authenticated, timestamp)
         await self.update_person(person)
-        logger.debug(f"idref validated for person {person_uid}.")
-        return
+        logger.debug("{} identifier confirmed for person {}.", identifier_type, person_uid)
+
+    async def remove_identifier(self, person_uid: str, identifier_type: str, value: str):
+        """
+        Remove a specific (type, value) identifier from a person and emit the dedicated
+        removal signal so harvested data keyed on that identifier gets cleaned up.
+
+        :param person_uid: UID of the person
+        :param identifier_type: identifier type (enum string value)
+        :param value: identifier value carried by the message
+        """
+        id_type = self._parse_identifier_type(identifier_type)
+        person = await self.get_person(person_uid)
+        identifier = person.get_identifier(id_type)
+        if identifier is None or identifier.value != value:
+            raise ValueError(
+                f"Person {person_uid} has no {identifier_type} identifier "
+                f"with value {value}: nothing to remove."
+            )
+        removed = await self._get_person_dao().remove_person_identifier(
+            person_uid, id_type.value, value)
+        if not removed:
+            raise ValueError(
+                f"Identifier {identifier_type}={value} could not be removed "
+                f"for person {person_uid}."
+            )
+        await person_identifier_removed.send_async(
+            self,
+            person_uid=person_uid,
+            identifier_type=id_type.value,
+            identifier_value=value,
+            mode=MessageMode.INTERACTIVE)
+        await person_updated.send_async(self, payload=person_uid,
+                                        mode=MessageMode.INTERACTIVE)
+        logger.debug("{} identifier removed for person {}.", identifier_type, person_uid)
+
+    @staticmethod
+    def _parse_identifier_type(identifier_type: str) -> PersonIdentifierType:
+        """
+        Resolve an identifier type string to its enum member or raise.
+        """
+        id_type = PersonIdentifierType.from_str(identifier_type)
+        if id_type is None:
+            raise ValueError(f"Unknown identifier type: {identifier_type}")
+        return id_type
+
+    @staticmethod
+    def _stamp_identifier_flags(identifier: PersonIdentifier,
+                                authenticated: bool, timestamp: str):
+        """
+        Stamp validation/authentication flags on an identifier: idref is only ever
+        validated; other types are authenticated when the message asserts it,
+        validated otherwise (a manual update by a privileged user counts as validation).
+        """
+        identifier.validated = True
+        if authenticated and identifier.type != PersonIdentifierType.IDREF:
+            identifier.authenticated = True
+            identifier.authentication_date = timestamp
+
+    def _get_person_dao(self) -> PersonDAO:
+        return cast(PersonDAO, self._get_dao_factory().get_dao(Person))
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:
