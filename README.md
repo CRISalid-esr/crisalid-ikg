@@ -49,18 +49,18 @@ Neo4j can be ran from the Neo4j Desktop interface.
 To run Neo4j **in a container**, and **allow data persistence**, you can use the following command :
 
 ```bash
- docker run --publish=7474:7474 --publish=7687:7687 --env=NEO4J_AUTH=none -e NEO4J_apoc_export_file_enabled=true -e NEO4J_apoc_import_file_enabled=true -e NEO4J_apoc_import_file_use__neo4j__config=true -e NEO4JLABS_PLUGINS=\[\"apoc\"\] -v ./neo4j/data:/data -v ./neo4j/logs:/logs -v ./neo4j/import:/import -v ./neo4j/backups:/backups -v ./neo4j/plugins:/plugins   neo4j:5-community
+ docker run --publish=7474:7474 --publish=7687:7687 --env=NEO4J_AUTH=none -e NEO4J_apoc_export_file_enabled=true -e NEO4J_apoc_import_file_enabled=true -e NEO4J_apoc_import_file_use__neo4j__config=true -e NEO4J_PLUGINS=\[\"apoc\"\] -v ./neo4j/data:/data -v ./neo4j/logs:/logs -v ./neo4j/import:/import -v ./neo4j/backups:/backups -v ./neo4j/plugins:/plugins   neo4j:2026.06.0-community
 ```
 If you want to run the container under heavy load, you can **increase the memory heap size** with the following command :
 
 ```bash
-docker run --publish=7474:7474 --publish=7687:7687 --env=NEO4J_AUTH=none -e NEO4J_apoc_export_file_enabled=true -e NEO4J_server_memory_heap_initial__size=4G -e NEO4J_server_memory_heap_max__size=8G -e NEO4J_server_memory_pagecache_size=6G -e NEO4J_apoc_import_file_enabled=true -e NEO4J_apoc_import_file_use__neo4j__config=true -e NEO4JLABS_PLUGINS=\[\"apoc\"\] -v ./neo4j/data:/data -v ./neo4j/logs:/logs -v ./neo4j/import:/import -v ./neo4j/backups:/backups -v ./neo4j/plugins:/plugins   neo4j:5-community
+docker run --publish=7474:7474 --publish=7687:7687 --env=NEO4J_AUTH=none -e NEO4J_apoc_export_file_enabled=true -e NEO4J_server_memory_heap_initial__size=4G -e NEO4J_server_memory_heap_max__size=8G -e NEO4J_server_memory_pagecache_size=6G -e NEO4J_apoc_import_file_enabled=true -e NEO4J_apoc_import_file_use__neo4j__config=true -e NEO4J_PLUGINS=\[\"apoc\"\] -v ./neo4j/data:/data -v ./neo4j/logs:/logs -v ./neo4j/import:/import -v ./neo4j/backups:/backups -v ./neo4j/plugins:/plugins   neo4j:2026.06.0-community
 ```
 ###### Neo4j backup
 With this approach, a **backup** can be **triggered** with the following command :
 
 ```bash
- docker run --interactive --tty --rm -v ./neo4j/data:/data -v ./neo4j/backups:/backups --env NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j/neo4j-admin:5-community neo4j-admin database dump neo4j --to-path=/backups  --overwrite-destination=true
+ docker run --interactive --tty --rm -v ./neo4j/data:/data -v ./neo4j/backups:/backups --env NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j/neo4j-admin:2026.06.0-community-debian neo4j-admin database dump neo4j --to-path=/backups  --overwrite-destination=true
 ```
 
 The **backup can be restored** with the following command :
@@ -68,13 +68,13 @@ The **backup can be restored** with the following command :
 - if your backup file is in the `./neo4j/backups directory` (it was created with the previous command) :
 
 ```bash
- docker run --interactive --tty --rm -v ./neo4j/data:/data -v ./neo4j/backups:/backups --env NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j/neo4j-admin:5-community neo4j-admin database load neo4j --from-path=/backups   --overwrite-destination=true
+ docker run --interactive --tty --rm -v ./neo4j/data:/data -v ./neo4j/backups:/backups --env NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j/neo4j-admin:2026.06.0-community-debian neo4j-admin database load neo4j --from-path=/backups   --overwrite-destination=true
 ```
 
 - if your backup file is in another directory :
 
 ```bash
-cat /path/to/my/neo4j.dump | docker run --interactive --rm -v ./neo4j/data:/data -v ./neo4j/backups:/backups --env NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j/neo4j-admin:5-community neo4j-admin database load neo4j --from-stdin --overwrite-destination=true
+cat /path/to/my/neo4j.dump | docker run --interactive --rm -v ./neo4j/data:/data -v ./neo4j/backups:/backups --env NEO4J_ACCEPT_LICENSE_AGREEMENT=yes neo4j/neo4j-admin:2026.06.0-community-debian neo4j-admin database load neo4j --from-stdin --overwrite-destination=true
 ```
 
 ### Elasticsearch
@@ -235,7 +235,7 @@ The project uses [pytest](https://docs.pytest.org/en/stable/) for testing.
 Running the tests requires test dependencies to be running. The following command will launch Neo4j :
 
 ```bash
-docker run --publish=7475:7474 --publish=7688:7687 --env=NEO4J_AUTH=none -e NEO4J_apoc_export_file_enabled=true -e NEO4J_apoc_import_file_enabled=true -e NEO4J_apoc_import_file_use__neo4j__config=true -e NEO4JLABS_PLUGINS=\[\"apoc\"\]  neo4j:5-community
+docker run --publish=7475:7474 --publish=7688:7687 --env=NEO4J_AUTH=none -e NEO4J_apoc_export_file_enabled=true -e NEO4J_apoc_import_file_enabled=true -e NEO4J_apoc_import_file_use__neo4j__config=true -e NEO4J_PLUGINS=\[\"apoc\"\]  neo4j:2026.06.0-community
 ```
 
 The 7475 port is only intended to allow you to check test behaviour through the Neo4j browser. The 7688 port is the one used by the test suite to connect to the Neo4j instance. It should match the one defined in the `neo4j_uri` in `test_app_settings.py`, which can be overriden through `.test.env` or the `NEO4J_URI` environment variable.
