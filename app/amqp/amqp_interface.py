@@ -177,8 +177,9 @@ class AMQPInterface:
                     logger.debug(f"Message added to inner queue for topic: {topic}")
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error(f"Error while listening to messages on topic '{topic}': {e}",
-                         exc_info=True)
+            logger.opt(exception=True).error(
+                "Error while listening to messages on topic '{}': {}", topic, e
+            )
 
     async def _declare_exchange(self, exchange_name: str, with_dlx=False) -> None:
         if exchange_name in self.pika_exchanges:

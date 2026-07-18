@@ -90,8 +90,10 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
                     await self._update_source_record(source_record, person, identifier_used,
                                                      mode=mode, first_attempt=False)
                     return
-                logger.error(f"Aborting update attempt for {source_record.uid}"
-                             f" after failed create attempt", exc_info=True)
+                logger.opt(exception=True).error(
+                    "Aborting update attempt for {} after failed create attempt",
+                    source_record.uid,
+                )
                 return
             await self.service.create_source_record(source_record=source_record,
                                                     harvested_for=person,
@@ -105,7 +107,9 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
         except ConflictError as e:
             logger.warning(
                 f"Identifier conflict while trying to create source record {source_record} : {e}")
-            logger.error(f"{source_record.uid} already exists in the database", exc_info=True)
+            logger.opt(exception=True).error(
+                "{} already exists in the database", source_record.uid
+            )
         except DatabaseError as e:
             logger.error(
                 f"Database error while trying to create source record {source_record} : {e}")
@@ -127,8 +131,10 @@ class AMQReferenceMessageProcessor(AMQPMessageProcessor):
                     await self._create_source_record(source_record, person, identifier_used,
                                                      mode=mode, first_attempt=False)
                 else:
-                    logger.error(f"Aborting create attempt for {source_record.uid}"
-                                 f" after failed update attempt", exc_info=True)
+                    logger.opt(exception=True).error(
+                        "Aborting create attempt for {} after failed update attempt",
+                        source_record.uid,
+                    )
         except ReferenceOwnerNotFoundError as e:
             logger.error(
                 f"Reference owner {person} not found while trying to update source record"
