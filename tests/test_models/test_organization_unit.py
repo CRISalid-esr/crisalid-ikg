@@ -10,6 +10,7 @@ from app.models.organization_types import (
     OrgMembershipPosition,
 )
 from app.models.organization_unit import (
+    DoctoralSchool,
     Institution,
     InstitutionSubdivision,
     OrgInclusion,
@@ -43,6 +44,51 @@ def test_create_institution_subdivision_from_json(institution_subdivision_a_json
     assert parent.target == "local-EXAMPLE-UNIV-001"
     assert parent.start_date == date(2010, 1, 1)
     assert parent.end_date == date(2030, 12, 31)
+
+
+def test_create_doctoral_school_from_json(doctoral_school_a_json_data):
+    org = nonUnitAdapter.validate_python(doctoral_school_a_json_data)
+    assert isinstance(org, DoctoralSchool)
+    assert org.generic_type == GenericOrganizationType.DOCTORAL_SCHOOL
+    assert org.national_type == NationalOrganizationType.ED
+    assert len(org.parents) == 1
+    assert org.parents[0].target == "local-EXAMPLE-UNIV-001"
+    assert org.electronical_addresses[0].uri == "https://ed-arts.pantheonsorbonne.fr/"
+
+
+def test_create_doctoral_school_from_directory_message():
+    """A doctoral school event as sent by the directory bridge (no national type)."""
+    data = {
+        "contacts": [
+            {
+                "type": "electronical_address",
+                "value": {"uri": "https://ed-arts.pantheonsorbonne.fr/"},
+                "format": "website_address",
+            }
+        ],
+        "identifiers": [{"type": "local", "value": "EDO04"}],
+        "long_labels": [{"value": "ED Arts plastiques", "language": "fr"}],
+        "descriptions": [
+            {
+                "value": "École doctorale d'arts plastiques, esthétique "
+                         "et sciences de l'art",
+                "language": "fr",
+            }
+        ],
+        "generic_type": "doctoral_school",
+        "short_labels": [{"value": "ED Arts plastiques", "language": "fr"}],
+        "relationships": [{"type": "part_of", "target": "local-DGIB"}],
+    }
+    org = nonUnitAdapter.validate_python(data)
+    assert isinstance(org, DoctoralSchool)
+    assert org.national_type is None
+    assert org.parents[0].target == "local-DGIB"
+
+
+def test_doctoral_school_rejects_non_ed_national_type(doctoral_school_a_json_data):
+    doctoral_school_a_json_data["type"] = "UMR"
+    with pytest.raises(ValidationError):
+        nonUnitAdapter.validate_python(doctoral_school_a_json_data)
 
 
 def test_create_research_unit_from_json(research_unit_center_json_data):

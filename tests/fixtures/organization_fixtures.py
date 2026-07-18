@@ -124,6 +124,27 @@ async def fixture_persisted_institution_subdivision_a_pydantic_model(
     return institution_subdivision_a_pydantic_model
 
 
+@pytest_asyncio.fixture(name="doctoral_school_a_json_data")
+async def fixture_doctoral_school_a_json_data(_base_path) -> dict:
+    return _organization_unit_json_data_from_file(_base_path, "doctoral_school_a")
+
+
+@pytest_asyncio.fixture(name="doctoral_school_a_pydantic_model")
+async def fixture_doctoral_school_a_pydantic_model(
+        doctoral_school_a_json_data) -> OrganizationBase:
+    return _organization_unit_from_json_data(doctoral_school_a_json_data)
+
+
+@pytest_asyncio.fixture(name="persisted_doctoral_school_a_pydantic_model")
+async def fixture_persisted_doctoral_school_a_pydantic_model(
+        doctoral_school_a_pydantic_model) -> OrganizationBase:
+    settings = get_app_settings()
+    factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
+    dao = factory.get_dao(OrganizationBase)
+    await dao.create(doctoral_school_a_pydantic_model)
+    return doctoral_school_a_pydantic_model
+
+
 @pytest_asyncio.fixture(name="research_unit_center_json_data")
 async def fixture_research_unit_center_json_data(_base_path) -> dict:
     return _organization_unit_json_data_from_file(_base_path, "research_unit_center")

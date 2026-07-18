@@ -44,6 +44,7 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_structured_physical_address_uid_constraint(tx)
         await cls._create_place_lat_lon_unique_constraint(tx)
         await cls._create_research_unit_uid_unique_constraint(tx)
+        await cls._create_doctoral_school_uid_unique_constraint(tx)
         await cls._create_publication_identifier_unique_type_value_constraint(tx)
         await cls._create_source_issue_unique_source_identifier_source_constraint(tx)
         await cls._create_authority_organization_state_signature_constraint(tx)
@@ -315,6 +316,24 @@ class Neo4jSetup(Setup[AsyncDriver]):
         except DatabaseError as e:
             logger.error(
                 "Error creating ResearchUnit uid unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
+    async def _create_doctoral_school_uid_unique_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT doctoral_school_uid_unique IF NOT EXISTS
+        FOR (d:DoctoralSchool)
+        REQUIRE d.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating DoctoralSchool uid unique constraint: "
                 f"{e}"
             )
             raise e

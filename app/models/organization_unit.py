@@ -194,6 +194,13 @@ class InstitutionSubdivision(OrganizationBase):
     )
 
 
+class DoctoralSchool(OrganizationBase):
+    """A doctoral school attached to one or several institutions (ED…)."""
+    generic_type: TypingLiteral[GenericOrganizationType.DOCTORAL_SCHOOL] = (
+        GenericOrganizationType.DOCTORAL_SCHOOL
+    )
+
+
 class UnitSubdivision(OrganizationBase):
     """A subdivision of a research unit."""
     generic_type: TypingLiteral[GenericOrganizationType.UNIT_SUBDIVISION] = (
@@ -251,7 +258,7 @@ Unit = Annotated[
 ]
 
 NonUnitOrganizationUnit = Annotated[
-    Union[Institution, InstitutionSubdivision, UnitSubdivision, Team],
+    Union[Institution, InstitutionSubdivision, DoctoralSchool, UnitSubdivision, Team],
     Field(discriminator='generic_type'),
 ]
 

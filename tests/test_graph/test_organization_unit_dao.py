@@ -13,6 +13,7 @@ from app.models.organization_types import (
     OrgMembershipPosition,
 )
 from app.models.organization_unit import (
+    DoctoralSchool,
     Institution,
     InstitutionSubdivision,
     OrganizationBase,
@@ -178,6 +179,33 @@ async def test_create_institution_subdivision_with_part_of(
     retrieved = await dao.get(fac_uid)
     assert retrieved is not None
     assert isinstance(retrieved, InstitutionSubdivision)
+    assert len(retrieved.parents) == 1
+    assert retrieved.parents[0].target == "local-EXAMPLE-UNIV-001"
+
+
+async def test_create_doctoral_school_with_part_of(
+        test_app,
+        persisted_institution_a_pydantic_model: OrganizationBase,
+        doctoral_school_a_pydantic_model: OrganizationBase,
+):
+    dao = _get_dao()
+    await dao.create(doctoral_school_a_pydantic_model)
+
+    ed_uid = doctoral_school_a_pydantic_model.uid
+    assert ed_uid == "local-EDO04"
+
+    labels = await _node_labels(ed_uid)
+    assert "OrganizationUnit" in labels
+    assert "DoctoralSchool" in labels
+
+    rel_props = await _relationship_exists(ed_uid, "PART_OF", "local-EXAMPLE-UNIV-001")
+    assert rel_props is not None
+
+    retrieved = await dao.get(ed_uid)
+    assert retrieved is not None
+    assert isinstance(retrieved, DoctoralSchool)
+    assert retrieved.generic_type == GenericOrganizationType.DOCTORAL_SCHOOL
+    assert retrieved.national_type == NationalOrganizationType.ED
     assert len(retrieved.parents) == 1
     assert retrieved.parents[0].target == "local-EXAMPLE-UNIV-001"
 
