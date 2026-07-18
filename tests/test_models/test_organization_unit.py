@@ -91,7 +91,7 @@ def test_doctoral_school_rejects_non_ed_national_type(doctoral_school_a_json_dat
         nonUnitAdapter.validate_python(doctoral_school_a_json_data)
 
 
-@pytest.mark.parametrize("national_type", ["GIS", "GIP", "LABEX", "UR"])
+@pytest.mark.parametrize("national_type", ["GIS", "GIP", "LABEX", "EUR", "UR"])
 def test_institution_subdivision_accepts_research_group_national_types(national_type):
     """Institution subdivision events as sent by the directory bridge (GRALE-like)."""
     data = {
