@@ -5,6 +5,7 @@ class GenericOrganizationType(str, Enum):
     """Top-level category of a research organization structure."""
     INSTITUTION = "institution"
     INSTITUTION_SUBDIVISION = "institution_subdivision"
+    DOCTORAL_SCHOOL = "doctoral_school"
     UNIT = "unit"
     UNIT_SUBDIVISION = "unit_subdivision"
     TEAM = "team"
@@ -24,6 +25,7 @@ class NationalOrganizationType(str, Enum):
     UFR = "UFR"
     FAC = "FAC"
     FDR = "FDR"
+    ED = "ED"
     TEAM = "TEAM"
     THEME = "THEME"
 
@@ -61,6 +63,9 @@ ALLOWED_NATIONAL_TYPES_BY_GENERIC_TYPE: dict = {
         NationalOrganizationType.UFR,
         NationalOrganizationType.FAC,
         NationalOrganizationType.FDR,
+    },
+    GenericOrganizationType.DOCTORAL_SCHOOL: {
+        NationalOrganizationType.ED,
     },
     GenericOrganizationType.UNIT_SUBDIVISION: set(),
     GenericOrganizationType.TEAM: {

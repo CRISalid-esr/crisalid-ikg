@@ -11,6 +11,7 @@ from app.graph.neo4j.utils import load_query
 from app.models.identifier_types import OrganizationIdentifierType
 from app.models.organization_unit import (
     AdministrativeUnit,
+    DoctoralSchool,
     Institution,
     InstitutionSubdivision,
     OrganizationBase,
@@ -260,6 +261,8 @@ class OrganizationUnitDAO(Neo4jDAO):
             labels.append("Institution")
         elif isinstance(org_unit, InstitutionSubdivision):
             labels.append("InstitutionSubdivision")
+        elif isinstance(org_unit, DoctoralSchool):
+            labels.append("DoctoralSchool")
         elif isinstance(org_unit, UnitSubdivision):
             labels.append("UnitSubdivision")
         elif isinstance(org_unit, Team):
