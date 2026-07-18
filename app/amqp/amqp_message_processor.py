@@ -1,6 +1,5 @@
 import asyncio
 import json
-import traceback
 from abc import ABC, abstractmethod
 from datetime import datetime
 
@@ -47,16 +46,14 @@ class AMQPMessageProcessor(ABC):
                         await message.ack()
                     # inner exceptions
                     except ValueError as error:
-                        logger.error(
-                            f"Invalid message received by {worker_id} : {error}",
-                            exc_info=True
+                        logger.opt(exception=True).error(
+                            "Invalid message received by {} : {}", worker_id, error
                         )
                     except DatabaseError as database_error:
-                        logger.error(traceback.format_exc())
-                        logger.error(
-                            f"Database error for worker {worker_id} "
-                            f"message processing : {database_error}",
-                            exc_info=True
+                        logger.opt(exception=True).error(
+                            "Database error for worker {} message processing : {}",
+                            worker_id,
+                            database_error,
                         )
                         requeue = True
                     finally:
@@ -68,11 +65,11 @@ class AMQPMessageProcessor(ABC):
                 await message.nack(requeue=True)
                 raise keyboard_interrupt
             except Exception as exception:  # pylint: disable=broad-exception-caught
-                logger.error(
-                    f"Unexpected exception during {worker_id} message processing: {exception}",
-                    exc_info=True
+                logger.opt(exception=True).error(
+                    "Unexpected exception during {} message processing: {}",
+                    worker_id,
+                    exception,
                 )
-                logger.error(traceback.format_exc())
             finally:
                 self.tasks_queue.task_done()
                 await asyncio.sleep(0)
