@@ -91,7 +91,7 @@ def test_doctoral_school_rejects_non_ed_national_type(doctoral_school_a_json_dat
         nonUnitAdapter.validate_python(doctoral_school_a_json_data)
 
 
-@pytest.mark.parametrize("national_type", ["GIS", "GIP", "LABEX", "EUR", "UR"])
+@pytest.mark.parametrize("national_type", ["GIS", "GIP", "LABEX", "EUR"])
 def test_institution_subdivision_accepts_research_group_national_types(national_type):
     """Institution subdivision events as sent by the directory bridge (GRALE-like)."""
     data = {
@@ -126,6 +126,18 @@ def test_institution_subdivision_accepts_research_group_national_types(national_
     assert isinstance(org, InstitutionSubdivision)
     assert org.national_type == NationalOrganizationType(national_type)
     assert org.parents[0].target == "local-UP1"
+
+
+def test_institution_subdivision_rejects_unit_national_types():
+    """UR is a research unit national type, not an institution subdivision one."""
+    data = {
+        "type": "UR",
+        "identifiers": [{"type": "local", "value": "DS63"}],
+        "long_labels": [{"value": "GRALE", "language": "fr"}],
+        "generic_type": "institution_subdivision",
+    }
+    with pytest.raises(ValidationError):
+        nonUnitAdapter.validate_python(data)
 
 
 def test_create_research_unit_from_json(research_unit_center_json_data):

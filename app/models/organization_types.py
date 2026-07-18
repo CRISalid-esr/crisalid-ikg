@@ -71,7 +71,6 @@ ALLOWED_NATIONAL_TYPES_BY_GENERIC_TYPE: dict = {
         NationalOrganizationType.GIP,
         NationalOrganizationType.LABEX,
         NationalOrganizationType.EUR,
-        NationalOrganizationType.UR,
     },
     GenericOrganizationType.DOCTORAL_SCHOOL: {
         NationalOrganizationType.ED,
