@@ -26,6 +26,10 @@ class NationalOrganizationType(str, Enum):
     FAC = "FAC"
     FDR = "FDR"
     ED = "ED"
+    GIS = "GIS"
+    GIP = "GIP"
+    LABEX = "LABEX"
+    EUR = "EUR"
     TEAM = "TEAM"
     THEME = "THEME"
 
@@ -63,6 +67,10 @@ ALLOWED_NATIONAL_TYPES_BY_GENERIC_TYPE: dict = {
         NationalOrganizationType.UFR,
         NationalOrganizationType.FAC,
         NationalOrganizationType.FDR,
+        NationalOrganizationType.GIS,
+        NationalOrganizationType.GIP,
+        NationalOrganizationType.LABEX,
+        NationalOrganizationType.EUR,
     },
     GenericOrganizationType.DOCTORAL_SCHOOL: {
         NationalOrganizationType.ED,
