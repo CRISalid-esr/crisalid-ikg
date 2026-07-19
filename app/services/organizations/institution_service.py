@@ -2,6 +2,7 @@ from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.utils import load_query
+from app.models.identifier_types import OrganizationIdentifierType
 from app.models.organization_unit import Institution, OrganizationBase
 from app.services.identifiers.identifier_service import AgentIdentifierService
 from app.services.organizations.institution_registry_service import InstitutionRegistryService
@@ -25,6 +26,34 @@ class InstitutionService:
                     result = await tx.run(
                         load_query("institution_uid_by_uid"),
                         uid=entity_uid,
+                    )
+                    record = await result.single()
+                    return record["uid"] if record else None
+
+    async def resolve_institution_uid(self, entity_uid: str) -> str | None:
+        """
+        Resolve an entity uid to the uid of an existing Institution node.
+        First tries an exact uid match, then parses the uid as an identifier
+        "<type>-<value>" (e.g. "uai-12345") and matches it against the
+        HAS_IDENTIFIER edges of Institution nodes, preferring internal ones.
+        Returns None if nothing matches.
+        """
+        existing_uid = await self.institution_uid(entity_uid)
+        if existing_uid is not None:
+            return existing_uid
+        separator = AgentIdentifierService.IDENTIFIER_SEPARATOR
+        if separator not in entity_uid:
+            return None
+        identifier_type, identifier_value = entity_uid.split(separator, 1)
+        if OrganizationIdentifierType.from_str(identifier_type) is None:
+            return None
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    result = await tx.run(
+                        load_query("institution_uid_by_identifier"),
+                        identifier_type=identifier_type,
+                        identifier_value=identifier_value,
                     )
                     record = await result.single()
                     return record["uid"] if record else None

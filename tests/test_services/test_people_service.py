@@ -7,6 +7,7 @@ from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.identifier_types import OrganizationIdentifierType, PersonIdentifierType
 from app.models.organization_unit import OrganizationBase
 from app.models.people import Person
+from app.services.organizations.institution_service import InstitutionService
 from app.services.people.people_service import PeopleService
 
 
@@ -673,3 +674,26 @@ async def test_remove_identifier_wrong_value(
     assert orcid_identifier is not None
     assert orcid_identifier.value == "0000-0001-2345-6789"
 
+
+
+async def test_create_person_employment_resolved_by_identifier(
+        person_a_json_data: dict,
+        persisted_institution_a_pydantic_model: OrganizationBase,
+) -> None:
+    """
+    Given a persisted institution with a local uid and a uai identifier
+    When a person is created with an employment referencing the institution by uai
+    Then the employment is attached to the existing institution
+    and no duplicate institution is created from the registry
+    """
+    person_data = dict(person_a_json_data)
+    person_data["memberships"] = []
+    person_data["employments"] = [{"entity_uid": "uai-UAI001"}]
+    person = Person(**person_data)
+    service = PeopleService()
+    await service.create_person(person)
+    fetched_person = await service.get_person(person.uid)
+    assert len(fetched_person.employments) == 1
+    assert (fetched_person.employments[0].entity_uid
+            == persisted_institution_a_pydantic_model.uid)
+    assert await InstitutionService().institution_uid("uai-UAI001") is None
