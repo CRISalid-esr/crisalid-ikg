@@ -1,5 +1,5 @@
-MERGE (doc:Document {uid: $document_uid})
-MERGE (person:Person {uid: $person_uid})
+MATCH (doc:Document {uid: $document_uid})
+MATCH (person:Person {uid: $person_uid})
 MERGE (doc)-[:HAS_CONTRIBUTION]->(contribution:Contribution)<-[:HAS_CONTRIBUTION]-(person)
 ON CREATE SET contribution.roles = $roles, contribution.rank = $rank
 ON MATCH SET contribution.roles = $roles, contribution.rank = $rank
