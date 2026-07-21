@@ -92,14 +92,24 @@ class SourceContributorMappingService:
             source_people_cluster = [person for person in self.source_people if
                                      person.uid in source_people_cluster_uids]
             yet_processed_source_person_uids.update(source_people_cluster_uids)
-            person_uid = (
-                    await self._match_by_identifiers(source_people_cluster)
-                    or await self._match_by_name(source_people_cluster)
-                    or await self._match_with_external_person(source_people_cluster)
-            )
+            person_uid = await self._resolve_cluster(source_people_cluster)
             if person_uid is not None:
                 linked_people[person_uid] = source_people_cluster
         return linked_people
+
+    async def _resolve_cluster(self, source_people_cluster: List[SourcePerson]) -> str | None:
+        """
+        Resolve a cluster of source people to a real person uid, by identifiers,
+        by name, or by creating/finding an external person.
+
+        :param source_people_cluster: List of SourcePerson objects.
+        :return: The UID of the resolved person, or None if no person could be resolved.
+        """
+        return (
+                await self._match_by_identifiers(source_people_cluster)
+                or await self._match_by_name(source_people_cluster)
+                or await self._match_with_external_person(source_people_cluster)
+        )
 
     async def _match_by_name(self, source_people_cluster: List[SourcePerson]) -> str | None:
         """
@@ -206,14 +216,30 @@ class SourceContributorMappingService:
         :param source_people_cluster: List of SourcePerson objects
         :return: The UID of the merged person
         """
-        person_to_keep_uid = existing_external_people_uids.pop()
-        for person_to_merge_uid in existing_external_people_uids:
+        ordered_uids = sorted(existing_external_people_uids, key=self._survivor_election_key)
+        person_to_keep_uid = ordered_uids[0]
+        for person_to_merge_uid in ordered_uids[1:]:
             await self.person_dao.merge_people(person_to_keep_uid, person_to_merge_uid)
         # Link the source people to the merged person
         await self.source_person_dao.link_to_person([source_person.uid for source_person in
                                                      source_people_cluster],
                                                     person_to_keep_uid)
         return person_to_keep_uid
+
+    def _survivor_election_key(self, person_uid: str) -> tuple:
+        """
+        Sort key for electing the surviving person of an external-people merge:
+        harvester priority of the uid's source prefix (same order as used by
+        _build_external_person), tie-broken by uid, so repeated merges converge
+        on the same survivor.
+
+        :param person_uid: candidate person uid (e.g. "hal-170517")
+        :return: sort key tuple
+        """
+        sources = self._get_harvesting_sources()
+        prefix = person_uid.split("-", 1)[0]
+        priority = sources.index(prefix) if prefix in sources else len(sources)
+        return priority, person_uid
 
     async def _update_contributions(self, linked_people):
         document_dao = self._get_document_dao()
@@ -233,6 +259,23 @@ class SourceContributorMappingService:
                 person_uid=person_uid,
                 roles=[role.value for role in roles]
             )
+            if contribution_id is None:
+                # the person may have been deleted by a concurrent external-people merge
+                # since the linking phase: re-resolve the cluster once and retry
+                person_uid = await self._resolve_cluster(source_people_cluster)
+                if person_uid is not None:
+                    contribution_id = await document_dao.create_contribution(
+                        document_uid=self.document_uid,
+                        person_uid=person_uid,
+                        roles=[role.value for role in roles]
+                    )
+            if contribution_id is None:
+                logger.error(
+                    "Could not create contribution for document {}: person {} "
+                    "(source people {}) does not exist",
+                    self.document_uid, person_uid,
+                    [source_person.uid for source_person in source_people_cluster])
+                continue
             # get source organizations for the source people cluster
             source_organisations = self._get_organisations_for_person(
                 source_people_cluster,
@@ -253,8 +296,7 @@ class SourceContributorMappingService:
                 targets=elected_target_uids,
             )
 
-            if contribution_id is not None:
-                current_contribution_ids.add(contribution_id)
+            current_contribution_ids.add(contribution_id)
         # Delete contributions that are not in the current set
         await document_dao.delete_contributions_not_in(
             document_uid=self.document_uid,
