@@ -399,7 +399,7 @@ class SourceRecordDAO(Neo4jDAO):
             query,
             source_record_uid=source_record_uid,
             contributor_uid=source_contribution.contributor.uid,
-            role=source_contribution.role.name if source_contribution.role else None,
+            role=source_contribution.role.name,
             rank=source_contribution.rank,
             affiliation_uids=[affiliation.uid for affiliation in source_contribution.affiliations]
         )
@@ -641,9 +641,10 @@ class SourceRecordDAO(Neo4jDAO):
         for contribution in contributions:
             try:
                 role = LocContributionRole.from_name(
-                    contribution["role"]) if "role" in contribution else None
+                    contribution["role"]) if "role" in contribution \
+                    else LocContributionRole.CONTRIBUTOR
             except ValueError:
-                role = None
+                role = LocContributionRole.CONTRIBUTOR
             affiliations = []
             for affiliation in contribution.get("affiliations", []):
                 source_organization = SourceOrganization(

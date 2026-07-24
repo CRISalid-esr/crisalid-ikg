@@ -13,6 +13,7 @@ from app.models.change_report import ChangeApplicationReport
 from app.models.document import Document
 from app.models.harvesting_sources import HarvestingSource
 from app.models.identifier_types import OrganizationIdentifierType, PersonIdentifierType
+from app.models.loc_contribution_role import LocContributionRole
 from app.models.people import Person
 from app.models.source_organization_identifiers import SourceOrganizationIdentifier
 from app.models.source_organizations import SourceOrganization
@@ -77,7 +78,8 @@ class ContributionUpdateService:
                         identifiers=self._incoming_identifiers(person),
                     )
                 continue
-            roles = contribution.get("roles") or []
+            # a contribution without roles defaults to the generic Contributor role
+            roles = contribution.get("roles") or [LocContributionRole.CONTRIBUTOR.value]
             rank = contribution.get("rank")
             contribution_id = await document_dao.create_contribution(
                 document_uid=document_uid,
