@@ -1,6 +1,8 @@
 from app.models.harvesting_sources import HarvestingSource
 from app.models.loc_contribution_role import LocContributionRole
+from app.models.source_contributions import SourceContribution
 from app.models.source_organizations import SourceOrganization
+from app.models.source_people import SourcePerson
 from app.models.source_records import SourceRecord
 
 def test_hal_chapter_source_record(
@@ -45,3 +47,60 @@ def test_hal_chapter_source_record(
         i.type == 'ror' and i.value == 'https://ror.org/000000000'
         for i in organisation_0.identifiers
     )
+
+
+def _minimal_contributor() -> dict:
+    return {
+        "source": "idref",
+        "source_identifier": "123456789",
+        "name": "Alice Dupont",
+    }
+
+
+def test_contribution_without_role_defaults_to_contributor():
+    """
+    Given a source contribution without a role
+    When the model is built
+    Then the role defaults to the generic Contributor role
+    """
+    contribution = SourceContribution(contributor=SourcePerson(**_minimal_contributor()))
+    assert contribution.role == LocContributionRole.CONTRIBUTOR
+
+
+def test_contribution_with_null_role_defaults_to_contributor():
+    """
+    Given a source contribution with an explicit null role
+    When the model is built
+    Then the role defaults to the generic Contributor role
+    """
+    contribution = SourceContribution(
+        role=None,
+        contributor=SourcePerson(**_minimal_contributor())
+    )
+    assert contribution.role == LocContributionRole.CONTRIBUTOR
+
+
+def test_contribution_with_unknown_role_defaults_to_contributor():
+    """
+    Given a source contribution with a role URL outside the LoC relators vocabulary
+    When the model is built
+    Then the role defaults to the generic Contributor role
+    """
+    contribution = SourceContribution(
+        role="https://id.loc.gov/vocabulary/relators/xxx.html",
+        contributor=SourcePerson(**_minimal_contributor())
+    )
+    assert contribution.role == LocContributionRole.CONTRIBUTOR
+
+
+def test_contribution_with_valid_role_is_kept():
+    """
+    Given a source contribution with a valid LoC role URL
+    When the model is built
+    Then the role maps to the corresponding relator
+    """
+    contribution = SourceContribution(
+        role="https://id.loc.gov/vocabulary/relators/aut.html",
+        contributor=SourcePerson(**_minimal_contributor())
+    )
+    assert contribution.role == LocContributionRole.AUTHOR

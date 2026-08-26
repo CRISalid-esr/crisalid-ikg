@@ -431,3 +431,58 @@ async def test_affiliation_hal_structid_becomes_identifier(
         _contributions_change(document.uid, contributions))
 
     assert ("hal", "1210550") in await _affiliation_identifiers(document.uid)
+
+
+async def _contribution_roles_by_person(document_uid: str) -> dict:
+    query = (
+        "MATCH (:Document {uid: $uid})-[:HAS_CONTRIBUTION]->(c:Contribution)"
+        "<-[:HAS_CONTRIBUTION]-(p:Person) RETURN p.uid AS person_uid, c.roles AS roles"
+    )
+    async with Neo4jConnexion().get_driver() as driver:
+        async with driver.session() as session:
+            result = await session.run(query, uid=document_uid)
+            return {record["person_uid"]: record["roles"] async for record in result}
+
+
+@pytest.mark.asyncio
+async def test_contribution_without_roles_defaults_to_contributor(
+        test_app,  # pylint: disable=unused-argument
+        document_hal_article_a_persisted_model: Document,
+        persisted_person_a_pydantic_model: Person,
+        mocked_document_updated_signal) -> None:  # pylint: disable=unused-argument
+    """
+    Given a contributions change carrying one contribution with empty roles,
+    one without a roles field and one with an explicit role,
+    When the change is applied,
+    Then the roleless contributions default to the generic Contributor role
+    and the explicit role is kept untouched.
+    """
+    document = document_hal_article_a_persisted_model
+    internal = persisted_person_a_pydantic_model
+    contributions = [
+        {
+            "rank": 0, "roles": [],
+            "person": {"uid": internal.uid, "displayName": internal.display_name,
+                       "identifiers": []},
+            "affiliations": [],
+        },
+        {
+            "rank": 1,
+            "person": {"uid": None, "displayName": "Claire Durand",
+                       "identifiers": [{"type": "orcid", "value": "0000-0000-0000-0002"}]},
+            "affiliations": [],
+        },
+        {
+            "rank": 2, "roles": [AUT],
+            "person": {"uid": None, "displayName": "Paul Petit",
+                       "identifiers": [{"type": "orcid", "value": "0000-0000-0000-0003"}]},
+            "affiliations": [],
+        },
+    ]
+    await ChangeService().create_and_apply_change(
+        _contributions_change(document.uid, contributions))
+
+    roles_by_person = await _contribution_roles_by_person(document.uid)
+    assert roles_by_person[internal.uid] == [CTB]
+    assert roles_by_person["orcid-0000-0000-0000-0002"] == [CTB]
+    assert roles_by_person["orcid-0000-0000-0000-0003"] == [AUT]

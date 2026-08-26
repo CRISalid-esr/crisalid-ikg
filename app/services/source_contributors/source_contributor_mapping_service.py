@@ -386,9 +386,13 @@ class SourceContributorMappingService:
         for person in sorted_people:
             for contribution in contributions:
                 if (contribution.contributor.uid == person.uid
-                        and contribution.role is not None
                         and contribution.role not in roles):
                     roles.append(contribution.role)
+
+        # The generic Contributor role (default for sources providing no role) is
+        # subsumed by any specific role: keep it only when it is the sole role
+        if len(roles) > 1:
+            roles = [role for role in roles if role != LocContributionRole.CONTRIBUTOR]
 
         return roles
 
