@@ -167,7 +167,7 @@ class AppSettings(BaseSettings):
     taxi_languages: List[str] = ["en", "fr"]
     taxi_min_input_length: int = 25
     taxi_max_topics: int = 30
-    taxi_similarity_threshold: float = 0.6
+    taxi_similarity_threshold: float = 0.53
     taxi_batch_size: int = 50
     taxi_max_consecutive_failures: int = 5
     taxi_circuit_open_seconds: int = 300

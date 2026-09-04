@@ -40,7 +40,7 @@ by IKG.
     { "id": "doc-uid-1", "text": "Machine learning algorithms for quantum computing physics simulations" },
     { "id": "doc-uid-2", "text": "Taxonomy of soccer training methods" }
   ],
-  "similarity_threshold": 0.6
+  "similarity_threshold": 0.53
 }
 ```
 
@@ -52,7 +52,7 @@ by IKG.
   "model": "bge-m3",
   "query_count": 2,
   "total_matches": 2,
-  "similarity_threshold": 0.6,
+  "similarity_threshold": 0.53,
   "results": [
     {
       "id": "doc-uid-1",
@@ -87,7 +87,7 @@ taxi_timeout_seconds: int = 30
 taxi_languages: List[str] = ["en", "fr"]
 taxi_min_input_length: int = 25
 taxi_max_topics: int = 30
-taxi_similarity_threshold: float = 0.6
+taxi_similarity_threshold: float = 0.53
 taxi_batch_size: int = 50
 taxi_max_consecutive_failures: int = 5
 taxi_circuit_open_seconds: int = 300
@@ -106,7 +106,7 @@ TAXI_MIN_INPUT_LENGTH=25
 # maximum number of source="crisalid" HAS_TOPIC edges per document
 TAXI_MAX_TOPICS=30
 # minimum cosine similarity; sent to Taxi and re-applied client-side
-TAXI_SIMILARITY_THRESHOLD=0.6
+TAXI_SIMILARITY_THRESHOLD=0.53
 # number of documents per Taxi request in the CLI recompute command
 TAXI_BATCH_SIZE=50
 # circuit breaker: after N consecutive failures, stop calling Taxi for M seconds
