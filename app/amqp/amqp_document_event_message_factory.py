@@ -39,5 +39,6 @@ class AMQPDocumentEventMessageFactory(AbstractAMQPMessageFactory):
             "titles": [title.model_dump() for title in document.titles],
             "abstracts": [abstract.model_dump() for abstract in document.abstracts],
             "subjects": [subject.model_dump() for subject in document.subjects],
+            "topics": [topic.model_dump() for topic in document.topics],
             "contributions": [contribution.model_dump() for contribution in document.contributions]
         }

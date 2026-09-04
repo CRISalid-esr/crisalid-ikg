@@ -201,6 +201,67 @@ Each `:Embeddable` node carries an `embedding_status` property:
 
 Failed nodes are not retried automatically. Re-run `compute-embeddings` (default `--statuses pending,failed`) to retry them.
 
+### Document topics via Crisalid-taxi (optional)
+
+Each `Document` can be linked to OpenAlex `Topic` nodes with `HAS_TOPIC` relationships. Two sources coexist, distinguished by the `source` property of the relationship:
+
+| `source` | Origin | Relationship properties |
+|---|---|---|
+| `openalex` | Propagated from the `HAS_TOPIC` edges of the document's source records (highest score wins) | `score` |
+| `crisalid` | Computed by [Crisalid-taxi](https://github.com/CRISalid-esr/crisalid-taxi), a semantic classifier that embeds the document text and compares it with the OpenAlex taxonomy | `score`, `model`, `computed_at` |
+
+The `openalex` propagation is always on. The Crisalid-taxi computation is **opt-in**:
+
+```env
+TAXI_ENABLED=true
+```
+
+Both require the OpenAlex taxonomy to be loaded in the graph (see `OPENALEX_TOPICS_TREE_PATH`).
+
+#### Configuration
+
+```env
+TAXI_ENABLED=true
+TAXI_API_URL="http://localhost:8000"
+TAXI_TIMEOUT_SECONDS=30
+TAXI_LANGUAGES=["en", "fr"]
+TAXI_MIN_INPUT_LENGTH=25
+TAXI_MAX_TOPICS=30
+TAXI_SIMILARITY_THRESHOLD=0.6
+TAXI_BATCH_SIZE=50
+TAXI_MAX_CONSECUTIVE_FAILURES=5
+TAXI_CIRCUIT_OPEN_SECONDS=300
+```
+
+- `TAXI_LANGUAGES` is a priority list: the first language that has a title or an abstract is used, and only the titles, abstracts and subject preferred labels in that language are sent. Literals with an undetermined language are used only when no listed language matches.
+- `TAXI_MIN_INPUT_LENGTH` is the minimum length of title + abstract; shorter documents are not sent.
+- `TAXI_SIMILARITY_THRESHOLD` is sent to Crisalid-taxi and re-applied on the returned scores; at most `TAXI_MAX_TOPICS` topics are kept per document.
+- After `TAXI_MAX_CONSECUTIVE_FAILURES` consecutive failures (timeouts, 5xx…), calls are suspended for `TAXI_CIRCUIT_OPEN_SECONDS`, then retried.
+
+#### How topics are computed
+
+During document computation, the Crisalid-taxi call runs concurrently with the Unpaywall call, and the topics are written before the `document_created` / `document_updated` events are published, so the outbound messages contain them (`topics` key of the payload).
+
+The text sent to Crisalid-taxi is hashed and stored on the document (`topics_input_hash`). When the title, abstract and subjects have not changed, Crisalid-taxi is not called again. A failed call never removes existing `crisalid` links.
+
+#### Recomputing topics from the command line
+
+```bash
+# one document, ignoring the stored hash
+python -m app.cli documents recompute-topics <document-uid>
+
+# all documents whose text changed since the last computation, in batches
+python -m app.cli documents recompute-topics-all
+
+# only documents that never got crisalid topics
+python -m app.cli documents recompute-topics-all --missing-only
+
+# everything, e.g. after a Crisalid-taxi model change
+python -m app.cli documents recompute-topics-all --force
+```
+
+`--batch-size` overrides `TAXI_BATCH_SIZE`; `--no-dispatch` disables the `document_updated` events emitted for documents whose topics changed. The command stops when the circuit breaker opens; rerun it later.
+
 ### Project and dependencies installation
 
 
