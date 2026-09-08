@@ -65,6 +65,8 @@ services:
       - ES_PORT=9200
       - ES_USER=elastic
       - ES_PASSWORD=elastic
+      - TAXI_ENABLED=false
+      - TAXI_API_URL=http://crisalid-taxi:8000
     depends_on:
       svp-rabbitmq:
         condition: service_healthy

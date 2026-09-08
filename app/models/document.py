@@ -13,6 +13,22 @@ from app.models.text_literal import TextLiteral
 from app.utils.date.partial_iso_8601 import partial_iso8601_interval
 
 
+class DocumentTopic(BaseModel):
+    """
+    A Document -> Topic link, whatever its origin.
+
+    ``source`` is ``"openalex"`` for links propagated from the source records
+    and ``"crisalid"`` for links computed by Crisalid-taxi.
+    """
+
+    uid: str
+    uri: Optional[str] = None
+    display_name: Optional[str] = None
+    source: str
+    score: Optional[float] = None
+    model: Optional[str] = None
+
+
 class Document(BaseModel):
     """
     Document model
@@ -22,6 +38,7 @@ class Document(BaseModel):
     titles: List[Literal] = []
     abstracts: List[TextLiteral] = []
     subjects: List[Concept] = []
+    topics: List[DocumentTopic] = []
     to_be_recomputed: bool = False
     to_be_deleted: bool = False
     to_be_merged_into_uid: Optional[str] = None

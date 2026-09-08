@@ -236,6 +236,7 @@ From SourceRecords, a merging algorithm produces **Document** nodes, with specif
 
 Documents are linked to:
 - **Concept** nodes via **HAS_SUBJECT** — treat with caution (see note below)
+- **Concept:Topic** nodes via **HAS_TOPIC**, carrying `source` (`"openalex"` when propagated from the source records' own HAS_TOPIC edges, `"crisalid"` when computed by the Crisalid-taxi classifier), `score`, and for `crisalid` links `model` and `computed_at`. Documents also store `topics_input_hash` / `topics_model` / `topics_computed_at` (skip logic for Crisalid-taxi calls)
 - **Literal** nodes via **HAS_TITLE** (type `"document_title"`) and **HAS_ABSTRACT** (type `"document_abstract"`)
 - **Journal** nodes (for journal articles) via **PUBLISHED_IN**, which carries `issue`, `volume`, and `page` properties
 
