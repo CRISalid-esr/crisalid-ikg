@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from enum import Enum
 from typing import List, Optional
 
 from pydantic import field_validator
@@ -18,9 +19,17 @@ class AuthorityOrganizationState(AuthorityOrganization):
     Consistent identity state for an organization.
     """
 
+    class TypeOrigin(Enum):
+        """
+        Provenance of the state's type
+        """
+        HARVEST = "harvest"  # set from harvested source organizations (default)
+        USER = "user"  # set by a user action, protected from harvest overwrite
+
     type: SourceOrganization.SourceOrganisationType = (
         SourceOrganization.SourceOrganisationType.ORGANIZATION
     )
+    type_origin: TypeOrigin = TypeOrigin.HARVEST
 
     names: List[Literal] = []
     normalized_name: Optional[str] = None

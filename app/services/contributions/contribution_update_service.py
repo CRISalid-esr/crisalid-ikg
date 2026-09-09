@@ -43,6 +43,7 @@ class ContributionUpdateService:
         "regrouplaboratory": SourceOrganization.SourceOrganisationType.LABORATORY_GROUP,
         "researchteam": SourceOrganization.SourceOrganisationType.RESEARCH_TEAM,
         "regroupresearchteam": SourceOrganization.SourceOrganisationType.RESEARCH_TEAM_GROUP,
+        "department": SourceOrganization.SourceOrganisationType.DEPARTMENT,
     }
 
     # Affiliation identifier keys carried inline in the message (besides the HAL structId)
@@ -374,7 +375,12 @@ class ContributionUpdateService:
             seen.add(organisation.uid)
             try:
                 root = await self.authority_organization_service\
-                    .get_or_create_authority_organization([organisation])
+                    .get_or_create_authority_organization(
+                        [organisation],
+                        # a recognized type was chosen by the user: it overrides the
+                        # state's type and is protected from harvest overwrite
+                        type_authoritative=organisation.type
+                        != SourceOrganization.SourceOrganisationType.ORGANIZATION)
                 root_objects.append(root)
             except ConflictError as error:
                 logger.error(
@@ -426,11 +432,31 @@ class ContributionUpdateService:
             source=HarvestingSource.HAL,
             source_identifier=str(source_identifier),
             name=affiliation.get("name") or affiliation.get("label") or "",
-            type=self._ORG_TYPE_MAP.get(
-                affiliation.get("type"),
-                SourceOrganization.SourceOrganisationType.ORGANIZATION),
+            type=self._resolve_affiliation_type(affiliation, report),
             identifiers=identifiers,
         )
+
+    def _resolve_affiliation_type(
+            self, affiliation: dict,
+            report: ChangeApplicationReport) -> SourceOrganization.SourceOrganisationType:
+        """
+        Map the message's HAL structure type; a missing type is the generic placeholder,
+        an unknown value is reported and treated the same way.
+        """
+        raw_type = affiliation.get("type")
+        if not raw_type:
+            return SourceOrganization.SourceOrganisationType.ORGANIZATION
+        org_type = self._ORG_TYPE_MAP.get(raw_type)
+        if org_type is None:
+            logger.warning("Unknown affiliation type {} ignored: {}", raw_type, affiliation)
+            report.add_warning(
+                "AFFILIATION_TYPE_UNKNOWN",
+                "Unknown affiliation type ignored",
+                type=raw_type,
+                affiliation=affiliation,
+            )
+            return SourceOrganization.SourceOrganisationType.ORGANIZATION
+        return org_type
 
     # --------------------------------------------------------------------- daos
 

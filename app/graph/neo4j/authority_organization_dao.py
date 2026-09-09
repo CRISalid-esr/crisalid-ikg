@@ -135,6 +135,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             normalized_name=state.normalized_name,
             display_names=state.display_names,
             org_type=state.type.value,
+            type_origin=state.type_origin.value,
             source_organization_uids=state.source_organization_uids,
             excluded_identifiers=[t.value for t in (state.excluded_identifiers or [])],
         )
@@ -178,6 +179,7 @@ class AuthorityOrganizationDAO(Neo4jDAO):
             uid=state.uid,
             identifier_signature=identifier_signature,
             org_type=state.type.value,
+            type_origin=state.type_origin.value,
             normalized_name=state.normalized_name,
             display_names=state.display_names,
             source_organization_uids=state.source_organization_uids,
@@ -522,9 +524,13 @@ class AuthorityOrganizationDAO(Neo4jDAO):
                 excluded.append(enum_type)
 
         org_type = o.get("type") or SourceOrganization.SourceOrganisationType.ORGANIZATION.value
+        # nodes written before the property existed hydrate to the harvest origin
+        type_origin = (o.get("type_origin")
+                       or AuthorityOrganizationState.TypeOrigin.HARVEST.value)
         return AuthorityOrganizationState(
             uid=o["uid"],
             type=SourceOrganization.SourceOrganisationType(org_type),
+            type_origin=AuthorityOrganizationState.TypeOrigin(type_origin),
             source_organization_uids=o.get("source_organization_uids") or [],
             names=names,
             display_names=o.get("display_names") or [],
