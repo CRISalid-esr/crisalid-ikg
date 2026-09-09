@@ -1,13 +1,17 @@
 # file: app/amqp/amqp_user_actions_message_processor.py
 
+from datetime import datetime, timezone
+
 from loguru import logger
 from pydantic import ValidationError
 
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
-from app.models.change import Change
+from app.amqp.message_mode import MessageMode
+from app.models.change import Change, ChangeStatus
 from app.models.identifier_types import PersonIdentifierType
 from app.services.changes.change_service import ChangeService
 from app.services.people.people_service import PeopleService
+from app.signals import change_failed
 
 
 class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
@@ -50,9 +54,35 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
         try:
             change = Change.model_validate(json_payload)
         except ValidationError as e:
+            # no valid Change can be built: the failure event is the only record
+            await change_failed.send_async(
+                self, fields=self._invalid_change_fields(json_payload, e))
             raise ValueError(f"Failed to build Change object: {e}") from e
         # exceptions are handled in the base class
         await self.change_service.create_and_apply_change(change)
+
+    @staticmethod
+    def _invalid_change_fields(json_payload: dict, error: ValidationError) -> dict:
+        """
+        Build change-failed event fields from a raw payload that failed validation,
+        so the originating application can still correlate the failure.
+        """
+        application = json_payload.get("application")
+        raw_id = json_payload.get("id")
+        return {
+            "uid": f"{application}:{raw_id}" if application and raw_id else None,
+            "id": raw_id,
+            "application": application,
+            "person_uid": json_payload.get("personUid"),
+            "target_type": json_payload.get("targetType"),
+            "target_uid": json_payload.get("targetUid"),
+            "path": json_payload.get("path"),
+            "action_type": json_payload.get("actionType"),
+            "status": ChangeStatus.FAILED.value,
+            "error_message": f"invalid message: {error}",
+            "warnings": [],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
     async def _process_unregistered_change(self, json_payload: str):
         """
@@ -71,41 +101,59 @@ class AMQPUserActionsMessageProcessor(AMQPMessageProcessor):
                 harvesters = None
             service = PeopleService()
             await service.signal_publications_to_be_updated(json_payload["targetUid"],
-                                                            harvesters=harvesters)
+                                                            harvesters=harvesters,
+                                                            mode=MessageMode.INTERACTIVE)
             logger.debug(f"Publications fetched for person {json_payload['targetUid']}.")
             return
 
-        if json_payload["actionType"] == "ADD":
-            if json_payload["targetType"] != "PERSON":
-                raise ValueError("Target type must be 'PERSON' for unregistered ADD action type.")
-            if not json_payload["targetUid"] or not isinstance(json_payload["targetUid"], str):
-                raise ValueError("Target UID is required for person-related"
-                                 "ADD action type and should be a string.")
-
-            received_identifier = ((json_payload.get("parameters", {}).get("identifier") or {})
-                                   .get("value", None))
-            identifier_type = ((json_payload.get("parameters", {}).get("identifier") or {})
-                               .get("type", ''))
-
-            allowed_id_types = [PersonIdentifierType.ORCID.value,
-                                PersonIdentifierType.IDHALS.value]
-            target_uid = json_payload.get("targetUid", None)
-
-            if target_uid:
-                if received_identifier and identifier_type.lower() in allowed_id_types:
-                    service = PeopleService()
-                    await service.authenticate_identifier(json_payload["targetUid"],
-                                                          identifier_type.lower(),
-                                                          received_identifier,
-                                                          json_payload["timestamp"])
-
-                else:
-                    raise ValueError(
-                        f"No identifier or identifier type given by message "
-                        f"for person {target_uid}. No authentication possible"
-                    )
-            else:
-                raise ValueError(
-                    "No target UID given. No authentication possible."
-                )
+        if json_payload["actionType"] in ["ADD", "UPDATE", "REMOVE"]:
+            await self._process_identifier_action(json_payload)
             return
+
+    async def _process_identifier_action(self, json_payload: dict):
+        """
+        Handle a person-identifier user action: ADD (add-only), UPDATE
+        (confirm existing, value unchanged) or REMOVE (triggers harvested-data cleanup).
+        Value changes are always REMOVE + ADD — never an in-place replacement.
+        """
+        action_type = json_payload["actionType"]
+        if json_payload["targetType"] != "PERSON":
+            raise ValueError(f"Target type must be 'PERSON' for unregistered "
+                             f"{action_type} action type.")
+        target_uid = json_payload.get("targetUid", None)
+        if not target_uid or not isinstance(target_uid, str):
+            raise ValueError(f"Target UID is required for person-related "
+                             f"{action_type} action type and should be a string.")
+
+        parameters = json_payload.get("parameters", {}) or {}
+        if action_type == "REMOVE":
+            # REMOVE carries the identifier fields directly in parameters
+            identifier_fields = parameters
+        else:
+            identifier_fields = parameters.get("identifier") or {}
+        identifier_type = (identifier_fields.get("type") or '').lower()
+        identifier_value = identifier_fields.get("value", None)
+        authenticated = bool(identifier_fields.get("authenticated", False))
+
+        allowed_id_types = [PersonIdentifierType.ORCID.value,
+                            PersonIdentifierType.IDHALS.value,
+                            PersonIdentifierType.IDHALI.value,
+                            PersonIdentifierType.IDREF.value]
+        if not identifier_value or identifier_type not in allowed_id_types:
+            raise ValueError(
+                f"No identifier or identifier type given by message "
+                f"for person {target_uid}. No identifier {action_type} possible."
+            )
+
+        service = PeopleService()
+        if action_type == "ADD":
+            await service.add_identifier(target_uid, identifier_type,
+                                         identifier_value, authenticated,
+                                         json_payload["timestamp"])
+        elif action_type == "UPDATE":
+            await service.confirm_identifier(target_uid, identifier_type,
+                                             identifier_value, authenticated,
+                                             json_payload["timestamp"])
+        else:
+            await service.remove_identifier(target_uid, identifier_type,
+                                            identifier_value)

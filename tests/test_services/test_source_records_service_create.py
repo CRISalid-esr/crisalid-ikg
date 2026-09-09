@@ -1,8 +1,11 @@
-from typing import List
+from typing import List, cast
 
+from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from app.graph.neo4j.source_record_dao import SourceRecordDAO
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.harvesters import Harvester
 from app.models.harvesting_sources import HarvestingSource
-from app.models.identifier_types import JournalIdentifierType
+from app.models.identifier_types import JournalIdentifierType, PersonIdentifierType
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -10,7 +13,8 @@ from app.services.source_records.source_record_service import SourceRecordServic
 
 
 async def test_create_source_record(persisted_person_a_pydantic_model: Person,
-                                    scanr_thesis_source_record_pydantic_model: SourceRecord
+                                    scanr_thesis_source_record_pydantic_model: SourceRecord,
+                                    default_identifier_used: PersonIdentifier
                                     ) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
@@ -22,7 +26,8 @@ async def test_create_source_record(persisted_person_a_pydantic_model: Person,
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=scanr_thesis_source_record_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
     assert await service.source_record_exists(scanr_thesis_source_record_pydantic_model.uid)
     fetched_source_record = await service.get_source_record(
         scanr_thesis_source_record_pydantic_model.uid)
@@ -59,7 +64,8 @@ async def test_create_source_record(persisted_person_a_pydantic_model: Person,
 
 async def test_create_hal_source_record_with_custom_metadata(
         persisted_person_a_pydantic_model: Person,
-        hal_article_source_record_with_custom_metadata_pydantic_model: SourceRecord
+        hal_article_source_record_with_custom_metadata_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
@@ -72,7 +78,8 @@ async def test_create_hal_source_record_with_custom_metadata(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=hal_article_source_record_with_custom_metadata_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     assert await service.source_record_exists(
         hal_article_source_record_with_custom_metadata_pydantic_model.uid)
     fetched_source_record = await service.get_source_record(
@@ -113,7 +120,8 @@ async def test_create_hal_source_record_with_custom_metadata(
 
 async def test_create_hal_source_record_with_inconsistent_custom_metadata(
         persisted_person_a_pydantic_model: Person,
-        hal_article_source_record_with_inconsistent_custom_metadata_pydantic_model: SourceRecord
+        hal_article_source_record_with_inconsistent_custom_metadata_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
@@ -126,7 +134,8 @@ async def test_create_hal_source_record_with_inconsistent_custom_metadata(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=hal_article_source_record_with_inconsistent_custom_metadata_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     assert await service.source_record_exists(
         hal_article_source_record_with_inconsistent_custom_metadata_pydantic_model.uid)
     fetched_source_record = await service.get_source_record(
@@ -170,7 +179,8 @@ async def test_create_hal_source_record_with_inconsistent_custom_metadata(
 
 async def test_journal_from_scanr_article(
         scanr_article_a_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ):
     """
         Given a valid source record model recording an article harvested from ScanR
@@ -179,7 +189,8 @@ async def test_journal_from_scanr_article(
         """
     service = SourceRecordService()
     await service.create_source_record(source_record=scanr_article_a_source_record_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
     fetched_source_record = await service.get_source_record(
         scanr_article_a_source_record_pydantic_model.uid)
     assert fetched_source_record.source_identifier == "doi10.3847/1538-4357/ad0cc0"
@@ -203,7 +214,8 @@ async def test_journal_from_scanr_article(
 async def test_two_scanr_articles_from_same_journal_and_person(
         scanr_article_a_source_record_pydantic_model: SourceRecord,
         scanr_article_b_source_record_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier
 ):
     """
     Given two source records from the same issue and journal and harvested for the same person
@@ -212,9 +224,11 @@ async def test_two_scanr_articles_from_same_journal_and_person(
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=scanr_article_a_source_record_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
     await service.create_source_record(source_record=scanr_article_b_source_record_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
 
     fetched_source_record_a = await service.get_source_record(
         scanr_article_a_source_record_pydantic_model.uid)
@@ -250,7 +264,8 @@ async def test_two_scanr_articles_from_same_journal_and_person(
 async def test_create_two_source_records_with_same_concepts(
         persisted_person_a_pydantic_model: Person,
         idref_record_with_person_a_as_contributor_pydantic_model: SourceRecord,
-        scanr_record_with_person_a_as_contributor_pydantic_model: SourceRecord
+        scanr_record_with_person_a_as_contributor_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given a persisted person Pydantic model,
@@ -264,7 +279,8 @@ async def test_create_two_source_records_with_same_concepts(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=idref_record_with_person_a_as_contributor_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_idref_source_record = await service.get_source_record(
         idref_record_with_person_a_as_contributor_pydantic_model.uid)
     assert (
@@ -273,7 +289,8 @@ async def test_create_two_source_records_with_same_concepts(
     )
     await service.create_source_record(
         source_record=scanr_record_with_person_a_as_contributor_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_scanr_source_record = await service.get_source_record(
         scanr_record_with_person_a_as_contributor_pydantic_model.uid)
     assert (
@@ -290,6 +307,7 @@ async def test_create_source_record_with_empty_uri_identifier(
         persisted_person_a_pydantic_model: Person,
         idref_record_with_person_a_as_contributor_empty_uri_json_data,
         idref_record_with_person_a_as_contributor_empty_uri_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given a persisted person Pydantic model,
@@ -304,7 +322,8 @@ async def test_create_source_record_with_empty_uri_identifier(
             == 4)
     await service.create_source_record(
         source_record=idref_record_with_person_a_as_contributor_empty_uri_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_idref_source_record = await service.get_source_record(
         idref_record_with_person_a_as_contributor_empty_uri_pydantic_model.uid)
     assert (
@@ -316,7 +335,8 @@ async def test_create_source_record_with_empty_uri_identifier(
 
 async def test_create_source_record_with_issue(
         persisted_person_a_pydantic_model: Person,
-        open_alex_article_source_record_with_issue_title_pydantic_model: SourceRecord
+        open_alex_article_source_record_with_issue_title_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
@@ -330,7 +350,8 @@ async def test_create_source_record_with_issue(
     assert len(open_alex_article_source_record_with_issue_title_pydantic_model.issue.titles) > 0
     await service.create_source_record(
         source_record=open_alex_article_source_record_with_issue_title_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_source_record = await service.get_source_record(
         open_alex_article_source_record_with_issue_title_pydantic_model.uid)
     assert fetched_source_record.issue
@@ -341,7 +362,8 @@ async def test_create_source_record_with_issue(
 
 async def test_create_source_record_with_issue_datetime_including_t(
         persisted_person_b_pydantic_model: Person,
-        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord
+        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
@@ -355,9 +377,35 @@ async def test_create_source_record_with_issue_datetime_including_t(
     service = SourceRecordService()
     await service.create_source_record(
         source_record=scanr_record_with_person_b_as_contributor_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
     assert await service.source_record_exists(
         scanr_record_with_person_b_as_contributor_pydantic_model.uid)
     fetched_source_record = await service.get_source_record(
         scanr_record_with_person_b_as_contributor_pydantic_model.uid)
     assert fetched_source_record.raw_issued == "2023-10-26"
+
+
+async def test_create_source_record_stores_identifier_used(
+        persisted_person_a_pydantic_model: Person,
+        scanr_thesis_source_record_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
+) -> None:
+    """
+    Given a source record created with a specific identifier_used,
+    When the source record uids are queried by identifier used,
+    Then the created source record uid is in the result.
+    """
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    source_record_dao: SourceRecordDAO = cast(SourceRecordDAO, factory.get_dao(SourceRecord))
+    service = SourceRecordService()
+    await service.create_source_record(
+        source_record=scanr_thesis_source_record_pydantic_model,
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
+    uids = await source_record_dao.get_source_record_uids_by_identifier_used(
+        person_uid=persisted_person_a_pydantic_model.uid,
+        identifier_used_type=PersonIdentifierType.IDREF,
+        identifier_used_value="122758765"
+    )
+    assert scanr_thesis_source_record_pydantic_model.uid in uids

@@ -7,9 +7,8 @@ from app.config import get_app_settings
 from app.http.aio_http_client_manager import AioHttpClientManager
 from app.models.agent_identifiers import OrganizationIdentifier
 from app.models.identifier_types import OrganizationIdentifierType
-from app.models.institution import Institution
 from app.models.literal import Literal
-from app.models.places import Place
+from app.models.organization_unit import Institution
 from app.models.structured_physical_address import StructuredPhysicalAddress
 
 
@@ -38,7 +37,7 @@ class InstitutionRegistryService:
             # add each provided identifier to the institution if not already present
             for identifier in identifiers:
                 if identifier not in institution.identifiers:
-                    institution.identifiers.append(identifier)
+                    institution.identifiers.append(identifier)  # pylint: disable=no-member
         return institution
 
     async def _query_external_source(
@@ -88,15 +87,14 @@ class InstitutionRegistryService:
         """
 
         identifiers = cls._build_identifiers_from_registry_data(data)
-        names = cls._build_names_from_registry_data(data)
+        long_labels = cls._build_names_from_registry_data(data)
         address = cls._build_addresses_from_registry_data(data)
-        place = cls._build_places_from_registry_data(data)
 
         return Institution(
-            names=names,
+            long_labels=long_labels,
             identifiers=identifiers,
             addresses=[address],
-            places=[place]
+            external=True,
         )
 
     @staticmethod
@@ -119,22 +117,18 @@ class InstitutionRegistryService:
         return identifiers
 
     @staticmethod
-    def _build_places_from_registry_data(data):
-        return Place(
-            latitude=data.get("latitude"),
-            longitude=data.get("longitude")
-        )
-
-    @staticmethod
     def _build_addresses_from_registry_data(data):
         return StructuredPhysicalAddress(
-            street=[Literal(value=data["address"], language="fr")] if "address" in data else [],
-            city=[Literal(value=data["city"], language="fr")] if "city" in data else [],
-            zip_code=[
-                Literal(value=data["postal_code"], language="fr")] if "postal_code" in data else [],
-            state_or_province=[
-                Literal(value=data["reg_nom"], language="fr")] if "reg_nom" in data else [],
-            country=[Literal(value=data["country"], language="fr")] if "country" in data else [],
+            street=[Literal(value=data["address"], language="fr")] if data.get("address") else [],
+            city=[Literal(value=data["city"], language="fr")] if data.get("city") else [],
+            zip_code=(
+                [Literal(value=data["postal_code"], language="fr")]
+                if data.get("postal_code") else []
+            ),
+            state_or_province=(
+                [Literal(value=data["reg_nom"], language="fr")] if data.get("reg_nom") else []
+            ),
+            country=[Literal(value=data["country"], language="fr")] if data.get("country") else [],
         )
 
     @staticmethod
@@ -142,8 +136,8 @@ class InstitutionRegistryService:
         names = [
             Literal(value=data["name"], language="fr")
         ]
-        if "uo_lib_en" in data:
+        if data.get("uo_lib_en"):
             names.append(Literal(value=data["uo_lib_en"], language="en"))
-        if "uo_lib_officiel" in data:
+        if data.get("uo_lib_officiel"):
             names.append(Literal(value=data["uo_lib_officiel"], language="fr"))
         return names

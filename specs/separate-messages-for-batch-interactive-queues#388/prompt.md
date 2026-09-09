@@ -1,0 +1,304 @@
+# Separate batch/interactive messages — 5th routing-key segment
+
+## Context
+
+The CRISalid bus adopts a new convention: every routing key gains a **5th segment** `.interactive`
+or `.batch` that declares the traffic class of the message.
+
+sovisuplus has already implemented its side (issue #827):
+- It publishes task messages with the `.interactive` suffix and subscribes to two separate queues
+  (`sovisuplus-interactive` / `sovisuplus-batch`) using wildcard bindings `event.*.*.*.interactive`
+  and `event.*.*.*.batch`.
+- `definitions.sample.json` in `crisalid-deployment` has already been updated accordingly.
+
+This issue implements the **crisalid-ikg** side:
+
+1. Rename/replace the inbound user-actions queue to `crisalid-ikg-actions-interactive` and update
+   its binding keys to the new 5-segment format.
+2. Rename the inbound directory queues to `-batch` and add `.batch` to their binding keys.
+3. Add a **mode** (`batch` or `interactive`) to all outbound messages published on the `graph`
+   exchange and on the `publications` exchange.
+4. Fix the harvesting event routing key names to match the catalog.
+
+---
+
+## 1. Inbound queue — replace `crisalid-ikg-user-actions` with `crisalid-ikg-actions-interactive`
+
+### Current state
+
+| Setting | Value |
+|---|---|
+| `amqp_user_actions_queue_name` | `"crisalid-ikg-user-actions"` |
+| `amqp_user_actions_topic` | `"user_actions"` |
+| Binding keys | `task.documents.document.*`, `task.people.person.*`, `task.people.documents.fetch` |
+
+### Target state
+
+| Setting | Value |
+|---|---|
+| `amqp_user_actions_interactive_queue_name` | `"crisalid-ikg-actions-interactive"` |
+| `amqp_user_actions_interactive_topic` | `"user_actions_interactive"` |
+| Binding keys | `task.documents.document.*.interactive`, `task.people.person.*.interactive`, `task.people.documents.fetch.interactive` |
+
+The queue carries a DLQ as before:
+- DLQ name: `dlq.crisalid-ikg-actions-interactive`
+- Dead-letter exchange: `dlx.graph`
+- Dead-letter routing key: `crisalid-ikg-actions-interactive`
+(already reflected in `definitions.sample.json`)
+
+### Changes required
+
+**`app/settings/app_settings.py`**
+- Remove `amqp_user_actions_queue_name`, `amqp_user_actions_topic`.
+- Add `amqp_user_actions_interactive_queue_name` and `amqp_user_actions_interactive_topic`.
+- Update binding key settings:
+  - `amqp_graph_document_task_routing_key: str = "task.documents.document.*.interactive"`
+  - `amqp_graph_person_documents_fetch_task_routing_key: str = "task.people.documents.fetch.interactive"`
+  - `amqp_graph_person_attribute_update_task_routing_key: str = "task.people.person.*.interactive"`
+
+**`app/amqp/amqp_interface.py`**
+- Update `self.keys` to use the new topic key and the three new binding keys above.
+- In `connect()`: replace the `_bind_queue` call for `user_actions` with a call using the new
+  topic, queue name, and `with_dlq=True`.
+- Update `_attach_message_processing_workers` call to use the new topic.
+
+**`app/amqp/amqp_message_processor_factory.py`**
+- Replace the `amqp_user_actions_topic` branch with `amqp_user_actions_interactive_topic`.
+
+---
+
+## 2. Inbound directory queues — rename to `-batch`
+
+ETL pipelines only ever produce `batch`-class messages. The two `directory` exchange queues are
+renamed accordingly and their binding keys gain the `.batch` 5th segment.
+
+| Setting | Old value | New value |
+|---|---|---|
+| `amqp_people_queue_name` | `"crisalid-ikg-people"` | `"crisalid-ikg-people-batch"` |
+| `amqp_structures_queue_name` | `"crisalid-ikg-structures"` | `"crisalid-ikg-structures-batch"` |
+| `amqp_directory_people_event_routing_key` | `"event.people.person.*"` | `"event.people.person.*.batch"` |
+| `amqp_directory_structure_event_routing_key` | `"event.structures.structure.*"` | `"event.structures.structure.*.batch"` |
+
+**`app/settings/app_settings.py`** — update the four values above.
+
+`amqp_interface.py` already uses the settings for queue names and binding keys (`self.keys` dict
+and `_bind_queue` calls) — no code change needed there.
+
+This requires the ETL service (crisalid-directory-bridge) to emit routing keys with a `.batch`
+5th segment on the `directory` exchange (coordinated change).
+
+---
+
+## 3. Outbound — 5th segment on all emitted messages
+
+### Routing key convention
+
+All messages emitted by crisalid-ikg (on both the `graph` and `publications` exchanges) gain a
+5th segment:
+
+```
+<type>.<domain>.<entity>.<action>.<mode>
+```
+
+where `<mode>` is `"batch"` or `"interactive"`.
+
+### Mode enum
+
+`app/amqp/message_mode.py`:
+
+```python
+from enum import Enum
+
+class MessageMode(str, Enum):
+    BATCH = "batch"
+    INTERACTIVE = "interactive"
+```
+
+### Mode rules
+
+| Trigger origin | Mode | Exchange | Message |
+|---|---|---|---|
+| `PeopleService`, all `OrganizationUnit*Service` (directory ETL) | `batch` | `graph` | person / structure events |
+| `DocumentService` (publication processing) | `batch` | `graph` | document events |
+| `ChangeService.apply_change()` (non-MERGE) | `interactive` | `graph` | `document_updated` |
+| MERGE path via `EquivalenceService` | `interactive` | `graph` | `document_updated/created` |
+| `AMQPUserActionsMessageProcessor` — FETCH action | `interactive` | `publications` | `task.entity.references.retrieval` |
+| `PeopleService` — person created/updated with identifier change | `batch` | `publications` | `task.entity.references.retrieval` |
+| `AMQPHarvestingEventsMessageProcessor` | `batch` | `graph` | harvesting state/result events |
+
+**Harvesting events are always `batch`.** There is no interactive path for harvesting events —
+the interactive context is irrecoverably lost once the job enters svp-harvester's pipeline.
+No interactive queue is declared for harvesting events.
+
+### How mode flows through the system
+
+Mode is a `mode` kwarg on `send_async` and on every signal handler that reaches an AMQP publisher.
+
+**Graph exchange events** — add `mode` kwarg to signal sends:
+
+```python
+# batch (directory / harvester path)
+await person_created.send_async(self, payload=uid, mode=MessageMode.BATCH)
+
+# interactive (user action path)
+await document_updated.send_async(self, document_uid=uid, mode=MessageMode.INTERACTIVE)
+```
+
+`AMQPInterface` dispatch methods extract `mode` from `**extra` (default `BATCH`) and forward it
+to `_dispatch_*` helpers, which pass it to `publisher.publish(…, mode=mode)`.
+
+**Publications exchange task** (`task.entity.references.retrieval`) — add `mode` kwarg to
+`signal_publications_to_be_updated`:
+
+```python
+# in PeopleService — called from directory ETL
+await publications_to_be_updated.send_async(self, payload={…}, mode=MessageMode.BATCH)
+
+# in AMQPUserActionsMessageProcessor — called from a user FETCH action
+await service.signal_publications_to_be_updated(person_uid, harvesters=harvesters,
+                                                 mode=MessageMode.INTERACTIVE)
+```
+
+`PeopleService.signal_publications_to_be_updated` accepts an optional `mode` param (default
+`BATCH`) and threads it through to `send_async`.
+
+`AMQPInterface.fetch_publications` extracts `mode` from `**extra` and passes it to
+`publisher.publish(…, mode=mode)`.
+
+### `AMQPMessagePublisher.publish()` — append mode unconditionally
+
+Mode is now appended to **all** outgoing messages, not only EVENT messages:
+
+```python
+async def publish(self, message_type, message_subtype, content,
+                  mode: MessageMode = MessageMode.BATCH) -> None:
+    payload, routing_key = await self._build_message(message_type, message_subtype, content)
+    if routing_key is None or payload is None:
+        return
+    routing_key = f"{routing_key}.{mode.value}"   # applies to TASK and EVENT alike
+    ...
+```
+
+Message factories continue to build base routing keys without a mode segment; the publisher
+appends it.
+
+---
+
+## 4. Harvesting event routing key name fix
+
+The current settings use incorrect 3rd-segment names. Update:
+
+| Setting | Current value | New value |
+|---|---|---|
+| `amqp_graph_harvesting_state_event_routing_key` | `"event.harvestings.state.*"` | `"event.harvestings.harvesting_state_event.*"` |
+| `amqp_graph_harvesting_result_event_routing_key` | `"event.harvestings.result.*"` | `"event.harvestings.harvesting_result_event.*"` |
+
+After the publisher appends `.batch`, the full keys become:
+- `event.harvestings.harvesting_state_event.running.batch`
+- `event.harvestings.harvesting_result_event.created.batch`
+
+These match the `event.harvestings.*.*.batch` wildcard binding on `sovisuplus-batch`. ✓
+
+---
+
+## 5. Settings summary
+
+Remove:
+- `amqp_user_actions_queue_name`
+- `amqp_user_actions_topic`
+
+Add:
+- `amqp_user_actions_interactive_queue_name: str = "crisalid-ikg-actions-interactive"`
+- `amqp_user_actions_interactive_topic: str = "user_actions_interactive"`
+
+Update:
+- `amqp_people_queue_name`: `"crisalid-ikg-people-batch"`
+- `amqp_structures_queue_name`: `"crisalid-ikg-structures-batch"`
+- `amqp_directory_people_event_routing_key`: `"event.people.person.*.batch"`
+- `amqp_directory_structure_event_routing_key`: `"event.structures.structure.*.batch"`
+- `amqp_graph_document_task_routing_key`: `"task.documents.document.*.interactive"`
+- `amqp_graph_person_documents_fetch_task_routing_key`: `"task.people.documents.fetch.interactive"`
+- `amqp_graph_person_attribute_update_task_routing_key`: `"task.people.person.*.interactive"`
+- `amqp_graph_harvesting_state_event_routing_key`: `"event.harvestings.harvesting_state_event.*"`
+- `amqp_graph_harvesting_result_event_routing_key`: `"event.harvestings.harvesting_result_event.*"`
+
+All other outbound routing key settings (people, structure, document events) remain as 4-segment
+base keys; the publisher appends `.{mode}` at publish time.
+
+---
+
+## 6. What does NOT change
+
+- All queues and exchanges other than `crisalid-ikg-user-actions` (directory, harvesting-events).
+- Message payload schemas — this issue is routing-key / queue-topology only.
+- `AMQPUserActionsMessageProcessor` processing logic — `actionType`/`targetType` values remain
+  UPPERCASE Prisma enum values; only the routing key segment is lowercased on the sovisuplus side.
+- `AbstractAMQPMessageFactory` and its subclasses — they keep building base routing keys without
+  a mode segment.
+- DLQ behavior — the new `crisalid-ikg-actions-interactive` queue still has a DLQ, same as before.
+
+---
+
+## 7. Testing
+
+- `test_amqp_message_publisher.py`: verify EVENT routing keys append `.batch` by default;
+  `task.entity.references.retrieval` also appends `.batch` by default; passing `INTERACTIVE`
+  produces `.interactive`.
+- `test_amqp_harvesting_events_message_processor.py`: expected routing keys use new 3rd-segment
+  names and `.batch` suffix.
+- `test_amqp_user_actions_message_processor.py` or integration test: verify that a FETCH action
+  triggers `task.entity.references.retrieval.interactive`.
+
+---
+
+## 8. Inbound publications queues — split into -batch / -interactive (svp-harvester #902)
+
+svp-harvester #902 preserves mode through the full harvesting pipeline and emits all outbound
+reference events with a 5th routing-key segment. `crisalid-ikg-publications` is therefore split
+into two isolated queues so that interactive document events are not queued behind bulk harvests.
+
+### Queue topology
+
+| Queue | Exchange | Binding key |
+|---|---|---|
+| `crisalid-ikg-publications-batch` | `publications` | `event.references.reference.*.batch` |
+| `crisalid-ikg-publications-interactive` | `publications` | `event.references.reference.*.interactive` |
+
+Both queues are bound on the same `AMQPReferenceMessageProcessor`.
+
+### Mode propagation
+
+Mode is extracted from the routing key's last segment in
+`AMQPReferenceMessageProcessor._process_message()` and threads through the processing chain:
+
+```
+key.endswith(".interactive") → MessageMode.INTERACTIVE, else BATCH
+  ↓
+SourceRecordService.create/update_source_record(..., mode)
+  ↓
+source_record_created/updated.send_async(..., mode=mode)
+  ↓
+EquivalenceService.update_source_record(mode=mode)  → stores self._mode
+  ↓
+document_*_from_sources / document_sources_changed.send_async(mode=self._mode)
+  ↓
+AMQPInterface.dispatch_document_* → publisher.publish(mode=mode)
+```
+
+### Harvesting events queue split
+
+`crisalid-ikg-harvesting-events` is also split into two queues:
+
+| Queue | Exchange | Binding key |
+|---|---|---|
+| `crisalid-ikg-harvesting-events-batch` | `publications` | `event.references.*.*.batch` |
+| `crisalid-ikg-harvesting-events-interactive` | `publications` | `event.references.*.*.interactive` |
+
+`AMQPHarvestingEventsMessageProcessor._process_message()` extracts mode from the routing key's
+last segment (same pattern as the reference processor) and forwards it to the
+`harvesting_state_event_received` and `harvesting_result_event_received` signals.
+
+### What does NOT change
+
+- The outbound `task.entity.references.retrieval` base key is unchanged; the publisher appends
+  `.{mode}` producing `…retrieval.batch` or `…retrieval.interactive`.

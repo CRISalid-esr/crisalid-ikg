@@ -1,5 +1,7 @@
 from typing import Set, List, Optional
 
+from app.amqp.message_mode import MessageMode
+from app.models.change_report import ChangeApplicationReport
 from app.services.changes.processors.abstract_change_processor import AbstractChangeProcessor
 from app.services.documents.document_service import DocumentService
 
@@ -9,7 +11,7 @@ class DocumentMergeChangeProcessor(AbstractChangeProcessor):
     Processor for user-initiated document merge actions.
     """
 
-    async def apply(self) -> None:
+    async def apply(self) -> ChangeApplicationReport:
 
         params = self.change.parameters or {}
         merged_list: Optional[List[str]] = None
@@ -39,4 +41,5 @@ class DocumentMergeChangeProcessor(AbstractChangeProcessor):
             )
 
         service = DocumentService()
-        await service.merge_documents(all_uids)
+        await service.merge_documents(all_uids, mode=MessageMode.INTERACTIVE)
+        return ChangeApplicationReport()

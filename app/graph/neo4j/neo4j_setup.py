@@ -5,6 +5,7 @@ from neo4j.exceptions import DatabaseError
 from app.config import get_app_settings
 from app.graph.generic.setup import Setup
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
+from app.graph.neo4j.utils import load_query
 
 
 class Neo4jSetup(Setup[AsyncDriver]):
@@ -16,11 +17,15 @@ class Neo4jSetup(Setup[AsyncDriver]):
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_constraints)
+            async with driver.session() as session:
+                await session.write_transaction(self._add_embeddable_label_to_existing_nodes)
+            await self._create_embeddable_vector_index(driver)
 
     @classmethod
     async def _create_constraints(cls, tx: AsyncManagedTransaction):
         settings = get_app_settings()
         await cls._create_person_uid_constraint(tx)
+        await cls._create_person_fulltext_name_index(tx)
         await cls._create_agent_identifier_unique_type_value_constraint(tx)
         await cls._create_journal_uid_constraint(tx)
         await cls._create_journal_identifier_uid_constraint(tx)
@@ -33,11 +38,13 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_source_organization_identifier_unique_type_value_constraint(tx)
         # Idem https://github.com/CRISalid-esr/crisalid-ikg/issues/161
         await cls._create_concept_uid_constraint(tx)
+        await cls._create_concept_uri_constraint(tx)
         await cls._create_document_uid_constraint(tx)
         await cls._create_institution_uid_constraint(tx)
         await cls._create_structured_physical_address_uid_constraint(tx)
         await cls._create_place_lat_lon_unique_constraint(tx)
         await cls._create_research_unit_uid_unique_constraint(tx)
+        await cls._create_doctoral_school_uid_unique_constraint(tx)
         await cls._create_publication_identifier_unique_type_value_constraint(tx)
         await cls._create_source_issue_unique_source_identifier_source_constraint(tx)
         await cls._create_authority_organization_state_signature_constraint(tx)
@@ -46,6 +53,9 @@ class Neo4jSetup(Setup[AsyncDriver]):
         await cls._create_text_literal_type_key_constraint(tx)
         await cls._create_source_record_uid_constraint(tx)
         await cls._create_change_uid_constraint(tx)
+        await cls._create_organization_unit_uid_constraint(tx)
+        await cls._create_organization_unit_generic_type_index(tx)
+        await cls._create_organization_unit_national_type_index(tx)
 
         if settings.neo4j_edition == "community":
             return
@@ -68,6 +78,18 @@ class Neo4jSetup(Setup[AsyncDriver]):
             raise e
 
     @staticmethod
+    async def _create_concept_uri_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT concept_uri_unique IF NOT EXISTS
+        FOR (c:Concept) REQUIRE c.uri IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error("Error creating concept uri unique constraint: {}", e)
+            raise e
+
+    @staticmethod
     async def _create_person_uid_constraint(tx: AsyncManagedTransaction):
         query = """
         CREATE CONSTRAINT person_uid_unique IF NOT EXISTS
@@ -77,6 +99,24 @@ class Neo4jSetup(Setup[AsyncDriver]):
             await tx.run(query=query)
         except DatabaseError as e:
             logger.error(f"Error creating person uid unique constraint: {e}")
+            raise e
+
+    @staticmethod
+    async def _create_person_fulltext_name_index(tx: AsyncManagedTransaction):
+        query = """
+        CREATE FULLTEXT INDEX person_fulltext_name IF NOT EXISTS
+        FOR (p:Person)
+        ON EACH [p.display_name, p.display_name_variants]
+        OPTIONS {
+          indexConfig: {
+            `fulltext.analyzer`: 'standard-no-stop-words'
+          }
+        }
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(f"Error creating person fulltext name index: {e}")
             raise e
 
     @staticmethod
@@ -281,6 +321,24 @@ class Neo4jSetup(Setup[AsyncDriver]):
             raise e
 
     @staticmethod
+    async def _create_doctoral_school_uid_unique_constraint(
+            tx: AsyncManagedTransaction
+    ):
+        query = """
+        CREATE CONSTRAINT doctoral_school_uid_unique IF NOT EXISTS
+        FOR (d:DoctoralSchool)
+        REQUIRE d.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error(
+                "Error creating DoctoralSchool uid unique constraint: "
+                f"{e}"
+            )
+            raise e
+
+    @staticmethod
     async def _create_source_record_represented_by_document_constraint(tx: AsyncManagedTransaction):
         query = """
         CREATE CONSTRAINT source_record_represented_by_document_unique IF NOT EXISTS
@@ -444,4 +502,87 @@ class Neo4jSetup(Setup[AsyncDriver]):
                 "Error creating Journal uid unique constraint: "
                 f"{e}"
             )
+            raise e
+
+    @staticmethod
+    async def _create_organization_unit_uid_constraint(tx: AsyncManagedTransaction):
+        query = """
+        CREATE CONSTRAINT organization_unit_uid_unique IF NOT EXISTS
+        FOR (o:OrganizationUnit)
+        REQUIRE o.uid IS UNIQUE;
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error("Error creating OrganizationUnit uid unique constraint: {}", e)
+            raise e
+
+    @staticmethod
+    async def _create_organization_unit_generic_type_index(tx: AsyncManagedTransaction):
+        query = """
+        CREATE INDEX organization_unit_generic_type IF NOT EXISTS
+        FOR (o:OrganizationUnit) ON (o.generic_type);
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error("Error creating OrganizationUnit generic_type index: {}", e)
+            raise e
+
+    @staticmethod
+    async def _create_organization_unit_national_type_index(tx: AsyncManagedTransaction):
+        query = """
+        CREATE INDEX organization_unit_national_type IF NOT EXISTS
+        FOR (o:OrganizationUnit) ON (o.national_type);
+        """
+        try:
+            await tx.run(query=query)
+        except DatabaseError as e:
+            logger.error("Error creating OrganizationUnit national_type index: {}", e)
+            raise e
+
+    _EMBEDDABLE_TYPES = [
+        "organization_long_label",
+        "organization_description",
+        "research_unit_name",
+        "research_unit_description",
+        "institution_name",
+        "institution_country_name",
+        "concept_pref_label",
+        "document_title",
+        "document_abstract",
+        "concept_alt_label",
+        "authority_organization_state_name",
+        "institution_state_name",
+        "institution_continent_name",
+        "concept_definition",
+    ]
+
+    @classmethod
+    async def _add_embeddable_label_to_existing_nodes(cls, tx: AsyncManagedTransaction):
+        try:
+            await tx.run(
+                "MATCH (l:Literal) WHERE l.type IN $types "
+                "SET l:Embeddable, l.embedding_status = coalesce(l.embedding_status, 'pending')",
+                types=cls._EMBEDDABLE_TYPES,
+            )
+            await tx.run(
+                "MATCH (t:TextLiteral) WHERE t.type IN $types "
+                "SET t:Embeddable, t.embedding_status = coalesce(t.embedding_status, 'pending')",
+                types=cls._EMBEDDABLE_TYPES,
+            )
+        except DatabaseError as e:
+            logger.error("Error adding Embeddable label to existing nodes: {}", e)
+            raise e
+
+    async def _create_embeddable_vector_index(self, driver: AsyncDriver):
+        settings = get_app_settings()
+        try:
+            async with driver.session() as session:
+                await session.run(
+                    load_query("create_embeddable_vector_index"),
+                    dims=settings.embedding_dimensions,
+                )
+        except DatabaseError as e:
+            logger.error("Error creating Embeddable vector index: {}", e)
             raise e

@@ -1,5 +1,8 @@
+import asyncio
 from itertools import combinations
 from typing import cast
+
+from loguru import logger
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
@@ -8,15 +11,19 @@ from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
 from app.models.document import Document
 from app.models.document_publication_channel import DocumentPublicationChannel
+from app.models.literal import Literal
 from app.models.source_records import SourceRecord
 from app.services.documents.metadata_computation_service import MetadataComputationService
 from app.services.documents.oa_colors_computation_service import OAColorsComputationService
+from app.services.documents.topics_computation_service import TopicsComputationService, \
+    TopicsResult
 from app.services.journals.journal_service import JournalService
 from app.services.source_contributors.source_contributor_mapping_service import \
     SourceContributorMappingService
 from app.services.source_records.equivalence_service import EquivalenceService
+from app.amqp.message_mode import MessageMode
 from app.signals import document_updated, document_created, \
-    document_unchanged, document_deleted
+    document_unchanged, document_deleted, literal_updated
 
 
 class DocumentService:
@@ -24,31 +31,39 @@ class DocumentService:
     Service to handle operations on publication data
     """
 
-    async def update_from_source_records(self, _, document_uid: str):
+    async def update_from_source_records(self, _, document_uid: str,
+                                         mode: MessageMode = MessageMode.BATCH):
         """
         Recompute metadata for an existing document
         :param _: unused (for compatibility with signal handlers)
         :param document_uid: the document uid
+        :param mode: message mode for outbound events
         :return:
         """
-        to_be_deleted = not await self._compute_document_from_source_records(document_uid)
+        to_be_deleted = not await self._compute_document_from_source_records(
+            document_uid, mode=mode)
         if to_be_deleted:
-            await self.signal_document_deleted(document_uid)
+            await self.signal_document_deleted(document_uid, mode=mode)
         else:
-            await self.signal_document_updated(document_uid)
+            await self.signal_document_updated(document_uid, mode=mode)
+            await literal_updated.send_async(self)
 
-    async def create_from_source_records(self, _, document_uid: str):
+    async def create_from_source_records(self, _, document_uid: str,
+                                         mode: MessageMode = MessageMode.BATCH):
         """
         Recompute metadata for a newly created document
         :param _: unused (for compatibility with signal handlers)
         :param document_uid: the document uid
+        :param mode: message mode for outbound events
         :return:
         """
         # fetch the source records to be merged
-        await self._compute_document_from_source_records(document_uid)
-        await self.signal_document_created(document_uid)
+        await self._compute_document_from_source_records(document_uid, mode=mode)
+        await self.signal_document_created(document_uid, mode=mode)
+        await literal_updated.send_async(self)
 
-    async def merge_documents(self, document_uids: set[str]) -> None:
+    async def merge_documents(self, document_uids: set[str],
+                              mode: MessageMode = MessageMode.BATCH) -> None:
         """
         Merge a set of documents by asserting equivalences between their source records.
         Steps:
@@ -84,12 +99,14 @@ class DocumentService:
             return
 
         svc = EquivalenceService()
-        await svc.update_source_record(self, representative_uid)
+        await svc.update_source_record(self, representative_uid, mode=mode)
 
-    async def _compute_document_from_source_records(self, document_uid) -> bool:
+    async def _compute_document_from_source_records(
+            self, document_uid, mode: MessageMode = MessageMode.BATCH) -> bool:
         """
         Compute the metadata of a document from its source records
         :param document_uid:
+        :param mode: message mode for outbound events emitted while replaying changes
         :return: False if the document should be deleted (i.e. has no source records)
         """
         sources_records = await self._get_source_records_of_document(document_uid)
@@ -99,7 +116,15 @@ class DocumentService:
         # delegate the merge operation to the metadata computation service
         document = MetadataComputationService(sources_records).merge()
 
-        document = await OAColorsComputationService(document, sources_records).compute_oa_colors()
+        dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
+        # Unpaywall and Crisalid-taxi calls are independent I/O: run them concurrently
+        previous_hash = (await dao.get_topics_state(document_uid)
+                         if get_app_settings().taxi_enabled else None)
+        document, topics_result = await asyncio.gather(
+            OAColorsComputationService(document, sources_records).compute_oa_colors(),
+            TopicsComputationService().compute_topics_for_document(
+                document_uid, document, previous_hash),
+        )
 
         document.uid = document_uid
         # set it explicitly to False for code clarity although it is the default value
@@ -115,48 +140,72 @@ class DocumentService:
         if publication_channel is not None:
             document.publication_channels.append(publication_channel)
         # persist the merged document
-        dao: DocumentDAO = cast(DocumentDAO, self._get_dao_factory().get_dao(Document))
         await dao.create_or_update_document(document)
+        await self._write_crisalid_topics(dao, topics_result)
         # pylint: disable=fixme
         # TODO : if the document has an entering edge "to_be_merged_into",
         # take all changes from the source document and reapply them to the target
         # import dynamically to avoid circular imports
         # pylint: disable=import-outside-toplevel,cyclic-import
         from app.services.changes.change_service import ChangeService
-        await ChangeService().apply_changes_to_node(document_uid)
+        await ChangeService().apply_changes_to_node(document_uid, mode=mode)
         return True
 
-    async def signal_document_updated(self, document_uid):
+    @staticmethod
+    async def _write_crisalid_topics(dao: DocumentDAO,
+                                     topics_result: TopicsResult | None) -> None:
+        """
+        Persist the Crisalid-taxi topics of a document, never failing the computation
+        :param dao: document DAO
+        :param topics_result: result to persist, or None to leave existing links untouched
+        """
+        if topics_result is None:
+            return
+        try:
+            written = await dao.sync_crisalid_topics(topics_result.as_row())
+            if written is not None:
+                TopicsComputationService.log_missing_topics(topics_result,
+                                                            written["linked_uids"])
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("Error while writing Crisalid-taxi topics for document {}",
+                             topics_result.document_uid)
+
+    async def signal_document_updated(self, document_uid, mode: MessageMode = MessageMode.BATCH):
         """
         Signal that a document has been updated for all listeners to be notified
         :param document_uid:
+        :param mode: message mode for outbound events
         :return:
         """
-        await document_updated.send_async(self, document_uid=document_uid)
+        await document_updated.send_async(self, document_uid=document_uid, mode=mode)
 
-    async def signal_document_created(self, document_uid):
+    async def signal_document_created(self, document_uid, mode: MessageMode = MessageMode.BATCH):
         """
         Signal that a document has been created for all listeners to be notified
         :param document_uid:
+        :param mode: message mode for outbound events
         :return:
         """
-        await document_created.send_async(self, document_uid=document_uid)
+        await document_created.send_async(self, document_uid=document_uid, mode=mode)
 
-    async def signal_document_unchanged(self, document_uid):
+    async def signal_document_unchanged(self, document_uid,
+                                        mode: MessageMode = MessageMode.BATCH):
         """
         Signal that a document has not been changed for all listeners to be notified
         :param document_uid:
+        :param mode: message mode for outbound events
         :return:
         """
-        await document_unchanged.send_async(self, document_uid=document_uid)
+        await document_unchanged.send_async(self, document_uid=document_uid, mode=mode)
 
-    async def signal_document_deleted(self, document_uid):
+    async def signal_document_deleted(self, document_uid, mode: MessageMode = MessageMode.BATCH):
         """
         Signal that a document has been deleted for all listeners to be notified
         :param document_uid:
+        :param mode: message mode for outbound events
         :return:
         """
-        await document_deleted.send_async(self, document_uid=document_uid)
+        await document_deleted.send_async(self, document_uid=document_uid, mode=mode)
 
     async def _get_source_records_of_document(self, document_uid) -> list[
         SourceRecord]:
@@ -183,6 +232,60 @@ class DocumentService:
         """
         dao: DocumentDAO = self._document_dao()
         return await dao.get_document_uids()
+
+    async def get_document_uids_of_person(self, person_uid: str) -> list[str]|None:
+        """
+        Get the document uids linked to a person from the graph database
+        :param person_uid: person uid
+        :return: Pydantic Person object
+        """
+        dao: DocumentDAO = self._document_dao()
+        return await dao.get_person_documents(person_uid)
+
+    async def write_crisalid_topics(self, topics_result: TopicsResult) -> dict | None:
+        """
+        Persist the Crisalid-taxi topics of a document
+        :param topics_result: result of TopicsComputationService
+        :return: ``{document_uid, previous_uids, linked_uids}`` or None
+        """
+        return await self._document_dao().sync_crisalid_topics(topics_result.as_row())
+
+    async def write_crisalid_topics_batch(self, topics_results: list[TopicsResult]) -> list[dict]:
+        """
+        Persist the Crisalid-taxi topics of several documents in one transaction
+        :param topics_results: results of TopicsComputationService
+        :return: one ``{document_uid, previous_uids, linked_uids}`` per document
+        """
+        return await self._document_dao().sync_crisalid_topics_batch(
+            [result.as_row() for result in topics_results])
+
+    async def get_documents_for_topics_computation(
+            self, skip: int, limit: int, missing_only: bool = False) -> list:
+        """
+        Page through documents with the data needed to build the Crisalid-taxi input
+        :return: list of DocumentTopicsRow
+        """
+        # pylint: disable=import-outside-toplevel
+        from app.services.documents.topics_computation_service import DocumentTopicsRow
+        rows = await self._document_dao().get_documents_for_topics_computation(
+            skip=skip, limit=limit, missing_only=missing_only)
+        return [
+            DocumentTopicsRow(
+                uid=row["uid"],
+                titles=[Literal(**item) for item in row["titles"] if item],
+                abstracts=[Literal(**item) for item in row["abstracts"] if item],
+                subject_pref_labels=[Literal(**item)
+                                     for item in row["subject_pref_labels"] if item],
+                topics_input_hash=row["topics_input_hash"],
+            )
+            for row in rows
+        ]
+
+    async def count_topics_state(self) -> dict:
+        """
+        :return: ``{total, computed, crisalid_edges, openalex_edges}``
+        """
+        return await self._document_dao().count_topics_state()
 
     def _document_dao(self) -> DocumentDAO:
         factory = self._get_dao_factory()

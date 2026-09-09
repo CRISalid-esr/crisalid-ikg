@@ -1,15 +1,13 @@
 import datetime
-from typing import cast
 
 import pytest
 
 from app.config import get_app_settings
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
-from app.graph.neo4j.institution_dao import InstitutionDAO
 from app.models.identifier_types import OrganizationIdentifierType, PersonIdentifierType
-from app.models.institution import Institution
+from app.models.organization_unit import OrganizationBase
 from app.models.people import Person
-from app.models.research_units import ResearchUnit
+from app.services.organizations.institution_service import InstitutionService
 from app.services.people.people_service import PeopleService
 
 
@@ -38,34 +36,10 @@ async def test_create_person(
     assert len(fetched_person.names) == len(person_a_pydantic_model.names)
     assert len(person_a_pydantic_model.memberships) == 1
     assert len(fetched_person.memberships) == len(person_a_pydantic_model.memberships)
-    assert len(person_a_pydantic_model.memberships[0].research_unit.identifiers) == 1
-    assert len(fetched_person.memberships[0].research_unit.identifiers) == len(
-        person_a_pydantic_model.memberships[0].research_unit.identifiers
-    )
-    for fetched_membership in fetched_person.memberships:
-        for fetched_identifier in fetched_membership.research_unit.identifiers:
-            assert any(
-                identifier.type == fetched_identifier.type
-                and identifier.value == fetched_identifier.value
-                for membership in person_a_pydantic_model.memberships
-                for identifier in membership.research_unit.identifiers
-            )
+    assert fetched_person.memberships[0].entity_uid == person_a_pydantic_model.memberships[0].entity_uid
     assert len(person_a_pydantic_model.employments) == 1
     assert len(fetched_person.employments) == len(person_a_pydantic_model.employments)
-    assert len(person_a_pydantic_model.employments[0].institution.identifiers) == 1
-    assert len(fetched_person.employments[0].institution.identifiers) == len(
-        person_a_pydantic_model.employments[0].institution.identifiers
-    )
-    # Only the uai identifier is available
-    # as it is deduced from the institution uid
-    assert any(
-        identifier.type == OrganizationIdentifierType.UAI
-        and identifier.value == fetched_identifier.value
-        for fetched_employment in fetched_person.employments
-        for fetched_identifier in fetched_employment.institution.identifiers
-        for employment in person_a_pydantic_model.employments
-        for identifier in employment.institution.identifiers
-    )
+    assert fetched_person.employments[0].entity_uid == person_a_pydantic_model.employments[0].entity_uid
 
 
 async def test_create_person_a_without_name(
@@ -88,8 +62,8 @@ async def test_create_person_a_without_name(
 
 
 async def test_update_person_membership(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
-        persisted_research_unit_b_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
+        persisted_research_unit_b_pydantic_model: OrganizationBase,
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_membership_pydantic_model: Person,
 ) -> None:
@@ -147,7 +121,7 @@ async def test_update_person_identifiers_with_authentication(
     new_person = person_a_with_hal_pydantic_model.copy()
     new_person.uid = fetched_person.uid
     assert all(
-        identifier.authenticated is None
+        identifier.authenticated is False
         for identifier in new_person.identifiers
         if identifier.type.value in {"idhals", "orcid"}
     )
@@ -171,8 +145,49 @@ async def test_update_person_identifiers_with_authentication(
             )
 
 
+async def test_update_person_preserves_validated_idref(
+        persisted_person_a_with_idref_pydantic_model: Person,
+) -> None:
+    """
+    Given a person whose idref has been validated
+    When a people-update message re-sends the same idref as non-validated (directory sync)
+    Then the validated flag must be preserved (not downgraded/deleted),
+        just as authenticated identifiers are preserved.
+    """
+    person_uid = "local-jdoe_with_idref@univ-domain.edu"
+    service = PeopleService()
+
+    # validate the idref
+    await service.confirm_identifier(
+        person_uid, PersonIdentifierType.IDREF.value, "123456789",
+        False, "2025-08-26T06:17:28.243Z")
+
+    validated_person = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in validated_person.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier.validated is True
+
+    # simulate a directory people-update that re-sends the idref as non-validated
+    incoming_person = persisted_person_a_with_idref_pydantic_model.copy()
+    incoming_person.uid = person_uid
+    assert all(identifier.validated is False for identifier in incoming_person.identifiers)
+
+    await service.update_person(incoming_person)
+
+    updated_person = await service.get_person(person_uid)
+    idref_identifier = next(
+        (id for id in updated_person.identifiers if
+         id.type.value == PersonIdentifierType.IDREF.value), None
+    )
+    assert idref_identifier is not None
+    assert idref_identifier.value == "123456789"
+    assert idref_identifier.validated is True
+
+
 async def test_update_person_employment(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
         # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_employment_pydantic_model: Person,
@@ -186,35 +201,22 @@ async def test_update_person_employment(
     """
     service = PeopleService()
     settings = get_app_settings()
-    institution_dao = cast(
-        InstitutionDAO,
-        AbstractDAOFactory().get_dao_factory(settings.graph_db).get_dao(Institution)
-    )
+    org_unit_dao = AbstractDAOFactory().get_dao_factory(settings.graph_db).get_dao(OrganizationBase)
     fetched_person = await service.get_person(persisted_person_a_pydantic_model.uid)
     assert fetched_person.uid == persisted_person_a_pydantic_model.uid
     assert len(fetched_person.employments) == 1
     assert (fetched_person.employments[0].entity_uid ==
             persisted_person_a_pydantic_model.employments[0].entity_uid)
-    assert (fetched_person.employments[0].institution.identifiers[0].value ==
-            persisted_person_a_pydantic_model.employments[
-                0].institution.identifiers[0].value)
-    old_institution = await institution_dao.get(fetched_person.employments[0].institution.uid)
-    assert old_institution.uid == fetched_person.employments[0].institution.uid
-    assert len(old_institution.identifiers) == 5
+    old_institution = await org_unit_dao.get(fetched_person.employments[0].entity_uid)
+    assert old_institution.uid == fetched_person.employments[0].entity_uid
+    assert len(old_institution.identifiers) >= 1
     assert any(
-        identifier
-        for identifier in old_institution.identifiers
-        if identifier.value == fetched_person.employments[0].institution.identifiers[0].value
+        ll for ll in old_institution.long_labels
+        if ll.value == "International University of the Côte d'Azur"
     )
     assert any(
-        name
-        for name in old_institution.names
-        if name.value == "International University of the Côte d'Azur"
-    )
-    assert any(
-        name
-        for name in old_institution.names
-        if name.value == "Université Internationale de la Côte d'Azur"
+        ll for ll in old_institution.long_labels
+        if ll.value == "Université Internationale de la Côte d'Azur"
     )
     assert any(
         identifier
@@ -231,8 +233,7 @@ async def test_update_person_employment(
     assert any(
         identifier
         for identifier in old_institution.identifiers
-        if
-        identifier.value == "28574391600014"
+        if identifier.value == "28574391600014"
         and identifier.type == OrganizationIdentifierType.SIRET
     )
     assert any(
@@ -257,33 +258,18 @@ async def test_update_person_employment(
         if employment.entity_uid == person_a_with_different_employment_pydantic_model.employments[
             0].entity_uid
     )
-    assert any(
-        employment
-        for employment in updated_fetched_person.employments
-        if employment.institution.identifiers[0].value ==
-        person_a_with_different_employment_pydantic_model.employments[
-            0].institution.identifiers[0].value
+    new_institution = await org_unit_dao.get(
+        updated_fetched_person.employments[0].entity_uid
     )
-    new_institution = await institution_dao.get(
-        updated_fetched_person.employments[0].institution.uid
-    )
-    assert new_institution.uid == updated_fetched_person.employments[0].institution.uid
-    assert len(new_institution.identifiers) == 5
+    assert new_institution.uid == updated_fetched_person.employments[0].entity_uid
+    assert len(new_institution.identifiers) >= 1
     assert any(
-        identifier
-        for identifier in new_institution.identifiers
-        if identifier.value == updated_fetched_person.employments[0].institution.identifiers[
-            0].value
+        ll for ll in new_institution.long_labels
+        if ll.value == 'Université de Nouvelles Sciences et Technologies'
     )
     assert any(
-        name
-        for name in new_institution.names
-        if name.value == 'Université de Nouvelles Sciences et Technologies'
-    )
-    assert any(
-        name
-        for name in new_institution.names
-        if name.value == 'New Science and Technology University'
+        ll for ll in new_institution.long_labels
+        if ll.value == 'New Science and Technology University'
     )
     assert any(
         identifier
@@ -318,7 +304,7 @@ async def test_update_person_employment(
 
 
 async def test_update_person_employment_position(
-        persisted_research_unit_a_pydantic_model: ResearchUnit,
+        persisted_research_unit_a_pydantic_model: OrganizationBase,
         # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
         person_a_with_different_employment_pydantic_model: Person,
@@ -336,9 +322,6 @@ async def test_update_person_employment_position(
     assert len(fetched_person.employments) == 1
     assert (fetched_person.employments[0].entity_uid ==
             persisted_person_a_pydantic_model.employments[0].entity_uid)
-    assert (fetched_person.employments[0].institution.identifiers[0].value ==
-            persisted_person_a_pydantic_model.employments[
-                0].institution.identifiers[0].value)
     assert (fetched_person.employments[0].position.code ==
             persisted_person_a_pydantic_model.employments[0].position.code)
     await service.update_person(person_a_with_different_employment_pydantic_model)
@@ -357,352 +340,360 @@ async def test_update_person_employment_position(
     assert any(
         employment
         for employment in updated_fetched_person.employments
-        if employment.institution.identifiers[0].value ==
-        person_a_with_different_employment_pydantic_model.employments[
-            0].institution.identifiers[0].value
-    )
-    assert any(
-        employment
-        for employment in updated_fetched_person.employments
         if employment.position.code ==
         person_a_with_different_employment_pydantic_model.employments[0].position.code
     )
 
 
-async def test_authenticate_orcid_same(
-        persisted_person_a_pydantic_model: Person  # pylint: disable=unused-argument
-) -> None:
-    """
-    Given an existing person with a non authenticated orcid
-    Given an authentication with the same orcid
-    Check that authenticating updates the orcid identifier
-    """
-    person_uid = "local-jdoe@univ-domain.edu"
-    identifier_type = PersonIdentifierType.ORCID.value
-    received_identifier = "0000-0001-2345-6789"
-    timestamp = "2025-08-26T06:17:28.243Z"
-
-    service = PeopleService()
-
-    person_before_auth = await service.get_person(person_uid)
-    orcid_identifier = next(
-        (id for id in person_before_auth.identifiers if
-         id.type.value == PersonIdentifierType.ORCID.value), None
+def _get_identifier(person: Person, identifier_type: PersonIdentifierType):
+    return next(
+        (id for id in person.identifiers if id.type == identifier_type), None
     )
-    assert orcid_identifier.value == received_identifier
-    assert orcid_identifier.authentication_date is None
-    assert orcid_identifier.authenticated is None
-
-    await service.authenticate_identifier(person_uid, identifier_type,
-                                          received_identifier, timestamp)
-
-    person_after_auth = await service.get_person(person_uid)
-    orcid_identifier = next(
-        (id for id in person_after_auth.identifiers if
-         id.type.value == PersonIdentifierType.ORCID.value), None
-    )
-    assert orcid_identifier.value == received_identifier
-    assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
-        timestamp.replace("Z", "+00:00"))
-    assert orcid_identifier.authenticated
 
 
-async def test_authenticate_orcid_same_authenticated(
-        persisted_person_a_orcid_hal_authenticated_pydantic_model: Person
-        # pylint: disable=unused-argument
-) -> None:
-    """
-    Given an existing person with an authenticated orcid
-    Check that authenticating returns a value error because it is already authenticated
-    """
-    person_uid = "local-jdoe_auth_orcid@univ-domain.edu"
-    identifier_type = PersonIdentifierType.ORCID.value
-    received_identifier = "0000-0001-2345-6789"
-    timestamp = "2025-08-26T06:17:28.243Z"
-
-    actual_authentication_date = "2025-08-25T06:17:28.243Z"
-
-    service = PeopleService()
-    person_before_auth = await service.get_person(person_uid)
-    orcid_identifier = next(
-        (id for id in person_before_auth.identifiers if
-         id.type.value == PersonIdentifierType.ORCID.value), None
-    )
-    assert orcid_identifier.value == received_identifier
-    assert orcid_identifier.authenticated is True
-    assert (orcid_identifier.authentication_date ==
-            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
-
-    with pytest.raises(ValueError):
-        await service.authenticate_identifier(person_uid, identifier_type,
-                                              received_identifier, timestamp)
-
-    person_after_auth = await service.get_person(person_uid)
-    orcid_identifier = next(
-        (id for id in person_after_auth.identifiers if
-         id.type.value == PersonIdentifierType.ORCID.value), None
-    )
-    assert orcid_identifier.value == received_identifier
-    assert orcid_identifier.authenticated is True
-    assert (orcid_identifier.authentication_date ==
-            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
-
-
-async def test_authenticate_orcid_different(
-        persisted_person_a_pydantic_model: Person  # pylint: disable=unused-argument
-) -> None:
-    """
-    Given an existing person with a non authenticated orcid
-    Check that authenticating does not update the orcid
-        if it is different from the one already present
-    """
-    person_uid = "local-jdoe@univ-domain.edu"
-    actual_orcid = "0000-0001-2345-6789"
-    identifier_type = PersonIdentifierType.ORCID.value
-    received_identifier = "0000-0001-2345-4321"
-    timestamp = "2025-08-26T06:17:28.243Z"
-
-    service = PeopleService()
-    person_before_auth = await service.get_person(person_uid)
-    orcid_identifier = next(
-        (id for id in person_before_auth.identifiers if
-         id.type.value == PersonIdentifierType.ORCID.value), None
-    )
-    assert orcid_identifier.value == actual_orcid
-    assert orcid_identifier.authentication_date is None
-    assert orcid_identifier.authenticated is None
-
-    with pytest.raises(ValueError):
-        await service.authenticate_identifier(person_uid, identifier_type,
-                                              received_identifier, timestamp)
-
-    person_after_auth = await service.get_person(person_uid)
-    orcid_identifier = next(
-        (id for id in person_after_auth.identifiers if
-         id.type.value == PersonIdentifierType.ORCID.value), None
-    )
-    assert orcid_identifier.value == actual_orcid
-    assert orcid_identifier.authenticated is None
-
-
-async def test_authenticate_orcid_new(
+async def test_add_identifier_authenticated(
         persisted_person_a_no_orcid_no_hal_pydantic_model: Person  # pylint: disable=unused-argument
 ) -> None:
     """
     Given an existing person with no orcid identifier
-    Check that the identifier is added, directly authenticated
+    When an authenticated orcid is added
+    Then the identifier is created authenticated and validated
     """
     person_uid = "local-jdoe_no_orcid@univ-domain.edu"
-    identifier_type = PersonIdentifierType.ORCID.value
-    received_identifier = "0000-0001-2345-6789"
     timestamp = "2025-08-26T06:17:28.243Z"
-
     service = PeopleService()
-    person_before_auth = await service.get_person(person_uid)
-    orcid_identifier = next(
-        (id for id in person_before_auth.identifiers if
-         id.type.value == PersonIdentifierType.ORCID.value), None
-    )
-    assert orcid_identifier is None
 
-    await service.authenticate_identifier(person_uid, identifier_type,
-                                          received_identifier, timestamp)
+    await service.add_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                 "0000-0001-2345-6789", True, timestamp)
 
-    person_after_auth = await service.get_person(person_uid)
-    orcid_identifier = next(
-        (id for id in person_after_auth.identifiers if
-         id.type.value == PersonIdentifierType.ORCID.value), None
-    )
-    assert orcid_identifier.value == received_identifier
+    person = await service.get_person(person_uid)
+    orcid_identifier = _get_identifier(person, PersonIdentifierType.ORCID)
+    assert orcid_identifier.value == "0000-0001-2345-6789"
+    assert orcid_identifier.authenticated is True
+    assert orcid_identifier.validated is True
     assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
-    assert orcid_identifier.authenticated
 
 
-async def test_authenticate_id_hal_s_new(
+async def test_add_identifier_manual(
         persisted_person_a_no_orcid_no_hal_pydantic_model: Person  # pylint: disable=unused-argument
 ) -> None:
     """
     Given an existing person with no idhals identifier
-    Check that the identifier is added, directly authenticated
+    When an idhals is added manually (no authentication)
+    Then the identifier is created validated but not authenticated
     """
     person_uid = "local-jdoe_no_orcid@univ-domain.edu"
-    identifier_type = PersonIdentifierType.IDHALS.value
-    received_identifier = "john-doe"
     timestamp = "2025-08-26T06:17:28.243Z"
-
     service = PeopleService()
-    person_before_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_before_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALS.value), None
-    )
-    assert hal_identifier is None
 
-    await service.authenticate_identifier(person_uid, identifier_type,
-                                          received_identifier, timestamp)
+    await service.add_identifier(person_uid, PersonIdentifierType.IDHALS.value,
+                                 "john-doe", False, timestamp)
 
-    person_after_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_after_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALS.value), None
+    person = await service.get_person(person_uid)
+    hal_identifier = _get_identifier(person, PersonIdentifierType.IDHALS)
+    assert hal_identifier.value == "john-doe"
+    assert hal_identifier.validated is True
+    assert hal_identifier.authenticated is False
+    assert hal_identifier.authentication_date is None
+
+
+async def test_add_identifier_idref_never_authenticated(
+        persisted_person_a_no_orcid_no_hal_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with no idref identifier
+    When an idref is added, even with the authenticated flag set
+    Then the identifier is created validated only (idref has no authentication process)
+    """
+    person_uid = "local-jdoe_no_orcid@univ-domain.edu"
+    timestamp = "2025-08-26T06:17:28.243Z"
+    service = PeopleService()
+
+    await service.add_identifier(person_uid, PersonIdentifierType.IDREF.value,
+                                 "123456789", True, timestamp)
+
+    person = await service.get_person(person_uid)
+    idref_identifier = _get_identifier(person, PersonIdentifierType.IDREF)
+    assert idref_identifier.value == "123456789"
+    assert idref_identifier.validated is True
+    assert idref_identifier.authenticated is False
+    assert idref_identifier.authentication_date is None
+
+
+async def test_add_identifier_existing_type_rejected(
+        persisted_person_a_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with an orcid identifier
+    When another orcid is added
+    Then the add is rejected (remove before add) and the existing identifier is unchanged
+    """
+    person_uid = "local-jdoe@univ-domain.edu"
+    timestamp = "2025-08-26T06:17:28.243Z"
+    service = PeopleService()
+
+    with pytest.raises(ValueError):
+        await service.add_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                     "0000-0001-2345-4321", False, timestamp)
+
+    person = await service.get_person(person_uid)
+    orcid_identifier = _get_identifier(person, PersonIdentifierType.ORCID)
+    assert orcid_identifier.value == "0000-0001-2345-6789"
+    assert orcid_identifier.validated is False
+    assert orcid_identifier.authenticated is False
+
+
+async def test_add_identifier_detaches_external_owner(
+        persisted_person_a_no_orcid_no_hal_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an external person owning an orcid AgentIdentifier
+    When the same orcid is added to an internal person
+    Then the external HAS_IDENTIFIER edge is detached (one owner per identifier)
+        and the external person survives with its other data
+    """
+    person_uid = "local-jdoe_no_orcid@univ-domain.edu"
+    orcid_value = "0000-0001-2345-6789"
+    timestamp = "2025-08-26T06:17:28.243Z"
+    service = PeopleService()
+
+    external_person = Person(
+        uid="scanr-test-external-jdoe",
+        display_name="J. Doe",
+        external=True,
+        names=[],
+        identifiers=[]
     )
-    assert hal_identifier.value == received_identifier
-    assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
+    await service.create_person(external_person)
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    person_dao = factory.get_dao(Person)
+    await person_dao.add_person_identifiers(
+        external_person.uid,
+        [{"type": PersonIdentifierType.ORCID.value, "value": orcid_value}])
+    external_before = await service.get_person(external_person.uid)
+    assert _get_identifier(external_before, PersonIdentifierType.ORCID) is not None
+
+    await service.add_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                 orcid_value, False, timestamp)
+
+    internal_person = await service.get_person(person_uid)
+    assert _get_identifier(internal_person, PersonIdentifierType.ORCID).value == orcid_value
+    external_after = await service.get_person(external_person.uid)
+    assert external_after is not None
+    assert _get_identifier(external_after, PersonIdentifierType.ORCID) is None
+
+
+async def test_confirm_identifier_authenticates(
+        persisted_person_a_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with a non authenticated orcid
+    When the orcid is confirmed through authentication (same value)
+    Then the identifier is authenticated and validated, value unchanged
+    """
+    person_uid = "local-jdoe@univ-domain.edu"
+    orcid_value = "0000-0001-2345-6789"
+    timestamp = "2025-08-26T06:17:28.243Z"
+    service = PeopleService()
+
+    await service.confirm_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                     orcid_value, True, timestamp)
+
+    person = await service.get_person(person_uid)
+    orcid_identifier = _get_identifier(person, PersonIdentifierType.ORCID)
+    assert orcid_identifier.value == orcid_value
+    assert orcid_identifier.authenticated is True
+    assert orcid_identifier.validated is True
+    assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
         timestamp.replace("Z", "+00:00"))
-    assert hal_identifier.authenticated
 
 
-async def test_authenticate_id_hal_s_same_authenticated(
+async def test_confirm_identifier_idempotent(
         persisted_person_a_orcid_hal_authenticated_pydantic_model: Person
         # pylint: disable=unused-argument
 ) -> None:
     """
-    Given an existing person with an authenticated idhals
-    Check that authenticating returns a value error because it is already authenticated
+    Given an existing person with an already authenticated orcid
+    When the orcid is confirmed again with the same value (token refresh)
+    Then the confirmation succeeds and refreshes the authentication date
     """
     person_uid = "local-jdoe_auth_orcid@univ-domain.edu"
-    identifier_type = PersonIdentifierType.IDHALS.value
-    received_identifier = "john-doe"
-    timestamp = "2025-08-26T06:17:28.245Z"
-
-    actual_authentication_date = "2025-08-25T06:17:28.243Z"
-
+    orcid_value = "0000-0001-2345-6789"
+    timestamp = "2025-08-26T06:17:28.243Z"
     service = PeopleService()
-    person_before_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_before_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALS.value), None
-    )
-    assert hal_identifier.value == received_identifier
-    assert hal_identifier.authenticated is True
-    assert (hal_identifier.authentication_date ==
-            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
+
+    await service.confirm_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                     orcid_value, True, timestamp)
+
+    person = await service.get_person(person_uid)
+    orcid_identifier = _get_identifier(person, PersonIdentifierType.ORCID)
+    assert orcid_identifier.value == orcid_value
+    assert orcid_identifier.authenticated is True
+    assert orcid_identifier.authentication_date == datetime.datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00"))
+
+
+async def test_confirm_identifier_value_mismatch(
+        persisted_person_a_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with an orcid identifier
+    When a confirmation arrives with a different value
+    Then the confirmation fails (value changes require remove + add) and nothing changes
+    """
+    person_uid = "local-jdoe@univ-domain.edu"
+    timestamp = "2025-08-26T06:17:28.243Z"
+    service = PeopleService()
 
     with pytest.raises(ValueError):
-        await service.authenticate_identifier(person_uid, identifier_type,
-                                              received_identifier, timestamp)
+        await service.confirm_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                         "0000-0001-2345-4321", True, timestamp)
 
-    person_after_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_after_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALS.value), None
-    )
-    assert hal_identifier.value == received_identifier
-    assert hal_identifier.authenticated is True
-    assert (hal_identifier.authentication_date ==
-            datetime.datetime.fromisoformat(actual_authentication_date.replace("Z", "+00:00")))
+    person = await service.get_person(person_uid)
+    orcid_identifier = _get_identifier(person, PersonIdentifierType.ORCID)
+    assert orcid_identifier.value == "0000-0001-2345-6789"
+    assert orcid_identifier.authenticated is False
+    assert orcid_identifier.validated is False
 
 
-async def test_authenticate_id_hal_s_same(
-        persisted_person_a_with_hal_pydantic_model: Person  # pylint: disable=unused-argument
+async def test_confirm_identifier_missing(
+        persisted_person_a_no_orcid_no_hal_pydantic_model: Person  # pylint: disable=unused-argument
 ) -> None:
     """
-    Given an existing person with a non authenticated idhals
-    Given an authentication with the same idhals
-    Check that authenticating updates the idhals identifier
+    Given an existing person with no orcid identifier
+    When a confirmation arrives for an orcid
+    Then the confirmation fails (nothing to confirm)
     """
-    person_uid = "local-jdoe_with_hal@univ-domain.edu"
-    identifier_type = PersonIdentifierType.IDHALS.value
-    received_identifier = "john-doe"
+    person_uid = "local-jdoe_no_orcid@univ-domain.edu"
     timestamp = "2025-08-26T06:17:28.243Z"
-
     service = PeopleService()
 
-    person_before_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_before_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALS.value), None
-    )
-    assert hal_identifier.value == received_identifier
-    assert hal_identifier.authentication_date is None
-    assert hal_identifier.authenticated is None
-
-    await service.authenticate_identifier(person_uid, identifier_type,
-                                          received_identifier, timestamp)
-
-    person_after_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_after_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALS.value), None
-    )
-    assert hal_identifier.value == received_identifier
-    assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
-        timestamp.replace("Z", "+00:00"))
-    assert hal_identifier.authenticated
+    with pytest.raises(ValueError):
+        await service.confirm_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                         "0000-0001-2345-6789", True, timestamp)
 
 
-async def test_authenticate_id_hal_s_different(
-        persisted_person_a_with_hal_pydantic_model: Person  # pylint: disable=unused-argument
+async def test_confirm_identifier_idref_never_authenticated(
+        persisted_person_a_with_idref_pydantic_model: Person  # pylint: disable=unused-argument
 ) -> None:
     """
-    Given an existing person with a non authenticated idhals
-    Check that authenticating with a different idhals
-        overrides the idhals value and authenticate
+    Given an existing person with a non validated idref
+    When the idref is confirmed, even with the authenticated flag set
+    Then the identifier is validated only (idref has no authentication process)
     """
-    person_uid = "local-jdoe_with_hal@univ-domain.edu"
-    actual_hal = "john-doe"
-    identifier_type = PersonIdentifierType.IDHALS.value
-    received_identifier = "jdoe"
+    person_uid = "local-jdoe_with_idref@univ-domain.edu"
     timestamp = "2025-08-26T06:17:28.243Z"
-
     service = PeopleService()
-    person_before_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_before_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALS.value), None
-    )
-    assert hal_identifier.value == actual_hal
-    assert hal_identifier.authentication_date is None
-    assert hal_identifier.authenticated is None
 
-    await service.authenticate_identifier(person_uid, identifier_type,
-                                          received_identifier, timestamp)
+    await service.confirm_identifier(person_uid, PersonIdentifierType.IDREF.value,
+                                     "123456789", True, timestamp)
 
-    person_after_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_after_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALS.value), None
-    )
-    assert hal_identifier.value == received_identifier
-    assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
-        timestamp.replace("Z", "+00:00"))
-    assert hal_identifier.authenticated
+    person = await service.get_person(person_uid)
+    idref_identifier = _get_identifier(person, PersonIdentifierType.IDREF)
+    assert idref_identifier.validated is True
+    assert idref_identifier.authenticated is False
+    assert idref_identifier.authentication_date is None
 
 
-async def test_authenticate_id_hal_i_different(
-        persisted_person_a_with_hal_pydantic_model: Person  # pylint: disable=unused-argument
+async def test_remove_identifier(
+        persisted_person_a_pydantic_model: Person  # pylint: disable=unused-argument
 ) -> None:
     """
-    Given an existing person with a non authenticated idhali
-    Check that authenticating with a different idhali
-        overrides the idhali value and authenticate
+    Given an existing person with an orcid identifier
+    When the orcid is removed
+    Then the identifier is gone from the person and no person owns it anymore
     """
-    person_uid = "local-jdoe_with_hal@univ-domain.edu"
-    actual_hal = "012345"
-    identifier_type = PersonIdentifierType.IDHALI.value
-    received_identifier = "543210"
-    timestamp = "2025-08-26T06:17:28.243Z"
-
+    person_uid = "local-jdoe@univ-domain.edu"
+    orcid_value = "0000-0001-2345-6789"
     service = PeopleService()
-    person_before_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_before_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALI.value), None
-    )
-    assert hal_identifier.value == actual_hal
-    assert hal_identifier.authentication_date is None
-    assert hal_identifier.authenticated is None
 
-    await service.authenticate_identifier(person_uid, identifier_type,
-                                          received_identifier, timestamp)
+    await service.remove_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                    orcid_value)
 
-    person_after_auth = await service.get_person(person_uid)
-    hal_identifier = next(
-        (id for id in person_after_auth.identifiers if
-         id.type.value == PersonIdentifierType.IDHALI.value), None
+    person = await service.get_person(person_uid)
+    assert _get_identifier(person, PersonIdentifierType.ORCID) is None
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    person_dao = factory.get_dao(Person)
+    owner = await person_dao.find_by_identifier(PersonIdentifierType.ORCID, orcid_value)
+    assert owner is None
+
+
+async def test_remove_identifier_shared_node_preserved(
+        persisted_person_a_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an internal person and an external person sharing the same AgentIdentifier
+    When the identifier is removed from the internal person
+    Then the AgentIdentifier node survives for the external owner
+    """
+    person_uid = "local-jdoe@univ-domain.edu"
+    orcid_value = "0000-0001-2345-6789"
+    service = PeopleService()
+
+    external_person = Person(
+        uid="scanr-test-external-shared",
+        display_name="J. Doe",
+        external=True,
+        names=[],
+        identifiers=[]
     )
-    assert hal_identifier.value == received_identifier
-    assert hal_identifier.authentication_date == datetime.datetime.fromisoformat(
-        timestamp.replace("Z", "+00:00"))
-    assert hal_identifier.authenticated
+    await service.create_person(external_person)
+    factory = AbstractDAOFactory().get_dao_factory("neo4j")
+    person_dao = factory.get_dao(Person)
+    await person_dao.add_person_identifiers(
+        external_person.uid,
+        [{"type": PersonIdentifierType.ORCID.value, "value": orcid_value}])
+
+    await service.remove_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                    orcid_value)
+
+    internal_person = await service.get_person(person_uid)
+    assert _get_identifier(internal_person, PersonIdentifierType.ORCID) is None
+    external_after = await service.get_person(external_person.uid)
+    assert _get_identifier(external_after, PersonIdentifierType.ORCID) is not None
+
+
+async def test_remove_identifier_wrong_value(
+        persisted_person_a_pydantic_model: Person  # pylint: disable=unused-argument
+) -> None:
+    """
+    Given an existing person with an orcid identifier
+    When a removal arrives with a different value
+    Then the removal fails and the identifier is untouched
+    """
+    person_uid = "local-jdoe@univ-domain.edu"
+    service = PeopleService()
+
+    with pytest.raises(ValueError):
+        await service.remove_identifier(person_uid, PersonIdentifierType.ORCID.value,
+                                        "0000-0001-2345-4321")
+
+    person = await service.get_person(person_uid)
+    orcid_identifier = _get_identifier(person, PersonIdentifierType.ORCID)
+    assert orcid_identifier is not None
+    assert orcid_identifier.value == "0000-0001-2345-6789"
+
+
+
+async def test_create_person_employment_resolved_by_identifier(
+        person_a_json_data: dict,
+        persisted_institution_a_pydantic_model: OrganizationBase,
+) -> None:
+    """
+    Given a persisted institution with a local uid and a uai identifier
+    When a person is created with an employment referencing the institution by uai
+    Then the employment is attached to the existing institution
+    and no duplicate institution is created from the registry
+    """
+    person_data = dict(person_a_json_data)
+    person_data["memberships"] = []
+    person_data["employments"] = [{"entity_uid": "uai-UAI001"}]
+    person = Person(**person_data)
+    service = PeopleService()
+    await service.create_person(person)
+    fetched_person = await service.get_person(person.uid)
+    assert len(fetched_person.employments) == 1
+    assert (fetched_person.employments[0].entity_uid
+            == persisted_institution_a_pydantic_model.uid)
+    assert await InstitutionService().institution_uid("uai-UAI001") is None

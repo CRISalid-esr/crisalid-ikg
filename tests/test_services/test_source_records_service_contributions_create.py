@@ -1,4 +1,5 @@
 # pylint: disable=duplicate-code
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.harvesting_sources import HarvestingSource
 from app.models.loc_contribution_role import LocContributionRole
 from app.models.people import Person
@@ -10,7 +11,8 @@ from app.services.source_records.source_record_service import SourceRecordServic
 async def test_create_source_record_with_contributions(
         test_app,  # pylint: disable=unused-argument
         persisted_person_a_pydantic_model: Person,
-        hal_chapter_a_source_record_pydantic_model: SourceRecord
+        hal_chapter_a_source_record_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given a persisted person pydantic model and a non persisted source record pydantic model
@@ -23,7 +25,8 @@ async def test_create_source_record_with_contributions(
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=hal_chapter_a_source_record_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
     assert await service.source_record_exists(hal_chapter_a_source_record_pydantic_model.uid)
     fetched_source_record = await service.get_source_record(
         hal_chapter_a_source_record_pydantic_model.uid)

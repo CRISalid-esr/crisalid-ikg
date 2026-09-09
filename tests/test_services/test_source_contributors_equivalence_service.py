@@ -5,6 +5,7 @@ from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.person_dao import PersonDAO
 from app.graph.neo4j.source_person_dao import SourcePersonDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.document import Document
 from app.models.people import Person
 from app.models.source_people import SourcePerson
@@ -20,7 +21,8 @@ async def test_create_source_records_with_shared_contributors(
         persisted_person_e_pydantic_model: Person,
         scanr_article_a_v2_source_record_pydantic_model: SourceRecord,
         hal_article_a_source_record_pydantic_model: SourceRecord,
-        open_alex_article_a_source_record_pydantic_model: SourceRecord
+        open_alex_article_a_source_record_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given 3 source records with common hal identifier and created for different persons,
@@ -32,15 +34,18 @@ async def test_create_source_records_with_shared_contributors(
     source_record_service = SourceRecordService()
     await source_record_service.create_source_record(
         source_record=hal_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_e_pydantic_model)
+        harvested_for=persisted_person_e_pydantic_model,
+        identifier_used=default_identifier_used)
 
     await source_record_service.create_source_record(
         source_record=scanr_article_a_v2_source_record_pydantic_model,
-        harvested_for=persisted_person_d_pydantic_model)
+        harvested_for=persisted_person_d_pydantic_model,
+        identifier_used=default_identifier_used)
 
     await source_record_service.create_source_record(
         source_record=open_alex_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_d_pydantic_model)
+        harvested_for=persisted_person_d_pydantic_model,
+        identifier_used=default_identifier_used)
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
     document = await document_dao.get_document_by_source_record_uid(
@@ -85,7 +90,8 @@ async def test_create_source_records_with_shared_contributors(
             )
     await source_record_service.update_source_record(
         source_record=hal_article_a_source_record_pydantic_model,
-        harvested_for=persisted_person_e_pydantic_model)
+        harvested_for=persisted_person_e_pydantic_model,
+        identifier_used=default_identifier_used)
     document = await document_dao.get_document_by_source_record_uid(
         hal_article_a_source_record_pydantic_model.uid)
     assert document is not None
@@ -98,6 +104,7 @@ async def test_two_equivalent_records_with_the_same_contributors(
         persisted_person_a_pydantic_model: Person,
         article_exoplanet_from_oa_source_record_pydantic_model: SourceRecord,
         article_exoplanet_from_scanr_source_record_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given two source records with the same 3 contributors from 2 different source platforms,
@@ -116,11 +123,13 @@ async def test_two_equivalent_records_with_the_same_contributors(
     source_record_service = SourceRecordService()
     await source_record_service.create_source_record(
         source_record=article_exoplanet_from_oa_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
 
     await source_record_service.create_source_record(
         source_record=article_exoplanet_from_scanr_source_record_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
 
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))

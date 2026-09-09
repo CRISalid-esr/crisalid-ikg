@@ -5,6 +5,12 @@ import aio_pika
 from aio_pika import DeliveryMode
 from loguru import logger
 
+from app.amqp.message_mode import MessageMode
+
+from app.amqp.amqp_change_applied_event_message_factory import \
+    AMQPChangeAppliedEventMessageFactory
+from app.amqp.amqp_change_failed_event_message_factory import \
+    AMQPChangeFailedEventMessageFactory
 from app.amqp.amqp_document_created_event_message_factory import \
     AMQPDocumentCreatedEventMessageFactory
 from app.amqp.amqp_document_deleted_event_message_factory import \
@@ -24,14 +30,14 @@ from app.amqp.amqp_person_unchanged_event_message_factory import \
 from app.amqp.amqp_person_updated_event_message_factory import AMQPPersonUpdatedEventMessageFactory
 from app.amqp.amqp_publication_retrieval_message_factory import \
     AMQPPublicationRetrievalMessageFactory
-from app.amqp.amqp_research_unit_created_event_message_factory import \
-    AMQPResearchUnitCreatedEventMessageFactory
-from app.amqp.amqp_research_unit_deleted_event_message_factory import \
-    AMQPResearchUnitDeletedEventMessageFactory
-from app.amqp.amqp_research_unit_unchanged_event_message_factory import \
-    AMQPResearchUnitUnchangedEventMessageFactory
-from app.amqp.amqp_research_unit_updated_event_message_factory import \
-    AMQPResearchUnitUpdatedEventMessageFactory
+from app.amqp.amqp_structure_created_event_message_factory import \
+    AMQPStructureCreatedEventMessageFactory
+from app.amqp.amqp_structure_deleted_event_message_factory import \
+    AMQPStructureDeletedEventMessageFactory
+from app.amqp.amqp_structure_unchanged_event_message_factory import \
+    AMQPStructureUnchangedEventMessageFactory
+from app.amqp.amqp_structure_updated_event_message_factory import \
+    AMQPStructureUpdatedEventMessageFactory
 
 
 class AMQPMessagePublisher:
@@ -75,6 +81,8 @@ class AMQPMessagePublisher:
         DOCUMENT_CREATED = "Document created"
         DOCUMENT_DELETED = "Document deleted"
         DOCUMENT_UNCHANGED = "Document unchanged"
+        CHANGE_APPLIED = "Change applied"
+        CHANGE_FAILED = "Change failed"
         HARVESTING_STATE_EVENT = "Harvesting state event"
         HARVESTING_RESULT_EVENT = "Harvesting result event"
 
@@ -87,15 +95,16 @@ class AMQPMessagePublisher:
             EventMessageSubtype.PERSON_UPDATED: AMQPPersonUpdatedEventMessageFactory,
             EventMessageSubtype.PERSON_UNCHANGED: AMQPPersonUnchangedEventMessageFactory,
             EventMessageSubtype.PERSON_DELETED: AMQPPersonDeletedEventMessageFactory,
-            EventMessageSubtype.STRUCTURE_CREATED: AMQPResearchUnitCreatedEventMessageFactory,
-            EventMessageSubtype.STRUCTURE_UPDATED: AMQPResearchUnitUpdatedEventMessageFactory,
-            EventMessageSubtype.STRUCTURE_UNCHANGED:
-                AMQPResearchUnitUnchangedEventMessageFactory,
-            EventMessageSubtype.STRUCTURE_DELETED: AMQPResearchUnitDeletedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_CREATED: AMQPStructureCreatedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_UPDATED: AMQPStructureUpdatedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_UNCHANGED: AMQPStructureUnchangedEventMessageFactory,
+            EventMessageSubtype.STRUCTURE_DELETED: AMQPStructureDeletedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_CREATED: AMQPDocumentCreatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_UPDATED: AMQPDocumentUpdatedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_DELETED: AMQPDocumentDeletedEventMessageFactory,
             EventMessageSubtype.DOCUMENT_UNCHANGED: AMQPDocumentUnchangedEventMessageFactory,
+            EventMessageSubtype.CHANGE_APPLIED: AMQPChangeAppliedEventMessageFactory,
+            EventMessageSubtype.CHANGE_FAILED: AMQPChangeFailedEventMessageFactory,
             EventMessageSubtype.HARVESTING_STATE_EVENT: AMQPHarvestingStateEventMessageFactory,
             EventMessageSubtype.HARVESTING_RESULT_EVENT: AMQPHarvestingResultEventMessageFactory,
         },
@@ -106,11 +115,12 @@ class AMQPMessagePublisher:
         self.exchange = exchange
 
     async def publish(self, message_type: MessageType, message_subtype: MessageSubtype,
-                      content: dict) -> None:
+                      content: dict, mode: MessageMode = MessageMode.BATCH) -> None:
         """Publish a message to the AMQP queue"""
         payload, routing_key = await self._build_message(message_type, message_subtype, content)
         if routing_key is None or payload is None:
             return
+        routing_key = f"{routing_key}.{mode.value}"
         try:
             message = aio_pika.Message(
                 json.dumps(payload, default=str).encode(),

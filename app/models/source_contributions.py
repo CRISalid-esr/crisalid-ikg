@@ -14,7 +14,7 @@ class SourceContribution(BaseModel):
     Source Contribution model
     """
     rank: Optional[int] = None
-    role: Optional[LocContributionRole] = None
+    role: LocContributionRole = LocContributionRole.CONTRIBUTOR
     contributor: SourcePerson
     affiliations: List[SourceOrganization] = []
 
@@ -23,17 +23,18 @@ class SourceContribution(BaseModel):
     def validate_role(cls, value):
         """
         Convert a role URI to the corresponding LocContributionRole Enum entry.
+        Absent or unrecognized roles default to the generic Contributor role.
         """
         if isinstance(value, LocContributionRole):
             return value
         if value is None or not isinstance(value, str):
-            return None
+            return LocContributionRole.CONTRIBUTOR
         value = cls.url_to_uri(value)
         try:
             return LocContributionRole(value)
         except ValueError:
             logger.error(f"Invalid contribution role: {value}")
-            return None
+            return LocContributionRole.CONTRIBUTOR
 
     @staticmethod
     def url_to_uri(url: str) -> str:

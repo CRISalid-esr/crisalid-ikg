@@ -4,6 +4,7 @@ person_created = signal('person-created')
 person_unchanged = signal('person-unchanged')
 person_updated = signal('person-updated')
 person_identifiers_updated = signal('person-identifiers-updated')
+person_identifier_removed = signal('person-identifier-removed')
 person_deleted = signal('person-deleted')
 
 publications_to_be_updated = signal('publications-to-update')
@@ -13,13 +14,11 @@ structure_updated = signal('structure-updated')
 structure_unchanged = signal('structure-unchanged')
 structure_deleted = signal('structure-deleted')
 
-institution_created = signal('institution-created')
-institution_updated = signal('institution-updated')
-institution_unchanged = signal('institution-unchanged')
-institution_deleted = signal('institution-deleted')
-
 source_record_created = signal('source-record-created')
 source_record_updated = signal('source-record-updated')
+
+change_applied = signal('change-applied')
+change_failed = signal('change-failed')
 
 document_created_from_sources = signal('document-created-from-sources')
 document_sources_changed = signal('document-sources-changed')
@@ -37,3 +36,5 @@ source_journal_unchanged = signal('source-journal-unchanged')
 source_journal_deleted = signal('source-journal-deleted')
 
 authority_organisation_state_updated = signal('authority-organization-state-updated')
+
+literal_updated = signal('literal-updated')

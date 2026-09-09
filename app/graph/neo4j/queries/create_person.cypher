@@ -28,10 +28,15 @@ FOREACH (name IN $names |
 WITH p
 UNWIND $identifiers AS identifier
 CREATE (i:AgentIdentifier {type: identifier.type, value: identifier.value})
-SET i.authenticated = CASE WHEN identifier.authenticated IS NOT NULL THEN identifier.authenticated
-  ELSE i.authenticated
+SET i.validated = CASE
+  WHEN identifier.validated = true OR identifier.authenticated = true THEN true
+  ELSE false
   END,
-i.authentication_date = CASE WHEN identifier.authentication_date IS NOT NULL THEN identifier.authentication_date
-  ELSE i.authentication_date
+i.authenticated = CASE WHEN identifier.authenticated = true THEN true
+  ELSE false
+  END,
+i.authentication_date = CASE WHEN identifier.authenticated = true
+  AND identifier.authentication_date IS NOT NULL THEN identifier.authentication_date
+  ELSE NULL
   END
 CREATE (p)-[:HAS_IDENTIFIER]->(i)

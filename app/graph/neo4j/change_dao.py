@@ -89,7 +89,8 @@ class ChangeDAO(Neo4jDAO):
             params=change.marshal_parameters(),
             timestamp=change.timestamp.isoformat(),
             status=change.status.value,
-            error_message=change.error_message
+            error_message=change.error_message,
+            warnings=change.marshal_warnings()
         )
 
     @staticmethod
@@ -99,7 +100,8 @@ class ChangeDAO(Neo4jDAO):
             query,
             uid=change.uid,
             status=change.status.value,
-            error_message=change.error_message
+            error_message=change.error_message,
+            warnings=change.marshal_warnings()
         )
 
     @classmethod

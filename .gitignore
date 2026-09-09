@@ -167,3 +167,4 @@ docker-compose.yml
 etc
 rabbitmq-data
 /neo4j*
+/data/openalex

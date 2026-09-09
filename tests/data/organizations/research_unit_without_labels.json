@@ -1,0 +1,16 @@
+{
+  "generic_type": "unit",
+  "type": "UMR",
+  "main_mission": "research",
+  "long_labels": [],
+  "short_labels": [],
+  "descriptions": [],
+  "local_types": [],
+  "identifiers": [
+    {"type": "local", "value": "U153"},
+    {"type": "nns", "value": "200012123S"},
+    {"type": "ror", "value": "123456"}
+  ],
+  "relationships": [],
+  "contacts": []
+}

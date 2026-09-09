@@ -8,10 +8,12 @@ from app.errors.database_error import handle_database_errors
 from app.graph.neo4j.neo4j_connexion import Neo4jConnexion
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.utils import load_query
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.concepts import Concept
 from app.models.document_type import DocumentTypeEnum
 from app.models.hal_custom_metadata import HalCustomMetadata
 from app.models.harvesters import Harvester
+from app.models.identifier_types import PersonIdentifierType
 from app.models.journal_identifiers import JournalIdentifier
 from app.models.literal import Literal
 from app.models.loc_contribution_role import LocContributionRole
@@ -24,7 +26,7 @@ from app.models.source_organization_identifiers import SourceOrganizationIdentif
 from app.models.source_organizations import SourceOrganization
 from app.models.source_people import SourcePerson
 from app.models.source_person_identifiers import SourcePersonIdentifier
-from app.models.source_records import SourceRecord
+from app.models.source_records import SourceRecord, SourceRecordDomain
 from app.models.text_literal import TextLiteral
 
 
@@ -52,7 +54,8 @@ class SourceRecordDAO(Neo4jDAO):
 
     @handle_database_errors
     async def create(self, source_record: SourceRecord,
-                     harvested_for: Person
+                     harvested_for: Person,
+                     identifier_used: PersonIdentifier
                      ) -> Tuple[
         str, Neo4jDAO.Status, UpdateStatus | None]:
         """
@@ -60,19 +63,22 @@ class SourceRecordDAO(Neo4jDAO):
 
         :param harvested_for: person on behalf of whom the source record was harvested
         :param source_record: source record object
+        :param identifier_used: person identifier that triggered the harvest
         :return: source record uid, operation status and update status details
         """
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 await session.write_transaction(self._create_source_record_transaction,
                                                 source_record,
-                                                harvested_for
+                                                harvested_for,
+                                                identifier_used
                                                 )
         return source_record.uid, SourceRecordDAO.Status.CREATED, None
 
     @handle_database_errors
     async def update(self, source_record: SourceRecord,
-                     harvested_for: Person
+                     harvested_for: Person,
+                     identifier_used: PersonIdentifier
                      ) -> Tuple[
         str, Neo4jDAO.Status, UpdateStatus | None]:
         """
@@ -80,13 +86,15 @@ class SourceRecordDAO(Neo4jDAO):
 
         :param harvested_for: person on behalf of whom the source record was harvested
         :param source_record: source record object
+        :param identifier_used: person identifier that triggered the harvest
         :return: source record uid, operation status and update status details
         """
         async with Neo4jConnexion().get_driver() as driver:
             async with driver.session() as session:
                 async with await session.begin_transaction() as tx:
                     return await self._update_source_record_transaction(tx, source_record,
-                                                                        harvested_for)
+                                                                        harvested_for,
+                                                                        identifier_used)
 
     @handle_database_errors
     async def get_source_records_with_shared_identifier_uids(self, source_record_id: str):
@@ -133,6 +141,31 @@ class SourceRecordDAO(Neo4jDAO):
                 )
                 record = await result.single()
                 return record['source_record_uids']
+
+    @handle_database_errors
+    async def get_source_record_uids_by_identifier_used(
+            self,
+            person_uid: str,
+            identifier_used_type: PersonIdentifierType,
+            identifier_used_value: str
+    ) -> List[str]:
+        """
+        Get source record UIDs harvested for a person using a specific identifier
+        :param person_uid: person uid
+        :param identifier_used_type: type of the identifier used to trigger the harvest
+        :param identifier_used_value: value of the identifier used to trigger the harvest
+        :return: list of source record UIDs
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("get_source_record_uids_by_identifier_used"),
+                    person_uid=person_uid,
+                    identifier_used_type=identifier_used_type.value,
+                    identifier_used_value=identifier_used_value
+                )
+                record = await result.single()
+                return record['source_record_uids'] if record else []
 
     @handle_database_errors
     async def delete_inferred_equivalence_relationships(self, source_record_uid: str,
@@ -220,6 +253,25 @@ class SourceRecordDAO(Neo4jDAO):
                     return await SourceRecordDAO._source_record_exists(tx, source_record_uid)
 
     @handle_database_errors
+    async def sync_topics(
+        self, source_record_uid: str, domains: List[SourceRecordDomain]
+    ) -> None:
+        """
+        Replace all HAS_TOPIC edges on a source record with the supplied list.
+        Passing an empty list clears all existing edges.
+
+        :param source_record_uid: uid of the source record
+        :param domains: list of SourceRecordDomain entries (uri + optional score)
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.run(
+                    load_query("sync_source_record_topics"),
+                    source_record_uid=source_record_uid,
+                    topics=[{"uri": d.uri, "score": d.score} for d in domains],
+                )
+
+    @handle_database_errors
     async def delete_contributions(self, source_record_uid: str):
         """
         Delete contributions of a source record
@@ -232,6 +284,96 @@ class SourceRecordDAO(Neo4jDAO):
                     load_query("delete_source_record_contributions"),
                     source_record_uid=source_record_uid
                 )
+
+    @handle_database_errors
+    async def count_harvested_for(self, source_record_uid: str) -> int:
+        """
+        Count the HARVESTED_FOR relationships of a source record
+        :param source_record_uid: uid of the source record
+        :return: number of HARVESTED_FOR relationships
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("count_harvested_for"),
+                    source_record_uid=source_record_uid
+                )
+                record = await result.single()
+                return record["harvested_for_count"] if record else 0
+
+    @handle_database_errors
+    async def delete_exclusive_source_record(self, source_record_uid: str, person_uid: str):
+        """
+        Delete a source record harvested exclusively for one person: the record, its
+        SourceContribution nodes, the person's RECORDED_BY edges to the record's SourcePersons
+        (unless the SourcePerson contributes to another record still harvested for the person)
+        and the SourcePersons orphaned of any contribution. Shared entities (SourceJournal,
+        SourceIssue, SourceOrganization) are preserved.
+
+        :param source_record_uid: uid of the source record
+        :param person_uid: uid of the person the record was harvested for
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    source_person_uids = await self._get_source_record_source_person_uids(
+                        tx, source_record_uid)
+                    await self._delete_person_recorded_by(
+                        tx, source_record_uid, person_uid, source_person_uids)
+                    await tx.run(load_query("delete_source_record_contributions"),
+                                 source_record_uid=source_record_uid)
+                    await tx.run(load_query("delete_orphan_source_people"),
+                                 source_person_uids=source_person_uids)
+                    await tx.run(load_query("delete_source_record"),
+                                 source_record_uid=source_record_uid)
+
+    @handle_database_errors
+    async def detach_shared_harvested_for(self, source_record_uid: str, person_uid: str):
+        """
+        Detach a person's harvesting path from a source record shared with other persons:
+        delete the person's HARVESTED_FOR relationship and its RECORDED_BY edges to the
+        record's SourcePersons (unless the SourcePerson contributes to another record still
+        harvested for the person). The record and the other persons' paths are kept intact.
+
+        :param source_record_uid: uid of the source record
+        :param person_uid: uid of the person the record was harvested for
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                async with await session.begin_transaction() as tx:
+                    source_person_uids = await self._get_source_record_source_person_uids(
+                        tx, source_record_uid)
+                    await self._delete_person_recorded_by(
+                        tx, source_record_uid, person_uid, source_person_uids)
+                    await tx.run(load_query("detach_harvested_for"),
+                                 source_record_uid=source_record_uid,
+                                 person_uid=person_uid)
+
+    @staticmethod
+    async def _get_source_record_source_person_uids(
+            tx: AsyncManagedTransaction, source_record_uid: str) -> list[str]:
+        """
+        Collect the uids of the SourcePersons contributing to a source record.
+        """
+        result = await tx.run(load_query("get_source_record_source_person_uids"),
+                              source_record_uid=source_record_uid)
+        record = await result.single()
+        return record["source_person_uids"] if record else []
+
+    @staticmethod
+    async def _delete_person_recorded_by(
+            tx: AsyncManagedTransaction, source_record_uid: str,
+            person_uid: str, source_person_uids: list[str]):
+        """
+        Delete the person's RECORDED_BY edges to the given SourcePersons unless the
+        SourcePerson contributes to another record still harvested for the person.
+        """
+        if not source_person_uids:
+            return
+        await tx.run(load_query("delete_person_recorded_by_for_source_people"),
+                     source_record_uid=source_record_uid,
+                     person_uid=person_uid,
+                     source_person_uids=source_person_uids)
 
     @handle_database_errors
     async def create_contribution(self, source_contribution: SourceContribution,
@@ -257,7 +399,7 @@ class SourceRecordDAO(Neo4jDAO):
             query,
             source_record_uid=source_record_uid,
             contributor_uid=source_contribution.contributor.uid,
-            role=source_contribution.role.name if source_contribution.role else None,
+            role=source_contribution.role.name,
             rank=source_contribution.rank,
             affiliation_uids=[affiliation.uid for affiliation in source_contribution.affiliations]
         )
@@ -293,7 +435,8 @@ class SourceRecordDAO(Neo4jDAO):
     @classmethod
     async def _create_source_record_transaction(cls, tx: AsyncManagedTransaction,
                                                 source_record: SourceRecord,
-                                                harvested_for: Person
+                                                harvested_for: Person,
+                                                identifier_used: PersonIdentifier
                                                 ):
         if not source_record.uid:
             raise ValueError(f"Unable to compute primary key for source record {source_record}")
@@ -316,6 +459,8 @@ class SourceRecordDAO(Neo4jDAO):
             source_identifier=source_record.source_identifier,
             harvester=source_record.harvester.value,
             person_uid=harvested_for.uid,
+            identifier_used_type=identifier_used.type.value,
+            identifier_used_value=identifier_used.value,
             issue=issue,
             journal_uid=source_record.issue.journal.uid if source_record.issue and
                                                            source_record.issue.journal else None,
@@ -341,7 +486,8 @@ class SourceRecordDAO(Neo4jDAO):
     @classmethod
     async def _update_source_record_transaction(cls, tx: AsyncManagedTransaction,
                                                 source_record: SourceRecord,
-                                                harvested_for: Person
+                                                harvested_for: Person,
+                                                identifier_used: PersonIdentifier
                                                 ) -> Tuple[
         str, Neo4jDAO.Status, UpdateStatus | None]:
         if not source_record.uid:
@@ -364,6 +510,8 @@ class SourceRecordDAO(Neo4jDAO):
             source_identifier=source_record.source_identifier,
             harvester=source_record.harvester.value,
             person_uid=harvested_for.uid,
+            identifier_used_type=identifier_used.type.value,
+            identifier_used_value=identifier_used.value,
             issue=issue,
             journal_uid=source_record.issue.journal.uid if source_record.issue and
                                                            source_record.issue.journal else None,
@@ -493,9 +641,10 @@ class SourceRecordDAO(Neo4jDAO):
         for contribution in contributions:
             try:
                 role = LocContributionRole.from_name(
-                    contribution["role"]) if "role" in contribution else None
+                    contribution["role"]) if "role" in contribution \
+                    else LocContributionRole.CONTRIBUTOR
             except ValueError:
-                role = None
+                role = LocContributionRole.CONTRIBUTOR
             affiliations = []
             for affiliation in contribution.get("affiliations", []):
                 source_organization = SourceOrganization(

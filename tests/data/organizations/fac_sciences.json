@@ -1,0 +1,19 @@
+{
+  "generic_type": "institution_subdivision",
+  "type": "FAC",
+  "local_types": [],
+  "long_labels": [
+    {"value": "Faculté des sciences", "language": "fr"},
+    {"value": "Science faculty", "language": "en"}
+  ],
+  "short_labels": [],
+  "descriptions": [
+    {"value": "Science faculty of Université Étienne Dupond, grouping science departments.", "language": "en"},
+    {"value": "Faculté des sciences de l'Université Étienne Dupond, regroupant les départements scientifiques.", "language": "fr"}
+  ],
+  "identifiers": [{"type": "local", "value": "FAC-SCI-001"}],
+  "relationships": [
+    {"type": "part_of", "subtype": null, "target": "uai-02345", "start_date": "1995-01-01", "end_date": null}
+  ],
+  "contacts": []
+}

@@ -20,7 +20,7 @@ class SourceRecordIndex:
         settings = get_app_settings()
         self.index_config = settings.es_indexes["source_records"]
 
-    async def add_source_record(self, _, source_record_id):
+    async def add_source_record(self, _, source_record_id, **_kwargs):
         """
         Add a source record to the index
         :param emitter: the emitter of the signal
@@ -30,7 +30,7 @@ class SourceRecordIndex:
 
         if not self._init_es_client():
             logger.debug(
-                "Elasticsearch client is not set up, cannot add source record %s to the index",
+                "Elasticsearch client is not set up, cannot add source record {} to the index",
                 source_record_id)
             return False
         print(f"Adding source record {source_record_id} to the index")

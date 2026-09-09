@@ -19,7 +19,7 @@ async def test_signal_document_created(
     service = DocumentService()
     await service.signal_document_created(
         document_hal_article_a_persisted_model.uid)
-    expected_sent_message_routing_key = "event.documents.document.created"
+    expected_sent_message_routing_key = "event.documents.document.created.batch"
     expected_sent_message_payload_fields = {'abstracts': [], 'contributions': [{'contributor': {
         'display_name': 'Jérôme Février', 'external': True, 'identifiers': [], 'memberships': [],
         'names': [], 'uid': 'hal-863912'},

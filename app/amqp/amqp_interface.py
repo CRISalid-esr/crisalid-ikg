@@ -10,6 +10,7 @@ from loguru import logger
 from app.amqp.amqp_message_processor import AMQPMessageProcessor
 from app.amqp.amqp_message_processor_factory import AMQPMessageProcessorFactory
 from app.amqp.amqp_message_publisher import AMQPMessagePublisher
+from app.amqp.message_mode import MessageMode
 from app.settings.app_settings import AppSettings
 
 
@@ -31,11 +32,19 @@ class AMQPInterface:
         self.keys = {
             "people": [self.settings.amqp_directory_people_event_routing_key],
             "structures": [self.settings.amqp_directory_structure_event_routing_key],
-            "publications": [self.settings.amqp_harvester_reference_event_routing_key],
-            "harvesting_events": [self.settings.amqp_harvesting_event_routing_key],
-            "user_actions": [self.settings.amqp_graph_document_task_routing_key,
-                             self.settings.amqp_graph_person_documents_fetch_task_routing_key,
-                             self.settings.amqp_graph_person_attribute_update_task_routing_key],
+            "publications_batch": [
+                self.settings.amqp_harvester_reference_event_batch_routing_key],
+            "publications_interactive": [
+                self.settings.amqp_harvester_reference_event_interactive_routing_key],
+            "harvesting_events_batch": [
+                self.settings.amqp_harvesting_event_batch_routing_key],
+            "harvesting_events_interactive": [
+                self.settings.amqp_harvesting_event_interactive_routing_key],
+            "user_actions_interactive": [
+                self.settings.amqp_graph_document_task_routing_key,
+                self.settings.amqp_graph_person_documents_fetch_task_routing_key,
+                self.settings.amqp_graph_person_attribute_update_task_routing_key,
+            ],
         }
 
     async def connect(self, listen=True) -> None:
@@ -46,38 +55,53 @@ class AMQPInterface:
 
         logger.info("Declaring exchanges...")
         await self._declare_exchange(self.settings.amqp_graph_exchange_name, with_dlx=True)
-        await self._declare_exchange(self.settings.amqp_publications_exchange_name)
+        await self._declare_exchange(self.settings.amqp_publications_exchange_name, with_dlx=True)
 
         if not listen:
             logger.info("Connection established in non-listening mode.")
             return
 
-        await self._declare_exchange(self.settings.amqp_directory_exchange_name)
+        await self._declare_exchange(self.settings.amqp_directory_exchange_name, with_dlx=True)
 
         logger.info("Binding queues...")
         await self._bind_queue(self.settings.amqp_directory_exchange_name,
                                self.settings.amqp_people_topic,
-                               self.settings.amqp_people_queue_name)
+                               self.settings.amqp_people_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_directory_exchange_name,
                                self.settings.amqp_structures_topic,
-                               self.settings.amqp_structures_queue_name)
+                               self.settings.amqp_structures_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
-                               self.settings.amqp_publications_topic,
-                               self.settings.amqp_publications_queue_name)
+                               self.settings.amqp_publications_batch_topic,
+                               self.settings.amqp_publications_batch_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_publications_exchange_name,
-                               self.settings.amqp_harvesting_events_topic,
-                               self.settings.amqp_harvesting_events_queue_name)
+                               self.settings.amqp_publications_interactive_topic,
+                               self.settings.amqp_publications_interactive_queue_name,
+                               with_dlq=True)
+        await self._bind_queue(self.settings.amqp_publications_exchange_name,
+                               self.settings.amqp_harvesting_events_batch_topic,
+                               self.settings.amqp_harvesting_events_batch_queue_name,
+                               with_dlq=True)
+        await self._bind_queue(self.settings.amqp_publications_exchange_name,
+                               self.settings.amqp_harvesting_events_interactive_topic,
+                               self.settings.amqp_harvesting_events_interactive_queue_name,
+                               with_dlq=True)
         await self._bind_queue(self.settings.amqp_graph_exchange_name,
-                               self.settings.amqp_user_actions_topic,
-                               self.settings.amqp_user_actions_queue_name,
+                               self.settings.amqp_user_actions_interactive_topic,
+                               self.settings.amqp_user_actions_interactive_queue_name,
                                with_dlq=True)
 
         logger.info("Attaching message processing workers...")
         self._attach_message_processing_workers(self.settings.amqp_people_topic)
-        self._attach_message_processing_workers(self.settings.amqp_publications_topic)
+        self._attach_message_processing_workers(self.settings.amqp_publications_batch_topic)
+        self._attach_message_processing_workers(self.settings.amqp_publications_interactive_topic)
         self._attach_message_processing_workers(self.settings.amqp_structures_topic)
-        self._attach_message_processing_workers(self.settings.amqp_user_actions_topic)
-        self._attach_message_processing_workers(self.settings.amqp_harvesting_events_topic)
+        self._attach_message_processing_workers(self.settings.amqp_user_actions_interactive_topic)
+        self._attach_message_processing_workers(self.settings.amqp_harvesting_events_batch_topic)
+        self._attach_message_processing_workers(
+            self.settings.amqp_harvesting_events_interactive_topic)
 
         logger.info("AMQP interface setup complete")
 
@@ -153,8 +177,9 @@ class AMQPInterface:
                     logger.debug(f"Message added to inner queue for topic: {topic}")
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error(f"Error while listening to messages on topic '{topic}': {e}",
-                         exc_info=True)
+            logger.opt(exception=True).error(
+                "Error while listening to messages on topic '{}': {}", topic, e
+            )
 
     async def _declare_exchange(self, exchange_name: str, with_dlx=False) -> None:
         if exchange_name in self.pika_exchanges:
@@ -198,7 +223,7 @@ class AMQPInterface:
 
         if with_dlq:
             queue_arguments["x-dead-letter-exchange"] = f"dlx.{exchange_name}"
-            queue_arguments["x-dead-letter-routing-key"] = topic
+            queue_arguments["x-dead-letter-routing-key"] = queue_name
 
         self.pika_queues[topic] = await self.pika_channel.declare_queue(
             queue_name,
@@ -257,10 +282,12 @@ class AMQPInterface:
             logger.error(f"Cannot fetch publications for person {person_uid}"
                          "AMQP exchange not declared")
             return
+        mode = extra.get("mode", MessageMode.BATCH)
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.TASK,
                                 AMQPMessagePublisher.TaskMessageSubtype.PUBLICATION_RETRIEVAL,
-                                {"person_uid": person_uid, "harvesters": harvesters})
+                                {"person_uid": person_uid, "harvesters": harvesters},
+                                mode=mode)
 
     async def dispatch_person_created(self, _, **extra) -> None:
         """
@@ -270,8 +297,9 @@ class AMQPInterface:
         :return: None
         """
         person_uid = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.PERSON_CREATED
-        await self._dispatch_person_event(event_message_subtype, person_uid)
+        await self._dispatch_person_event(event_message_subtype, person_uid, mode)
 
     async def dispatch_person_updated(self, _, **extra) -> None:
         """
@@ -281,8 +309,9 @@ class AMQPInterface:
         :return: None
         """
         person_uid = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.PERSON_UPDATED
-        await self._dispatch_person_event(event_message_subtype, person_uid)
+        await self._dispatch_person_event(event_message_subtype, person_uid, mode)
 
     async def dispatch_person_unchanged(self, _, **extra) -> None:
         """
@@ -292,8 +321,9 @@ class AMQPInterface:
         :return: None
         """
         person_uid = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.PERSON_UNCHANGED
-        await self._dispatch_person_event(event_message_subtype, person_uid)
+        await self._dispatch_person_event(event_message_subtype, person_uid, mode)
 
     async def dispatch_person_deleted(self, _, **extra) -> None:
         """
@@ -303,10 +333,12 @@ class AMQPInterface:
         :return: None
         """
         person_uid = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.PERSON_DELETED
-        await self._dispatch_person_event(event_message_subtype, person_uid)
+        await self._dispatch_person_event(event_message_subtype, person_uid, mode)
 
-    async def _dispatch_person_event(self, event_message_subtype, person_uid):
+    async def _dispatch_person_event(self, event_message_subtype, person_uid,
+                                     mode: MessageMode = MessageMode.BATCH):
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
             logger.error(f"Cannot dispatch {event_message_subtype} event for person {person_uid}: "
@@ -315,7 +347,8 @@ class AMQPInterface:
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
                                 event_message_subtype,
-                                {"person_uid": person_uid})
+                                {"person_uid": person_uid},
+                                mode=mode)
 
     async def dispatch_structure_created(self, _, **extra) -> None:
         """
@@ -324,9 +357,10 @@ class AMQPInterface:
         :param extra: extra parameters (payload of the message)
         :return: None
         """
-        research_unit_uid = extra["payload"]
+        structure_uid = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_CREATED
-        await self._dispatch_structure_event(event_message_subtype, research_unit_uid)
+        await self._dispatch_structure_event(event_message_subtype, structure_uid, mode)
 
     async def dispatch_structure_updated(self, _, **extra) -> None:
         """
@@ -335,9 +369,10 @@ class AMQPInterface:
         :param extra: extra parameters (payload of the message)
         :return: None
         """
-        research_unit_uid = extra["payload"]
+        structure_uid = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_UPDATED
-        await self._dispatch_structure_event(event_message_subtype, research_unit_uid)
+        await self._dispatch_structure_event(event_message_subtype, structure_uid, mode)
 
     async def dispatch_structure_unchanged(self, _, **extra) -> None:
         """
@@ -346,9 +381,10 @@ class AMQPInterface:
         :param extra: extra parameters (payload of the message)
         :return: None
         """
-        research_unit_uid = extra["payload"]
+        structure_uid = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_UNCHANGED
-        await self._dispatch_structure_event(event_message_subtype, research_unit_uid)
+        await self._dispatch_structure_event(event_message_subtype, structure_uid, mode)
 
     async def dispatch_structure_deleted(self, _, **extra) -> None:
         """
@@ -357,21 +393,23 @@ class AMQPInterface:
         :param extra: extra parameters (payload of the message)
         :return: None
         """
-        research_unit_uid = extra["payload"]
+        structure_uid = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_DELETED
-        await self._dispatch_structure_event(event_message_subtype, research_unit_uid)
+        await self._dispatch_structure_event(event_message_subtype, structure_uid, mode)
 
-    async def _dispatch_structure_event(self, event_message_subtype, research_unit_uid):
+    async def _dispatch_structure_event(self, event_message_subtype, structure_uid,
+                                        mode: MessageMode = MessageMode.BATCH):
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
-            logger.error("Cannot dispatch %s event for structure %s: "
-                         "AMQP exchange not declared", event_message_subtype,
-                         research_unit_uid)
+            logger.error("Cannot dispatch {} event for structure {}: "
+                         "AMQP exchange not declared", event_message_subtype, structure_uid)
             return
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
                                 event_message_subtype,
-                                {"research_unit_uid": research_unit_uid})
+                                {"structure_uid": structure_uid},
+                                mode=mode)
 
     async def dispatch_document_updated(self, _, **extra) -> None:
         """
@@ -382,7 +420,8 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_UPDATED
         document_uid = extra["document_uid"]
-        await self._dispatch_document_event(event_message_subtype, document_uid)
+        mode = extra.get("mode", MessageMode.BATCH)
+        await self._dispatch_document_event(event_message_subtype, document_uid, mode)
 
     async def dispatch_document_created(self, _, **extra) -> None:
         """
@@ -393,7 +432,8 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_CREATED
         document_uid = extra["document_uid"]
-        await self._dispatch_document_event(event_message_subtype, document_uid)
+        mode = extra.get("mode", MessageMode.BATCH)
+        await self._dispatch_document_event(event_message_subtype, document_uid, mode)
 
     async def dispatch_document_deleted(self, _, **extra) -> None:
         """
@@ -404,7 +444,8 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_DELETED
         document_uid = extra["document_uid"]
-        await self._dispatch_document_event(event_message_subtype, document_uid)
+        mode = extra.get("mode", MessageMode.BATCH)
+        await self._dispatch_document_event(event_message_subtype, document_uid, mode)
 
     async def dispatch_document_unchanged(self, _, **extra) -> None:
         """
@@ -415,22 +456,59 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.DOCUMENT_UNCHANGED
         document_uid = extra["document_uid"]
-        await self._dispatch_document_event(event_message_subtype, document_uid)
+        mode = extra.get("mode", MessageMode.BATCH)
+        await self._dispatch_document_event(event_message_subtype, document_uid, mode)
 
-    async def _dispatch_document_event(self, event_message_subtype, document_uid):
+    async def _dispatch_document_event(self, event_message_subtype, document_uid,
+                                       mode: MessageMode = MessageMode.BATCH):
         logger.info(
             f"Dispatching document event: {event_message_subtype}"
             f" for document {document_uid}")
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
-            logger.error("Cannot dispatch %s event for document %s: "
-                         "AMQP exchange not declared", document_uid)
+            logger.error("Cannot dispatch {} event for document {}: "
+                         "AMQP exchange not declared", event_message_subtype, document_uid)
             return
         publisher = AMQPMessagePublisher(exchange)
         await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
                                 event_message_subtype,
-                                {"document_uid": document_uid
-                                 })
+                                {"document_uid": document_uid},
+                                mode=mode)
+
+    async def dispatch_change_applied(self, _, **extra) -> None:
+        """
+        Dispatch a change applied event (user-action outcome, interactive only)
+        :param _: sender of message (unused)
+        :param extra: extra parameters carrying the change event fields
+        :return: None
+        """
+        event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.CHANGE_APPLIED
+        await self._dispatch_change_event(event_message_subtype, extra["fields"])
+
+    async def dispatch_change_failed(self, _, **extra) -> None:
+        """
+        Dispatch a change failed event (user-action outcome, interactive only)
+        :param _: sender of message (unused)
+        :param extra: extra parameters carrying the change event fields
+        :return: None
+        """
+        event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.CHANGE_FAILED
+        await self._dispatch_change_event(event_message_subtype, extra["fields"])
+
+    async def _dispatch_change_event(self, event_message_subtype, fields: dict):
+        logger.info(
+            f"Dispatching change event: {event_message_subtype}"
+            f" for change {fields.get('uid')}")
+        exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
+        if not exchange:
+            logger.error("Cannot dispatch {} event for change {}: "
+                         "AMQP exchange not declared", event_message_subtype, fields.get("uid"))
+            return
+        publisher = AMQPMessagePublisher(exchange)
+        await publisher.publish(AMQPMessagePublisher.MessageType.EVENT,
+                                event_message_subtype,
+                                {"fields": fields},
+                                mode=MessageMode.INTERACTIVE)
 
     async def dispatch_harvesting_state_event(self, _, **extra):
         """
@@ -441,6 +519,7 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.HARVESTING_STATE_EVENT
         json_payload = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
             logger.error("Graph exchange not declared. Cannot repost harvesting event.")
@@ -449,7 +528,8 @@ class AMQPInterface:
         await publisher.publish(
             AMQPMessagePublisher.MessageType.EVENT,
             event_message_subtype,
-            json_payload
+            json_payload,
+            mode=mode,
         )
 
     async def dispatch_harvesting_result_event(self, _, **extra):
@@ -461,6 +541,7 @@ class AMQPInterface:
         """
         event_message_subtype = AMQPMessagePublisher.EventMessageSubtype.HARVESTING_RESULT_EVENT
         json_payload = extra["payload"]
+        mode = extra.get("mode", MessageMode.BATCH)
         exchange = self.pika_exchanges.get(self.settings.amqp_graph_exchange_name, None)
         if not exchange:
             logger.error("Graph exchange not declared. Cannot repost harvesting result event.")
@@ -469,5 +550,6 @@ class AMQPInterface:
         await publisher.publish(
             AMQPMessagePublisher.MessageType.EVENT,
             event_message_subtype,
-            json_payload
+            json_payload,
+            mode=mode,
         )

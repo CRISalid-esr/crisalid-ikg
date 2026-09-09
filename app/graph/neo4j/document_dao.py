@@ -18,7 +18,7 @@ from app.models.concepts import Concept
 from app.models.conference_abstract import ConferenceAbstract
 from app.models.conference_article import ConferenceArticle
 from app.models.contributions import Contribution
-from app.models.document import Document
+from app.models.document import Document, DocumentTopic
 from app.models.document_publication_channel import DocumentPublicationChannel
 from app.models.journal import Journal
 from app.models.journal_article import JournalArticle
@@ -32,7 +32,7 @@ from app.models.scholarly_publication import ScholarlyPublication
 from app.models.text_literal import TextLiteral
 
 
-class DocumentDAO(Neo4jDAO):
+class DocumentDAO(Neo4jDAO):  # pylint: disable=too-many-public-methods
     """
     Data access object for publications in the Neo4j graph database
     """
@@ -111,6 +111,105 @@ class DocumentDAO(Neo4jDAO):
                     source_record_uids=source_record_uids
                 )
 
+    @handle_database_errors
+    async def get_topics_state(self, document_uid: str) -> str | None:
+        """
+        Get the hash of the text last sent to Crisalid-taxi for a document
+
+        :param document_uid: UID of the document
+        :return: the stored ``topics_input_hash``, or None
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("get_document_topics_state"),
+                    document_uid=document_uid,
+                )
+                record = await result.single()
+                return record["input_hash"] if record else None
+
+    @handle_database_errors
+    async def sync_crisalid_topics(self, row: dict) -> dict | None:
+        """
+        Replace the ``source = 'crisalid'`` HAS_TOPIC edges of a document and record the
+        input hash, in a single statement. Edges of other sources are left untouched.
+
+        :param row: ``{document_uid, input_hash, model, topics: [{uid, score}]}``
+        :return: ``{document_uid, previous_uids, linked_uids}`` or None if the document
+                 does not exist
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("sync_document_crisalid_topics"),
+                    **row,
+                )
+                record = await result.single()
+                return dict(record) if record else None
+
+    @handle_database_errors
+    async def sync_crisalid_topics_batch(self, rows: list[dict]) -> list[dict]:
+        """
+        Batch variant of :meth:`sync_crisalid_topics`, one write transaction for all rows.
+
+        :param rows: list of ``{document_uid, input_hash, model, topics: [{uid, score}]}``
+        :return: one ``{document_uid, previous_uids, linked_uids}`` per existing document
+        """
+        if not rows:
+            return []
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("sync_documents_crisalid_topics_batch"),
+                    rows=rows,
+                )
+                return [dict(record) async for record in result]
+
+    @handle_database_errors
+    async def get_documents_for_topics_computation(
+            self, skip: int, limit: int, missing_only: bool = False) -> list[dict]:
+        """
+        Page through documents with the data needed to build the Crisalid-taxi input
+
+        :param skip: number of documents to skip (ordered by uid)
+        :param limit: page size
+        :param missing_only: only documents that never got crisalid topics
+        :return: list of ``{uid, topics_input_hash, titles, abstracts, subject_pref_labels}``
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("get_documents_for_topics_computation"),
+                    skip=skip, limit=limit, missing_only=missing_only,
+                )
+                return [dict(record) async for record in result]
+
+    @handle_database_errors
+    async def count_topics_state(self) -> dict:
+        """
+        Count documents and HAS_TOPIC edges by source
+
+        :return: ``{total, computed, crisalid_edges, openalex_edges}``
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(load_query("count_documents_by_topics_state"))
+                record = await result.single()
+                return dict(record) if record else {}
+
+    @handle_database_errors
+    async def get_person_documents(self, person_uid: str) -> list[str] | None:
+        """
+        Get all documents linked to a person from the graph database
+
+        :param person_uid: person uid
+        :return: person object
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.read_transaction(
+                    self._get_document_uids_by_person_uid, person_uid)
+
     @classmethod
     async def _create_or_update_document_transaction(
             cls, tx: AsyncManagedTransaction,
@@ -172,6 +271,10 @@ class DocumentDAO(Neo4jDAO):
                 for pc in (document.publication_channels or [])
             ]
         )
+        await tx.run(
+            load_query("sync_document_openalex_topics"),
+            document_uid=document.uid,
+        )
 
         return result
 
@@ -215,6 +318,17 @@ class DocumentDAO(Neo4jDAO):
         )
         return [record['uid'] async for record in result]
 
+    @classmethod
+    async def _get_document_uids_by_person_uid(cls, tx, person_uid: str) -> list[str] | None:
+        result = await tx.run(
+            load_query("get_document_uids_by_person_uid"),
+            person_uid=person_uid
+        )
+        record = await result.single()
+        if record and len(record["document_uids"]) > 0:
+            return record["document_uids"]
+        return None
+
     @handle_database_errors
     async def get_document_by_source_record_uid(
             self, source_record_uid: str) -> Document | None:
@@ -244,7 +358,8 @@ class DocumentDAO(Neo4jDAO):
             self,
             document_uid: str,
             person_uid: str,
-            roles: list[str]
+            roles: list[str],
+            rank: int | None = None
     ) -> str | None:
         """
         Create a Contribution node and establish relationships to the Document and Person.
@@ -252,6 +367,7 @@ class DocumentDAO(Neo4jDAO):
         :param document_uid: UID of the Document.
         :param person_uid: UID of the Person.
         :param roles: List of roles to attach to the contribution.
+        :param rank: Optional rank (card position) of the contribution.
         :return: UID of the created Contribution.
         """
         async with Neo4jConnexion().get_driver() as driver:
@@ -260,7 +376,8 @@ class DocumentDAO(Neo4jDAO):
                     self._create_contribution_transaction,
                     document_uid,
                     person_uid,
-                    roles
+                    roles,
+                    rank
                 )
 
     @staticmethod
@@ -268,7 +385,8 @@ class DocumentDAO(Neo4jDAO):
             tx: AsyncManagedTransaction,
             document_uid: str,
             person_uid: str,
-            roles: list[str]
+            roles: list[str],
+            rank: int | None = None
     ) -> str | None:
         """
         Transaction to create Contribution and link it to Document and Person.
@@ -277,6 +395,7 @@ class DocumentDAO(Neo4jDAO):
         :param document_uid: UID of the Document.
         :param person_uid: UID of the Person.
         :param roles: List of roles to attach to the contribution.
+        :param rank: Optional rank (card position) of the contribution.
         :return: id of the created Contribution.
         """
         query = load_query("create_contribution_to_document")
@@ -284,7 +403,8 @@ class DocumentDAO(Neo4jDAO):
             query,
             document_uid=document_uid,
             person_uid=person_uid,
-            roles=roles
+            roles=roles,
+            rank=rank
         )
         single = await result.single()
         if single is None:
@@ -371,6 +491,9 @@ class DocumentDAO(Neo4jDAO):
             document.abstracts.append(TextLiteral(**abstract))
         for subject in record['subjects']:
             document.subjects.append(Concept(**subject))
+        for topic in record.get('topics') or []:
+            if topic:
+                document.topics.append(DocumentTopic(**topic))
         for contribution in record['contributions']:
             document.contributions.append(Contribution(**contribution))
 
@@ -456,7 +579,7 @@ class DocumentDAO(Neo4jDAO):
         query = load_query("remove_document_subjects")
         await tx.run(query, document_uid=document_uid, subject_uids=subject_uids)
 
-    # pylint: disable=too-many-arguments, too-many-positional-arguments
+    # pylint: disable=too-many-arguments,R0917
     @handle_database_errors
     async def add_subject(
             self,
@@ -483,7 +606,7 @@ class DocumentDAO(Neo4jDAO):
                     subject_alt_labels=subject_alt_labels
                 )
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,R0917
     @staticmethod
     async def _add_subject_transaction(
             tx: AsyncManagedTransaction,

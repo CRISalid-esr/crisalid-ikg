@@ -1,6 +1,7 @@
 import pytest_asyncio
 
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.document import Document
 from app.models.people import Person
 from app.models.source_records import SourceRecord
@@ -77,13 +78,15 @@ async def fixture_source_record_id_hal_1_pydantic_model(
 @pytest_asyncio.fixture(name="source_record_id_doi_1_persisted_model")
 async def fixture_source_record_id_doi_1_persisted_model(
         source_record_id_doi_1_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person) -> SourceRecord:
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier) -> SourceRecord:
     """
     Persist source record Pydantic model for source_record_id_doi_1
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=source_record_id_doi_1_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
     return await service.get_source_record(source_record_id_doi_1_pydantic_model.uid)
 
 
@@ -101,24 +104,28 @@ async def fixture_document_persisted_model(
 @pytest_asyncio.fixture(name="source_record_id_doi_1_hal_1_persisted_model")
 async def fixture_source_record_id_doi_1_hal_1_persisted_model(
         source_record_id_doi_1_hal_1_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person) -> SourceRecord:
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier) -> SourceRecord:
     """
     Persist source record Pydantic model for source_record_id_doi_1_hal_1
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=source_record_id_doi_1_hal_1_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
     return await service.get_source_record(source_record_id_doi_1_hal_1_pydantic_model.uid)
 
 
 @pytest_asyncio.fixture(name="source_record_id_hal_1_persisted_model")
 async def fixture_source_record_id_hal_1_persisted_model(
         source_record_id_hal_1_pydantic_model: SourceRecord,
-        persisted_person_a_pydantic_model: Person) -> SourceRecord:
+        persisted_person_a_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier) -> SourceRecord:
     """
     Persist source record Pydantic model for source_record_id_hal_1
     """
     service = SourceRecordService()
     await service.create_source_record(source_record=source_record_id_hal_1_pydantic_model,
-                                       harvested_for=persisted_person_a_pydantic_model)
+                                       harvested_for=persisted_person_a_pydantic_model,
+                                       identifier_used=default_identifier_used)
     return await service.get_source_record(source_record_id_hal_1_pydantic_model.uid)

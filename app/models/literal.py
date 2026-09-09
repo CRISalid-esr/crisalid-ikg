@@ -33,7 +33,7 @@ class Literal(BaseModel):
         v = str(v)
         if len(v) > cls.MAX_VALUE_LENGTH:
             logger.warning(
-                "Literal value truncated from %d to %d characters",
+                "Literal value truncated from {} to {} characters",
                 len(v),
                 cls.MAX_VALUE_LENGTH,
             )

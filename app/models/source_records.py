@@ -1,4 +1,5 @@
 import re
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, List, ClassVar, Dict, Union
 
@@ -19,6 +20,14 @@ from app.models.text_literal import TextLiteral
 from app.models.void_custom_metadata import VoidCustomMetadata
 from app.services.source_records.source_record_url_service import SourceRecordUrlService
 from app.utils.date.partial_iso_8601 import parse_partial_iso8601
+
+
+@dataclass
+class SourceRecordDomain:
+    """Domain entry attached to a source record (uri + optional relevance score)."""
+
+    uri: str
+    score: float | None = None
 
 
 class SourceRecord(BaseModel):
@@ -60,6 +69,17 @@ class SourceRecord(BaseModel):
     url: Optional[HttpUrl] = None
 
     custom_metadata: Optional[Union[HalCustomMetadata, VoidCustomMetadata]] = None
+
+    domains: List[SourceRecordDomain] = []
+
+    @field_validator("domains", mode="before")
+    @classmethod
+    def _coerce_domains(cls, v):
+        return [
+            {"uri": d["uri"], "score": d.get("score")}
+            if isinstance(d, dict) else d
+            for d in (v or [])
+        ]
 
     @field_validator("harvester", mode="before")
     @classmethod
@@ -173,7 +193,7 @@ class SourceRecord(BaseModel):
         for item in v:
             value = item.get("value") if isinstance(item, dict) else getattr(item, "value", None)
             if value is None or not str(value).strip():
-                logger.warning("Skipping identifier with empty value: %s", item)
+                logger.warning("Skipping identifier with empty value: {}", item)
                 continue
             valid.append(item)
 

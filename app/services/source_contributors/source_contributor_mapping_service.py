@@ -1,9 +1,6 @@
-import re
-import unicodedata
 from typing import cast, AsyncGenerator, List
-from venv import logger
 
-from rapidfuzz import fuzz
+from loguru import logger
 
 from app.config import get_app_settings
 from app.errors.conflict_error import ConflictError
@@ -25,6 +22,7 @@ from app.models.source_records import SourceRecord
 from app.services.authority_organizations.authority_organization_service import \
     AuthorityOrganizationService
 from app.services.source_contributors.source_organization_service import SourceOrganizationService
+from app.utils.name_matching import normalize_name, fuzz_distance
 
 
 class SourceContributorMappingService:
@@ -94,14 +92,24 @@ class SourceContributorMappingService:
             source_people_cluster = [person for person in self.source_people if
                                      person.uid in source_people_cluster_uids]
             yet_processed_source_person_uids.update(source_people_cluster_uids)
-            person_uid = (
-                    await self._match_by_identifiers(source_people_cluster)
-                    or await self._match_by_name(source_people_cluster)
-                    or await self._match_with_external_person(source_people_cluster)
-            )
+            person_uid = await self._resolve_cluster(source_people_cluster)
             if person_uid is not None:
                 linked_people[person_uid] = source_people_cluster
         return linked_people
+
+    async def _resolve_cluster(self, source_people_cluster: List[SourcePerson]) -> str | None:
+        """
+        Resolve a cluster of source people to a real person uid, by identifiers,
+        by name, or by creating/finding an external person.
+
+        :param source_people_cluster: List of SourcePerson objects.
+        :return: The UID of the resolved person, or None if no person could be resolved.
+        """
+        return (
+                await self._match_by_identifiers(source_people_cluster)
+                or await self._match_by_name(source_people_cluster)
+                or await self._match_with_external_person(source_people_cluster)
+        )
 
     async def _match_by_name(self, source_people_cluster: List[SourcePerson]) -> str | None:
         """
@@ -151,7 +159,7 @@ class SourceContributorMappingService:
             try:
                 person_uid, _, _ = await self.person_dao.create(external_person)
             except ConflictError:
-                logger.error("External person %s already exists", external_person)
+                logger.error("External person {} already exists", external_person)
                 person_uid = external_person.uid
             existing_external_people_uids.add(person_uid)
         if len(existing_external_people_uids) == 1:
@@ -208,14 +216,30 @@ class SourceContributorMappingService:
         :param source_people_cluster: List of SourcePerson objects
         :return: The UID of the merged person
         """
-        person_to_keep_uid = existing_external_people_uids.pop()
-        for person_to_merge_uid in existing_external_people_uids:
+        ordered_uids = sorted(existing_external_people_uids, key=self._survivor_election_key)
+        person_to_keep_uid = ordered_uids[0]
+        for person_to_merge_uid in ordered_uids[1:]:
             await self.person_dao.merge_people(person_to_keep_uid, person_to_merge_uid)
         # Link the source people to the merged person
         await self.source_person_dao.link_to_person([source_person.uid for source_person in
                                                      source_people_cluster],
                                                     person_to_keep_uid)
         return person_to_keep_uid
+
+    def _survivor_election_key(self, person_uid: str) -> tuple:
+        """
+        Sort key for electing the surviving person of an external-people merge:
+        harvester priority of the uid's source prefix (same order as used by
+        _build_external_person), tie-broken by uid, so repeated merges converge
+        on the same survivor.
+
+        :param person_uid: candidate person uid (e.g. "hal-170517")
+        :return: sort key tuple
+        """
+        sources = self._get_harvesting_sources()
+        prefix = person_uid.split("-", 1)[0]
+        priority = sources.index(prefix) if prefix in sources else len(sources)
+        return priority, person_uid
 
     async def _update_contributions(self, linked_people):
         document_dao = self._get_document_dao()
@@ -235,6 +259,23 @@ class SourceContributorMappingService:
                 person_uid=person_uid,
                 roles=[role.value for role in roles]
             )
+            if contribution_id is None:
+                # the person may have been deleted by a concurrent external-people merge
+                # since the linking phase: re-resolve the cluster once and retry
+                person_uid = await self._resolve_cluster(source_people_cluster)
+                if person_uid is not None:
+                    contribution_id = await document_dao.create_contribution(
+                        document_uid=self.document_uid,
+                        person_uid=person_uid,
+                        roles=[role.value for role in roles]
+                    )
+            if contribution_id is None:
+                logger.error(
+                    "Could not create contribution for document {}: person {} "
+                    "(source people {}) does not exist",
+                    self.document_uid, person_uid,
+                    [source_person.uid for source_person in source_people_cluster])
+                continue
             # get source organizations for the source people cluster
             source_organisations = self._get_organisations_for_person(
                 source_people_cluster,
@@ -255,15 +296,15 @@ class SourceContributorMappingService:
                 targets=elected_target_uids,
             )
 
-            if contribution_id is not None:
-                current_contribution_ids.add(contribution_id)
+            current_contribution_ids.add(contribution_id)
         # Delete contributions that are not in the current set
         await document_dao.delete_contributions_not_in(
             document_uid=self.document_uid,
             contribution_ids=list(current_contribution_ids)
         )
 
-    def _elect_authority_organizations_for_affiliation_statements(self, root_objects,
+    @staticmethod
+    def _elect_authority_organizations_for_affiliation_statements(root_objects,
                                                                   source_organisations):
         # elect one target per root: either a state (unique match) or the root (0 or multiple
         # matches)
@@ -314,7 +355,7 @@ class SourceContributorMappingService:
             except ConflictError as e:
                 logger.error(
                     "Conflict error while creating or fetching authority "
-                    "organization for source organization cluster %s : %s",
+                    "organization for source organization cluster {} : {}",
                     [org.uid for org in so_cluster],
                     e
                 )
@@ -345,9 +386,13 @@ class SourceContributorMappingService:
         for person in sorted_people:
             for contribution in contributions:
                 if (contribution.contributor.uid == person.uid
-                        and contribution.role is not None
                         and contribution.role not in roles):
                     roles.append(contribution.role)
+
+        # The generic Contributor role (default for sources providing no role) is
+        # subsumed by any specific role: keep it only when it is the sole role
+        if len(roles) > 1:
+            roles = [role for role in roles if role != LocContributionRole.CONTRIBUTOR]
 
         return roles
 
@@ -497,20 +542,7 @@ class SourceContributorMappingService:
         return distance
 
     def _normalize_string(self, input_string):
-        # Convert to lowercase
-        normalized = input_string.lower()
-
-        # Replace accented characters with their ASCII equivalents
-        normalized = unicodedata.normalize('NFD', normalized)
-        normalized = ''.join(char for char in normalized if unicodedata.category(char) != 'Mn')
-
-        # Replace all non-letter characters with spaces
-        normalized = re.sub(r'[^a-z]', ' ', normalized)
-
-        # Remove extra spaces
-        normalized = re.sub(r'\s+', ' ', normalized).strip()
-
-        return normalized
+        return normalize_name(input_string)
 
     def _coauthor_names_maximal_distance(self):
         settings = get_app_settings()
@@ -538,7 +570,7 @@ class SourceContributorMappingService:
         :param name2: Second name
         :return: normalized Levenshtein distance
         """
-        return fuzz.token_sort_ratio(name1, name2, processor=self._normalize_string)
+        return fuzz_distance(name1, name2)
 
     def _is_similar(self, internal_person: Person, external_people: list[SourcePerson]) -> bool:
         """

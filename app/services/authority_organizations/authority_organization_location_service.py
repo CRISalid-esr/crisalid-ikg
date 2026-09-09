@@ -12,6 +12,7 @@ from app.models.literal import Literal
 from app.models.places import Place
 from app.models.source_organizations import SourceOrganization
 from app.models.structured_physical_address import StructuredPhysicalAddress
+from app.signals import literal_updated
 
 class AuthorityOrganizationLocationService:
     """
@@ -28,8 +29,12 @@ class AuthorityOrganizationLocationService:
         state = await auth_org_dao.get_authority_organization_state_by_uid(state_uid)
 
         source_org_dao = self._get_source_org_dao()
-        source_orgs = [await source_org_dao.get_by_uid(uid) for uid
-                       in state.source_organization_uids]
+        # some source organization uids may not have a backing node in the graph
+        # (e.g. affiliations resolved in-memory from a user contribution update)
+        source_orgs = [source_org for source_org in
+                       [await source_org_dao.get_by_uid(uid)
+                        for uid in state.source_organization_uids]
+                       if source_org is not None]
 
         address_list = []
         place_list = []
@@ -69,6 +74,7 @@ class AuthorityOrganizationLocationService:
             await auth_org_dao.attach_place_and_address_nodes_to_state(state_uid,
                                                                    place_list,
                                                                    address_list)
+            await literal_updated.send_async(self)
 
         except DatabaseError as e:
             logger.error(f"Error attaching place and address to "

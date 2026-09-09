@@ -326,23 +326,21 @@ class PersonDAO(Neo4jDAO):
     async def _create_employments(cls, incoming_person: Person, tx):
         try:
             for employment in incoming_person.employments:
-                # employments have been filtered at service level
-                # to only include existing institutions
                 create_employment_query = load_query("create_employment")
                 try:
                     await tx.run(create_employment_query,
                                  person_uid=incoming_person.uid,
-                                 institution_uid=employment.institution.uid,
+                                 institution_uid=employment.entity_uid,
                                  position=employment.position.code if employment.position else None)
                 except ConstraintError as constraint_error:
                     raise ConflictError(
                         f"Schema constraint violation while creating employment "
-                        f"for person {incoming_person} and institution {employment.institution_uid}"
+                        f"for person {incoming_person} and institution {employment.entity_uid}"
                     ) from constraint_error
                 except ClientError as client_error:
                     raise ValueError(
                         f"Bad request error while creating employment "
-                        f"for person {incoming_person} and institution {employment.institution_uid}"
+                        f"for person {incoming_person} and institution {employment.entity_uid}"
                     ) from client_error
 
         except Exception as e:
@@ -352,19 +350,11 @@ class PersonDAO(Neo4jDAO):
     @classmethod
     async def _create_memberships(cls, incoming_person: Person, tx):
         for membership in incoming_person.memberships:
-            try:
-                research_unit_uid = AgentIdentifierService.compute_uid_for(
-                    membership.research_unit
-                )
-            except ValueError:
-                logger.error(
-                    "Unable to compute primary key for research structure "
-                    f"{membership.research_unit}"
-                )
-                continue
-            find_structure_query = load_query("find_research_unit_by_uid")
-            result = await tx.run(find_structure_query,
-                                  research_unit_uid=research_unit_uid)
+            research_unit_uid = membership.entity_uid
+            result = await tx.run(
+                load_query("research_unit_exists_by_uid"),
+                uid=research_unit_uid,
+            )
             structure = await result.single()
             if not structure:
                 logger.error(f"Research structure with uid {research_unit_uid} not found")
@@ -413,12 +403,10 @@ class PersonDAO(Neo4jDAO):
         """
         return (sorted(
             existing_employments,
-            key=lambda x: (
-                str(x.institution.uid), x.position.code if x.position else None)) ==
+            key=lambda x: (x.entity_uid, x.position.code if x.position else None)) ==
                 sorted(
                     incoming_employments,
-                    key=lambda x: (
-                        str(x.institution.uid), x.position.code if x.position else None)))
+                    key=lambda x: (x.entity_uid, x.position.code if x.position else None)))
 
     @handle_database_errors
     async def find_by_identifiers(self, identifiers: list[dict]) -> str | None:
@@ -448,6 +436,164 @@ class PersonDAO(Neo4jDAO):
         result = await tx.run(query, identifiers=identifiers)
         record = await result.single()
         return record["uid"] if record else None
+
+    async def find_candidates_by_identifiers(self, identifiers: list[dict]) -> list[dict]:
+        """
+        Find every Person matching any of the provided identifiers, either through their
+        AgentIdentifiers (internal people) or through their source people's
+        SourcePersonIdentifiers (external people).
+
+        Unlike :meth:`find_by_identifiers` (AgentIdentifier-only, first match), this returns
+        all candidates together with the identifier that matched, so the caller can
+        disambiguate between several persons and discard inconsistent identifiers.
+
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        :return: list of dicts with keys id_type, id_value, person_uid, external, display_name,
+            via ('agent' when matched through an AgentIdentifier, 'source' when matched through a
+            SourcePersonIdentifier).
+        """
+        if not identifiers:
+            return []
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.read_transaction(
+                    self._find_candidates_by_identifiers_transaction, identifiers)
+
+    @staticmethod
+    async def _find_candidates_by_identifiers_transaction(
+            tx: AsyncManagedTransaction, identifiers: list[dict]
+    ) -> list[dict]:
+        """
+        Transaction backing :meth:`find_candidates_by_identifiers`.
+        """
+        query = load_query("find_person_candidates_by_identifiers")
+        result = await tx.run(query, identifiers=identifiers)
+        return await result.data()
+
+    async def add_person_identifiers(self, person_uid: str, identifiers: list[dict]) -> None:
+        """
+        Add AgentIdentifiers to an existing person without touching its names or other
+        identifiers (MERGE-based, idempotent).
+
+        :param person_uid: UID of the person.
+        :param identifiers: List of dictionaries with 'type' and 'value'.
+        """
+        if not identifiers:
+            return
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                await session.write_transaction(
+                    self._add_person_identifiers_transaction, person_uid, identifiers)
+
+    @staticmethod
+    async def _add_person_identifiers_transaction(
+            tx: AsyncManagedTransaction, person_uid: str, identifiers: list[dict]
+    ) -> None:
+        """
+        Transaction backing :meth:`add_person_identifiers`.
+        """
+        query = load_query("create_person_identifiers")
+        await tx.run(query, person_uid=person_uid, identifiers=identifiers)
+
+    async def find_external_internal_shared_identifiers(self) -> list[dict]:
+        """
+        Find every AgentIdentifier shared between an external and an internal person.
+
+        :return: list of dicts with keys external_uid, external_display_name, id_type, id_value,
+            internal_uid, internal_display_name (one row per shared identifier / internal owner).
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                result = await session.run(
+                    load_query("find_external_internal_shared_identifiers"))
+                return await result.data()
+
+    async def detach_external_shared_identifiers(self) -> int:
+        """
+        Detach, from external persons, every HAS_IDENTIFIER edge whose AgentIdentifier is also
+        owned by an internal person. The AgentIdentifier node and the external Person are left
+        intact.
+
+        :return: number of HAS_IDENTIFIER relationships detached.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.write_transaction(
+                    self._detach_external_shared_identifiers_transaction)
+
+    @staticmethod
+    async def _detach_external_shared_identifiers_transaction(
+            tx: AsyncManagedTransaction
+    ) -> int:
+        """
+        Transaction backing :meth:`detach_external_shared_identifiers`.
+        """
+        result = await tx.run(load_query("detach_external_shared_identifiers"))
+        record = await result.single()
+        return record["detached"] if record else 0
+
+    async def remove_person_identifier(self, person_uid: str,
+                                       identifier_type: str, identifier_value: str) -> bool:
+        """
+        Remove a specific (type, value) identifier from a person: delete the HAS_IDENTIFIER
+        edge and delete the AgentIdentifier node if no other person references it.
+
+        :param person_uid: UID of the person.
+        :param identifier_type: identifier type (enum string value).
+        :param identifier_value: identifier value.
+        :return: True if an identifier edge was removed, False if nothing matched.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.write_transaction(
+                    self._remove_person_identifier_transaction,
+                    person_uid, identifier_type, identifier_value)
+
+    @staticmethod
+    async def _remove_person_identifier_transaction(
+            tx: AsyncManagedTransaction,
+            person_uid: str, identifier_type: str, identifier_value: str
+    ) -> bool:
+        """
+        Transaction backing :meth:`remove_person_identifier`.
+        """
+        result = await tx.run(load_query("remove_person_identifier"),
+                              person_uid=person_uid,
+                              identifier_type=identifier_type,
+                              identifier_value=identifier_value)
+        record = await result.single()
+        return record is not None
+
+    async def detach_external_identifier_owner(self, identifier_type: str,
+                                               identifier_value: str) -> int:
+        """
+        Detach, from external persons, the HAS_IDENTIFIER edge to the AgentIdentifier with
+        the given (type, value) when an internal person also owns it. The AgentIdentifier
+        node and the external Person are left intact.
+
+        :param identifier_type: identifier type (enum string value).
+        :param identifier_value: identifier value.
+        :return: number of HAS_IDENTIFIER relationships detached.
+        """
+        async with Neo4jConnexion().get_driver() as driver:
+            async with driver.session() as session:
+                return await session.write_transaction(
+                    self._detach_external_identifier_owner_transaction,
+                    identifier_type, identifier_value)
+
+    @staticmethod
+    async def _detach_external_identifier_owner_transaction(
+            tx: AsyncManagedTransaction,
+            identifier_type: str, identifier_value: str
+    ) -> int:
+        """
+        Transaction backing :meth:`detach_external_identifier_owner`.
+        """
+        result = await tx.run(load_query("detach_external_identifier_owner"),
+                              identifier_type=identifier_type,
+                              identifier_value=identifier_value)
+        record = await result.single()
+        return record["detached"] if record else 0
 
     @staticmethod
     def _hydrate(record) -> Person:
@@ -481,6 +627,9 @@ class PersonDAO(Neo4jDAO):
             )
         person = Person(
             uid=person_data["uid"],
+            display_name=person_data.get("display_name"),
+            display_name_variants=person_data.get("display_name_variants") or [],
+            external=person_data.get("external", False),
             identifiers=identifiers,
             names=names,
             memberships=memberships,

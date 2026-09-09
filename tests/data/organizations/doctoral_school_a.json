@@ -1,0 +1,33 @@
+{
+  "generic_type": "doctoral_school",
+  "type": "ED",
+  "local_types": [],
+  "long_labels": [
+    {"value": "École doctorale d'arts plastiques, esthétique et sciences de l'art", "language": "fr"}
+  ],
+  "short_labels": [
+    {"value": "ED Arts plastiques", "language": "fr"}
+  ],
+  "descriptions": [
+    {"value": "École doctorale d'arts plastiques, esthétique et sciences de l'art", "language": "fr"}
+  ],
+  "identifiers": [
+    {"type": "local", "value": "EDO04"}
+  ],
+  "relationships": [
+    {
+      "type": "part_of",
+      "subtype": null,
+      "target": "local-EXAMPLE-UNIV-001",
+      "start_date": null,
+      "end_date": null
+    }
+  ],
+  "contacts": [
+    {
+      "type": "electronical_address",
+      "format": "website_address",
+      "value": {"uri": "https://ed-arts.pantheonsorbonne.fr/"}
+    }
+  ]
+}

@@ -82,6 +82,30 @@ async def fixture_person_a_no_orcid_no_hal_pydantic_model(
     """
     return _person_from_json_data(person_a_no_orcid_no_hal_json_data)
 
+@pytest_asyncio.fixture(name="persisted_person_a_with_idref_pydantic_model")
+async def fixture_persisted_person_a_with_idref_pydantic_model(
+        person_a_with_idref_pydantic_model) -> Person:
+    """
+    Create a persisted person pydantic model carrying a non validated idref
+    :return: persisted person pydantic model with an idref identifier
+    """
+    people_service: PeopleService = PeopleService()
+    await people_service.create_person(person_a_with_idref_pydantic_model)
+    return person_a_with_idref_pydantic_model
+
+@pytest_asyncio.fixture(name="person_a_with_idref_pydantic_model")
+async def fixture_person_a_with_idref_pydantic_model(person_a_json_data) -> Person:
+    """
+    Create a person pydantic model carrying a non validated idref identifier
+    :return: person pydantic model with an idref identifier
+    """
+    person_a_with_idref_json_data = person_a_json_data.copy()
+    person_a_with_idref_json_data["identifiers"] = [
+        {"type": PersonIdentifierType.IDREF.value, "value": "123456789"},
+        {"type": PersonIdentifierType.LOCAL.value, "value": "jdoe_with_idref@univ-domain.edu"}
+    ]
+    return _person_from_json_data(person_a_with_idref_json_data)
+
 @pytest_asyncio.fixture(name="person_a_orcid_hal_authenticated_pydantic_model")
 async def fixture_person_a_orcid_hal_authenticated_pydantic_model(
         person_a_orcid_hal_authenticated_json_data) -> Person:
@@ -559,3 +583,23 @@ async def fixture_person_f_json_data(_base_path) -> dict:
     :return: basic person json data
     """
     return _person_json_data_from_file(_base_path, "person_f")
+
+
+@pytest_asyncio.fixture(name="person_a_with_support_unit_membership_json_data")
+async def fixture_person_a_with_support_unit_membership_json_data(_base_path) -> dict:
+    """
+    Create a person json data with membership in a SupportUnit (scientific_services)
+    :return: person json data with SupportUnit membership
+    """
+    return _person_json_data_from_file(_base_path, "person_a_with_support_unit_membership")
+
+
+@pytest_asyncio.fixture(name="person_a_with_support_unit_membership_pydantic_model")
+async def fixture_person_a_with_support_unit_membership_pydantic_model(
+        person_a_with_support_unit_membership_json_data) -> Person:
+    """
+    Create a person pydantic model with membership in a SupportUnit
+    :return: person pydantic model with SupportUnit membership
+    """
+    return _person_from_json_data(person_a_with_support_unit_membership_json_data)
+

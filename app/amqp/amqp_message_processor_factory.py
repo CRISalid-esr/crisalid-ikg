@@ -27,14 +27,16 @@ class AMQPMessageProcessorFactory:
         :return:
         """
         settings = get_app_settings()
-        if topic == settings.amqp_publications_topic:
+        if topic in (settings.amqp_publications_batch_topic,
+                     settings.amqp_publications_interactive_topic):
             return AMQReferenceMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_people_topic:
             return AMQPPeopleMessageProcessor(tasks_queue, settings)
         if topic == settings.amqp_structures_topic:
             return AMQPStructureMessageProcessor(tasks_queue, settings)
-        if topic == settings.amqp_user_actions_topic:
+        if topic == settings.amqp_user_actions_interactive_topic:
             return AMQPUserActionsMessageProcessor(tasks_queue, settings)
-        if topic == settings.amqp_harvesting_events_topic:
+        if topic in (settings.amqp_harvesting_events_batch_topic,
+                     settings.amqp_harvesting_events_interactive_topic):
             return AMQPHarvestingEventsMessageProcessor(tasks_queue, settings)
         raise ValueError(f"No processor found for topic: {topic}")

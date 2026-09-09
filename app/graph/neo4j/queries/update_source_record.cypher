@@ -29,11 +29,11 @@ OPTIONAL MATCH (s)-[r:HAS_ABSTRACT]->(:TextLiteral {type: 'source_record_abstrac
 DELETE r
 WITH DISTINCT s
 FOREACH (abstract IN $abstracts |
-  MERGE (a:TextLiteral {key: abstract.key, type:'source_record_abstract'})
-  ON CREATE SET
-    a.value    = abstract.value,
+  MERGE (a:TextLiteral {key: abstract.key, type: 'source_record_abstract'})
+    ON CREATE SET
+    a.value = abstract.value,
     a.language = coalesce(nullif(trim(abstract.language), ''), 'und'),
-    a.type     = 'source_record_abstract'
+    a.type = 'source_record_abstract'
   MERGE (s)-[:HAS_ABSTRACT]->(a)
 )
 
@@ -50,9 +50,6 @@ FOREACH (identifier IN $identifiers |
 WITH s
 OPTIONAL MATCH (s)-[p:PUBLISHED_IN]->(i:SourceIssue)
 DELETE p
-WITH s, i
-  WHERE NOT (i)--(:SourceRecord)
-DETACH DELETE i
 
 WITH DISTINCT s
 FOREACH (_ IN CASE WHEN $issue IS NOT NULL THEN [1]
@@ -73,7 +70,9 @@ MERGE (i)- [:ISSUED_BY] - >(j)
 
 WITH DISTINCT s
 MATCH (p:Person {uid:$person_uid})
-MERGE (s)- [:HARVESTED_FOR] - >(p)
+MERGE (s)- [r:HARVESTED_FOR] - >(p)
+ON MATCH SET r.identifier_used_type = $identifier_used_type, r.identifier_used_value = $identifier_used_value
+ON CREATE SET r.identifier_used_type = $identifier_used_type, r.identifier_used_value = $identifier_used_value
 
 WITH DISTINCT s
 OPTIONAL MATCH (s)- [r:HAS_SUBJECT] - >(c:Concept)

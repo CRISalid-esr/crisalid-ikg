@@ -13,10 +13,9 @@ from app.models.authority_organization_state import AuthorityOrganizationState
 from app.models.change import Change
 from app.models.concepts import Concept
 from app.models.document import Document
-from app.models.institution import Institution
 from app.models.journal import Journal
+from app.models.organization_unit import OrganizationBase
 from app.models.people import Person
-from app.models.research_units import ResearchUnit
 from app.models.source_journal import SourceJournal
 from app.models.source_organizations import SourceOrganization
 from app.models.source_people import SourcePerson
@@ -39,8 +38,7 @@ class Neo4jDAOFactory(DAOFactory):
                 "app.graph.neo4j.authority_organization_dao.AuthorityOrganizationDAO",
             AuthorityOrganization:
                 "app.graph.neo4j.authority_organization_dao.AuthorityOrganizationDAO",
-            ResearchUnit: "app.graph.neo4j.research_unit_dao.ResearchUnitDAO",
-            Institution: "app.graph.neo4j.institution_dao.InstitutionDAO",
+            OrganizationBase: "app.graph.neo4j.organization_unit_dao.OrganizationUnitDAO",
             SourceRecord: "app.graph.neo4j.source_record_dao.SourceRecordDAO",
             Concept: "app.graph.neo4j.concept_dao.ConceptDAO",
             SourceJournal: "app.graph.neo4j.source_journal_dao.SourceJournalDAO",
@@ -67,3 +65,7 @@ class Neo4jDAOFactory(DAOFactory):
 
     def get_setup(self) -> Neo4jSetup:
         return Neo4jSetup(driver=self.driver)
+
+    def get_domain_setup(self) -> "Neo4jDomainSetup":
+        from app.graph.neo4j.neo4j_domain_setup import Neo4jDomainSetup  # pylint: disable=import-outside-toplevel
+        return Neo4jDomainSetup(driver=self.driver)

@@ -3,6 +3,7 @@ from unittest.mock import patch, AsyncMock
 
 import pytest
 
+from app.amqp.message_mode import MessageMode
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.book_of_chapters import BookOfChapters
 from app.models.change import Change, TargetType, ChangeStatus
@@ -61,7 +62,8 @@ async def test_change_service_removes_subjects_from_document(
     assert all(uid in updated_uids for uid in to_keep)
     assert all(uid not in updated_uids for uid in to_remove)
 
-    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid)
+    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid,
+                                                            mode=MessageMode.INTERACTIVE)
 
     change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
     stored = await change_dao.get_by_uid(change.uid)
@@ -137,7 +139,8 @@ async def test_change_service_update_type_of_document(
     assert updated.type == "BookOfChapters"
     assert updated.__class__ == BookOfChapters
 
-    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid)
+    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid,
+                                                            mode=MessageMode.INTERACTIVE)
 
     change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
     stored = await change_dao.get_by_uid(change.uid)
@@ -179,7 +182,8 @@ async def test_change_service_add_title_to_document(
     assert updated.titles[0].value == "Test title"
     assert updated.titles[0].language == "an"
 
-    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid)
+    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid,
+                                                            mode=MessageMode.INTERACTIVE)
 
     change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
     stored = await change_dao.get_by_uid(change.uid)
@@ -291,7 +295,8 @@ async def test_change_service_add_abstract_to_document(
     assert updated.abstracts[0].value == "Test abstract"
     assert updated.abstracts[0].language == "an"
 
-    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid)
+    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid,
+                                                            mode=MessageMode.INTERACTIVE)
 
     change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
     stored = await change_dao.get_by_uid(change.uid)
@@ -450,7 +455,8 @@ async def test_change_service_add_subject_to_document(
     assert len(updated_uids) == len(document.subjects) + 1
     assert change.parameters.get('uid') in updated_uids
 
-    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid)
+    mocked_document_updated_signal.assert_called_once_with(service, document_uid=document.uid,
+                                                            mode=MessageMode.INTERACTIVE)
 
     change_dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(Change)
     stored = await change_dao.get_by_uid(change.uid)

@@ -23,17 +23,19 @@ from app.services.authority_organizations.authority_organization_location_servic
 from app.services.documents.document_service import DocumentService
 from app.services.journals.journal_service import JournalService
 from app.services.source_records.equivalence_service import EquivalenceService
+from app.services.source_records.source_record_service import SourceRecordService
 from app.settings.app_env_types import AppEnvTypes
 from app.signals import person_created, person_identifiers_updated, source_record_created, \
     person_unchanged, document_updated, source_record_updated, structure_created, \
     structure_updated, document_sources_changed, document_created, \
     document_unchanged, document_deleted, structure_unchanged, structure_deleted, \
-    person_deleted, person_updated, publications_to_be_updated, source_journal_created, \
-    source_journal_updated, harvesting_state_event_received, harvesting_result_event_received, \
-    document_created_from_sources, authority_organisation_state_updated
+    person_deleted, person_identifier_removed, person_updated, publications_to_be_updated, \
+    source_journal_created, source_journal_updated, harvesting_state_event_received, \
+    harvesting_result_event_received, document_created_from_sources, \
+    authority_organisation_state_updated, change_applied, change_failed
 
 
-class CrisalidIKG(FastAPI):
+class CrisalidIKG(FastAPI):  # pylint: disable=too-many-instance-attributes
     """Main application, routing logic, middlewares and startup/shutdown events"""
 
     def __init__(self):
@@ -66,6 +68,7 @@ class CrisalidIKG(FastAPI):
         )
 
         self.add_event_handler("startup", self.setup_graph)
+        self.add_event_handler("startup", self.import_openalex_domains)
 
         if settings.amqp_enabled:
             self.add_event_handler("startup", self.open_rabbitmq_connexion)
@@ -81,6 +84,7 @@ class CrisalidIKG(FastAPI):
         self._register_harvesting_events()
         self._register_person_events()
         self._register_authority_organization_state_events()
+        self._register_embedding_events()
 
     @logger.catch(reraise=True)
     async def setup_graph(self) -> None:  # pragma: no cover
@@ -91,6 +95,16 @@ class CrisalidIKG(FastAPI):
         setup = factory.get_setup()
         await setup.run()
         logger.info("Graph connexion has been set up")
+
+    @logger.catch(reraise=True)
+    async def import_openalex_domains(self) -> None:  # pragma: no cover
+        """Import OpenAlex domains hierarchy at boot time"""
+        logger.info("Importing OpenAlex domains hierarchy")
+        settings = get_app_settings()
+        factory = AbstractDAOFactory().get_dao_factory(settings.graph_db)
+        setup = factory.get_domain_setup()
+        await setup.run()
+        logger.info("OpenAlex domains hierarchy import complete")
 
     @logger.catch(reraise=True)
     async def setup_elasticsearch(self) -> None:  # pragma: no cover
@@ -127,6 +141,8 @@ class CrisalidIKG(FastAPI):
         document_created.connect(self.amqp_interface.dispatch_document_created)
         document_unchanged.connect(self.amqp_interface.dispatch_document_unchanged)
         document_deleted.connect(self.amqp_interface.dispatch_document_deleted)
+        change_applied.connect(self.amqp_interface.dispatch_change_applied)
+        change_failed.connect(self.amqp_interface.dispatch_change_failed)
 
     def _register_harvesting_events(self):
         harvesting_state_event_received.connect(self.amqp_interface.dispatch_harvesting_state_event)
@@ -137,6 +153,14 @@ class CrisalidIKG(FastAPI):
         self.authority_organization_location_service = AuthorityOrganizationLocationService()
         authority_organisation_state_updated.connect(
             self.authority_organization_location_service.add_location_from_source_organizations)
+
+    def _register_embedding_events(self):
+        if not get_app_settings().embedding_enabled:
+            return
+        from app.services.embeddings.embedding_service import EmbeddingService  # pylint: disable=import-outside-toplevel
+        from app.signals import literal_updated  # pylint: disable=import-outside-toplevel
+        self.embedding_service = EmbeddingService()
+        literal_updated.connect(self.embedding_service.on_literals_pending)
 
     @logger.catch(reraise=True)
     async def close_elasticsearch(self) -> None:  # pragma: no cover
@@ -155,15 +179,23 @@ class CrisalidIKG(FastAPI):
             if listen:
                 asyncio.create_task(self.amqp_interface.listen(settings.amqp_people_topic),
                                     name="amqp_people_listener")
-                asyncio.create_task(self.amqp_interface.listen(settings.amqp_publications_topic),
-                                    name="amqp_publications_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_publications_batch_topic),
+                    name="amqp_publications_batch_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_publications_interactive_topic),
+                    name="amqp_publications_interactive_listener")
                 asyncio.create_task(self.amqp_interface.listen(settings.amqp_structures_topic),
                                     name="amqp_structures_listener")
-                asyncio.create_task(self.amqp_interface.listen(settings.amqp_user_actions_topic),
-                                    name="amqp_user_actions_listener")
                 asyncio.create_task(
-                    self.amqp_interface.listen(settings.amqp_harvesting_events_topic),
-                    name="amqp_harvesting_events_listener")
+                    self.amqp_interface.listen(settings.amqp_user_actions_interactive_topic),
+                    name="amqp_user_actions_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_harvesting_events_batch_topic),
+                    name="amqp_harvesting_events_batch_listener")
+                asyncio.create_task(
+                    self.amqp_interface.listen(settings.amqp_harvesting_events_interactive_topic),
+                    name="amqp_harvesting_events_interactive_listener")
             logger.info("RabbitMQ connexion has been enabled")
         except AMQPConnectionError as error:
             logger.error(
@@ -183,6 +215,9 @@ class CrisalidIKG(FastAPI):
         person_unchanged.connect(self.amqp_interface.dispatch_person_unchanged)
         person_deleted.connect(self.amqp_interface.dispatch_person_deleted)
         person_identifiers_updated.connect(self.amqp_interface.dispatch_person_updated)
+        self.source_record_service = SourceRecordService()
+        person_identifier_removed.connect(
+            self.source_record_service.cleanup_harvested_data_for_identifier)
         structure_created.connect(self.amqp_interface.dispatch_structure_created)
         structure_updated.connect(self.amqp_interface.dispatch_structure_updated)
         structure_unchanged.connect(self.amqp_interface.dispatch_structure_unchanged)

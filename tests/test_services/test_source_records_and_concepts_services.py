@@ -1,3 +1,4 @@
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.concepts.concept_service import ConceptService
@@ -6,7 +7,8 @@ from app.services.source_records.source_record_service import SourceRecordServic
 
 async def test_create_source_records_with_a_unreferenced_concept(
         persisted_person_b_pydantic_model: Person,
-        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord
+        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given a persisted person pydantic_model,
@@ -23,7 +25,8 @@ async def test_create_source_records_with_a_unreferenced_concept(
 
     await record_service.create_source_record(
         source_record=scanr_record_with_person_b_as_contributor_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_scanr_source_record_for_person_b = await record_service.get_source_record(
         scanr_record_with_person_b_as_contributor_pydantic_model.uid)
     assert (
@@ -38,7 +41,8 @@ async def test_create_two_source_records_with_same_concepts(
         persisted_person_a_pydantic_model: Person,
         persisted_person_b_pydantic_model: Person,
         scanr_record_with_person_a_as_contributor_pydantic_model: SourceRecord,
-        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord
+        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given two persisted person pydantic_model,
@@ -58,7 +62,8 @@ async def test_create_two_source_records_with_same_concepts(
 
     await record_service.create_source_record(
         source_record=scanr_record_with_person_a_as_contributor_pydantic_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_scanr_source_record_for_person_a = await record_service.get_source_record(
         scanr_record_with_person_a_as_contributor_pydantic_model.uid)
     assert (
@@ -72,7 +77,8 @@ async def test_create_two_source_records_with_same_concepts(
                fetched_concept.pref_labels)
     await record_service.create_source_record(
         source_record=scanr_record_with_person_b_as_contributor_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_scanr_source_record_for_person_b = await record_service.get_source_record(
         scanr_record_with_person_b_as_contributor_pydantic_model.uid)
     assert (
@@ -90,7 +96,8 @@ async def test_create_two_source_records_with_common_concepts_and_different_alt_
         persisted_person_a_pydantic_model: Person,
         scanr_record_with_person_a_as_contrib_and_additional_alt_labels_pyd_model: SourceRecord,
         persisted_person_b_pydantic_model: Person,
-        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord
+        scanr_record_with_person_b_as_contributor_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier
 ) -> None:
     """
     Given two persisted person pydantic_model,
@@ -124,7 +131,8 @@ async def test_create_two_source_records_with_common_concepts_and_different_alt_
 
     await record_service.create_source_record(
         source_record=scanr_record_with_person_a_as_contrib_and_additional_alt_labels_pyd_model,
-        harvested_for=persisted_person_a_pydantic_model)
+        harvested_for=persisted_person_a_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_scanr_source_record_for_person_a = await record_service.get_source_record(
         scanr_record_with_person_a_as_contrib_and_additional_alt_labels_pyd_model.uid)
     assert (
@@ -141,7 +149,8 @@ async def test_create_two_source_records_with_common_concepts_and_different_alt_
 
     await record_service.create_source_record(
         source_record=scanr_record_with_person_b_as_contributor_pydantic_model,
-        harvested_for=persisted_person_b_pydantic_model)
+        harvested_for=persisted_person_b_pydantic_model,
+        identifier_used=default_identifier_used)
     fetched_scanr_source_record_for_person_b = await record_service.get_source_record(
         scanr_record_with_person_b_as_contributor_pydantic_model.uid)
     assert (

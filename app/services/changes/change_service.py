@@ -11,7 +11,8 @@ from app.graph.neo4j.document_dao import DocumentDAO
 from app.models.change import Change, TargetType, ChangeStatus
 from app.models.document import Document
 from app.services.changes.change_processor_factory import ChangeProcessorFactory
-from app.signals import document_updated
+from app.amqp.message_mode import MessageMode
+from app.signals import document_updated, change_applied, change_failed
 
 
 class ChangeService:
@@ -19,11 +20,13 @@ class ChangeService:
     Service for managing changes in the graph.
     """
 
-    async def create_and_apply_change(self, change: Change) -> None:
+    async def create_and_apply_change(
+            self, change: Change, mode: MessageMode = MessageMode.INTERACTIVE) -> None:
         """
         Create a Change node if it does not exist, or update the status if it does.
         This method is intended to "on the fly" apply changes to the graph.
         :param change:
+        :param mode: message mode for the outbound document-updated event
         :return:
         """
         existing = await self._change_dao().get_by_uid(change.uid)
@@ -34,13 +37,24 @@ class ChangeService:
                 return
             if existing.status == ChangeStatus.FAILED:
                 logger.info(f"Change {change.uid} had failed. Retrying.")
-                return
-            logger.info(f"Change {change.uid} found bu not applied. Applying.")
-            await self.apply_change(existing)
+                existing.error_message = None
+                existing.warnings = []
+            else:
+                logger.info(f"Change {change.uid} found but not applied. Applying.")
+            await self.apply_change(existing, mode=mode)
         else:
             logger.info(f"Change {change.uid} not found. Creating and applying.")
-            await self.create_change(change)
-            await self.apply_change(change)
+            try:
+                await self.create_change(change)
+            except (DatabaseError, ValueError) as e:
+                # the Change node is not persisted (e.g. missing target document):
+                # the failure event and the logs are the only record
+                change.status = ChangeStatus.FAILED
+                change.error_message = str(e)
+                logger.error(f"Failed to create change {change.uid}: {e}")
+                await self._signal_change_failed(change, mode)
+                raise
+            await self.apply_change(change, mode=mode)
 
     async def create_change(self, change: Change) -> Change:
         """
@@ -57,44 +71,72 @@ class ChangeService:
             change.status = ChangeStatus.CREATED
             return await self._change_dao().create_document_change(document, change)
 
-    async def apply_change(self, change: Change) -> None:
+    async def apply_change(
+            self, change: Change, mode: MessageMode = MessageMode.INTERACTIVE) -> None:
         """
         Apply a change to the graph.
         :param change:
+        :param mode: message mode for the outbound document-updated event
         :return:
         """
         try:
             processor = ChangeProcessorFactory.get_processor(change)
-            await processor.apply()
+            report = await processor.apply()
             change.status = ChangeStatus.APPLIED
+            change.error_message = None
+            change.warnings = report.warnings if report else []
             await self._update_change_status(change)
+            if mode == MessageMode.INTERACTIVE:
+                await change_applied.send_async(self, fields=change.to_event_fields())
             # for MERGE changes, the document_updated signal is sent by the processor
             if change.target_type == TargetType.DOCUMENT and change.action_type not in ("MERGE"):
-                await document_updated.send_async(self, document_uid=change.target_uid)
+                await document_updated.send_async(self, document_uid=change.target_uid,
+                                                  mode=mode)
         except (DatabaseError, ValueError) as e:
             change.status = ChangeStatus.FAILED
             change.error_message = str(e)
             await self._update_change_status(change)
             logger.error(f"Failed to apply change {change.uid}: {e}")
+            await self._signal_change_failed(change, mode)
             raise e
 
-    async def apply_changes_to_node(self, target_uid: str) -> None:
+    async def apply_changes_to_node(
+            self, target_uid: str, mode: MessageMode = MessageMode.BATCH) -> None:
         """
         Apply all changes related to a specific target UID.
+
+        Contribution changes carry full state, so only the latest ``contributions`` change is
+        applied; older ones are superseded (kept in the graph for history, not replayed).
         :param target_uid:
+        :param mode: message mode for the outbound document-updated events
         :return:
         """
         changes = await self._change_dao().get_changes_by_target_uid(
             target_uid=target_uid
         )
+        # changes are returned ordered by timestamp ASC, so the last one wins
+        latest_contributions_uid = None
+        for change in changes:
+            if change.path == "contributions":
+                latest_contributions_uid = change.uid
         for change in changes:
             if change.action_type == "MERGE":
                 # Skip merge changes to avoid infinite loops
                 continue
+            # supersession: only the latest contributions change is replayed
+            if change.path == "contributions" and change.uid != latest_contributions_uid:
+                continue
             try:
-                await self.apply_change(change)
+                await self.apply_change(change, mode=mode)
             except (DatabaseError, ValueError) as e:
                 logger.error(f"Failed to apply change {change.uid} to {target_uid}: {e}")
+
+    async def _signal_change_failed(self, change: Change, mode: MessageMode) -> None:
+        """
+        Emit the change-failed event; batch replays stay silent toward clients.
+        """
+        if mode == MessageMode.INTERACTIVE:
+            await change_failed.send_async(self, fields=change.to_event_fields())
 
     async def _update_change_status(self, change: Change) -> None:
         """

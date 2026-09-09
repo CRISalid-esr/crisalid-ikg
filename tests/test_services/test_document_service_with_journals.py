@@ -4,6 +4,7 @@ import pytest
 
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.neo4j.document_dao import DocumentDAO
+from app.models.agent_identifiers import PersonIdentifier
 from app.models.document import Document
 from app.models.document_publication_channel import DocumentPublicationChannel
 from app.models.journal import Journal
@@ -49,6 +50,7 @@ async def test_merge_documents_with_journal_information(
         hal_article_with_journal_1_pydantic_model: SourceRecord,
         open_alex_article_with_journal_1_pydantic_model: SourceRecord,
         persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier,
 ) -> None:
     """
     Test that when 2 equivalent source records come with journal issn pointing to the same journal,
@@ -62,11 +64,13 @@ async def test_merge_documents_with_journal_information(
     hal_article_with_journal_1_persisted_model = await (
         source_record_service.create_source_record(
             hal_article_with_journal_1_pydantic_model,
-            persisted_person_f_pydantic_model
+            persisted_person_f_pydantic_model,
+            identifier_used=default_identifier_used
         ))
     await source_record_service.create_source_record(
         open_alex_article_with_journal_1_pydantic_model,
-        persisted_person_f_pydantic_model
+        persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
@@ -102,6 +106,7 @@ async def test_merge_documents_with_inconsistent_journal_information(
         hal_article_with_inconsistent_journal_1_pydantic_model: SourceRecord,
         open_alex_article_with_journal_1_pydantic_model: SourceRecord,
         persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier,
 ) -> None:
     """
     Test that when 2 equivalent source records with journal information come but the first one (
@@ -116,11 +121,13 @@ async def test_merge_documents_with_inconsistent_journal_information(
     hal_article_with_inconsistent_journal_1_persisted_model = await (
         source_record_service.create_source_record(
             hal_article_with_inconsistent_journal_1_pydantic_model,
-            persisted_person_f_pydantic_model
+            persisted_person_f_pydantic_model,
+            identifier_used=default_identifier_used
         ))
     await source_record_service.create_source_record(
         open_alex_article_with_journal_1_pydantic_model,
-        persisted_person_f_pydantic_model
+        persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
@@ -157,6 +164,7 @@ async def test_merge_documents_with_different_journal_information(
         hal_article_with_journal_1_pydantic_model: SourceRecord,
         open_alex_article_with_journal_2_pydantic_model: SourceRecord,
         persisted_person_f_pydantic_model: Person,
+        default_identifier_used: PersonIdentifier,
 ) -> None:
     """
     Test that when 2 equivalent source records with journal information come but the first one (
@@ -171,11 +179,13 @@ async def test_merge_documents_with_different_journal_information(
     hal_article_with_journal_1_persisted_model = await (
         source_record_service.create_source_record(
             hal_article_with_journal_1_pydantic_model,
-            persisted_person_f_pydantic_model
+            persisted_person_f_pydantic_model,
+            identifier_used=default_identifier_used
         ))
     await source_record_service.create_source_record(
         open_alex_article_with_journal_2_pydantic_model,
-        persisted_person_f_pydantic_model
+        persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
     document_dao: DocumentDAO = cast(DocumentDAO, factory.get_dao(Document))
@@ -209,7 +219,8 @@ async def test_merge_documents_with_journal_information_changes(
         hal_article_with_journal_1_pydantic_model: SourceRecord,
         hal_article_with_journal_2_pydantic_model: SourceRecord,
         persisted_person_f_pydantic_model: Person,
-        open_alex_article_with_journal_1_pydantic_model: SourceRecord
+        open_alex_article_with_journal_1_pydantic_model: SourceRecord,
+        default_identifier_used: PersonIdentifier,
 ) -> None:
     """
     Test that when a document is updated with a new journal information,
@@ -227,11 +238,13 @@ async def test_merge_documents_with_journal_information_changes(
     hal_article_with_journal_1_persisted_model = await (
         source_record_service.create_source_record(
             hal_article_with_journal_1_pydantic_model,
-            persisted_person_f_pydantic_model
+            persisted_person_f_pydantic_model,
+            identifier_used=default_identifier_used
         ))
     await source_record_service.create_source_record(
         open_alex_article_with_journal_1_pydantic_model,
-        persisted_person_f_pydantic_model
+        persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
 
     factory = AbstractDAOFactory().get_dao_factory("neo4j")
@@ -263,7 +276,8 @@ async def test_merge_documents_with_journal_information_changes(
     assert journal.publisher == "American Society of Civil Engineers v2"
     await source_record_service.update_source_record(
         hal_article_with_journal_2_pydantic_model,
-        persisted_person_f_pydantic_model
+        persisted_person_f_pydantic_model,
+        identifier_used=default_identifier_used
     )
     await document_service.update_from_source_records(
         None,

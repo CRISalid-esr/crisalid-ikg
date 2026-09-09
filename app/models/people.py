@@ -63,13 +63,6 @@ class Person(Agent[PersonIdentifierType]):
                 )
                 continue
 
-            if not PersonIdentifierType.validate_identifier(identifier.type, identifier.value):
-                logger.warning(
-                    "Invalid identifier with type "
-                    f"{str(identifier.type)} and value {identifier.value}"
-                )
-                continue
-
             valid_identifiers.append(identifier)
 
         return cls._deduplicate_identifiers(valid_identifiers)

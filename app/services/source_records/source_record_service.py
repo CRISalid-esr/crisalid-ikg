@@ -5,16 +5,23 @@ from app.errors.database_error import DatabaseError
 from app.errors.reference_owner_not_found_error import ReferenceOwnerNotFoundError
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.graph.generic.dao_factory import DAOFactory
+from app.graph.neo4j.concept_dao import ConceptDAO
+from app.graph.neo4j.document_dao import DocumentDAO
 from app.graph.neo4j.neo4j_dao import Neo4jDAO
 from app.graph.neo4j.person_dao import PersonDAO
 from app.graph.neo4j.source_record_dao import SourceRecordDAO
+from app.amqp.message_mode import MessageMode
+from app.models.agent_identifiers import PersonIdentifier
+from app.models.concepts import Concept
+from app.models.document import Document
+from app.models.identifier_types import PersonIdentifierType
 from app.models.people import Person
 from app.models.source_records import SourceRecord
 from app.services.concepts.concept_service import ConceptService
 from app.services.source_contributors.source_organization_service import SourceOrganizationService
 from app.services.source_contributors.source_person_service import SourcePersonService
 from app.services.source_journals.source_journal_service import SourceJournalService
-from app.signals import source_record_updated, source_record_created
+from app.signals import source_record_updated, source_record_created, document_sources_changed
 
 
 class SourceRecordService:
@@ -23,13 +30,16 @@ class SourceRecordService:
     """
 
     async def create_source_record(self, source_record: SourceRecord,
-                                   harvested_for: Person) -> SourceRecord:
+                                   harvested_for: Person,
+                                   identifier_used: PersonIdentifier,
+                                   mode: MessageMode = MessageMode.BATCH) -> SourceRecord:
         """
         Create a source bibliographic record in the graph database
         from a Pydantic SourceRecord object and a Pydantic Person object
         :param source_record: Pydantic SourceRecord object
         :param harvested_for: Pydantic Person object.
                 The person the reference has been harvested for
+        :param identifier_used: person identifier that triggered the harvest
         :return:
         """
         person = await self._handle_source_record_owner(harvested_for)
@@ -37,20 +47,25 @@ class SourceRecordService:
         await self._handle_source_record_affiliations(source_record)
         await self._handle_source_record_subjects(source_record)
         await self._handle_source_record_journal(source_record)
-        status = await self._create_source_record(source_record, person)
+        status = await self._create_source_record(source_record, person, identifier_used)
         await self._update_source_record_contributions(source_record)
+        await self._handle_source_record_domains(source_record)
         if status == Neo4jDAO.Status.CREATED:
-            await source_record_created.send_async(self, source_record_id=source_record.uid)
+            await source_record_created.send_async(self, source_record_id=source_record.uid,
+                                                   mode=mode)
         return source_record
 
     async def update_source_record(self, source_record: SourceRecord,
-                                   harvested_for: Person) -> SourceRecord:
+                                   harvested_for: Person,
+                                   identifier_used: PersonIdentifier,
+                                   mode: MessageMode = MessageMode.BATCH) -> SourceRecord:
         """
         Update a source bibliographic record in the graph database
         from a Pydantic SourceRecord object and a Pydantic Person object
         :param source_record: Pydantic SourceRecord object
         :param harvested_for: Pydantic Person object.
                The person the reference has been harvested for
+        :param identifier_used: person identifier that triggered the harvest
         :return:
         """
         person = await self._handle_source_record_owner(harvested_for)
@@ -58,16 +73,20 @@ class SourceRecordService:
         await self._handle_source_record_affiliations(source_record)
         await self._handle_source_record_subjects(source_record)
         await self._handle_source_record_journal(source_record)
-        status = await self._update_source_record(source_record, person)
+        status = await self._update_source_record(source_record, person, identifier_used)
         await self._update_source_record_contributions(source_record)
+        await self._handle_source_record_domains(source_record)
         if status == Neo4jDAO.Status.UPDATED:
-            await source_record_updated.send_async(self, source_record_id=source_record.uid)
+            await source_record_updated.send_async(self, source_record_id=source_record.uid,
+                                                   mode=mode)
         return source_record
 
-    async def _create_source_record(self, source_record, person) -> Neo4jDAO.Status:
+    async def _create_source_record(self, source_record, person,
+                                    identifier_used: PersonIdentifier) -> Neo4jDAO.Status:
         source_record_dao: SourceRecordDAO = self._get_dao_factory().get_dao(SourceRecord)
         _, status, _ = await source_record_dao.create(source_record=source_record,
-                                                                     harvested_for=person)
+                                                      harvested_for=person,
+                                                      identifier_used=identifier_used)
         return status
 
     async def _update_source_record_contributions(self, source_record):
@@ -82,11 +101,13 @@ class SourceRecordService:
             except DatabaseError as e:
                 logger.error(f"Database error while creating contribution {contribution} : {e}")
 
-    async def _update_source_record(self, source_record, person) -> Neo4jDAO.Status:
+    async def _update_source_record(self, source_record, person,
+                                    identifier_used: PersonIdentifier) -> Neo4jDAO.Status:
         source_record_dao: SourceRecordDAO = self._get_dao_factory().get_dao(SourceRecord)
         _, status, _ = await source_record_dao.update(
             source_record=source_record,
-            harvested_for=person
+            harvested_for=person,
+            identifier_used=identifier_used
         )
         return status
 
@@ -122,6 +143,21 @@ class SourceRecordService:
             except DatabaseError as e:
                 logger.error(f"Database error while creating or updating concept {subject} : {e}")
         source_record.subjects = registered_concepts
+
+    async def _handle_source_record_domains(self, source_record: SourceRecord) -> None:
+        concept_dao: ConceptDAO = self._get_dao_factory().get_dao(Concept)
+        valid_topics = []
+        for domain in source_record.domains:
+            topic = await concept_dao.find_by_uri(domain.uri)
+            if topic is None:
+                logger.error(
+                    f"Topic with URI {domain.uri} not found in graph "
+                    f"(source record {source_record.uid}) — skipping"
+                )
+                continue
+            valid_topics.append(domain)
+        source_record_dao: SourceRecordDAO = self._get_dao_factory().get_dao(SourceRecord)
+        await source_record_dao.sync_topics(source_record.uid, valid_topics)
 
     async def _handle_source_record_contributors(self, source_record: SourceRecord) -> None:
         source_contributors_service = SourcePersonService()
@@ -184,6 +220,62 @@ class SourceRecordService:
         factory = self._get_dao_factory()
         dao: SourceRecordDAO = factory.get_dao(SourceRecord)
         return await dao.source_record_exists(source_record_uid)
+
+    async def cleanup_harvested_data_for_identifier(self, _,
+                                                    person_uid: str,
+                                                    identifier_type: str,
+                                                    identifier_value: str,
+                                                    mode: MessageMode = MessageMode.INTERACTIVE):
+        """
+        Remove the harvested data created for a person through a deleted identifier.
+
+        Records harvested exclusively for the person through that identifier are deleted
+        with their source layer; records shared with other persons only lose this person's
+        harvesting path (HARVESTED_FOR + RECORDED_BY). Documents linked to the affected
+        records are recomputed afterwards, dropping the person's contribution (shared
+        records) or being deleted (records that were their only source).
+
+        :param _: signal sender (unused)
+        :param person_uid: UID of the person whose identifier was removed
+        :param identifier_type: type of the removed identifier (enum string value)
+        :param identifier_value: value of the removed identifier
+        :param mode: message mode for the outbound document events
+        """
+        id_type = PersonIdentifierType.from_str(identifier_type)
+        if id_type is None:
+            logger.error("Cannot clean up harvested data: unknown identifier type {}",
+                         identifier_type)
+            return
+        factory = self._get_dao_factory()
+        source_record_dao: SourceRecordDAO = factory.get_dao(SourceRecord)
+        document_dao: DocumentDAO = factory.get_dao(Document)
+        source_record_uids = await source_record_dao.get_source_record_uids_by_identifier_used(
+            person_uid=person_uid,
+            identifier_used_type=id_type,
+            identifier_used_value=identifier_value)
+        if not source_record_uids:
+            return
+        # capture the affected documents before deletion severs the RECORDED_BY edges
+        affected_document_uids = set()
+        for source_record_uid in source_record_uids:
+            document = await document_dao.get_document_by_source_record_uid(source_record_uid)
+            if document is not None:
+                affected_document_uids.add(document.uid)
+        for source_record_uid in source_record_uids:
+            harvested_for_count = await source_record_dao.count_harvested_for(source_record_uid)
+            if harvested_for_count <= 1:
+                await source_record_dao.delete_exclusive_source_record(
+                    source_record_uid, person_uid)
+            else:
+                await source_record_dao.detach_shared_harvested_for(
+                    source_record_uid, person_uid)
+        logger.info(
+            "Cleaned up {} source record(s) harvested for person {} "
+            "through identifier {}={}",
+            len(source_record_uids), person_uid, identifier_type, identifier_value)
+        for document_uid in affected_document_uids:
+            await document_sources_changed.send_async(self, document_uid=document_uid,
+                                                      mode=mode)
 
     @staticmethod
     def _get_dao_factory() -> DAOFactory:
