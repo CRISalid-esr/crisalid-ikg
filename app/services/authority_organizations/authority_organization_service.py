@@ -27,10 +27,15 @@ class AuthorityOrganizationService:
     async def get_or_create_authority_organization(
             self,
             source_org_cluster: List[SourceOrganization],
+            type_authoritative: bool = False,
     ) -> AuthorityOrganizationRoot:
         """
         Build AuthorityOrganizationRoot + AuthorityOrganizationState(s) from a source-org cluster.
         For each state, get-or-create it in Neo4j (states are labeled :AuthorityOrganization too).
+
+        :param source_org_cluster: source organizations sharing identifiers
+        :param type_authoritative: True when the cluster's type was chosen by a user action:
+            it overrides the persisted state's type and is protected from harvest overwrite
         """
         in_memory_root = self.split_cluster_into_root_and_states(source_org_cluster)
 
@@ -40,7 +45,8 @@ class AuthorityOrganizationService:
         for state in in_memory_root.states:
             if state.identifiers:
                 persisted_states.append(
-                    await self._get_or_create_state_in_graph_by_identifier(dao, state))
+                    await self._get_or_create_state_in_graph_by_identifier(
+                        dao, state, type_authoritative))
                 await self._signal_state_updated(persisted_states[-1].uid)
             elif state.normalized_name:
                 # handle case of state without identifiers
@@ -449,10 +455,17 @@ class AuthorityOrganizationService:
             self,
             dao: AuthorityOrganizationDAO,
             desired: AuthorityOrganizationState,
+            type_authoritative: bool = False,
     ) -> AuthorityOrganizationState:
         """
         Find compatible state in graph, or create new one.
+
+        :param type_authoritative: the desired type comes from a user action (see
+            ``get_or_create_authority_organization``)
         """
+        if type_authoritative:
+            desired.type_origin = AuthorityOrganizationState.TypeOrigin.USER
+
         candidates = await dao.get_states_with_compatible_identifiers(desired.identifiers)
         candidates = [c for c in candidates if self._passes_excluded_identifiers(desired, c)]
 
@@ -474,13 +487,13 @@ class AuthorityOrganizationService:
                 selected.identifiers.append(ident)
                 existing_keys.add(k)
 
-        if (
-                selected.type == SourceOrganization.SourceOrganisationType.ORGANIZATION
-                and desired.type != SourceOrganization.SourceOrganisationType.ORGANIZATION
-        ):
-            selected.type = desired.type
+        self._merge_type(selected, desired, type_authoritative)
 
-        selected.set_names(desired.names)
+        if type_authoritative:
+            # user path: a single message name must not wipe the names collected so far
+            selected.set_names(selected.names + desired.names)
+        else:
+            selected.set_names(desired.names)
 
         # Merge exclusions (only add, never remove)
         selected_excluded_identifiers = set(selected.excluded_identifiers or [])
@@ -490,6 +503,28 @@ class AuthorityOrganizationService:
             selected.excluded_identifiers = list(merged_excluded_identifiers)
 
         return await dao.update_authority_organization_state(selected)
+
+    @staticmethod
+    def _merge_type(
+            selected: AuthorityOrganizationState,
+            desired: AuthorityOrganizationState,
+            type_authoritative: bool,
+    ) -> None:
+        """
+        Apply the desired type to the persisted state.
+
+        - user action (authoritative): always wins and marks the state as user-typed
+        - harvest: never touches a user-typed state, otherwise only fills a generic type
+        """
+        if type_authoritative:
+            selected.type = desired.type
+            selected.type_origin = AuthorityOrganizationState.TypeOrigin.USER
+        elif (
+                selected.type_origin != AuthorityOrganizationState.TypeOrigin.USER
+                and selected.type == SourceOrganization.SourceOrganisationType.ORGANIZATION
+                and desired.type != SourceOrganization.SourceOrganisationType.ORGANIZATION
+        ):
+            selected.type = desired.type
 
     async def _signal_state_updated(self, state_uid):
         """

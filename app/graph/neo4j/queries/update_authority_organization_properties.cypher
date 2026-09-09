@@ -1,5 +1,6 @@
 MATCH (o:AuthorityOrganizationState {uid: $uid})
 SET o.type = $org_type
+SET o.type_origin = $type_origin
 SET o.normalized_name = $normalized_name
 SET o.display_names = $display_names
 SET o.identifier_signature = $identifier_signature

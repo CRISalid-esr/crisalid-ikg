@@ -24,6 +24,7 @@ class SourceOrganization(SourcedModel):
         LABORATORY_GROUP = "laboratory_group"
         RESEARCH_TEAM = "research_team"
         RESEARCH_TEAM_GROUP = "research_team_group"
+        DEPARTMENT = "department"
 
     IDENTIFIER_SEPARATOR: ClassVar[str] = "-"
 
