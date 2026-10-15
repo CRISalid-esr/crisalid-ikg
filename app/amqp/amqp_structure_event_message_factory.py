@@ -71,6 +71,9 @@ class AMQPStructureEventMessageFactory(AbstractAMQPMessageFactory):
             ],
         }
 
+        if structure.hal_collection is not None:
+            payload["hal_collection"] = structure.hal_collection
+
         if isinstance(structure, UnitBase):
             payload["main_mission"] = structure.main_mission.value
             payload["secondary_missions"] = [m.value for m in structure.secondary_missions]
