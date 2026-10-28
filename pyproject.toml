@@ -5,7 +5,7 @@ description = "CRISalid institutional knowledge graph"
 authors = ["CRISalid community <contact@crisalid.org>"]
 license = "CeCILL v2.1"
 readme = "README.md"
-packages = [{include = "app"}]
+packages = [{include = "crisalid_ikg"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
