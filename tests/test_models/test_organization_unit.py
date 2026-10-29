@@ -356,3 +356,20 @@ def test_lra_v2_italian_labels(lra_research_unit_v2_json_data):
     assert ena_membership.position == OrgMembershipPosition.PARTICIPATING_SUPERVISION
     cnrs_membership = next(m for m in org.memberships if m.target == "uai-0757581P")
     assert cnrs_membership.end_date == date(2025, 12, 31)
+
+
+def test_hal_collection_is_stripped(research_unit_a_json_data):
+    org = unitAdapter.validate_python(
+        {**research_unit_a_json_data, "hal_collection": "  https://hal.science/FOO  "})
+    assert org.hal_collection == "https://hal.science/FOO"
+
+
+@pytest.mark.parametrize("value", ["", "   ", None])
+def test_hal_collection_blank_becomes_none(research_unit_a_json_data, value):
+    org = unitAdapter.validate_python({**research_unit_a_json_data, "hal_collection": value})
+    assert org.hal_collection is None
+
+
+def test_hal_collection_missing_is_none(research_unit_a_json_data):
+    org = unitAdapter.validate_python(research_unit_a_json_data)
+    assert org.hal_collection is None

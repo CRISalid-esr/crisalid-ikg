@@ -76,8 +76,17 @@ class OrganizationBase(Agent[OrganizationIdentifierType]):
     identifiers: list[OrganizationIdentifier] = Field(default_factory=list)
     addresses: list[StructuredPhysicalAddress] = Field(default_factory=list)
     electronical_addresses: list[ElectronicalAddress] = Field(default_factory=list)
+    hal_collection: Optional[str] = None
     memberships: list[OrgMembership] = Field(default_factory=list)
     parents: list[OrgInclusion] = Field(default_factory=list)
+
+    @field_validator('hal_collection', mode='before')
+    @classmethod
+    def _normalize_hal_collection(cls, v):
+        """Strip the HAL collection URL; blank values become None."""
+        if isinstance(v, str):
+            v = v.strip()
+        return v or None
 
     @staticmethod
     def _parse_local_type(lt):
