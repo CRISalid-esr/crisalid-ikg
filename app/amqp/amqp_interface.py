@@ -97,7 +97,10 @@ class AMQPInterface:
         self._attach_message_processing_workers(self.settings.amqp_people_topic)
         self._attach_message_processing_workers(self.settings.amqp_publications_batch_topic)
         self._attach_message_processing_workers(self.settings.amqp_publications_interactive_topic)
-        self._attach_message_processing_workers(self.settings.amqp_structures_topic)
+        # Structures are processed sequentially: a child may reference parents
+        # created by messages published just before it
+        self._attach_message_processing_workers(
+            self.settings.amqp_structures_topic, parallelism=False)
         self._attach_message_processing_workers(self.settings.amqp_user_actions_interactive_topic)
         self._attach_message_processing_workers(self.settings.amqp_harvesting_events_batch_topic)
         self._attach_message_processing_workers(
@@ -128,11 +131,19 @@ class AMQPInterface:
 
         logger.info("AMQP listeners and workers stopped.")
 
-    def _attach_message_processing_workers(self, topic: str):
+    def _attach_message_processing_workers(self, topic: str, parallelism: bool = True):
+        """
+        Create the inner queue and the processing workers for a topic.
+
+        :param topic: AMQP topic
+        :param parallelism: if False, a single worker is created so that messages
+            are processed sequentially in the order they were received
+        """
         logger.info(f"Attaching message processing workers for topic: {topic}")
         self.inner_tasks_queues[topic] = asyncio.Queue(
             maxsize=self.INNER_TASKS_QUEUE_LENGTH)
-        for worker_id in range(self.settings.amqp_task_parallelism_limit):
+        workers_count = self.settings.amqp_task_parallelism_limit if parallelism else 1
+        for worker_id in range(workers_count):
             self._attach_message_processing_worker(topic, worker_id)
 
     def _attach_message_processing_worker(self, topic, worker_id):
