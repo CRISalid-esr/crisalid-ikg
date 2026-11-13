@@ -189,6 +189,13 @@ class OrganizationUnitDAO(Neo4jDAO):
             uid=org_unit.uid,
             identifiers=[i.dict() for i in org_unit.identifiers],
         )
+        # Only overwrite hal_collection when a value is provided (never cleared on update)
+        if org_unit.hal_collection is not None:
+            await tx.run(
+                load_query("update_organization_unit_hal_collection"),
+                uid=org_unit.uid,
+                hal_collection=org_unit.hal_collection,
+            )
 
         await cls._create_org_relationships(tx, org_unit)
         return org_unit
@@ -280,6 +287,8 @@ class OrganizationUnitDAO(Neo4jDAO):
             props["national_type"] = org_unit.national_type.value
         if hasattr(org_unit, "main_mission") and org_unit.main_mission:
             props["main_mission"] = org_unit.main_mission.value
+        if org_unit.hal_collection:
+            props["hal_collection"] = org_unit.hal_collection
         return props
 
     # ── Hydration ─────────────────────────────────────────────────────────────
@@ -345,6 +354,7 @@ class OrganizationUnitDAO(Neo4jDAO):
             "identifiers": identifiers,
             "memberships": memberships,
             "parents": parents,
+            "hal_collection": org_data.get("hal_collection"),
         }
 
         if generic_type == "unit":

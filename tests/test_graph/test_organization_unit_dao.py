@@ -18,6 +18,7 @@ from app.models.organization_unit import (
     InstitutionSubdivision,
     OrganizationBase,
     ResearchUnit,
+    unitAdapter,
 )
 
 
@@ -348,3 +349,76 @@ async def test_update_preserves_person_to_structure_relationship(
 
     # Person relationship must still exist after update
     assert await _person_relationship_exists(person_uid, ru_uid)
+
+
+async def _node_has_hal_collection_property(uid: str) -> bool:
+    """Check whether the hal_collection property is set on the node."""
+    async with Neo4jConnexion().get_driver() as driver:
+        async with driver.session() as session:
+            async with await session.begin_transaction() as tx:
+                result = await tx.run(
+                    "MATCH (o:OrganizationUnit {uid: $uid}) "
+                    "RETURN o.hal_collection IS NOT NULL AS has_prop",
+                    uid=uid,
+                )
+                record = await result.single()
+                return record["has_prop"]
+
+
+def _with_hal_collection(json_data: dict, hal_collection) -> OrganizationBase:
+    data = {**json_data}
+    if hal_collection is not None:
+        data["hal_collection"] = hal_collection
+    return unitAdapter.validate_python(data)
+
+
+async def test_create_research_unit_with_hal_collection(
+        test_app,
+        research_unit_center_json_data: dict,
+):
+    dao = _get_dao()
+    org = _with_hal_collection(research_unit_center_json_data, "https://hal.science/ERC")
+    await dao.create(org)
+
+    retrieved = await dao.get(org.uid)
+    assert retrieved.hal_collection == "https://hal.science/ERC"
+
+
+async def test_create_research_unit_without_hal_collection(
+        test_app,
+        research_unit_center_pydantic_model: OrganizationBase,
+):
+    dao = _get_dao()
+    await dao.create(research_unit_center_pydantic_model)
+
+    retrieved = await dao.get(research_unit_center_pydantic_model.uid)
+    assert retrieved.hal_collection is None
+    assert not await _node_has_hal_collection_property(research_unit_center_pydantic_model.uid)
+
+
+async def test_update_research_unit_overwrites_hal_collection(
+        test_app,
+        research_unit_center_json_data: dict,
+):
+    dao = _get_dao()
+    await dao.create(_with_hal_collection(research_unit_center_json_data, "https://hal.science/A"))
+    updated = _with_hal_collection(research_unit_center_json_data, "https://hal.science/B")
+    await dao.update(updated)
+
+    retrieved = await dao.get(updated.uid)
+    assert retrieved.hal_collection == "https://hal.science/B"
+
+
+@pytest.mark.parametrize("new_value", [None, "", "   "])
+async def test_update_research_unit_keeps_hal_collection_when_missing(
+        test_app,
+        research_unit_center_json_data: dict,
+        new_value,
+):
+    dao = _get_dao()
+    await dao.create(_with_hal_collection(research_unit_center_json_data, "https://hal.science/A"))
+    updated = _with_hal_collection(research_unit_center_json_data, new_value)
+    await dao.update(updated)
+
+    retrieved = await dao.get(updated.uid)
+    assert retrieved.hal_collection == "https://hal.science/A"

@@ -6,7 +6,7 @@ from app.amqp.amqp_message_publisher import AMQPMessagePublisher
 from app.graph.generic.abstract_dao_factory import AbstractDAOFactory
 from app.models.document import Document
 from app.models.identifier_types import PersonIdentifierType
-from app.models.organization_unit import OrganizationBase
+from app.models.organization_unit import OrganizationBase, unitAdapter
 from app.models.people import Person
 from tests.test_utils.comparaison import force_dict_inner_list_ordering
 
@@ -109,7 +109,8 @@ async def test_publish_structure_event_research_unit(
         {"structure_uid": persisted_research_unit_a_pydantic_model.uid})
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
-    assert mocked_exchange.publish.call_args[1]["routing_key"] == "event.structures.structure.created.batch"
+    assert (mocked_exchange.publish.call_args[1]["routing_key"]
+            == "event.structures.structure.created.batch")
     message_body = json.loads(message.body)
     fields = message_body['fields']
     assert message_body['event'] == 'created'
@@ -121,6 +122,7 @@ async def test_publish_structure_event_research_unit(
     assert fields['local_types'] == []
     assert fields['memberships'] == []
     assert fields['parents'] == []
+    assert 'hal_collection' not in fields
     expected_identifiers = [
         {'type': 'ror', 'value': '123456'},
         {'type': 'local', 'value': 'U123'},
@@ -149,7 +151,8 @@ async def test_publish_structure_event_institution(
         mocked_exchange: Exchange,
         persisted_institution_a_pydantic_model: OrganizationBase,
 ):
-    """Test that a created event for an institution carries all model fields and no unit-specific fields."""
+    """Test that a created event for an institution carries all model fields
+    and no unit-specific fields."""
     publisher = AMQPMessagePublisher(mocked_exchange)
     await publisher.publish(
         AMQPMessagePublisher.MessageType.EVENT,
@@ -157,7 +160,8 @@ async def test_publish_structure_event_institution(
         {"structure_uid": persisted_institution_a_pydantic_model.uid})
     mocked_exchange.publish.assert_called_once()
     message = mocked_exchange.publish.call_args[1]["message"]
-    assert mocked_exchange.publish.call_args[1]["routing_key"] == "event.structures.structure.created.batch"
+    assert (mocked_exchange.publish.call_args[1]["routing_key"]
+            == "event.structures.structure.created.batch")
     message_body = json.loads(message.body)
     fields = message_body['fields']
     assert message_body['event'] == 'created'
@@ -241,3 +245,22 @@ async def test_publish_document_event(
     assert all(
         any(title == expected for title in message_body['fields']['titles']) for expected in
         expected_titles)
+
+
+async def test_publish_structure_event_with_hal_collection(
+        mocked_exchange: Exchange,
+        research_unit_a_json_data: dict,
+):
+    """Test that a structure event carries hal_collection when set."""
+    org = unitAdapter.validate_python(
+        {**research_unit_a_json_data, "hal_collection": "https://hal.science/FL"})
+    dao = AbstractDAOFactory().get_dao_factory("neo4j").get_dao(OrganizationBase)
+    await dao.create(org)
+    publisher = AMQPMessagePublisher(mocked_exchange)
+    await publisher.publish(
+        AMQPMessagePublisher.MessageType.EVENT,
+        AMQPMessagePublisher.EventMessageSubtype.STRUCTURE_CREATED,
+        {"structure_uid": org.uid})
+    message = mocked_exchange.publish.call_args[1]["message"]
+    fields = json.loads(message.body)['fields']
+    assert fields['hal_collection'] == "https://hal.science/FL"
